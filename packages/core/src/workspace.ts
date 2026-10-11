@@ -22,6 +22,11 @@ export interface TreeNode {
   createdAt: number;
   /** Set when the node is in the trash. Nodes are never erased. */
   deletedAt: number | null;
+  /**
+   * Ids this node's body links to, sorted. Copied from the body by setLinks, so
+   * backlinks never need every note body loaded.
+   */
+  links: string[];
 }
 
 export interface TreeItem extends TreeNode {
@@ -38,6 +43,8 @@ export interface Tree {
   items: Map<string, TreeItem>;
   /** Ids shown in the inbox or books sections. */
   visible: Set<string>;
+  /** For each target id, the visible nodes that link to it, sorted by title. */
+  backlinks: Map<string, TreeNode[]>;
 }
 
 // Each node is its own Y.Map so that fields merge independently: a rename on one
@@ -53,6 +60,7 @@ function toNode(id: string, fields: Y.Map<unknown>): TreeNode {
     position: fields.get("position") as string,
     createdAt: fields.get("createdAt") as number,
     deletedAt: (fields.get("deletedAt") as number | null | undefined) ?? null,
+    links: (fields.get("links") as string[] | undefined) ?? [],
   };
 }
 
@@ -113,7 +121,19 @@ export function readTree(doc: Y.Doc): Tree {
   const trash = [...byId.values()]
     .filter((node) => node.deletedAt !== null)
     .sort((a, b) => b.deletedAt! - a.deletedAt!);
-  return { inbox, books, trash, byId, items, visible };
+  // Notes in the trash do not count: their links come back if they are restored.
+  const backlinks = new Map<string, TreeNode[]>();
+  for (const id of visible) {
+    const source = byId.get(id)!;
+    for (const target of source.links) {
+      const sources = backlinks.get(target) ?? [];
+      sources.push(source);
+      backlinks.set(target, sources);
+    }
+  }
+  for (const sources of backlinks.values()) sources.sort((a, b) => a.title.localeCompare(b.title));
+
+  return { inbox, books, trash, byId, items, visible, backlinks };
 }
 
 /** The placed children of a parent: ROOT, INBOX or a visible node. */
@@ -207,6 +227,18 @@ function fieldsOf(doc: Y.Doc, id: string) {
 
 export function renameNode(doc: Y.Doc, id: string, title: string) {
   fieldsOf(doc, id).set("title", title);
+}
+
+/**
+ * Records which nodes `id` links to. Writes only when the list changed, so
+ * calling it on every edit of the body costs nothing extra in storage.
+ */
+export function setLinks(doc: Y.Doc, id: string, targets: Iterable<string>) {
+  const fields = fieldsOf(doc, id);
+  const next = [...new Set(targets)].filter((target) => target !== id).sort();
+  const current = (fields.get("links") as string[] | undefined) ?? [];
+  if (next.length === current.length && next.every((target, i) => target === current[i])) return;
+  fields.set("links", next);
 }
 
 export function trashNode(doc: Y.Doc, id: string) {

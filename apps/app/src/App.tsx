@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { WELCOME_ID, type SaveStatus, type Tree } from "@notemax/core";
 import { Icon } from "./Icon";
+import { LinkHub } from "./links/link-hub";
 import { NotePane } from "./NotePane";
 import { Sidebar } from "./Sidebar";
 import { StatusBar } from "./StatusBar";
@@ -46,6 +47,12 @@ export function App() {
     if (isNarrow()) setSidebarOpen(false);
   }, []);
 
+  const [hub] = useState(() => new LinkHub(select));
+  // Before paint, so links never show an old title for a frame.
+  useLayoutEffect(() => {
+    if (workspace.doc && workspace.tree) hub.update(workspace.doc, workspace.tree);
+  }, [hub, workspace.doc, workspace.tree]);
+
   // Only the first note to open counts toward startup time.
   // performance.now() counts from the moment the page started loading.
   const onReady = useCallback(() => setReadyMs((ms) => ms ?? performance.now()), []);
@@ -70,7 +77,7 @@ export function App() {
           <Icon name="sidebar" />
         </button>
         {activeNode ? (
-          <NotePane key={activeNode.id} node={activeNode} workspaceDoc={doc} onStatus={setNoteStatus} onReady={onReady} />
+          <NotePane key={activeNode.id} node={activeNode} tree={tree} hub={hub} workspaceDoc={doc} onStatus={setNoteStatus} onReady={onReady} />
         ) : (
           <p className="empty">No notes. Use + in the sidebar to create one.</p>
         )}

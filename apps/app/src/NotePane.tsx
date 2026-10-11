@@ -1,13 +1,16 @@
 import { useEffect, useRef } from "react";
-import type * as Y from "yjs";
+import * as Y from "yjs";
 import type { Editor as TiptapEditor } from "@tiptap/react";
-import { WELCOME_ID, renameNode, type SaveStatus, type TreeNode } from "@notemax/core";
+import { WELCOME_ID, extractLinks, renameNode, setLinks, type SaveStatus, type Tree, type TreeNode } from "@notemax/core";
+import { Backlinks } from "./Backlinks";
 import { Editor } from "./Editor";
+import type { LinkHub } from "./links/link-hub";
 import { useLocalDoc } from "./useLocalDoc";
 
 const welcomeContent = `
   <p>This note lives in your <strong>Inbox</strong>. Use the sidebar to add books, chapters and more notes.</p>
   <p>Everything is saved on this device. Try <strong>Ctrl+B</strong>, <code>#</code> plus space for a heading, or <code>-</code> plus space for a list.</p>
+  <p>Type <code>[[</code> to link to another note. Notes that link here are listed at the bottom.</p>
 `;
 
 // Tiptap's focus() waits for the next animation frame, so keys typed right after
@@ -18,13 +21,50 @@ function focusBody(editor: TiptapEditor) {
   editor.commands.focus("start");
 }
 
+// How long typing must pause before the link list is updated. Links change
+// rarely, so there is no need to scan the body on every keystroke.
+const LINK_SCAN_MS = 500;
+
+/** Keeps the workspace's copy of this note's links in step with its body. */
+function useLinkIndex(body: Y.Doc | undefined, workspaceDoc: Y.Doc, noteId: string) {
+  useEffect(() => {
+    if (!body) return;
+    const fragment = body.getXmlFragment("content");
+    const scan = () => setLinks(workspaceDoc, noteId, extractLinks(fragment));
+    // Also on open, which repairs the list if it went stale, for example after
+    // two devices edited this note at the same time.
+    scan();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onUpdate = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        timer = undefined;
+        scan();
+      }, LINK_SCAN_MS);
+    };
+    body.on("update", onUpdate);
+    return () => {
+      body.off("update", onUpdate);
+      // Switching notes must not drop a link typed in the last half second.
+      if (timer) {
+        clearTimeout(timer);
+        scan();
+      }
+    };
+  }, [body, workspaceDoc, noteId]);
+}
+
 export function NotePane({
   node,
+  tree,
+  hub,
   workspaceDoc,
   onStatus,
   onReady,
 }: {
   node: TreeNode;
+  tree: Tree;
+  hub: LinkHub;
   workspaceDoc: Y.Doc;
   onStatus(status: SaveStatus): void;
   onReady(): void;
@@ -34,6 +74,7 @@ export function NotePane({
   const focusWhenReady = useRef(false);
 
   useEffect(() => onStatus(status), [status, onStatus]);
+  useLinkIndex(local?.doc, workspaceDoc, node.id);
 
   if (openError) return <p className="error">Could not open this note: {openError}</p>;
 
@@ -59,6 +100,8 @@ export function NotePane({
       {local && (
         <Editor
           doc={local.doc}
+          noteId={node.id}
+          hub={hub}
           initialContent={node.id === WELCOME_ID ? welcomeContent : undefined}
           placeholder={node.kind === "book" ? "What is this book about?" : "Start writing..."}
           onReady={(editor) => {
@@ -71,6 +114,7 @@ export function NotePane({
           }}
         />
       )}
+      {local && <Backlinks tree={tree} noteId={node.id} hub={hub} />}
     </article>
   );
 }

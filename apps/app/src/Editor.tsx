@@ -4,14 +4,20 @@ import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
 import { Placeholder } from "@tiptap/extensions";
 import type * as Y from "yjs";
+import type { LinkHub } from "./links/link-hub";
+import { WikiLink } from "./links/wiki-link";
 
 export function Editor({
   doc,
+  noteId,
+  hub,
   initialContent,
   placeholder,
   onReady,
 }: {
   doc: Y.Doc;
+  noteId: string;
+  hub: LinkHub;
   /** Inserted only when the doc is empty, so it never duplicates on reload. */
   initialContent?: string;
   placeholder?: string;
@@ -24,6 +30,7 @@ export function Editor({
         StarterKit.configure({ undoRedo: false }),
         Collaboration.configure({ document: doc, field: "content" }),
         Placeholder.configure({ placeholder }),
+        WikiLink.configure({ hub, currentId: noteId }),
       ],
     },
     [doc],
