@@ -1,0 +1,23 @@
+[package]
+name = "notemax"
+version = "0.1.0"
+description = "Notemax desktop app"
+authors = ["Notemax"]
+license = ""
+repository = ""
+edition = "2024"
+rust-version = "1.90"
+
+[lib]
+# The _lib suffix avoids a name clash with the binary on Windows.
+name = "notemax_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.2", features = [] }
+
+[dependencies]
+log = "0.4"
+tauri = { version = "2.12.3", features = [] }
+tauri-plugin-log = "2"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
