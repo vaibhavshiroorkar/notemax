@@ -1,4 +1,5 @@
-// Per-device UI preferences (selected note, collapsed rows). Notes themselves never go here.
+// Per-device UI preferences (selected note, collapsed rows) and the unsent capture draft.
+// Saved notes never go here.
 // localStorage can throw in private windows or when site data is blocked, so every
 // access is guarded and the app works without it.
 const PREFIX = "notemax:";

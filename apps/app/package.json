@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@notemax/core": "workspace:*",
+    "@tauri-apps/api": "^2.12.3",
     "@tauri-apps/plugin-sql": "^2.5.0",
     "@tiptap/core": "3.31.4",
     "@tiptap/extension-collaboration": "^3.31.4",

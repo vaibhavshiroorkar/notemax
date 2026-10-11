@@ -1,10 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "What the main window may do: core features plus the local notes database.",
-  "windows": ["main"],
+  "description": "What the app windows may do: core features, the local notes database, and letting the capture box hide or move itself.",
+  "windows": ["main", "capture"],
   "permissions": [
     "core:default",
+    "core:window:allow-hide",
+    "core:window:allow-start-dragging",
     "sql:default",
     "sql:allow-execute"
   ]

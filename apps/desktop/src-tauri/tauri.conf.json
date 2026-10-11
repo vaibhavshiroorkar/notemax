@@ -20,6 +20,20 @@
         "minHeight": 300,
         "resizable": true,
         "dragDropEnabled": false
+      },
+      {
+        "label": "capture",
+        "title": "Quick capture",
+        "url": "capture.html",
+        "width": 560,
+        "height": 200,
+        "resizable": false,
+        "visible": false,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "center": true,
+        "dragDropEnabled": false
       }
     ],
     "security": {

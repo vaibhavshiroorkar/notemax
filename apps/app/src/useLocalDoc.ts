@@ -1,36 +1,6 @@
 import { useEffect, useState } from "react";
-import { createSqlStore, openIdbStore, openLocalDoc, type DocStore, type LocalDoc, type SaveStatus } from "@notemax/core";
-
-/** True inside the Tauri desktop app, false in a normal browser. */
-export const isDesktop = "__TAURI_INTERNALS__" in window;
-
-// Must match DB_URL in apps/desktop/src-tauri/src/lib.rs, which creates the tables.
-const DESKTOP_DB_URL = "sqlite:notemax.db";
-
-async function openStore(): Promise<DocStore> {
-  if (!isDesktop) return openIdbStore();
-  // Loaded only on desktop, so the web build never pulls in Tauri code.
-  const { default: Database } = await import("@tauri-apps/plugin-sql");
-  const db = await Database.load(DESKTOP_DB_URL);
-  return createSqlStore({
-    execute: (sql, params) => db.execute(sql, params),
-    select: <T,>(sql: string, params?: unknown[]) => db.select<T[]>(sql, params),
-  });
-}
-
-let storePromise: Promise<DocStore> | undefined;
-const getStore = () => (storePromise ??= openStore());
-
-/**
- * Browsers may delete a site's storage when the disk runs low, unless the site
- * asks to keep it. Returns false when the browser refuses. The desktop app
- * writes a normal file on disk, so this risk does not apply there.
- */
-export async function requestPersistentStorage(): Promise<boolean> {
-  if (isDesktop) return true;
-  if (!navigator.storage?.persist) return false;
-  return (await navigator.storage.persisted()) || navigator.storage.persist();
-}
+import { openLocalDoc, type LocalDoc, type SaveStatus } from "@notemax/core";
+import { DOC_CHANNEL, getStore } from "./platform";
 
 export function useLocalDoc(docId: string) {
   const [local, setLocal] = useState<LocalDoc | null>(null);
@@ -43,7 +13,7 @@ export function useLocalDoc(docId: string) {
     let unsubscribe = () => {};
 
     getStore()
-      .then((store) => openLocalDoc(store, docId))
+      .then((store) => openLocalDoc(store, docId, { broadcast: DOC_CHANNEL }))
       .then((doc) => {
         // React may unmount before the doc finishes opening (StrictMode does this on purpose).
         if (cancelled) return void doc.close();

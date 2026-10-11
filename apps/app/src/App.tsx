@@ -5,7 +5,7 @@ import { NotePane } from "./NotePane";
 import { Sidebar } from "./Sidebar";
 import { StatusBar } from "./StatusBar";
 import { getPref, setPref } from "./prefs";
-import { requestPersistentStorage } from "./useLocalDoc";
+import { requestPersistentStorage } from "./platform";
 import { useWorkspace } from "./useWorkspace";
 
 const severity: Record<SaveStatus["state"], number> = { saved: 0, saving: 1, error: 2 };

@@ -1,0 +1,58 @@
+@import "../theme.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+.capture {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--border);
+}
+
+.capture-header {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--sidebar-bg);
+  border-bottom: 1px solid var(--border);
+  cursor: default;
+  user-select: none;
+}
+
+.capture-box {
+  flex: 1;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  outline: none;
+  resize: none;
+  font: inherit;
+  font-size: 16px;
+  color: inherit;
+  background: transparent;
+}
+
+.capture-footer {
+  padding: 4px 12px 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.capture-error {
+  color: var(--danger);
+}

@@ -2,6 +2,7 @@ export type { DocStore } from "./store";
 export { openIdbStore } from "./idb-store";
 export { createSqlStore, type SqlDatabase } from "./sql-store";
 export { openLocalDoc, type LocalDoc, type LocalDocOptions, type SaveStatus } from "./local-doc";
+export { captureNote, splitCapture } from "./capture";
 export {
   ROOT,
   INBOX,

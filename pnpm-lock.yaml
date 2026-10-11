@@ -13,6 +13,9 @@ importers:
       '@notemax/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@tauri-apps/api':
+        specifier: ^2.12.3
+        version: 2.12.3
       '@tauri-apps/plugin-sql':
         specifier: ^2.5.0
         version: 2.5.0
