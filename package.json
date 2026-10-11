@@ -1,0 +1,12 @@
+{
+  "name": "notemax",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @notemax/app dev",
+    "desktop": "pnpm --filter @notemax/desktop dev",
+    "build": "pnpm --filter @notemax/app build",
+    "desktop:build": "pnpm --filter @notemax/desktop build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  }
+}
