@@ -49,16 +49,116 @@ ul {
 
 /* Sidebar */
 
+/* The tree scrolls; the footer with Settings stays pinned at the bottom. */
 .sidebar {
-  overflow-y: auto;
-  padding: 12px 8px 48px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
   font-size: 14px;
 }
 
-.section + .section {
-  margin-top: 16px;
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 8px 24px;
+}
+
+.sidebar-footer {
+  padding: 6px 8px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  text-align: left;
+}
+
+.footer-button:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.add-menu {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  min-width: 200px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  /* The header uses uppercase small text; the menu should not inherit it. */
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: var(--hover);
+  outline: none;
+}
+
+.menu-hint {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.folder-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.folder-title svg {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.folder-name {
+  flex: 1;
+  min-width: 0;
+  padding: 1px 4px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  outline: none;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.folder-title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .section-header {
@@ -123,10 +223,6 @@ ul {
   opacity: 0.4;
 }
 
-.row[data-kind="book"] .row-title {
-  font-weight: 600;
-}
-
 .row-title {
   flex: 1;
   min-width: 0;
@@ -187,6 +283,10 @@ ul {
 
 .trash .row {
   padding-left: 12px;
+}
+
+.icon-button.danger:hover {
+  color: var(--danger);
 }
 
 .text-button {
@@ -285,7 +385,7 @@ ul {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow);
 }
 
 .link-menu-item {
@@ -369,6 +469,138 @@ ul {
   color: var(--muted);
 }
 
+/* Dialogs */
+
+.dialog {
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  width: min(440px, calc(100vw - 32px));
+}
+
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.dialog-body {
+  padding: 20px;
+}
+
+.dialog-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.dialog-message {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+.dialog-message strong {
+  color: var(--text);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.button {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.button:hover {
+  background: var(--hover);
+}
+
+.button-danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+
+.button-danger:hover {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+}
+
+.settings {
+  width: min(560px, calc(100vw - 32px));
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.settings-header .dialog-title {
+  margin: 0;
+}
+
+.settings-section {
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+
+.settings-section h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.settings-section p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.settings-section .warning {
+  color: var(--danger);
+}
+
+.settings-path {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--hover);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.segmented button {
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.segmented button[aria-checked="true"] {
+  background: var(--active);
+  font-weight: 600;
+}
+
+kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 12px;
+}
+
 /* Status bar */
 
 .status-bar {
@@ -396,6 +628,10 @@ ul {
     inset: 0 auto 0 0;
     width: 260px;
     z-index: 10;
+  }
+
+  /* Room for the fixed sidebar toggle above the tree. */
+  .sidebar-scroll {
     padding-top: 48px;
   }
 

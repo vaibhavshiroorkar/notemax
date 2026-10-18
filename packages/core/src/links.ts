@@ -15,8 +15,9 @@ export function extractLinks(body: Y.XmlFragment): string[] {
 }
 
 /**
- * Visible notes and books whose title matches `query`, best first: exact
- * title, then title start, then word start, then anywhere in the title.
+ * Visible notes whose title matches `query`, best first: exact title, then
+ * title start, then word start, then anywhere in the title. Folders are left
+ * out because they do not open as pages.
  */
 export function searchNodes(tree: Tree, query: string, { limit = 8, exclude }: { limit?: number; exclude?: string } = {}): TreeNode[] {
   const q = query.trim().toLowerCase();
@@ -24,6 +25,7 @@ export function searchNodes(tree: Tree, query: string, { limit = 8, exclude }: {
   for (const id of tree.visible) {
     if (id === exclude) continue;
     const node = tree.byId.get(id)!;
+    if (node.kind !== "note") continue;
     const title = node.title.toLowerCase();
     let score: number;
     if (!q) score = 3;

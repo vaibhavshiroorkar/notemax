@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { INBOX, ROOT, WIKI_LINK, createNode, extractLinks, readTree, searchNodes, setLinks, trashNode } from "../src";
+import { ROOT, WIKI_LINK, createNode, extractLinks, readTree, searchNodes, setLinks, trashNode } from "../src";
 
 function bodyWithLinks(...targets: string[]) {
   const doc = new Y.Doc();
@@ -39,9 +39,9 @@ describe("extractLinks", () => {
 describe("backlinks", () => {
   it("lists the notes that link to a target", () => {
     const doc = new Y.Doc();
-    const target = createNode(doc, "note", INBOX, "Target");
-    const b = createNode(doc, "note", INBOX, "Beta");
-    const a = createNode(doc, "note", INBOX, "Alpha");
+    const target = createNode(doc, "note", ROOT, "Target");
+    const b = createNode(doc, "note", ROOT, "Beta");
+    const a = createNode(doc, "note", ROOT, "Alpha");
     setLinks(doc, a, [target]);
     setLinks(doc, b, [target, target]);
     expect(readTree(doc).backlinks.get(target)?.map((n) => n.title)).toEqual(["Alpha", "Beta"]);
@@ -49,8 +49,8 @@ describe("backlinks", () => {
 
   it("drops links that were removed from the body", () => {
     const doc = new Y.Doc();
-    const target = createNode(doc, "note", INBOX, "Target");
-    const a = createNode(doc, "note", INBOX, "A");
+    const target = createNode(doc, "note", ROOT, "Target");
+    const a = createNode(doc, "note", ROOT, "A");
     setLinks(doc, a, [target]);
     setLinks(doc, a, []);
     expect(readTree(doc).backlinks.get(target)).toBeUndefined();
@@ -58,8 +58,8 @@ describe("backlinks", () => {
 
   it("ignores links from trashed notes and links to itself", () => {
     const doc = new Y.Doc();
-    const target = createNode(doc, "note", INBOX, "Target");
-    const a = createNode(doc, "note", INBOX, "A");
+    const target = createNode(doc, "note", ROOT, "Target");
+    const a = createNode(doc, "note", ROOT, "A");
     setLinks(doc, a, [target]);
     trashNode(doc, a);
     setLinks(doc, target, [target]);
@@ -68,7 +68,7 @@ describe("backlinks", () => {
 
   it("does not write when the links did not change", () => {
     const doc = new Y.Doc();
-    const a = createNode(doc, "note", INBOX, "A");
+    const a = createNode(doc, "note", ROOT, "A");
     setLinks(doc, a, ["x", "y"]);
     let writes = 0;
     doc.on("update", () => writes++);
@@ -79,18 +79,22 @@ describe("backlinks", () => {
 
 describe("searchNodes", () => {
   const doc = new Y.Doc();
-  const book = createNode(doc, "book", ROOT, "Garden Book");
+  const book = createNode(doc, "folder", ROOT, "Garden Book");
   const ids = {
-    garden: createNode(doc, "note", INBOX, "Garden"),
+    garden: createNode(doc, "note", ROOT, "Garden"),
     gardening: createNode(doc, "note", book, "Gardening tips"),
-    my: createNode(doc, "note", INBOX, "My garden plan"),
-    regard: createNode(doc, "note", INBOX, "Kindergarden"),
-    other: createNode(doc, "note", INBOX, "Cooking"),
+    my: createNode(doc, "note", ROOT, "My garden plan"),
+    regard: createNode(doc, "note", ROOT, "Kindergarden"),
+    other: createNode(doc, "note", ROOT, "Cooking"),
   };
   const titles = (q: string, exclude?: string) => searchNodes(readTree(doc), q, { exclude }).map((n) => n.title);
 
   it("ranks exact, then prefix, then word start, then anywhere", () => {
-    expect(titles("garden")).toEqual(["Garden", "Garden Book", "Gardening tips", "My garden plan", "Kindergarden"]);
+    expect(titles("garden")).toEqual(["Garden", "Gardening tips", "My garden plan", "Kindergarden"]);
+  });
+
+  it("leaves out folders, which do not open as pages", () => {
+    expect(titles("garden")).not.toContain("Garden Book");
   });
 
   it("is case-insensitive and can leave out the current note", () => {

@@ -51,4 +51,14 @@ class IdbStore implements DocStore {
     await tx.store.put({ id: upToSeq, docId, update: merged });
     await tx.done;
   }
+
+  async remove(docId: string) {
+    const tx = this.db.transaction("updates", "readwrite");
+    let cursor = await tx.store.index("byDoc").openCursor(docRange(docId));
+    while (cursor) {
+      await cursor.delete();
+      cursor = await cursor.continue();
+    }
+    await tx.done;
+  }
 }

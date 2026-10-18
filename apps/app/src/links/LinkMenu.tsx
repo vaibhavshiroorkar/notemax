@@ -46,7 +46,7 @@ export const LinkMenu = forwardRef<LinkMenuHandle, SuggestionProps<LinkMenuItem,
             </>
           ) : (
             <span className="link-menu-title">
-              Create <strong>{item.title}</strong> in Inbox
+              Create note <strong>{item.title}</strong>
             </span>
           )}
         </button>

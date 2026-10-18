@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { INBOX, ROOT, canMove, createNode, moveNode, readTree, trashNode } from "../src";
+import { ROOT, canMove, createNode, moveNode, readTree, trashNode } from "../src";
 
 const titles = (items: { title: string }[]) => items.map((i) => i.title);
 
@@ -11,81 +11,87 @@ function sync(a: Y.Doc, b: Y.Doc) {
 
 function setup() {
   const doc = new Y.Doc();
-  const book = createNode(doc, "book", ROOT, "Book");
-  const other = createNode(doc, "book", ROOT, "Other book");
-  const a = createNode(doc, "note", book, "A");
-  const b = createNode(doc, "note", book, "B");
-  const c = createNode(doc, "note", book, "C");
-  const a1 = createNode(doc, "note", a, "A1");
-  const idea = createNode(doc, "note", INBOX, "Idea");
-  return { doc, book, other, a, b, c, a1, idea };
+  const folder = createNode(doc, "folder", ROOT, "Folder");
+  const other = createNode(doc, "folder", ROOT, "Other");
+  const a = createNode(doc, "note", folder, "A");
+  const b = createNode(doc, "note", folder, "B");
+  const c = createNode(doc, "note", folder, "C");
+  const sub = createNode(doc, "folder", folder, "Sub");
+  const idea = createNode(doc, "note", ROOT, "Idea");
+  return { doc, folder, other, a, b, c, sub, idea };
 }
 
 describe("moveNode", () => {
-  it("reorders within the same parent", () => {
-    const { doc, book, c } = setup();
-    moveNode(doc, c, book, 0);
-    expect(titles(readTree(doc).books[0].children)).toEqual(["C", "A", "B"]);
+  it("reorders within the same folder", () => {
+    const { doc, folder, c } = setup();
+    moveNode(doc, c, folder, 0);
+    expect(titles(readTree(doc).top[0].children)).toEqual(["C", "A", "B", "Sub"]);
   });
 
   it("moves to the end and to the middle", () => {
-    const { doc, book, a } = setup();
-    moveNode(doc, a, book, 99);
-    expect(titles(readTree(doc).books[0].children)).toEqual(["B", "C", "A"]);
-    moveNode(doc, a, book, 1);
-    expect(titles(readTree(doc).books[0].children)).toEqual(["B", "A", "C"]);
+    const { doc, folder, a } = setup();
+    moveNode(doc, a, folder, 99);
+    expect(titles(readTree(doc).top[0].children)).toEqual(["B", "C", "Sub", "A"]);
+    moveNode(doc, a, folder, 1);
+    expect(titles(readTree(doc).top[0].children)).toEqual(["B", "A", "C", "Sub"]);
   });
 
-  it("files an inbox note into a book, keeping its children", () => {
+  it("moves notes into a folder and back out to the top level", () => {
     const { doc, other, a, idea } = setup();
-    moveNode(doc, a, INBOX, 0);
-    let tree = readTree(doc);
-    expect(titles(tree.inbox)).toEqual(["A", "Idea"]);
-    expect(titles(tree.inbox[0].children)).toEqual(["A1"]);
-
     moveNode(doc, idea, other, 0);
+    let tree = readTree(doc);
+    expect(titles(tree.top)).toEqual(["Folder", "Other"]);
+    expect(titles(tree.top[1].children)).toEqual(["Idea"]);
+
+    moveNode(doc, a, ROOT, 0);
     tree = readTree(doc);
-    expect(titles(tree.inbox)).toEqual(["A"]);
-    expect(titles(tree.books[1].children)).toEqual(["Idea"]);
+    expect(titles(tree.top)).toEqual(["A", "Folder", "Other"]);
   });
 
-  it("nests a note inside another note", () => {
-    const { doc, a, c } = setup();
-    moveNode(doc, c, a, 0);
-    expect(titles(readTree(doc).books[0].children[0].children)).toEqual(["C", "A1"]);
+  it("mixes notes and folders at the top level", () => {
+    const { doc, other, idea } = setup();
+    moveNode(doc, idea, ROOT, 0);
+    moveNode(doc, other, ROOT, 1);
+    expect(titles(readTree(doc).top)).toEqual(["Idea", "Other", "Folder"]);
   });
 
-  it("reorders books", () => {
-    const { doc, other } = setup();
-    moveNode(doc, other, ROOT, 0);
-    expect(titles(readTree(doc).books)).toEqual(["Other book", "Book"]);
+  it("puts a folder inside another folder, with its contents", () => {
+    const { doc, folder, other, sub, b } = setup();
+    moveNode(doc, b, sub, 0);
+    moveNode(doc, sub, other, 0);
+    const tree = readTree(doc);
+    expect(titles(tree.top[0].children)).toEqual(["A", "C"]);
+    expect(titles(tree.top[1].children)).toEqual(["Sub"]);
+    expect(titles(tree.top[1].children[0].children)).toEqual(["B"]);
+    expect(tree.items.get(sub)!.parentId).toBe(other);
+    expect(folder).toBeTruthy();
   });
 
   it("refuses moves that break the structure", () => {
-    const { doc, book, other, a, a1, idea } = setup();
+    const { doc, folder, a, b, sub } = setup();
     const tree = readTree(doc);
-    expect(canMove(tree, a, a)).toMatch(/inside itself/);
-    expect(canMove(tree, a, a1)).toMatch(/inside itself/);
-    expect(canMove(tree, book, other)).toMatch(/top level/);
-    expect(canMove(tree, idea, ROOT)).toMatch(/inbox, a book/);
-    expect(() => moveNode(doc, a, a1, 0)).toThrow();
+    expect(canMove(tree, folder, folder)).toMatch(/inside itself/);
+    expect(canMove(tree, folder, sub)).toMatch(/inside itself/);
+    expect(canMove(tree, b, a)).toMatch(/only folders/);
+    expect(canMove(tree, folder, a)).toMatch(/only folders/);
+    expect(() => moveNode(doc, folder, sub, 0)).toThrow();
     // Nothing changed after the refused move.
-    expect(titles(readTree(doc).books[0].children[0].children)).toEqual(["A1"]);
+    expect(readTree(doc).items.get(sub)!.parentId).toBe(folder);
   });
 
-  it("refuses moving into a trashed note", () => {
-    const { doc, a, b } = setup();
-    trashNode(doc, b);
-    expect(() => moveNode(doc, a, b, 0)).toThrow(/not in the tree/);
+  it("refuses moving into a trashed folder", () => {
+    const { doc, a, other } = setup();
+    trashNode(doc, other);
+    expect(() => moveNode(doc, a, other, 0)).toThrow(/not in the tree/);
   });
 });
 
 describe("moves on two devices", () => {
-  it("never loses notes when two devices make a loop", () => {
+  it("never loses folders when two devices make a loop", () => {
     const laptop = new Y.Doc();
-    const book = createNode(laptop, "book", ROOT, "Book");
-    const a = createNode(laptop, "note", book, "A");
-    const b = createNode(laptop, "note", book, "B");
+    const a = createNode(laptop, "folder", ROOT, "A");
+    const b = createNode(laptop, "folder", ROOT, "B");
+    createNode(laptop, "note", a, "In A");
     const phone = new Y.Doc();
     sync(laptop, phone);
 
@@ -96,26 +102,25 @@ describe("moves on two devices", () => {
     for (const doc of [laptop, phone]) {
       const tree = readTree(doc);
       expect(tree.visible.has(a) && tree.visible.has(b)).toBe(true);
-      expect(tree.books[0].children).toEqual([]);
+      expect(tree.visible.size).toBe(3);
     }
-    // Both devices show the same rescued shape in the inbox.
-    const shape = (doc: Y.Doc) => JSON.stringify(readTree(doc).inbox.map((n) => [n.title, titles(n.children)]));
+    // Both devices show the same rescued shape at the top level.
+    const shape = (doc: Y.Doc) => JSON.stringify(readTree(doc).top.map((n) => [n.title, titles(n.children)]));
     expect(shape(laptop)).toBe(shape(phone));
 
     // A normal move afterwards repairs the stored data.
-    const rescued = readTree(laptop).inbox[0];
-    moveNode(laptop, rescued.id, book, 0);
+    const rescued = readTree(laptop).top[0];
+    moveNode(laptop, rescued.id, ROOT, 0);
     const tree = readTree(laptop);
-    expect(tree.inbox).toEqual([]);
-    expect(tree.books[0].children).toHaveLength(1);
-    expect(tree.books[0].children[0].children).toHaveLength(1);
+    expect(tree.top).toHaveLength(1);
+    expect(tree.top[0].children.some((n) => n.kind === "folder")).toBe(true);
   });
 
-  it("shows a note once when two devices move it to different places", () => {
+  it("shows a note once when two devices move it to different folders", () => {
     const laptop = new Y.Doc();
-    const one = createNode(laptop, "book", ROOT, "One");
-    const two = createNode(laptop, "book", ROOT, "Two");
-    const note = createNode(laptop, "note", INBOX, "Note");
+    const one = createNode(laptop, "folder", ROOT, "One");
+    const two = createNode(laptop, "folder", ROOT, "Two");
+    const note = createNode(laptop, "note", ROOT, "Note");
     const phone = new Y.Doc();
     sync(laptop, phone);
 
@@ -125,7 +130,7 @@ describe("moves on two devices", () => {
 
     for (const doc of [laptop, phone]) {
       const tree = readTree(doc);
-      const placements = tree.books.flatMap((book) => book.children).filter((n) => n.id === note);
+      const placements = tree.top.flatMap((folder) => folder.children).filter((n) => n.id === note);
       expect(placements).toHaveLength(1);
     }
     expect(readTree(laptop).byId.get(note)!.parentId).toBe(readTree(phone).byId.get(note)!.parentId);

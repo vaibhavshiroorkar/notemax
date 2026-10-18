@@ -1,7 +1,7 @@
 import * as Y from "yjs";
 import { openLocalDoc } from "./local-doc";
 import type { DocStore } from "./store";
-import { INBOX, WORKSPACE_DOC_ID, createNode } from "./workspace";
+import { ROOT, WORKSPACE_DOC_ID, createNode } from "./workspace";
 
 /**
  * Splits quick-capture text into a title (the first line) and body paragraphs.
@@ -16,8 +16,8 @@ export function splitCapture(text: string): { title: string; body: string[] } | 
 }
 
 /**
- * Saves a quick note into the Inbox and returns its id, or null for empty text.
- * The note is not filed anywhere else: sorting happens later, in the main window.
+ * Saves a quick note at the top level and returns its id, or null for empty
+ * text. It is not filed into a folder: sorting happens later, in the main window.
  */
 export async function captureNote(store: DocStore, text: string, options: { broadcast?: string } = {}): Promise<string | null> {
   const parts = splitCapture(text);
@@ -44,7 +44,7 @@ export async function captureNote(store: DocStore, text: string, options: { broa
 
   const workspace = await openLocalDoc(store, WORKSPACE_DOC_ID, docOptions);
   try {
-    createNode(workspace.doc, "note", INBOX, parts.title, id);
+    createNode(workspace.doc, "note", ROOT, parts.title, id);
   } finally {
     await workspace.close();
   }

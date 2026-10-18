@@ -1,5 +1,5 @@
 import type * as Y from "yjs";
-import { INBOX, createNode, searchNodes, type Tree, type TreeNode } from "@notemax/core";
+import { ROOT, createNode, searchNodes, type Tree, type TreeNode } from "@notemax/core";
 
 export type LinkMenuItem =
   | { kind: "existing"; node: TreeNode; where: string }
@@ -42,19 +42,11 @@ export class LinkHub {
     if (this.isOpenable(id)) this.openNote(id);
   }
 
-  /** Where a node sits: its book's title, or "Inbox". Tells apart two notes with one title. */
+  /** The folder a note is in, or "" at the top level. Tells apart two notes with one title. */
   where(id: string): string {
-    const tree = this.tree;
-    if (!tree) return "";
-    const seen = new Set<string>();
-    let top = tree.items.get(id);
-    while (top && top.kind !== "book" && top.parentId !== INBOX && !seen.has(top.id)) {
-      seen.add(top.id);
-      top = tree.items.get(top.parentId);
-    }
-    if (!top) return "";
-    if (top.kind === "book") return top.id === id ? "Book" : top.title || "Untitled book";
-    return "Inbox";
+    const parentId = this.tree?.items.get(id)?.parentId;
+    if (!parentId || parentId === ROOT) return "";
+    return this.tree?.items.get(parentId)?.title || "Untitled folder";
   }
 
   menuItems(query: string, currentId: string): LinkMenuItem[] {
@@ -67,9 +59,9 @@ export class LinkHub {
     return items;
   }
 
-  /** New notes from a link go to the Inbox, like every other quick note. */
+  /** New notes from a link go to the top level, like every other quick note. */
   create(title: string): string {
     if (!this.doc) throw new Error("workspace is not open");
-    return createNode(this.doc, "note", INBOX, title);
+    return createNode(this.doc, "note", ROOT, title);
   }
 }

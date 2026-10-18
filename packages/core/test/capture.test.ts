@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it, vi } from "vitest";
 import * as Y from "yjs";
-import { INBOX, WORKSPACE_DOC_ID, captureNote, createSqlStore, openLocalDoc, readTree, splitCapture } from "../src";
+import { ROOT, WORKSPACE_DOC_ID, captureNote, createSqlStore, openLocalDoc, readTree, splitCapture } from "../src";
 import { memorySqlDatabase } from "./node-sqlite";
 
 let channelCount = 0;
@@ -57,7 +57,7 @@ describe("captureNote", () => {
 
     const workspace = await openLocalDoc(store, WORKSPACE_DOC_ID);
     const node = readTree(workspace.doc).byId.get(id!);
-    expect(node).toMatchObject({ kind: "note", parentId: INBOX, title: "Idea" });
+    expect(node).toMatchObject({ kind: "note", parentId: ROOT, title: "Idea" });
 
     const note = await openLocalDoc(store, id!);
     expect(paragraphs(note.doc)).toEqual(["first line", "second line"]);

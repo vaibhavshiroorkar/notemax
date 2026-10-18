@@ -11,7 +11,7 @@ async function hideWindow() {
   await getCurrentWindow().hide();
 }
 
-/** The quick capture box. Enter saves to the Inbox and hides the window. */
+/** The quick capture box. Enter saves it as a new note and hides the window. */
 export function Capture() {
   const [text, setText] = useState(() => getPref(DRAFT_KEY) ?? "");
   const [error, setError] = useState<string>();
@@ -82,7 +82,7 @@ export function Capture() {
         onKeyDown={onKeyDown}
       />
       <footer className={error ? "capture-footer capture-error" : "capture-footer"} role="status">
-        {error ? `Not saved: ${error}` : saving ? "Saving..." : "Enter saves to Inbox. Shift+Enter adds a line. Esc closes."}
+        {error ? `Not saved: ${error}` : saving ? "Saving..." : "Enter saves. Shift+Enter adds a line. Esc closes."}
       </footer>
     </main>
   );

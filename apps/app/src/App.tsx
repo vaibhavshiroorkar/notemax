@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { WELCOME_ID, type SaveStatus, type Tree } from "@notemax/core";
+import { WELCOME_ID, type SaveStatus, type TreeItem } from "@notemax/core";
 import { Icon } from "./Icon";
 import { LinkHub } from "./links/link-hub";
 import { NotePane } from "./NotePane";
+import { Settings } from "./Settings";
 import { Sidebar } from "./Sidebar";
 import { StatusBar } from "./StatusBar";
 import { getPref, setPref } from "./prefs";
@@ -16,7 +17,15 @@ const worst = (a: SaveStatus, b: SaveStatus) => (severity[b.state] > severity[a.
 const isNarrow = () => window.matchMedia("(max-width: 700px)").matches;
 
 // Falls back when the remembered note was trashed or no longer exists.
-const firstVisible = (tree: Tree) => tree.inbox[0]?.id ?? tree.books[0]?.id ?? null;
+// Folders do not open as pages, so this looks for the first note, in sidebar order.
+function firstNote(items: TreeItem[]): string | null {
+  for (const item of items) {
+    if (item.kind === "note") return item.id;
+    const inside = firstNote(item.children);
+    if (inside) return inside;
+  }
+  return null;
+}
 
 export function App() {
   const workspace = useWorkspace();
@@ -25,6 +34,7 @@ export function App() {
   const [noteStatus, setNoteStatus] = useState<SaveStatus>({ state: "saved" });
   const [persistent, setPersistent] = useState<boolean>();
   const [readyMs, setReadyMs] = useState<number>();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     requestPersistentStorage().then(setPersistent, () => setPersistent(false));
@@ -35,7 +45,12 @@ export function App() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === "\\") setSidebarOpen((open) => !open);
+      if (!(event.ctrlKey || event.metaKey)) return;
+      if (event.key === "\\") setSidebarOpen((open) => !open);
+      if (event.key === ",") {
+        event.preventDefault();
+        setSettingsOpen(true);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -61,12 +76,12 @@ export function App() {
   if (!workspace.doc || !workspace.tree) return null;
 
   const { tree, doc } = workspace;
-  const activeId = tree.visible.has(selectedId) ? selectedId : firstVisible(tree);
+  const activeId = tree.items.get(selectedId)?.kind === "note" ? selectedId : firstNote(tree.top);
   const activeNode = activeId ? tree.byId.get(activeId) : undefined;
 
   return (
     <div className="app" data-sidebar={sidebarOpen ? "open" : "closed"}>
-      {sidebarOpen && <Sidebar tree={tree} doc={doc} activeId={activeId} onSelect={select} />}
+      {sidebarOpen && <Sidebar tree={tree} doc={doc} activeId={activeId} onSelect={select} onOpenSettings={() => setSettingsOpen(true)} />}
       <main className="main">
         <button
           className="icon-button sidebar-toggle"
@@ -82,6 +97,7 @@ export function App() {
           <p className="empty">No notes. Use + in the sidebar to create one.</p>
         )}
       </main>
+      {settingsOpen && <Settings persistent={persistent} onClose={() => setSettingsOpen(false)} />}
       <StatusBar status={worst(workspace.status, noteStatus)} persistent={persistent} readyMs={readyMs} />
     </div>
   );

@@ -1,26 +1,31 @@
 import * as Y from "yjs";
 import { generateKeyBetween } from "fractional-indexing";
 
-/** Parent id of every book. */
+/** Parent id of everything at the top level of the sidebar. */
 export const ROOT = "root";
-/** Parent id of notes not filed in a book yet. */
-export const INBOX = "inbox";
 /** The note created on first run. It reuses the id of the single note from before the sidebar existed. */
 export const WELCOME_ID = "welcome";
 /** Doc id of the workspace tree itself. Note docs use random UUIDs, so this cannot clash. */
 export const WORKSPACE_DOC_ID = "workspace";
 
-export type NodeKind = "book" | "note";
+// Older workspaces kept loose notes under an "inbox" parent and called folders
+// "book". They are read as top-level notes and folders. Stored values change
+// only when a node is next moved, so old data is never rewritten in bulk.
+const OLD_INBOX = "inbox";
+const OLD_FOLDER = "book";
+
+export type NodeKind = "folder" | "note";
 
 export interface TreeNode {
   id: string;
   kind: NodeKind;
+  /** ROOT or the id of a folder. Notes from before folders may still point at a note. */
   parentId: string;
   title: string;
   /** Fractional index: siblings sort by plain string comparison. */
   position: string;
   createdAt: number;
-  /** Set when the node is in the trash. Nodes are never erased. */
+  /** Set when the node is in the trash. It stays there until deleted forever. */
   deletedAt: number | null;
   /**
    * Ids this node's body links to, sorted. Copied from the body by setLinks, so
@@ -30,18 +35,19 @@ export interface TreeNode {
 }
 
 export interface TreeItem extends TreeNode {
+  /** Placed items only. For an item, parentId is where it is shown: ROOT or a folder. */
   children: TreeItem[];
 }
 
 export interface Tree {
-  inbox: TreeItem[];
-  books: TreeItem[];
+  /** Notes and folders at the top level, in one list. */
+  top: TreeItem[];
   /** Trashed nodes, most recently trashed first. Their children are hidden with them. */
   trash: TreeNode[];
   byId: Map<string, TreeNode>;
-  /** Placed items by id, as shown in the inbox or books sections. */
+  /** Placed items by id. */
   items: Map<string, TreeItem>;
-  /** Ids shown in the inbox or books sections. */
+  /** Ids shown in the sidebar. */
   visible: Set<string>;
   /** For each target id, the visible nodes that link to it, sorted by title. */
   backlinks: Map<string, TreeNode[]>;
@@ -51,11 +57,17 @@ export interface Tree {
 // device and a move on another both survive, instead of one overwriting the other.
 const nodesOf = (doc: Y.Doc) => doc.getMap<Y.Map<unknown>>("nodes");
 
+const kindOf = (fields: Y.Map<unknown>): NodeKind => (fields.get("kind") === OLD_FOLDER ? "folder" : (fields.get("kind") as NodeKind));
+const parentOf = (fields: Y.Map<unknown>): string => {
+  const parentId = fields.get("parentId") as string;
+  return parentId === OLD_INBOX ? ROOT : parentId;
+};
+
 function toNode(id: string, fields: Y.Map<unknown>): TreeNode {
   return {
     id,
-    kind: fields.get("kind") as NodeKind,
-    parentId: fields.get("parentId") as string,
+    kind: kindOf(fields),
+    parentId: parentOf(fields),
     title: (fields.get("title") as string | undefined) ?? "",
     position: fields.get("position") as string,
     createdAt: fields.get("createdAt") as number,
@@ -75,16 +87,42 @@ export function readTree(doc: Y.Doc): Tree {
   const byId = new Map<string, TreeNode>();
   nodesOf(doc).forEach((fields, id) => byId.set(id, toNode(id, fields)));
 
+  // Only folders hold things. A note under a note (allowed before folders
+  // existed) is shown in the nearest folder above it, or at the top.
+  // Undefined means the chain is broken or loops, handled further down.
+  const shownIn = (node: TreeNode): string | undefined => {
+    const seen = new Set<string>();
+    for (let parentId = node.parentId; parentId !== ROOT; ) {
+      const parent = byId.get(parentId);
+      if (!parent || seen.has(parentId)) return undefined;
+      if (parent.kind === "folder") return parentId;
+      seen.add(parentId);
+      parentId = parent.parentId;
+    }
+    return ROOT;
+  };
+  // Uses the stored chain, so a note stays hidden while any note or folder above it is trashed.
+  const hiddenByTrash = (node: TreeNode) => {
+    const seen = new Set<string>();
+    for (let cur: TreeNode | undefined = node; cur && !seen.has(cur.id); cur = byId.get(cur.parentId)) {
+      if (cur.deletedAt !== null) return true;
+      seen.add(cur.id);
+    }
+    return false;
+  };
+
   const childrenOf = new Map<string, TreeNode[]>();
   for (const node of byId.values()) {
-    const siblings = childrenOf.get(node.parentId) ?? [];
+    const container = shownIn(node);
+    if (container === undefined) continue;
+    const siblings = childrenOf.get(container) ?? [];
     siblings.push(node);
-    childrenOf.set(node.parentId, siblings);
+    childrenOf.set(container, siblings);
   }
 
   const visible = new Set<string>();
   const items = new Map<string, TreeItem>();
-  const place = (node: TreeNode, parentId = node.parentId): TreeItem => {
+  const place = (node: TreeNode, parentId: string): TreeItem => {
     visible.add(node.id);
     const item: TreeItem = { ...node, parentId, children: [] };
     items.set(node.id, item);
@@ -94,33 +132,21 @@ export function readTree(doc: Y.Doc): Tree {
   const build = (parentId: string): TreeItem[] =>
     (childrenOf.get(parentId) ?? [])
       // `visible` doubles as a cycle guard: a node is placed at most once.
-      .filter((node) => node.deletedAt === null && !visible.has(node.id))
+      .filter((node) => !visible.has(node.id) && !hiddenByTrash(node))
       .sort(byPosition)
-      .map((node) => place(node));
+      .map((node) => place(node, parentId));
 
-  const books = build(ROOT);
-  const inbox = build(INBOX);
+  const top = build(ROOT);
 
-  // Two devices can make a loop by moving A into B and B into A at the same time.
-  // Neither is then reachable from the top, so the sidebar would silently lose them.
-  // Show such notes in the inbox instead. This is display only, so every device
-  // computes the same result; the next real move fixes the stored data.
-  const hiddenByTrash = (node: TreeNode) => {
-    const seen = new Set<string>();
-    for (let cur: TreeNode | undefined = node; cur && !seen.has(cur.id); cur = byId.get(cur.parentId)) {
-      if (cur.deletedAt !== null) return true;
-      seen.add(cur.id);
-    }
-    return false;
-  };
-  const stranded = [...byId.values()]
-    .filter((node) => node.deletedAt === null && !visible.has(node.id) && !hiddenByTrash(node))
-    .sort(byPosition);
-  for (const node of stranded) if (!visible.has(node.id)) inbox.push(place(node, INBOX));
+  // Two devices can make a loop by moving folder A into B and B into A at the
+  // same time. Neither is then reachable from the top, so the sidebar would
+  // silently lose them. Show them at the top instead. This is display only, so
+  // every device computes the same result; the next real move fixes the data.
+  const stranded = [...byId.values()].filter((node) => !visible.has(node.id) && !hiddenByTrash(node)).sort(byPosition);
+  for (const node of stranded) if (!visible.has(node.id)) top.push(place(node, ROOT));
 
-  const trash = [...byId.values()]
-    .filter((node) => node.deletedAt !== null)
-    .sort((a, b) => b.deletedAt! - a.deletedAt!);
+  const trash = [...byId.values()].filter((node) => node.deletedAt !== null).sort((a, b) => b.deletedAt! - a.deletedAt!);
+
   // Notes in the trash do not count: their links come back if they are restored.
   const backlinks = new Map<string, TreeNode[]>();
   for (const id of visible) {
@@ -133,13 +159,12 @@ export function readTree(doc: Y.Doc): Tree {
   }
   for (const sources of backlinks.values()) sources.sort((a, b) => a.title.localeCompare(b.title));
 
-  return { inbox, books, trash, byId, items, visible, backlinks };
+  return { top, trash, byId, items, visible, backlinks };
 }
 
-/** The placed children of a parent: ROOT, INBOX or a visible node. */
+/** The placed children of ROOT or of a visible folder. */
 export function childrenOf(tree: Tree, parentId: string): TreeItem[] {
-  if (parentId === ROOT) return tree.books;
-  if (parentId === INBOX) return tree.inbox;
+  if (parentId === ROOT) return tree.top;
   return tree.items.get(parentId)?.children ?? [];
 }
 
@@ -155,13 +180,12 @@ export function isInside(tree: Tree, id: string, ancestorId: string): boolean {
 
 /** Whether `id` may be moved under `parentId`. Returns the reason when it may not. */
 export function canMove(tree: Tree, id: string, parentId: string): string | null {
-  const node = tree.items.get(id);
-  if (!node) return "this note is not in the tree";
-  if (node.kind === "book") return parentId === ROOT ? null : "books stay at the top level";
-  if (parentId === ROOT) return "notes go in the inbox, a book, or another note";
-  if (parentId === INBOX) return null;
-  if (!tree.items.has(parentId)) return "the target is not in the tree";
-  if (isInside(tree, parentId, id)) return "a note cannot go inside itself";
+  if (!tree.items.has(id)) return "this note is not in the tree";
+  if (parentId === ROOT) return null;
+  const target = tree.items.get(parentId);
+  if (!target) return "the target is not in the tree";
+  if (target.kind !== "folder") return "only folders can hold notes";
+  if (isInside(tree, parentId, id)) return "a folder cannot go inside itself";
   return null;
 }
 
@@ -191,14 +215,18 @@ export function moveNode(doc: Y.Doc, id: string, parentId: string, index: number
   });
 }
 
+/** Adds a note or folder at the end of ROOT or of a folder. */
 export function createNode(doc: Y.Doc, kind: NodeKind, parentId: string, title = "", id: string = crypto.randomUUID()): string {
-  if (kind === "book" && parentId !== ROOT) throw new Error("books can only be created at the top level");
-  if (kind === "note" && parentId === ROOT) throw new Error("notes go in the inbox, a book, or another note");
+  if (kind !== "note" && kind !== "folder") throw new Error(`unknown kind ${kind}`);
+  if (parentId !== ROOT) {
+    const parent = nodesOf(doc).get(parentId);
+    if (!parent || kindOf(parent) !== "folder") throw new Error("notes and folders go at the top level or in a folder");
+  }
 
   let last: string | null = null;
   nodesOf(doc).forEach((fields) => {
     const position = fields.get("position") as string;
-    if (fields.get("parentId") === parentId && (last === null || position > last)) last = position;
+    if (parentOf(fields) === parentId && (last === null || position > last)) last = position;
   });
 
   doc.transact(() => {
@@ -216,7 +244,7 @@ export function createNode(doc: Y.Doc, kind: NodeKind, parentId: string, title =
 
 /** Creates the welcome note on a brand-new workspace. Does nothing otherwise. */
 export function ensureWelcome(doc: Y.Doc) {
-  if (nodesOf(doc).size === 0) createNode(doc, "note", INBOX, "Welcome", WELCOME_ID);
+  if (nodesOf(doc).size === 0) createNode(doc, "note", ROOT, "Welcome", WELCOME_ID);
 }
 
 function fieldsOf(doc: Y.Doc, id: string) {
@@ -245,17 +273,48 @@ export function trashNode(doc: Y.Doc, id: string) {
   fieldsOf(doc, id).set("deletedAt", Date.now());
 }
 
-/** Takes a node out of the trash. A note whose parent is still trashed goes to the inbox, so it is not hidden. */
+/**
+ * Ids of every node inside `id`, at any depth, trashed or not. Cycles left by
+ * two devices moving folders at once are cut off rather than looped over.
+ */
+export function descendantsOf(doc: Y.Doc, id: string): string[] {
+  const children = new Map<string, string[]>();
+  nodesOf(doc).forEach((fields, childId) => {
+    const parentId = fields.get("parentId") as string;
+    children.set(parentId, [...(children.get(parentId) ?? []), childId]);
+  });
+  const found = new Set<string>();
+  const walk = (parentId: string) => {
+    for (const child of children.get(parentId) ?? []) {
+      if (child === id || found.has(child)) continue;
+      found.add(child);
+      walk(child);
+    }
+  };
+  walk(id);
+  return [...found];
+}
+
+/**
+ * Erases a trashed node and everything inside it from the tree. Returns the
+ * erased ids, whose bodies the caller then removes from storage. Only trashed
+ * nodes qualify, so nothing can be erased without passing through the Trash.
+ */
+export function deleteForever(doc: Y.Doc, id: string): string[] {
+  if (fieldsOf(doc, id).get("deletedAt") == null) throw new Error("only notes in the trash can be deleted forever");
+  const ids = [id, ...descendantsOf(doc, id)];
+  doc.transact(() => ids.forEach((nodeId) => nodesOf(doc).delete(nodeId)));
+  return ids;
+}
+
+/** Takes a node out of the trash. One whose folder is still trashed goes to the top level, so it is not hidden. */
 export function restoreNode(doc: Y.Doc, id: string) {
   const fields = fieldsOf(doc, id);
   doc.transact(() => {
     fields.set("deletedAt", null);
-    const parentId = fields.get("parentId") as string;
-    if (parentId === ROOT || parentId === INBOX) return;
     const tree = readTree(doc);
-    if (!tree.visible.has(parentId)) {
-      fields.set("parentId", INBOX);
-      fields.set("position", generateKeyBetween(tree.inbox.at(-1)?.position ?? null, null));
-    }
+    if (tree.visible.has(id)) return;
+    fields.set("parentId", ROOT);
+    fields.set("position", generateKeyBetween(tree.top.at(-1)?.position ?? null, null));
   });
 }

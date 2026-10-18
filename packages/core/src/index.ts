@@ -6,7 +6,6 @@ export { captureNote, splitCapture } from "./capture";
 export { WIKI_LINK, extractLinks, searchNodes } from "./links";
 export {
   ROOT,
-  INBOX,
   WELCOME_ID,
   WORKSPACE_DOC_ID,
   readTree,
@@ -19,6 +18,8 @@ export {
   renameNode,
   setLinks,
   trashNode,
+  descendantsOf,
+  deleteForever,
   restoreNode,
   type NodeKind,
   type TreeNode,

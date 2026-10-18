@@ -1,6 +1,7 @@
-/* Colors shared by the main window and the capture window. */
+/* Colors shared by the main window and the capture window. The theme setting
+   puts data-theme on <html>; without it the system setting decides. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   font-family: system-ui, sans-serif;
   line-height: 1.6;
   --bg: #ffffff;
@@ -12,10 +13,14 @@
   --border: rgba(0, 0, 0, 0.08);
   --danger: #c62828;
   --accent: #2f6fdd;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
+/* The dark colors appear twice, because CSS cannot share one block between a
+   media query and an attribute selector. Keep the two in step. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg: #1b1b1b;
     --sidebar-bg: #222222;
     --text: #e6e6e6;
@@ -25,5 +30,20 @@
     --border: rgba(255, 255, 255, 0.08);
     --danger: #ef6b6b;
     --accent: #6ea0ff;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1b1b1b;
+  --sidebar-bg: #222222;
+  --text: #e6e6e6;
+  --muted: #9a9a9a;
+  --hover: rgba(255, 255, 255, 0.06);
+  --active: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.08);
+  --danger: #ef6b6b;
+  --accent: #6ea0ff;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }

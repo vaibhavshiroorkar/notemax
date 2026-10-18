@@ -5,6 +5,7 @@
  *
  * Updates are append-only. Nothing is ever overwritten in place, so a failed
  * or interrupted write can lose at most that one write, never older text.
+ * The only way to erase a doc is `remove`, used when a note is deleted forever.
  */
 export interface DocStore {
   /** All stored updates for a doc, oldest first, plus the seq of the newest one (0 if none). */
@@ -19,4 +20,7 @@ export interface DocStore {
    * which is what makes compaction safe to run while edits are still arriving.
    */
   compact(docId: string, merged: Uint8Array, upToSeq: number): Promise<void>;
+
+  /** Erase every update of a doc. */
+  remove(docId: string): Promise<void>;
 }

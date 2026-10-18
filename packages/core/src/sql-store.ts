@@ -32,6 +32,10 @@ export function createSqlStore(db: SqlDatabase): DocStore {
       await db.execute("INSERT INTO updates (doc_id, data) VALUES ($1, $2)", [docId, toBase64(merged)]);
       await db.execute("DELETE FROM updates WHERE doc_id = $1 AND id <= $2", [docId, upToSeq]);
     },
+
+    async remove(docId) {
+      await db.execute("DELETE FROM updates WHERE doc_id = $1", [docId]);
+    },
   };
 }
 

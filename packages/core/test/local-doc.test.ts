@@ -25,6 +25,18 @@ describe.each(stores)("%s store", (_name, freshStore) => {
       expect(b.status().state).toBe("saved");
     });
 
+    it("removes one doc and leaves the others", async () => {
+      const store = await freshStore();
+      for (const id of ["gone", "kept"]) {
+        const d = await openLocalDoc(store, id);
+        d.doc.getText("t").insert(0, id);
+        await d.close();
+      }
+      await store.remove("gone");
+      expect((await store.load("gone")).updates).toHaveLength(0);
+      expect(text((await openLocalDoc(store, "kept")).doc)).toBe("kept");
+    });
+
     it("keeps docs separate", async () => {
       const store = await freshStore();
       const a = await openLocalDoc(store, "a");
@@ -94,6 +106,7 @@ describe.each(stores)("%s store", (_name, freshStore) => {
       const flaky: DocStore = {
         load: (id) => real.load(id),
         compact: (id, m, s) => real.compact(id, m, s),
+        remove: (id) => real.remove(id),
         append: async (id, u) => {
           if (failNext) {
             failNext = false;

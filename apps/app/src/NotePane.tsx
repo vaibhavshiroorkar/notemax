@@ -8,7 +8,7 @@ import type { LinkHub } from "./links/link-hub";
 import { useLocalDoc } from "./useLocalDoc";
 
 const welcomeContent = `
-  <p>This note lives in your <strong>Inbox</strong>. Use the sidebar to add books, chapters and more notes.</p>
+  <p>This is your first note. Use <strong>+</strong> in the sidebar to add notes and folders, and drag them to sort.</p>
   <p>Everything is saved on this device. Try <strong>Ctrl+B</strong>, <code>#</code> plus space for a heading, or <code>-</code> plus space for a list.</p>
   <p>Type <code>[[</code> to link to another note. Notes that link here are listed at the bottom.</p>
 `;
@@ -83,7 +83,7 @@ export function NotePane({
       <input
         className="note-title"
         value={node.title}
-        placeholder={node.kind === "book" ? "Untitled book" : "Untitled"}
+        placeholder="Untitled"
         aria-label="Title"
         // A new note starts with an empty title, so put the cursor there.
         autoFocus={node.title === ""}
@@ -103,7 +103,7 @@ export function NotePane({
           noteId={node.id}
           hub={hub}
           initialContent={node.id === WELCOME_ID ? welcomeContent : undefined}
-          placeholder={node.kind === "book" ? "What is this book about?" : "Start writing..."}
+          placeholder="Start writing..."
           onReady={(editor) => {
             editorRef.current = editor;
             if (focusWhenReady.current) {
