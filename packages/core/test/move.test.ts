@@ -79,6 +79,27 @@ describe("moveNode", () => {
     expect(readTree(doc).items.get(sub)!.parentId).toBe(folder);
   });
 
+  it("moves notes into a book, and the book into a folder", () => {
+    const { doc, other, a, idea } = setup();
+    const book = createNode(doc, "book", ROOT, "Book");
+    moveNode(doc, a, book, 0);
+    moveNode(doc, idea, book, 0);
+    moveNode(doc, book, other, 0);
+    const tree = readTree(doc);
+    expect(titles(tree.top[1].children)).toEqual(["Book"]);
+    expect(titles(tree.top[1].children[0].children)).toEqual(["Idea", "A"]);
+  });
+
+  it("keeps folders and books out of books", () => {
+    const { doc, folder, sub } = setup();
+    const book = createNode(doc, "book", ROOT, "Book");
+    const other = createNode(doc, "book", ROOT, "Other book");
+    const tree = readTree(doc);
+    expect(canMove(tree, sub, book)).toMatch(/only notes/);
+    expect(canMove(tree, other, book)).toMatch(/only notes/);
+    expect(canMove(tree, book, folder)).toBeNull();
+  });
+
   it("refuses moving into a trashed folder", () => {
     const { doc, a, other } = setup();
     trashNode(doc, other);

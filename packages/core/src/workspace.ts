@@ -8,18 +8,26 @@ export const WELCOME_ID = "welcome";
 /** Doc id of the workspace tree itself. Note docs use random UUIDs, so this cannot clash. */
 export const WORKSPACE_DOC_ID = "workspace";
 
-// Older workspaces kept loose notes under an "inbox" parent and called folders
-// "book". They are read as top-level notes and folders. Stored values change
-// only when a node is next moved, so old data is never rewritten in bulk.
+// Older workspaces kept loose notes under an "inbox" parent. They are read as
+// top-level notes. The stored value changes only when a note is next moved, so
+// old data is never rewritten in bulk.
 const OLD_INBOX = "inbox";
-const OLD_FOLDER = "book";
 
-export type NodeKind = "folder" | "note";
+/**
+ * A folder sorts things and holds anything but itself. A book is something
+ * being written: it holds only notes, its chapters, in reading order.
+ */
+export type NodeKind = "folder" | "book" | "note";
+
+/** Whether a `parent` may hold a `child`. ROOT holds everything. */
+export function holds(parent: NodeKind, child: NodeKind): boolean {
+  return parent === "folder" || (parent === "book" && child === "note");
+}
 
 export interface TreeNode {
   id: string;
   kind: NodeKind;
-  /** ROOT or the id of a folder. Notes from before folders may still point at a note. */
+  /** ROOT, a folder or a book. Notes from before folders may still point at a note. */
   parentId: string;
   title: string;
   /** Fractional index: siblings sort by plain string comparison. */
@@ -32,15 +40,17 @@ export interface TreeNode {
    * backlinks never need every note body loaded.
    */
   links: string[];
+  /** Words in the body, or null until the note is next opened. Kept here for the same reason as links. */
+  words: number | null;
 }
 
 export interface TreeItem extends TreeNode {
-  /** Placed items only. For an item, parentId is where it is shown: ROOT or a folder. */
+  /** Placed items only. For an item, parentId is where it is shown: ROOT, a folder or a book. */
   children: TreeItem[];
 }
 
 export interface Tree {
-  /** Notes and folders at the top level, in one list. */
+  /** Notes, folders and books at the top level, in one list. */
   top: TreeItem[];
   /** Trashed nodes, most recently trashed first. Their children are hidden with them. */
   trash: TreeNode[];
@@ -57,7 +67,7 @@ export interface Tree {
 // device and a move on another both survive, instead of one overwriting the other.
 const nodesOf = (doc: Y.Doc) => doc.getMap<Y.Map<unknown>>("nodes");
 
-const kindOf = (fields: Y.Map<unknown>): NodeKind => (fields.get("kind") === OLD_FOLDER ? "folder" : (fields.get("kind") as NodeKind));
+const kindOf = (fields: Y.Map<unknown>) => fields.get("kind") as NodeKind;
 const parentOf = (fields: Y.Map<unknown>): string => {
   const parentId = fields.get("parentId") as string;
   return parentId === OLD_INBOX ? ROOT : parentId;
@@ -73,6 +83,7 @@ function toNode(id: string, fields: Y.Map<unknown>): TreeNode {
     createdAt: fields.get("createdAt") as number,
     deletedAt: (fields.get("deletedAt") as number | null | undefined) ?? null,
     links: (fields.get("links") as string[] | undefined) ?? [],
+    words: (fields.get("words") as number | undefined) ?? null,
   };
 }
 
@@ -87,15 +98,16 @@ export function readTree(doc: Y.Doc): Tree {
   const byId = new Map<string, TreeNode>();
   nodesOf(doc).forEach((fields, id) => byId.set(id, toNode(id, fields)));
 
-  // Only folders hold things. A note under a note (allowed before folders
-  // existed) is shown in the nearest folder above it, or at the top.
-  // Undefined means the chain is broken or loops, handled further down.
+  // A node whose parent may not hold it is shown in the nearest container
+  // above that may, or at the top. That covers a note under a note (allowed
+  // before folders existed) and a folder put in a book while books were read
+  // as folders. Undefined means the chain is broken or loops, handled further down.
   const shownIn = (node: TreeNode): string | undefined => {
     const seen = new Set<string>();
     for (let parentId = node.parentId; parentId !== ROOT; ) {
       const parent = byId.get(parentId);
       if (!parent || seen.has(parentId)) return undefined;
-      if (parent.kind === "folder") return parentId;
+      if (holds(parent.kind, node.kind)) return parentId;
       seen.add(parentId);
       parentId = parent.parentId;
     }
@@ -162,7 +174,7 @@ export function readTree(doc: Y.Doc): Tree {
   return { top, trash, byId, items, visible, backlinks };
 }
 
-/** The placed children of ROOT or of a visible folder. */
+/** The placed children of ROOT or of a visible folder or book. */
 export function childrenOf(tree: Tree, parentId: string): TreeItem[] {
   if (parentId === ROOT) return tree.top;
   return tree.items.get(parentId)?.children ?? [];
@@ -184,7 +196,8 @@ export function canMove(tree: Tree, id: string, parentId: string): string | null
   if (parentId === ROOT) return null;
   const target = tree.items.get(parentId);
   if (!target) return "the target is not in the tree";
-  if (target.kind !== "folder") return "only folders can hold notes";
+  if (target.kind === "note") return "only folders and books can hold notes";
+  if (!holds(target.kind, tree.items.get(id)!.kind)) return "a book holds only notes";
   if (isInside(tree, parentId, id)) return "a folder cannot go inside itself";
   return null;
 }
@@ -215,12 +228,13 @@ export function moveNode(doc: Y.Doc, id: string, parentId: string, index: number
   });
 }
 
-/** Adds a note or folder at the end of ROOT or of a folder. */
+/** Adds a node at the end of ROOT or of a folder or book that may hold it. */
 export function createNode(doc: Y.Doc, kind: NodeKind, parentId: string, title = "", id: string = crypto.randomUUID()): string {
-  if (kind !== "note" && kind !== "folder") throw new Error(`unknown kind ${kind}`);
+  if (kind !== "note" && kind !== "folder" && kind !== "book") throw new Error(`unknown kind ${kind}`);
   if (parentId !== ROOT) {
     const parent = nodesOf(doc).get(parentId);
-    if (!parent || kindOf(parent) !== "folder") throw new Error("notes and folders go at the top level or in a folder");
+    if (!parent) throw new Error(`no folder or book with id ${parentId}`);
+    if (!holds(kindOf(parent), kind)) throw new Error(`a ${kindOf(parent)} cannot hold a ${kind}`);
   }
 
   let last: string | null = null;
@@ -269,6 +283,12 @@ export function setLinks(doc: Y.Doc, id: string, targets: Iterable<string>) {
   fields.set("links", next);
 }
 
+/** Records the body's word count. Writes only when it changed, like setLinks. */
+export function setWords(doc: Y.Doc, id: string, words: number) {
+  const fields = fieldsOf(doc, id);
+  if (fields.get("words") !== words) fields.set("words", words);
+}
+
 export function trashNode(doc: Y.Doc, id: string) {
   fieldsOf(doc, id).set("deletedAt", Date.now());
 }
@@ -307,7 +327,7 @@ export function deleteForever(doc: Y.Doc, id: string): string[] {
   return ids;
 }
 
-/** Takes a node out of the trash. One whose folder is still trashed goes to the top level, so it is not hidden. */
+/** Takes a node out of the trash. One whose folder or book is still trashed goes to the top level, so it is not hidden. */
 export function restoreNode(doc: Y.Doc, id: string) {
   const fields = fieldsOf(doc, id);
   doc.transact(() => {

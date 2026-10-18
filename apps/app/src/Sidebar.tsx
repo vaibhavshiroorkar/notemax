@@ -7,6 +7,7 @@ import {
   createNode,
   deleteForever,
   descendantsOf,
+  holds,
   moveNode,
   renameNode,
   restoreNode,
@@ -58,13 +59,13 @@ function loadCollapsed(): Set<string> {
 
 /**
  * Which part of a row the pointer is over decides where the dragged item lands.
- * The middle of a folder means inside it. Notes hold nothing, so a note row
- * only has a top half and a bottom half.
+ * The middle of a row means inside it. A row that cannot hold the dragged item
+ * (a note, or a book while a folder is dragged) only has a top and bottom half.
  */
-function zoneFor(event: DragEvent, target: TreeItem): Zone {
+function zoneFor(event: DragEvent, target: TreeItem, dragged: TreeItem): Zone {
   const rect = event.currentTarget.getBoundingClientRect();
   const y = (event.clientY - rect.top) / rect.height;
-  if (target.kind === "note") return y < 0.5 ? "before" : "after";
+  if (target.kind === "note" || !holds(target.kind, dragged.kind)) return y < 0.5 ? "before" : "after";
   return y < 0.25 ? "before" : y > 0.75 ? "after" : "inside";
 }
 
@@ -125,10 +126,10 @@ export function Sidebar({
     add(kind, parentId) {
       const id = createNode(doc, kind, parentId);
       expand(parentId);
-      // A note opens so its title can be typed. A folder has no page, so its
-      // name is typed in the sidebar row instead.
-      if (kind === "note") onSelect(id);
-      else setEditingId(id);
+      // A note or book opens so its title can be typed. A folder has no page,
+      // so its name is typed in the sidebar row instead.
+      if (kind === "folder") setEditingId(id);
+      else onSelect(id);
     },
     trash: (id) => trashNode(doc, id),
     startDrag: setDragging,
@@ -235,7 +236,13 @@ function DeleteDialog({ node, inside, onConfirm, onCancel }: { node: TreeNode; i
   );
 }
 
-/** The one + at the top. It asks what to make, since notes and folders share one list. */
+const addKinds: { kind: NodeKind; label: string }[] = [
+  { kind: "note", label: "New note" },
+  { kind: "folder", label: "New folder" },
+  { kind: "book", label: "New book" },
+];
+
+/** The one + at the top. It asks what to make, since everything shares one list. */
 function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
@@ -263,19 +270,17 @@ function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
 
   return (
     <div className="add-menu" ref={wrapper}>
-      <button className="icon-button" aria-label="New" aria-haspopup="menu" aria-expanded={open} title="New note or folder" onClick={() => setOpen(!open)}>
+      <button className="icon-button" aria-label="New" aria-haspopup="menu" aria-expanded={open} title="New note, folder or book" onClick={() => setOpen(!open)}>
         <Icon name="plus" />
       </button>
       {open && (
         <div className="menu" role="menu">
-          <button ref={first} role="menuitem" className="menu-item" onClick={() => pick("note")}>
-            <Icon name="note" />
-            <span>New note</span>
-          </button>
-          <button role="menuitem" className="menu-item" onClick={() => pick("folder")}>
-            <Icon name="folder" />
-            <span>New folder</span>
-          </button>
+          {addKinds.map(({ kind, label }, i) => (
+            <button key={kind} ref={i === 0 ? first : undefined} role="menuitem" className="menu-item" onClick={() => pick(kind)}>
+              <Icon name={kind} />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -285,7 +290,7 @@ function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
 /** Renames a folder in place. Every keystroke is saved, so Enter, Esc and clicking away all just finish. */
 function FolderNameInput({ item, ctx }: { item: TreeItem; ctx: RowContext }) {
   return (
-    <span className="row-title folder-title">
+    <span className="row-title icon-title">
       <Icon name="folder" />
       <input
         className="folder-name"
@@ -321,7 +326,7 @@ function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowCont
 
   const allowedPlacement = (event: DragEvent) => {
     if (!ctx.dragging) return null;
-    const placement = placementFor(ctx.tree, ctx.dragging, item, zoneFor(event, item));
+    const placement = placementFor(ctx.tree, ctx.dragging, item, zoneFor(event, item, ctx.dragging));
     return placement && !canMove(ctx.tree, ctx.dragging.id, placement.parentId) ? placement : null;
   };
 
@@ -348,7 +353,7 @@ function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowCont
           if (!allowedPlacement(event)) return ctx.hover(null);
           // Calling preventDefault is how a drop target says "you may drop here".
           event.preventDefault();
-          ctx.hover({ id: item.id, zone: zoneFor(event, item) });
+          ctx.hover({ id: item.id, zone: zoneFor(event, item, ctx.dragging) });
         }}
         onDrop={(event) => {
           event.preventDefault();
@@ -368,7 +373,7 @@ function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowCont
         ) : item.kind === "folder" ? (
           // Folders have no page of their own: clicking one opens or closes it.
           <button
-            className="row-title folder-title"
+            className="row-title icon-title"
             aria-expanded={open}
             title="Double-click to rename"
             onClick={() => ctx.toggle(item.id)}
@@ -377,13 +382,24 @@ function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowCont
             <Icon name="folder" />
             <span>{title}</span>
           </button>
+        ) : item.kind === "book" ? (
+          // A book opens its own page, with the chapters in order. It is renamed there.
+          <button className="row-title icon-title" onClick={() => ctx.select(item.id)}>
+            <Icon name="book" />
+            <span>{title}</span>
+          </button>
         ) : (
           <button className="row-title" onClick={() => ctx.select(item.id)}>
             {title}
           </button>
         )}
-        {item.kind === "folder" && (
-          <button className="icon-button row-action" aria-label={`Add note inside ${title}`} title="Add note inside" onClick={() => ctx.add("note", item.id)}>
+        {item.kind !== "note" && (
+          <button
+            className="icon-button row-action"
+            aria-label={item.kind === "book" ? `Add chapter to ${title}` : `Add note inside ${title}`}
+            title={item.kind === "book" ? "Add chapter" : "Add note inside"}
+            onClick={() => ctx.add("note", item.id)}
+          >
             <Icon name="plus" />
           </button>
         )}

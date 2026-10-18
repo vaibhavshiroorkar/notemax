@@ -1,14 +1,25 @@
 import { useEffect, useRef } from "react";
 import * as Y from "yjs";
 import type { Editor as TiptapEditor } from "@tiptap/react";
-import { WELCOME_ID, extractLinks, renameNode, setLinks, type SaveStatus, type Tree, type TreeNode } from "@notemax/core";
+import {
+  WELCOME_ID,
+  countWords,
+  extractLinks,
+  renameNode,
+  setLinks,
+  setWords,
+  type SaveStatus,
+  type Tree,
+  type TreeNode,
+} from "@notemax/core";
 import { Backlinks } from "./Backlinks";
 import { Editor } from "./Editor";
+import { Icon } from "./Icon";
 import type { LinkHub } from "./links/link-hub";
 import { useLocalDoc } from "./useLocalDoc";
 
 const welcomeContent = `
-  <p>This is your first note. Use <strong>+</strong> in the sidebar to add notes and folders, and drag them to sort.</p>
+  <p>This is your first note. Use <strong>+</strong> in the sidebar to add notes, folders and books, and drag them to sort.</p>
   <p>Everything is saved on this device. Try <strong>Ctrl+B</strong>, <code>#</code> plus space for a heading, or <code>-</code> plus space for a list.</p>
   <p>Type <code>[[</code> to link to another note. Notes that link here are listed at the bottom.</p>
 `;
@@ -21,16 +32,20 @@ function focusBody(editor: TiptapEditor) {
   editor.commands.focus("start");
 }
 
-// How long typing must pause before the link list is updated. Links change
-// rarely, so there is no need to scan the body on every keystroke.
-const LINK_SCAN_MS = 500;
+// How long typing must pause before links and words are recounted. There is
+// no need to scan the body on every keystroke.
+const SCAN_MS = 500;
 
-/** Keeps the workspace's copy of this note's links in step with its body. */
-function useLinkIndex(body: Y.Doc | undefined, workspaceDoc: Y.Doc, noteId: string) {
+/** Keeps the workspace's copy of this note's links and word count in step with its body. */
+function useBodyIndex(body: Y.Doc | undefined, workspaceDoc: Y.Doc, noteId: string) {
   useEffect(() => {
     if (!body) return;
     const fragment = body.getXmlFragment("content");
-    const scan = () => setLinks(workspaceDoc, noteId, extractLinks(fragment));
+    const scan = () =>
+      workspaceDoc.transact(() => {
+        setLinks(workspaceDoc, noteId, extractLinks(fragment));
+        setWords(workspaceDoc, noteId, countWords(fragment));
+      });
     // Also on open, which repairs the list if it went stale, for example after
     // two devices edited this note at the same time.
     scan();
@@ -40,7 +55,7 @@ function useLinkIndex(body: Y.Doc | undefined, workspaceDoc: Y.Doc, noteId: stri
       timer = setTimeout(() => {
         timer = undefined;
         scan();
-      }, LINK_SCAN_MS);
+      }, SCAN_MS);
     };
     body.on("update", onUpdate);
     return () => {
@@ -74,12 +89,26 @@ export function NotePane({
   const focusWhenReady = useRef(false);
 
   useEffect(() => onStatus(status), [status, onStatus]);
-  useLinkIndex(local?.doc, workspaceDoc, node.id);
+  useBodyIndex(local?.doc, workspaceDoc, node.id);
 
   if (openError) return <p className="error">Could not open this note: {openError}</p>;
 
+  const parent = tree.items.get(tree.items.get(node.id)?.parentId ?? "");
+  const book = parent?.kind === "book" ? parent : undefined;
+
   return (
     <article className="note">
+      {book && (
+        <nav className="note-book" aria-label="Book">
+          <button className="note-book-link" onClick={() => hub.open(book.id)}>
+            <Icon name="book" />
+            <span>{book.title || "Untitled book"}</span>
+          </button>
+          <span>
+            Chapter {book.children.findIndex((chapter) => chapter.id === node.id) + 1} of {book.children.length}
+          </span>
+        </nav>
+      )}
       <input
         className="note-title"
         value={node.title}

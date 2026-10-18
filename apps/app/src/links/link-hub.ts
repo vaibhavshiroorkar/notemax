@@ -42,11 +42,12 @@ export class LinkHub {
     if (this.isOpenable(id)) this.openNote(id);
   }
 
-  /** The folder a note is in, or "" at the top level. Tells apart two notes with one title. */
+  /** The folder or book a note is in, or "" at the top level. Tells apart two notes with one title. */
   where(id: string): string {
     const parentId = this.tree?.items.get(id)?.parentId;
     if (!parentId || parentId === ROOT) return "";
-    return this.tree?.items.get(parentId)?.title || "Untitled folder";
+    const parent = this.tree?.items.get(parentId);
+    return parent?.title || `Untitled ${parent?.kind ?? "folder"}`;
   }
 
   menuItems(query: string, currentId: string): LinkMenuItem[] {

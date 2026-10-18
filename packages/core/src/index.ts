@@ -4,10 +4,12 @@ export { createSqlStore, type SqlDatabase } from "./sql-store";
 export { openLocalDoc, type LocalDoc, type LocalDocOptions, type SaveStatus } from "./local-doc";
 export { captureNote, splitCapture } from "./capture";
 export { WIKI_LINK, extractLinks, searchNodes } from "./links";
+export { countWords } from "./words";
 export {
   ROOT,
   WELCOME_ID,
   WORKSPACE_DOC_ID,
+  holds,
   readTree,
   childrenOf,
   isInside,
@@ -17,6 +19,7 @@ export {
   ensureWelcome,
   renameNode,
   setLinks,
+  setWords,
   trashNode,
   descendantsOf,
   deleteForever,

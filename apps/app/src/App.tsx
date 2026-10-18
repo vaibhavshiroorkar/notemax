@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { WELCOME_ID, type SaveStatus, type TreeItem } from "@notemax/core";
+import { BookPane } from "./BookPane";
 import { Icon } from "./Icon";
 import { LinkHub } from "./links/link-hub";
 import { NotePane } from "./NotePane";
@@ -16,7 +17,7 @@ const worst = (a: SaveStatus, b: SaveStatus) => (severity[b.state] > severity[a.
 // Matches the breakpoint in styles.css where the sidebar becomes an overlay.
 const isNarrow = () => window.matchMedia("(max-width: 700px)").matches;
 
-// Falls back when the remembered note was trashed or no longer exists.
+// Falls back when the remembered note or book was trashed or no longer exists.
 // Folders do not open as pages, so this looks for the first note, in sidebar order.
 function firstNote(items: TreeItem[]): string | null {
   for (const item of items) {
@@ -76,7 +77,8 @@ export function App() {
   if (!workspace.doc || !workspace.tree) return null;
 
   const { tree, doc } = workspace;
-  const activeId = tree.items.get(selectedId)?.kind === "note" ? selectedId : firstNote(tree.top);
+  const selected = tree.items.get(selectedId);
+  const activeId = selected && selected.kind !== "folder" ? selectedId : firstNote(tree.top);
   const activeNode = activeId ? tree.byId.get(activeId) : undefined;
 
   return (
@@ -91,7 +93,9 @@ export function App() {
         >
           <Icon name="sidebar" />
         </button>
-        {activeNode ? (
+        {activeNode?.kind === "book" ? (
+          <BookPane key={activeNode.id} node={activeNode} tree={tree} workspaceDoc={doc} onSelect={select} onStatus={setNoteStatus} onReady={onReady} />
+        ) : activeNode ? (
           <NotePane key={activeNode.id} node={activeNode} tree={tree} hub={hub} workspaceDoc={doc} onStatus={setNoteStatus} onReady={onReady} />
         ) : (
           <p className="empty">No notes. Use + in the sidebar to create one.</p>
