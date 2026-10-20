@@ -430,6 +430,78 @@ ul {
   background: var(--hover);
 }
 
+.editor pre {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--hover);
+  overflow-x: auto;
+}
+
+.editor pre code {
+  padding: 0;
+  background: none;
+}
+
+.editor blockquote {
+  margin-left: 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+}
+
+.editor hr {
+  margin: 20px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.editor hr.ProseMirror-selectednode {
+  border-top-color: var(--accent);
+}
+
+.editor ul[data-type="taskList"] {
+  padding-left: 4px;
+  list-style: none;
+}
+
+.editor ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.editor ul[data-type="taskList"] li > label {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  /* One line tall, so the box centers on the first line of text at any font size. */
+  height: 1.6em;
+}
+
+.editor ul[data-type="taskList"] li > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor ul[data-type="taskList"] li > div > p {
+  margin: 0;
+}
+
+.editor ul[data-type="taskList"] li + li {
+  margin-top: 4px;
+}
+
+.editor ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.editor input[type="checkbox"] {
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .error {
   margin: 48px auto;
   max-width: 720px;
@@ -503,6 +575,17 @@ ul {
 
 .link-menu-empty {
   padding: 6px 8px;
+}
+
+.slash-menu {
+  width: 240px;
+  /* All ten items fit without scrolling. */
+  max-height: 420px;
+}
+
+.slash-hint {
+  flex-shrink: 0;
+  color: var(--muted);
 }
 
 .backlinks {
