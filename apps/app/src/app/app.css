@@ -1,0 +1,32 @@
+.app {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  height: 100vh;
+}
+
+.app[data-sidebar="closed"] {
+  grid-template-columns: 1fr;
+}
+
+.main {
+  position: relative;
+  overflow-y: auto;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+@media (max-width: 700px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  /* Stays above the sidebar overlay so it can always be closed. */
+  .sidebar-toggle {
+    position: fixed;
+    z-index: 20;
+  }
+}

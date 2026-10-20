@@ -1,0 +1,181 @@
+@import "./theme.css";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Shared controls */
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.icon-button:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.icon-button.danger:hover {
+  color: var(--danger);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  min-width: 200px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  /* The header uses uppercase small text; the menu should not inherit it. */
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: var(--hover);
+  outline: none;
+}
+
+.empty {
+  margin: 4px 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.error {
+  margin: 48px auto;
+  max-width: 720px;
+  color: var(--danger);
+}
+
+/* Dialogs */
+
+.dialog {
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  width: min(440px, calc(100vw - 32px));
+}
+
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.dialog-body {
+  padding: 20px;
+}
+
+.dialog-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.dialog-message {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+.dialog-message strong {
+  color: var(--text);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.button {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.button:hover {
+  background: var(--hover);
+}
+
+.button-danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+
+.button-danger:hover {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.segmented button {
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.segmented button[aria-checked="true"] {
+  background: var(--active);
+  font-weight: 600;
+}
+
+kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 12px;
+}

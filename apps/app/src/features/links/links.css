@@ -1,0 +1,71 @@
+.wiki-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.wiki-link:hover {
+  text-decoration-color: var(--accent);
+}
+
+.wiki-link-missing {
+  color: var(--muted);
+  text-decoration-style: dashed;
+  cursor: default;
+}
+
+.ProseMirror-selectednode.wiki-link {
+  border-radius: 3px;
+  outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.backlinks {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.backlinks-heading {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.backlinks-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.backlinks-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.backlink {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  padding: 4px 8px;
+  margin-left: -8px;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.backlink:hover {
+  background: var(--hover);
+}
+
+.backlink-title {
+  color: var(--accent);
+}
+
+.backlink-where {
+  font-size: 12px;
+  color: var(--muted);
+}

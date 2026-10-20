@@ -1,0 +1,82 @@
+.note-book {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.note-book-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border-radius: 4px;
+}
+
+.note-book-link:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.note-book-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.book-summary,
+.book-empty {
+  margin: 0 0 24px;
+  color: var(--muted);
+}
+
+.chapter-list {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.chapter {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  padding: 8px;
+  margin-left: -8px;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.chapter:hover {
+  background: var(--hover);
+}
+
+.chapter-number {
+  min-width: 1.5em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.chapter-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chapter-words {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.add-chapter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

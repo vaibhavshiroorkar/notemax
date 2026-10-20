@@ -1,0 +1,10 @@
+.slash-menu {
+  width: 240px;
+  /* All ten items fit without scrolling. */
+  max-height: 420px;
+}
+
+.slash-hint {
+  flex-shrink: 0;
+  color: var(--muted);
+}

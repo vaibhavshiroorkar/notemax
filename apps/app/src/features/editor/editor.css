@@ -1,0 +1,114 @@
+.note {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 56px 24px 96px;
+}
+
+.note-title {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.note-title::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.editor .ProseMirror {
+  /* Tall enough to click into, short enough that backlinks stay in view on short notes. */
+  min-height: 30vh;
+  outline: none;
+}
+
+.editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.editor code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--hover);
+}
+
+.editor pre {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--hover);
+  overflow-x: auto;
+}
+
+.editor pre code {
+  padding: 0;
+  background: none;
+}
+
+.editor blockquote {
+  margin-left: 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+}
+
+.editor hr {
+  margin: 20px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.editor hr.ProseMirror-selectednode {
+  border-top-color: var(--accent);
+}
+
+.editor ul[data-type="taskList"] {
+  padding-left: 4px;
+  list-style: none;
+}
+
+.editor ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.editor ul[data-type="taskList"] li > label {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  /* One line tall, so the box centers on the first line of text at any font size. */
+  height: 1.6em;
+}
+
+.editor ul[data-type="taskList"] li > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor ul[data-type="taskList"] li > div > p {
+  margin: 0;
+}
+
+.editor ul[data-type="taskList"] li + li {
+  margin-top: 4px;
+}
+
+.editor ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.editor input[type="checkbox"] {
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}

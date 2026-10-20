@@ -31,6 +31,18 @@ packages/
   core/      Storage, the workspace tree, links and word counts. No UI code, and covered by tests.
 ```
 
+Inside `apps/app/src`, each feature has its own folder with its components and styles:
+
+```
+app/         the window: layout, shortcuts, which page is open
+features/    one folder per feature: editor, links, slash, sidebar, books, settings, ...
+ui/          shared pieces: icons, dialogs, menus, theme
+platform/    desktop or web, and saved preferences
+data/        hooks that open notes and the workspace
+```
+
+Imports between folders use `@/`, like `@/ui/Icon`. Imports inside a feature stay relative.
+
 In the browser, notes are stored in IndexedDB. The desktop app keeps them in one SQLite file, `notemax.db`, in the app's config folder. Both sit behind the same `DocStore` interface in `packages/core`, so the rest of the app doesn't care which one it gets.
 
 ## Getting started

@@ -1,0 +1,23 @@
+.status-bar {
+  position: fixed;
+  right: 16px;
+  bottom: 12px;
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.status-bar[data-state="error"],
+.status-bar .warning {
+  color: var(--danger);
+}
+
+@media (max-width: 700px) {
+  .status-bar {
+    left: 16px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px 12px;
+  }
+}
