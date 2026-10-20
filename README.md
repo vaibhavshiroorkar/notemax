@@ -10,7 +10,7 @@ It's early and built as a personal tool first, so things change often.
 
 - A rich text editor with headings, lists, code and Markdown shortcuts.
 - Notes, folders and books in one sidebar. Drag to sort or to nest.
-- A page for each book, with its chapters in order and word counts.
+- A page for each book, with its chapters in order and word counts. While a book is open, its chapters sit in a panel on the right, where you can add, reorder and trash them.
 - `[[` links between notes, and a "Linked from" list under each note. Renaming a note never breaks links to it.
 - Trash, with restore and delete forever.
 - Light and dark themes.

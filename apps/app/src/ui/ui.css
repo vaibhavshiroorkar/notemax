@@ -179,3 +179,95 @@ kbd {
   font: inherit;
   font-size: 12px;
 }
+
+/* Rows in the sidebar and the book panel. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 6px;
+  min-height: 30px;
+}
+
+.row:hover {
+  background: var(--hover);
+}
+
+.row[aria-current="page"] {
+  background: var(--active);
+}
+
+/* Drop markers: a line for before or after, an outline for inside. */
+.row {
+  position: relative;
+}
+
+.row[data-drop="before"]::before,
+.row[data-drop="after"]::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+.row[data-drop="before"]::before {
+  top: -1px;
+}
+
+.row[data-drop="after"]::after {
+  bottom: -1px;
+}
+
+.row[data-drop="inside"] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.row[data-dragging] {
+  opacity: 0.4;
+}
+
+.row-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  padding: 4px 2px;
+}
+
+/* Row actions appear on hover or keyboard focus, so the tree stays calm. */
+.row-action {
+  opacity: 0;
+}
+
+.row:hover .row-action,
+.row:focus-within .row-action {
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  /* No hover on touch screens, so the actions always show. */
+  .row-action {
+    opacity: 1;
+  }
+}
+
+.footer-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  text-align: left;
+}
+
+.footer-button:hover {
+  background: var(--hover);
+  color: var(--text);
+}

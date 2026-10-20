@@ -1,14 +1,24 @@
+/* Left sidebar, page, book panel. A hidden side keeps its column at zero width. */
 .app {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 260px 1fr 0;
   height: 100vh;
 }
 
 .app[data-sidebar="closed"] {
-  grid-template-columns: 1fr;
+  grid-template-columns: 0 1fr 0;
+}
+
+.app[data-book-panel="open"] {
+  grid-template-columns: 260px 1fr 240px;
+}
+
+.app[data-sidebar="closed"][data-book-panel="open"] {
+  grid-template-columns: 0 1fr 240px;
 }
 
 .main {
+  grid-column: 2;
   position: relative;
   overflow-y: auto;
 }
@@ -19,9 +29,23 @@
   left: 12px;
 }
 
+/* The status bar is pinned to the window corner; keep it off the book panel. */
+.app[data-book-panel="open"] .status-bar {
+  right: 256px;
+}
+
 @media (max-width: 700px) {
-  .app {
+  /* Both sides float over the page here, so match every attribute combination. */
+  .app[data-sidebar][data-book-panel] {
     grid-template-columns: 1fr;
+  }
+
+  .main {
+    grid-column: 1;
+  }
+
+  .app[data-book-panel="open"] .status-bar {
+    right: 16px;
   }
 
   /* Stays above the sidebar overlay so it can always be closed. */

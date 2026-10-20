@@ -21,22 +21,6 @@
   border-top: 1px solid var(--border);
 }
 
-.footer-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 6px 8px;
-  border-radius: 6px;
-  color: var(--muted);
-  text-align: left;
-}
-
-.footer-button:hover {
-  background: var(--hover);
-  color: var(--text);
-}
-
 .add-menu {
   position: relative;
 }
@@ -81,79 +65,14 @@
   letter-spacing: 0.04em;
 }
 
-.row {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  border-radius: 6px;
-  min-height: 30px;
-}
-
-.row:hover {
-  background: var(--hover);
-}
-
-.row[aria-current="page"] {
-  background: var(--active);
-}
-
-/* Drop indicators: a line for before/after, an outline for inside. */
-.row {
-  position: relative;
-}
-
-.row[data-drop="before"]::before,
-.row[data-drop="after"]::after {
-  content: "";
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--accent);
-}
-
-.row[data-drop="before"]::before {
-  top: -1px;
-}
-
-.row[data-drop="after"]::after {
-  bottom: -1px;
-}
-
-.row[data-drop="inside"],
 .section-header[data-drop="inside"] {
   box-shadow: inset 0 0 0 2px var(--accent);
   border-radius: 6px;
 }
 
-.row[data-dragging] {
-  opacity: 0.4;
-}
-
-.row-title {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-  padding: 4px 2px;
-}
-
 .icon-spacer {
   width: 24px;
   flex-shrink: 0;
-}
-
-/* Row actions appear on hover or keyboard focus, so the tree stays calm. */
-.row-action {
-  opacity: 0;
-}
-
-.row:hover .row-action,
-.row:focus-within .row-action {
-  opacity: 1;
 }
 
 .trash {
@@ -183,8 +102,12 @@
   .sidebar-scroll {
     padding-top: 48px;
   }
+}
 
-  .row-action {
-    opacity: 1;
-  }
+.row-count {
+  flex-shrink: 0;
+  padding: 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }

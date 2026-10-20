@@ -1,9 +1,9 @@
-import { useState, type DragEvent } from "react";
+import { useEffect, useState, type DragEvent } from "react";
 import type * as Y from "yjs";
-import { ROOT, canMove, createNode, moveNode, renameNode, trashNode, type Tree, type TreeItem } from "@notemax/core";
+import { ROOT, canMove, createNode, moveNode, renameNode, trashNode, type Tree } from "@notemax/core";
 import { Icon } from "@/ui/Icon";
 import { AddMenu } from "./AddMenu";
-import type { DropTarget } from "./drag";
+import { endDrag, startDrag, useDragging, type DropTarget } from "./drag";
 import { Rows, type RowContext } from "./TreeRows";
 import { TrashSection } from "./TrashSection";
 import { useCollapsed } from "./useCollapsed";
@@ -23,9 +23,14 @@ export function Sidebar({
   onOpenSettings(): void;
 }) {
   const { collapsed, toggle, expand } = useCollapsed();
-  const [dragging, setDragging] = useState<TreeItem | null>(null);
+  const dragging = useDragging();
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // A drag that started in the book panel may end there, so clear any marker left here.
+  useEffect(() => {
+    if (!dragging) setDropTarget(null);
+  }, [dragging]);
 
   const ctx: RowContext = {
     tree,
@@ -47,11 +52,8 @@ export function Sidebar({
       else onSelect(id);
     },
     trash: (id) => trashNode(doc, id),
-    startDrag: setDragging,
-    endDrag() {
-      setDragging(null);
-      setDropTarget(null);
-    },
+    startDrag,
+    endDrag,
     hover: setDropTarget,
     drop({ parentId, index }) {
       if (!dragging) return;

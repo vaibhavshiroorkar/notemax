@@ -3,6 +3,7 @@ import { WELCOME_ID, type SaveStatus, type TreeItem } from "@notemax/core";
 import { useWorkspace } from "@/data/useWorkspace";
 import { useSignInRedirect } from "@/features/account/useSignInRedirect";
 import { BookPane } from "@/features/books/BookPane";
+import { BookPanel } from "@/features/books/BookPanel";
 import { NotePane } from "@/features/editor/NotePane";
 import { LinkHub } from "@/features/links/link-hub";
 import { Settings } from "@/features/settings/Settings";
@@ -34,6 +35,7 @@ export function App() {
   const workspace = useWorkspace();
   const [selectedId, setSelectedId] = useState(() => getPref("selectedId") ?? WELCOME_ID);
   const [sidebarOpen, setSidebarOpen] = useState(() => getPref("sidebarOpen") !== "false");
+  const [bookPanelOpen, setBookPanelOpen] = useState(() => getPref("bookPanelOpen") !== "false");
   const [noteStatus, setNoteStatus] = useState<SaveStatus>({ state: "saved" });
   const [persistent, setPersistent] = useState<boolean>();
   const [readyMs, setReadyMs] = useState<number>();
@@ -51,6 +53,7 @@ export function App() {
 
   useEffect(() => setPref("selectedId", selectedId), [selectedId]);
   useEffect(() => setPref("sidebarOpen", String(sidebarOpen)), [sidebarOpen]);
+  useEffect(() => setPref("bookPanelOpen", String(bookPanelOpen)), [bookPanelOpen]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -67,8 +70,11 @@ export function App() {
 
   const select = useCallback((id: string) => {
     setSelectedId(id);
-    // On a phone the sidebar covers the note, so get it out of the way.
-    if (isNarrow()) setSidebarOpen(false);
+    // On a phone both sidebars cover the note, so get them out of the way.
+    if (isNarrow()) {
+      setSidebarOpen(false);
+      setBookPanelOpen(false);
+    }
   }, []);
 
   const [hub] = useState(() => new LinkHub(select));
@@ -88,9 +94,14 @@ export function App() {
   const selected = tree.items.get(selectedId);
   const activeId = selected && selected.kind !== "folder" ? selectedId : firstNote(tree.top);
   const activeNode = activeId ? tree.byId.get(activeId) : undefined;
+  // The book that is open, or the book the open chapter belongs to.
+  const activeItem = activeId ? tree.items.get(activeId) : undefined;
+  const parentItem = activeItem && tree.items.get(activeItem.parentId);
+  const book = activeItem?.kind === "book" ? activeItem : parentItem?.kind === "book" ? parentItem : undefined;
+  const showBookPanel = !!book && bookPanelOpen;
 
   return (
-    <div className="app" data-sidebar={sidebarOpen ? "open" : "closed"}>
+    <div className="app" data-sidebar={sidebarOpen ? "open" : "closed"} data-book-panel={showBookPanel ? "open" : "closed"}>
       {sidebarOpen && <Sidebar tree={tree} doc={doc} activeId={activeId} onSelect={select} onOpenSettings={() => setSettingsOpen(true)} />}
       <main className="main">
         <button
@@ -101,6 +112,16 @@ export function App() {
         >
           <Icon name="sidebar" />
         </button>
+        {book && (
+          <button
+            className="icon-button book-panel-toggle"
+            aria-label={bookPanelOpen ? "Hide chapters" : "Show chapters"}
+            title={bookPanelOpen ? "Hide chapters" : "Show chapters"}
+            onClick={() => setBookPanelOpen((open) => !open)}
+          >
+            <Icon name="book-panel" />
+          </button>
+        )}
         {activeNode?.kind === "book" ? (
           <BookPane key={activeNode.id} node={activeNode} tree={tree} workspaceDoc={doc} onSelect={select} onStatus={setNoteStatus} onReady={onReady} />
         ) : activeNode ? (
@@ -109,6 +130,7 @@ export function App() {
           <p className="empty">No notes. Use + in the sidebar to create one.</p>
         )}
       </main>
+      {showBookPanel && <BookPanel book={book} tree={tree} doc={doc} activeId={activeId!} onSelect={select} />}
       {settingsOpen && <Settings persistent={persistent} accountError={accountError} onClose={() => setSettingsOpen(false)} />}
       <StatusBar status={worst(workspace.status, noteStatus)} persistent={persistent} readyMs={readyMs} />
     </div>

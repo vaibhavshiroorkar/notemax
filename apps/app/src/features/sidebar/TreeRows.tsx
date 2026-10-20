@@ -55,10 +55,13 @@ function FolderNameInput({ item, ctx }: { item: TreeItem; ctx: RowContext }) {
 }
 
 function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowContext }) {
-  const hasChildren = item.children.length > 0;
+  // A book's chapters are listed in the book panel on the right, not here.
+  const hasChildren = item.kind !== "book" && item.children.length > 0;
   const open = !ctx.collapsed.has(item.id);
   const title = item.title || "Untitled";
   const dropZone = ctx.dropTarget?.id === item.id ? ctx.dropTarget.zone : undefined;
+  // While a chapter is open, its book stays marked, since the chapter has no row here.
+  const current = item.id === ctx.activeId || (item.kind === "book" && ctx.tree.items.get(ctx.activeId ?? "")?.parentId === item.id);
 
   const allowedPlacement = (event: DragEvent) => {
     if (!ctx.dragging) return null;
@@ -73,7 +76,7 @@ function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowCont
         data-kind={item.kind}
         data-drop={dropZone}
         data-dragging={ctx.dragging?.id === item.id || undefined}
-        aria-current={item.id === ctx.activeId ? "page" : undefined}
+        aria-current={current ? "page" : undefined}
         style={{ paddingLeft: 4 + depth * 14 }}
         // Off while naming, so selecting text in the name box does not start a drag.
         draggable={ctx.editingId !== item.id}
@@ -128,6 +131,11 @@ function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowCont
           <button className="row-title" onClick={() => ctx.select(item.id)}>
             {title}
           </button>
+        )}
+        {item.kind === "book" && item.children.length > 0 && (
+          <span className="row-count" title={`${item.children.length} ${item.children.length === 1 ? "chapter" : "chapters"}`}>
+            {item.children.length}
+          </span>
         )}
         {item.kind !== "note" && (
           <button
