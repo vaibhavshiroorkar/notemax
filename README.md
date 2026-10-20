@@ -47,6 +47,8 @@ pnpm build           # production build of the web app
 pnpm desktop:build   # desktop installer
 ```
 
+Accounts are optional, and the app works fully without them. To try Google sign-in, copy `apps/app/.env.example` to `apps/app/.env` and fill in your own Supabase project.
+
 ## Roadmap
 
 Roughly in this order:

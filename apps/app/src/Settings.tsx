@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { AccountSection } from "./account/Account";
+import { accountsEnabled } from "./account/config";
 import { Dialog } from "./Dialog";
 import { Icon } from "./Icon";
 import { isDesktop } from "./platform";
@@ -19,7 +21,7 @@ async function databasePath(): Promise<string> {
   return join(await appConfigDir(), DB_FILE);
 }
 
-export function Settings({ persistent, onClose }: { persistent?: boolean; onClose(): void }) {
+export function Settings({ persistent, accountError, onClose }: { persistent?: boolean; accountError?: string; onClose(): void }) {
   const [theme, setThemeState] = useState(getTheme);
   const [dbPath, setDbPath] = useState<string>();
 
@@ -51,6 +53,8 @@ export function Settings({ persistent, onClose }: { persistent?: boolean; onClos
           ))}
         </div>
       </section>
+
+      {accountsEnabled && <AccountSection initialError={accountError} />}
 
       {isDesktop && (
         <section className="settings-section">

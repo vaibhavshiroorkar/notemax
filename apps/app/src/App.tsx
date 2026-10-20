@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { WELCOME_ID, type SaveStatus, type TreeItem } from "@notemax/core";
+import { accountsEnabled, isSignInRedirect } from "./account/config";
 import { BookPane } from "./BookPane";
 import { Icon } from "./Icon";
 import { LinkHub } from "./links/link-hub";
@@ -8,7 +9,7 @@ import { Settings } from "./Settings";
 import { Sidebar } from "./Sidebar";
 import { StatusBar } from "./StatusBar";
 import { getPref, setPref } from "./prefs";
-import { requestPersistentStorage } from "./platform";
+import { isDesktop, requestPersistentStorage } from "./platform";
 import { useWorkspace } from "./useWorkspace";
 
 const severity: Record<SaveStatus["state"], number> = { saved: 0, saving: 1, error: 2 };
@@ -36,9 +37,20 @@ export function App() {
   const [persistent, setPersistent] = useState<boolean>();
   const [readyMs, setReadyMs] = useState<number>();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [accountError, setAccountError] = useState<string>();
 
   useEffect(() => {
     requestPersistentStorage().then(setPersistent, () => setPersistent(false));
+  }, []);
+
+  // Back from Google on the web: finish signing in, then show the result in Settings.
+  useEffect(() => {
+    if (isDesktop || !accountsEnabled || !isSignInRedirect()) return;
+    const params = new URLSearchParams(location.search);
+    import("./account/client")
+      .then((client) => client.finishWebSignIn(params))
+      .then(setAccountError, (err) => setAccountError(String(err)))
+      .finally(() => setSettingsOpen(true));
   }, []);
 
   useEffect(() => setPref("selectedId", selectedId), [selectedId]);
@@ -101,7 +113,7 @@ export function App() {
           <p className="empty">No notes. Use + in the sidebar to create one.</p>
         )}
       </main>
-      {settingsOpen && <Settings persistent={persistent} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <Settings persistent={persistent} accountError={accountError} onClose={() => setSettingsOpen(false)} />}
       <StatusBar status={worst(workspace.status, noteStatus)} persistent={persistent} readyMs={readyMs} />
     </div>
   );

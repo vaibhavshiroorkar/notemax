@@ -649,6 +649,32 @@ ul {
   color: var(--danger);
 }
 
+.account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.account-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.account-name {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.account-name span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
 .settings-path {
   display: block;
   padding: 6px 8px;

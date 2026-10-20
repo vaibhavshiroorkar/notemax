@@ -1,8 +1,13 @@
+use std::io::{BufRead, BufReader, Write};
+use std::net::TcpListener;
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use tauri::{
-    AppHandle, Manager, WindowEvent,
+    AppHandle, Emitter, Manager, WindowEvent,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
+use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 // Must match DESKTOP_DB_URL in apps/app/src/platform.ts.
@@ -32,6 +37,69 @@ fn toggle_capture(app: &AppHandle) {
     }
 }
 
+// Google refuses to sign in inside an embedded webview, so sign-in happens in
+// the user's browser. Supabase then redirects to this port, where the app is
+// listening. Must match SIGN_IN_REDIRECT in apps/app/src/account/google.ts and
+// be listed under Redirect URLs in the Supabase dashboard.
+const SIGN_IN_PORT: u16 = 47820;
+static LISTENING: AtomicBool = AtomicBool::new(false);
+
+const SIGNED_IN_PAGE: &str = "<!doctype html><meta charset=utf-8><title>Notemax</title>\
+<body style=\"font:16px system-ui;text-align:center;padding-top:20vh\">\
+<p>You can close this tab and go back to Notemax.</p>";
+
+/// Opens the sign-in page in the browser and waits for its redirect.
+/// A listener left over from an abandoned attempt is reused, not doubled.
+#[tauri::command]
+fn open_sign_in(app: AppHandle, url: String) -> Result<(), String> {
+    if !url.starts_with("https://") {
+        return Err("the sign-in address must use https".into());
+    }
+    if !LISTENING.swap(true, Ordering::SeqCst) {
+        let listener = TcpListener::bind(("127.0.0.1", SIGN_IN_PORT)).map_err(|err| {
+            LISTENING.store(false, Ordering::SeqCst);
+            format!("port {SIGN_IN_PORT} is in use by another program: {err}")
+        })?;
+        let app = app.clone();
+        std::thread::spawn(move || {
+            wait_for_redirect(&app, listener);
+            LISTENING.store(false, Ordering::SeqCst);
+        });
+    }
+    app.opener().open_url(url, None::<&str>).map_err(|err| err.to_string())
+}
+
+/// Answers requests until one carries the sign-in result, then hands its query
+/// string to the main window. The code in it is useless without the secret the
+/// app kept when sign-in started, so a stray local request can do no harm.
+fn wait_for_redirect(app: &AppHandle, listener: TcpListener) {
+    for stream in listener.incoming() {
+        let Ok(mut stream) = stream else { continue };
+        // Browsers sometimes open a connection early and send nothing on it.
+        // Without a timeout that one connection would block the real redirect.
+        let _ = stream.set_read_timeout(Some(std::time::Duration::from_secs(5)));
+        let mut request_line = String::new();
+        if BufReader::new(&stream).read_line(&mut request_line).is_err() {
+            continue;
+        }
+        // For example "GET /?code=abc HTTP/1.1".
+        let target = request_line.split_whitespace().nth(1).unwrap_or("");
+        let query = target.split_once('?').map_or("", |(_, query)| query);
+        let done = query.split('&').any(|pair| pair.starts_with("code=") || pair.starts_with("error="));
+        let (status, body) = if done { ("200 OK", SIGNED_IN_PAGE) } else { ("404 Not Found", "") };
+        let _ = write!(
+            stream,
+            "HTTP/1.1 {status}\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+            body.len()
+        );
+        if done {
+            let _ = app.emit_to("main", "sign-in-redirect", query.to_string());
+            show_main(app);
+            return;
+        }
+    }
+}
+
 pub fn run() {
     let migrations = vec![Migration {
         version: 1,
@@ -51,6 +119,8 @@ pub fn run() {
 
     builder
         .plugin(tauri_plugin_sql::Builder::default().add_migrations(DB_URL, migrations).build())
+        .plugin(tauri_plugin_opener::init())
+        .invoke_handler(tauri::generate_handler![open_sign_in])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
