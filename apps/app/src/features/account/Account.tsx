@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import type { SettingsContext } from "@/plugins/types";
 import "./account.css";
 
 type Client = typeof import("./client");
@@ -10,12 +11,12 @@ const messageOf = (err: unknown) => (err instanceof Error ? err.message : String
  * The Account part of Settings. The Supabase library loads only when this
  * opens, so people who never sign in never load it or touch the network.
  */
-export function AccountSection({ initialError }: { initialError?: string }) {
+export function AccountSection({ accountError }: SettingsContext) {
   const [client, setClient] = useState<Client>();
   // Undefined while loading, null when signed out.
   const [user, setUser] = useState<User | null>();
   const [waiting, setWaiting] = useState<AbortController | null>(null);
-  const [error, setError] = useState(initialError);
+  const [error, setError] = useState(accountError);
 
   useEffect(() => {
     let stop = () => {};

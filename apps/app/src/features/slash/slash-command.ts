@@ -1,9 +1,11 @@
 import { Extension } from "@tiptap/core";
 import { PluginKey } from "@tiptap/pm/state";
 import Suggestion from "@tiptap/suggestion";
+import { registry } from "@/plugins/registry";
+import type { SlashItem } from "@/plugins/types";
 import { renderPopup } from "@/ui/suggestion/render-popup";
 import { SlashMenu } from "./SlashMenu";
-import { filterSlashItems, type SlashItem } from "./slash-items";
+import { filterSlashItems } from "./slash-items";
 
 const suggestionKey = new PluginKey("slashCommand");
 
@@ -19,7 +21,7 @@ export const SlashCommand = Extension.create({
         char: "/",
         // In a code block, / is just a character.
         allow: ({ state }) => !state.selection.$from.parent.type.spec.code,
-        items: ({ query }) => filterSlashItems(query),
+        items: ({ query }) => filterSlashItems(registry.slashItems(), query),
         command: ({ editor, range, props: item }) => {
           item.apply(editor.chain().focus().deleteRange(range)).run();
         },

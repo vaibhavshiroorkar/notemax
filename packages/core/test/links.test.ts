@@ -80,6 +80,7 @@ describe("backlinks", () => {
 describe("searchNodes", () => {
   const doc = new Y.Doc();
   const book = createNode(doc, "folder", ROOT, "Garden Book");
+  createNode(doc, "book", ROOT, "Garden Diaries");
   const ids = {
     garden: createNode(doc, "note", ROOT, "Garden"),
     gardening: createNode(doc, "note", book, "Gardening tips"),
@@ -95,6 +96,11 @@ describe("searchNodes", () => {
 
   it("leaves out folders, which do not open as pages", () => {
     expect(titles("garden")).not.toContain("Garden Book");
+  });
+
+  it("finds books only when asked to", () => {
+    expect(titles("diaries")).toEqual([]);
+    expect(searchNodes(readTree(doc), "diaries", { kinds: ["note", "book"] }).map((n) => n.title)).toEqual(["Garden Diaries"]);
   });
 
   it("is case-insensitive and can leave out the current note", () => {

@@ -1,4 +1,4 @@
-/* Left sidebar, page, book panel. A hidden side keeps its column at zero width. */
+/* Left sidebar, page, right sidebar. A hidden side keeps its column at zero width. */
 .app {
   display: grid;
   grid-template-columns: 260px 1fr 0;
@@ -9,11 +9,11 @@
   grid-template-columns: 0 1fr 0;
 }
 
-.app[data-book-panel="open"] {
+.app[data-side-panel="open"] {
   grid-template-columns: 260px 1fr 240px;
 }
 
-.app[data-sidebar="closed"][data-book-panel="open"] {
+.app[data-sidebar="closed"][data-side-panel="open"] {
   grid-template-columns: 0 1fr 240px;
 }
 
@@ -29,14 +29,30 @@
   left: 12px;
 }
 
-/* The status bar is pinned to the window corner; keep it off the book panel. */
-.app[data-book-panel="open"] .status-bar {
+/* The right sidebar. A plugin fills it; this only places it. */
+.side-panel {
+  grid-column: 3;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--sidebar-bg);
+  border-left: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.side-panel-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+/* The status bar is pinned to the window corner; keep it off the right sidebar. */
+.app[data-side-panel="open"] .status-bar {
   right: 256px;
 }
 
 @media (max-width: 700px) {
   /* Both sides float over the page here, so match every attribute combination. */
-  .app[data-sidebar][data-book-panel] {
+  .app[data-sidebar][data-side-panel] {
     grid-template-columns: 1fr;
   }
 
@@ -44,12 +60,21 @@
     grid-column: 1;
   }
 
-  .app[data-book-panel="open"] .status-bar {
+  .app[data-side-panel="open"] .status-bar {
     right: 16px;
   }
 
-  /* Stays above the sidebar overlay so it can always be closed. */
-  .sidebar-toggle {
+  .side-panel {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: 260px;
+    z-index: 10;
+    padding-top: 36px;
+  }
+
+  /* Both toggles stay above the overlays so they can always be closed. */
+  .sidebar-toggle,
+  .side-panel-toggle {
     position: fixed;
     z-index: 20;
   }

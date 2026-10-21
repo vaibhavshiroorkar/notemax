@@ -2,12 +2,10 @@ import { useEffect } from "react";
 import { EditorContent, useEditor, type Editor as TiptapEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
-import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Placeholder } from "@tiptap/extensions";
 import type * as Y from "yjs";
 import type { LinkHub } from "@/features/links/link-hub";
-import { WikiLink } from "@/features/links/wiki-link";
-import { SlashCommand } from "@/features/slash/slash-command";
+import { registry } from "@/plugins/registry";
 
 export function Editor({
   doc,
@@ -32,10 +30,8 @@ export function Editor({
         StarterKit.configure({ undoRedo: false }),
         Collaboration.configure({ document: doc, field: "content" }),
         Placeholder.configure({ placeholder }),
-        WikiLink.configure({ hub, currentId: noteId }),
-        TaskList,
-        TaskItem.configure({ nested: true }),
-        SlashCommand,
+        // Links, the / menu, to-do lists and anything else come from plugins.
+        ...registry.editorExtensions({ noteId, hub }),
       ],
     },
     [doc],

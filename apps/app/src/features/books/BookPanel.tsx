@@ -1,8 +1,9 @@
 import { useEffect, useState, type DragEvent } from "react";
-import type * as Y from "yjs";
-import { canMove, createNode, moveNode, trashNode, type Tree, type TreeItem } from "@notemax/core";
+import { canMove, createNode, moveNode, trashNode, type TreeItem } from "@notemax/core";
 import { endDrag, placementFor, startDrag, useDragging, type DropTarget, type Placement } from "@/features/sidebar/drag";
+import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
+import { bookOf } from "./book-of";
 import "./books.css";
 
 /**
@@ -10,19 +11,10 @@ import "./books.css";
  * while the book or one of its chapters is open, so the left sidebar can keep
  * each book to a single row.
  */
-export function BookPanel({
-  book,
-  tree,
-  doc,
-  activeId,
-  onSelect,
-}: {
-  book: TreeItem;
-  tree: Tree;
-  doc: Y.Doc;
-  activeId: string;
-  onSelect(id: string): void;
-}) {
+export function BookPanel({ app }: { app: AppContext }) {
+  const { tree, doc, activeId, open: onSelect } = app;
+  // Only shown while bookOf finds a book, so this is always set.
+  const book = bookOf(tree, activeId)!;
   const dragging = useDragging();
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const bookTitle = book.title || "Untitled book";
@@ -51,7 +43,7 @@ export function BookPanel({
   };
 
   return (
-    <aside className="book-panel" aria-label="Chapters" data-drop={dropTarget?.id === book.id ? "inside" : undefined} {...panelDrop}>
+    <aside className="side-panel book-panel" aria-label="Chapters" data-drop={dropTarget?.id === book.id ? "inside" : undefined} {...panelDrop}>
       <button className="book-panel-title" aria-current={activeId === book.id ? "page" : undefined} onClick={() => onSelect(book.id)}>
         <Icon name="book" />
         <span>{bookTitle}</span>

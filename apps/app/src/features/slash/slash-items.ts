@@ -1,14 +1,6 @@
-import type { ChainedCommands } from "@tiptap/core";
+import type { SlashItem } from "@/plugins/types";
 
-export interface SlashItem {
-  title: string;
-  /** The Markdown shortcut that does the same thing, so the menu teaches it. */
-  hint: string;
-  keywords: string[];
-  apply: (chain: ChainedCommands) => ChainedCommands;
-}
-
-export const SLASH_ITEMS: SlashItem[] = [
+export const BLOCK_ITEMS: SlashItem[] = [
   { title: "Text", hint: "", keywords: ["paragraph", "plain"], apply: (c) => c.setParagraph() },
   { title: "Heading 1", hint: "#", keywords: ["h1", "title"], apply: (c) => c.setHeading({ level: 1 }) },
   { title: "Heading 2", hint: "##", keywords: ["h2", "subtitle"], apply: (c) => c.setHeading({ level: 2 }) },
@@ -22,10 +14,10 @@ export const SLASH_ITEMS: SlashItem[] = [
 ];
 
 /** Matches the start of any word in the title or keywords, so "list" finds all three lists. */
-export function filterSlashItems(query: string): SlashItem[] {
+export function filterSlashItems(items: SlashItem[], query: string): SlashItem[] {
   const q = query.trim().toLowerCase();
-  if (!q) return SLASH_ITEMS;
-  return SLASH_ITEMS.filter((item) =>
+  if (!q) return items;
+  return items.filter((item) =>
     [...item.title.toLowerCase().split(/[\s-]+/), item.title.toLowerCase(), ...item.keywords].some((word) => word.startsWith(q)),
   );
 }

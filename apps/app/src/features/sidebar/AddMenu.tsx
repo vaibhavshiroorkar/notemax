@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { NodeKind } from "@notemax/core";
+import { registry } from "@/plugins/registry";
 import { Icon } from "@/ui/Icon";
-
-const addKinds: { kind: NodeKind; label: string }[] = [
-  { kind: "note", label: "New note" },
-  { kind: "folder", label: "New folder" },
-  { kind: "book", label: "New book" },
-];
 
 /** The one + at the top. It asks what to make, since everything shares one list. */
 export function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
@@ -36,14 +31,14 @@ export function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
 
   return (
     <div className="add-menu" ref={wrapper}>
-      <button className="icon-button" aria-label="New" aria-haspopup="menu" aria-expanded={open} title="New note, folder or book" onClick={() => setOpen(!open)}>
+      <button className="icon-button" aria-label="New" aria-haspopup="menu" aria-expanded={open} title="New" onClick={() => setOpen(!open)}>
         <Icon name="plus" />
       </button>
       {open && (
         <div className="menu" role="menu">
-          {addKinds.map(({ kind, label }, i) => (
+          {registry.kinds().map(({ kind, label, icon }, i) => (
             <button key={kind} ref={i === 0 ? first : undefined} role="menuitem" className="menu-item" onClick={() => pick(kind)}>
-              <Icon name={kind} />
+              <Icon name={icon} />
               <span>{label}</span>
             </button>
           ))}

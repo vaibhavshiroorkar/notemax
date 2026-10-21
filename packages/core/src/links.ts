@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import type { Tree, TreeNode } from "./workspace";
+import type { NodeKind, Tree, TreeNode } from "./workspace";
 
 /** Name of the editor's link node. Stored in note bodies, so it must never change. */
 export const WIKI_LINK = "wikiLink";
@@ -15,17 +15,21 @@ export function extractLinks(body: Y.XmlFragment): string[] {
 }
 
 /**
- * Visible notes whose title matches `query`, best first: exact title, then
- * title start, then word start, then anywhere in the title. Folders are left
- * out because they do not open as pages.
+ * Visible items whose title matches `query`, best first: exact title, then
+ * title start, then word start, then anywhere in the title. Only notes by
+ * default, since links point at notes. Folders never open as pages.
  */
-export function searchNodes(tree: Tree, query: string, { limit = 8, exclude }: { limit?: number; exclude?: string } = {}): TreeNode[] {
+export function searchNodes(
+  tree: Tree,
+  query: string,
+  { limit = 8, exclude, kinds = ["note"] }: { limit?: number; exclude?: string; kinds?: NodeKind[] } = {},
+): TreeNode[] {
   const q = query.trim().toLowerCase();
   const scored: [number, TreeNode][] = [];
   for (const id of tree.visible) {
     if (id === exclude) continue;
     const node = tree.byId.get(id)!;
-    if (node.kind !== "note") continue;
+    if (!kinds.includes(node.kind)) continue;
     const title = node.title.toLowerCase();
     let score: number;
     if (!q) score = 3;

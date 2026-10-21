@@ -8,7 +8,8 @@ It's early and built as a personal tool first, so things change often.
 
 ## What works now
 
-- A rich text editor with headings, lists, code and Markdown shortcuts.
+- A rich text editor with headings, lists, to-dos, code and Markdown shortcuts. Type `/` to pick a block.
+- Ctrl+K to jump to any note or book, or to run any command.
 - Notes, folders and books in one sidebar. Drag to sort or to nest.
 - A page for each book, with its chapters in order and word counts. While a book is open, its chapters sit in a panel on the right, where you can add, reorder and trash them.
 - `[[` links between notes, and a "Linked from" list under each note. Renaming a note never breaks links to it.
@@ -34,7 +35,8 @@ packages/
 Inside `apps/app/src`, each feature has its own folder with its components and styles:
 
 ```
-app/         the window: layout, shortcuts, which page is open
+app/         the window: layout, which page is open
+plugins/     the plugin API and the list of built-in plugins
 features/    one folder per feature: editor, links, slash, sidebar, books, settings, ...
 ui/          shared pieces: icons, dialogs, menus, theme
 platform/    desktop or web, and saved preferences
@@ -42,6 +44,8 @@ data/        hooks that open notes and the workspace
 ```
 
 Imports between folders use `@/`, like `@/ui/Icon`. Imports inside a feature stay relative.
+
+Every feature plugs in the same way: it exports a plugin object from its `plugin.ts`, and `plugins/builtin.ts` registers it. A plugin can add editor extensions, `/` menu items, commands with shortcuts, kinds for the + menu, the page for a kind, a right sidebar and Settings sections. `plugins/types.ts` describes each one. The app reads all of these from the registry, so a new feature never needs changes elsewhere. Loading plugins written by other people will come later.
 
 In the browser, notes are stored in IndexedDB. The desktop app keeps them in one SQLite file, `notemax.db`, in the app's config folder. Both sit behind the same `DocStore` interface in `packages/core`, so the rest of the app doesn't care which one it gets.
 
@@ -65,7 +69,7 @@ Accounts are optional, and the app works fully without them. To try Google sign-
 
 Roughly in this order:
 
-1. Editing: a `/` command menu, a Ctrl+K switcher, better paste, and images.
+1. Editing: better paste, and images.
 2. Desktop polish: installer, app icon, start with the system.
 3. Keeping data safe: version history, Markdown export, importers and backups.
 4. Finding things: full-text search, unlinked mentions and a graph view.

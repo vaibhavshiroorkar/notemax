@@ -1,7 +1,7 @@
 import type { Ref } from "react";
 import type { SuggestionProps } from "@tiptap/suggestion";
 import { SuggestionList, type SuggestionListHandle } from "@/ui/suggestion/SuggestionList";
-import type { SlashItem } from "./slash-items";
+import type { SlashItem } from "@/plugins/types";
 import "./slash.css";
 
 /** The list that opens after typing /. */
