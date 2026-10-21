@@ -1,5 +1,18 @@
 import type { NodeKind } from "@notemax/core";
-import type { AppContext, Command, EditorContext, KindInfo, PageView, Plugin, SettingsSection, SidePanel, SlashItem } from "./types";
+import type {
+  AppContext,
+  Command,
+  EditorContext,
+  KindInfo,
+  PageAddon,
+  PageView,
+  Plugin,
+  SettingsSection,
+  SidebarFilter,
+  SidebarSection,
+  SidePanel,
+  SlashItem,
+} from "./types";
 
 const plugins: Plugin[] = [];
 
@@ -27,4 +40,10 @@ export const registry = {
       .filter((section) => section.when?.() ?? true)
       .sort((a, b) => a.order - b.order),
   commands: (app: AppContext): Command[] => all((p) => p.commands).filter((command) => command.when?.(app) ?? true),
+  /** Every command, including ones hidden right now, for the shortcut settings. */
+  allCommands: (): Command[] => all((p) => p.commands),
+  pageHeader: (kind: NodeKind): PageAddon[] => all((p) => p.pageHeader).filter((addon) => addon.kinds?.includes(kind) ?? true),
+  sidebarSections: (): SidebarSection[] => all((p) => p.sidebarSections).sort((a, b) => a.order - b.order),
+  /** Hooks, so call this list in the same order on every render. */
+  sidebarFilterHooks: (): (() => SidebarFilter | null)[] => all((p) => (p.useSidebarFilter ? [p.useSidebarFilter] : undefined)),
 };

@@ -1,5 +1,5 @@
 import { useEffect, useState, type DragEvent } from "react";
-import { canMove, createNode, moveNode, trashNode, type TreeItem } from "@notemax/core";
+import { canMove, createNode, moveNode, type TreeItem } from "@notemax/core";
 import { endDrag, placementFor, startDrag, useDragging, type DropTarget, type Placement } from "@/features/sidebar/drag";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
@@ -93,7 +93,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                   className="icon-button row-action"
                   aria-label={`Move ${title} to trash`}
                   title="Move to trash"
-                  onClick={() => trashNode(doc, chapter.id)}
+                  onClick={() => app.trash(chapter.id)}
                 >
                   <Icon name="trash" />
                 </button>

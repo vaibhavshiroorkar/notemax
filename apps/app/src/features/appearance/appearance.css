@@ -1,0 +1,71 @@
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Each swatch shows the shade the current theme would use. */
+.swatch {
+  --swatch: var(--swatch-light);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+:root[data-theme="dark"] .swatch {
+  --swatch: var(--swatch-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .swatch {
+    --swatch: var(--swatch-dark);
+  }
+}
+
+.swatch[aria-checked="true"],
+.swatch[data-checked] {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* The custom swatch is a color input dressed as a rainbow circle. */
+.swatch-custom {
+  position: relative;
+  overflow: hidden;
+  background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+  cursor: pointer;
+}
+
+.swatch-custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.swatch-custom:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.text-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.text-size input {
+  width: 160px;
+  accent-color: var(--accent);
+}
+
+.text-size output {
+  min-width: 40px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}

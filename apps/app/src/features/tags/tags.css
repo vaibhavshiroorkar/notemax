@@ -1,0 +1,125 @@
+/* Tags under a page title */
+
+.tag-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  /* UI text, not page text, so it keeps the app font at any reading size. */
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--hover);
+}
+
+.tag-name {
+  padding: 1px 2px 1px 10px;
+  color: var(--accent);
+}
+
+.tag-name:hover {
+  text-decoration: underline;
+}
+
+.tag-remove {
+  display: inline-flex;
+  padding: 3px 6px 3px 2px;
+  color: var(--muted);
+}
+
+.tag-remove:hover {
+  color: var(--danger);
+}
+
+.tag-remove svg {
+  width: 12px;
+  height: 12px;
+}
+
+.tag-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.tag-add:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.tag-add svg {
+  width: 12px;
+  height: 12px;
+}
+
+.tag-input-wrap {
+  position: relative;
+}
+
+.tag-input {
+  width: 140px;
+  padding: 1px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  outline: none;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.tag-suggest {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 240px;
+}
+
+/* Tags in the sidebar */
+
+.tags-section {
+  margin-top: 20px;
+}
+
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 4px 0 8px;
+}
+
+.tag-toggle,
+.tag-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tag-toggle:hover,
+.tag-more:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.tag-toggle[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.tag-count {
+  font-size: 11px;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}

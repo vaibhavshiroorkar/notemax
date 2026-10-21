@@ -20,7 +20,18 @@ export interface Plugin {
   kinds?: KindInfo[];
   pageViews?: PageView[];
   sidePanels?: SidePanel[];
+  /** Shown under the title of a note or book page, like its tags. */
+  pageHeader?: PageAddon[];
+  /** Extra sections in the left sidebar, between the notes and the trash. */
+  sidebarSections?: SidebarSection[];
+  /**
+   * A React hook. While it returns a filter, the sidebar lists only the items
+   * that pass it. It is called on every sidebar render.
+   */
+  useSidebarFilter?(): SidebarFilter | null;
   settings?: SettingsSection[];
+  /** On or off choices, shown in Settings under the plugin's name. Read them with useOption. */
+  options?: PluginOption[];
 }
 
 /** The open workspace and the actions any command or panel may take on it. */
@@ -31,7 +42,20 @@ export interface AppContext {
   open(id: string): void;
   /** Adds a note, book or folder at the top level and opens it. */
   create(kind: NodeKind): void;
+  /** Moves an item to the trash and offers Undo for a few seconds. */
+  trash(id: string): void;
+  /** A short message at the bottom of the window, with an optional button. */
+  notify(message: string, action?: { label: string; run(): void }): void;
+  /** Back and forward through opened pages, like a browser. */
+  canGoBack: boolean;
+  canGoForward: boolean;
+  goBack(): void;
+  goForward(): void;
+  /** Only the page shows: both sidebars and the status bar are hidden. */
+  focusMode: boolean;
+  toggleFocusMode(): void;
   toggleSidebar(): void;
+  showSidebar(): void;
   toggleSidePanel(): void;
   openSettings(): void;
   openPalette(): void;
@@ -41,7 +65,10 @@ export interface Command {
   id: string;
   title: string;
   keywords?: string[];
-  /** Like "Mod+K". Mod is Ctrl on Windows and Linux, and Cmd on macOS. */
+  /**
+   * The default, like "Mod+K". Mod is Ctrl on Windows and Linux, and Cmd on
+   * macOS. Users can change it in Settings, so read it with shortcutFor.
+   */
   shortcut?: string;
   /** Hides the command when it makes no sense, like "Move to trash" with nothing open. */
   when?(app: AppContext): boolean;
@@ -71,6 +98,7 @@ export interface KindInfo {
 
 export interface PageProps {
   node: TreeNode;
+  app: AppContext;
   tree: Tree;
   workspaceDoc: Y.Doc;
   hub: LinkHub;
@@ -92,6 +120,33 @@ export interface SidePanel {
   title: string;
   when(app: AppContext): boolean;
   component: ComponentType<{ app: AppContext }>;
+}
+
+export interface PageAddon {
+  id: string;
+  /** Kinds whose page shows it. All pages when left out. */
+  kinds?: NodeKind[];
+  component: ComponentType<{ node: TreeNode; app: AppContext }>;
+}
+
+export interface SidebarSection {
+  id: string;
+  /** Sections are sorted by this, low first. */
+  order: number;
+  component: ComponentType<{ app: AppContext }>;
+}
+
+export interface SidebarFilter {
+  /** Says what is filtered, like "#poetry". */
+  label: string;
+  matches(node: TreeNode): boolean;
+  clear(): void;
+}
+
+export interface PluginOption {
+  id: string;
+  label: string;
+  default: boolean;
 }
 
 export interface SettingsContext {

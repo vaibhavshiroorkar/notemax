@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type * as Y from "yjs";
 import { deleteForever, descendantsOf, restoreNode, type Tree, type TreeNode } from "@notemax/core";
+import { forgetDoc } from "@/data/docCache";
 import { getStore } from "@/platform/platform";
 import { ConfirmDialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
@@ -13,7 +14,9 @@ export function TrashSection({ tree, doc }: { tree: Tree; doc: Y.Doc }) {
     const ids = deleteForever(doc, node.id);
     // The tree no longer lists them, so a failure here only leaves unreachable
     // text behind on disk. It never brings a deleted note back.
-    getStore()
+    // Any copy still open in memory goes first, so a late save cannot bring text back.
+    Promise.all(ids.map(forgetDoc))
+      .then(getStore)
       .then((store) => Promise.all(ids.map((id) => store.remove(id))))
       .catch((err) => console.warn("[notemax] could not erase note bodies", err));
   };

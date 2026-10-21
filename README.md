@@ -9,12 +9,15 @@ It's early and built as a personal tool first, so things change often.
 ## What works now
 
 - A rich text editor with headings, lists, to-dos, code and Markdown shortcuts. Type `/` to pick a block.
-- Ctrl+K to jump to any note or book, or to run any command.
+- Ctrl+K to jump to any note or book, or to run any command. It opens on your recent pages. Type `#tag` there to search by tag.
+- Back and forward between pages (Ctrl+[ and Ctrl+], or the mouse side buttons). Each note opens where you left it, with the same scroll and cursor.
+- Tags on notes and books. Click a tag to see everything that has it.
 - Notes, folders and books in one sidebar. Drag to sort or to nest.
 - A page for each book, with its chapters in order and word counts. While a book is open, its chapters sit in a panel on the right, where you can add, reorder and trash them.
 - `[[` links between notes, and a "Linked from" list under each note. Renaming a note never breaks links to it.
-- Trash, with restore and delete forever.
-- Light and dark themes.
+- Trash with Undo, restore and delete forever. Duplicate a note, rename with F2.
+- Make it yours: light or dark theme, accent color, font, text size and page width. Drag the sidebars to resize them. Focus mode hides everything but the page. Change any keyboard shortcut, and turn plugin options on or off.
+- Stays fast with thousands of notes: typing, switching pages and startup are tested with 5,000 notes.
 - A desktop app with a tray icon and quick capture: press Ctrl+Alt+N in any app to jot a note down.
 - Edits are saved to disk within a fraction of a second, and the status bar always tells you whether they are.
 
@@ -38,14 +41,14 @@ Inside `apps/app/src`, each feature has its own folder with its components and s
 app/         the window: layout, which page is open
 plugins/     the plugin API and the list of built-in plugins
 features/    one folder per feature: editor, links, slash, sidebar, books, settings, ...
-ui/          shared pieces: icons, dialogs, menus, theme
+ui/          shared pieces: icons, dialogs, menus, theme and appearance
 platform/    desktop or web, and saved preferences
 data/        hooks that open notes and the workspace
 ```
 
 Imports between folders use `@/`, like `@/ui/Icon`. Imports inside a feature stay relative.
 
-Every feature plugs in the same way: it exports a plugin object from its `plugin.ts`, and `plugins/builtin.ts` registers it. A plugin can add editor extensions, `/` menu items, commands with shortcuts, kinds for the + menu, the page for a kind, a right sidebar and Settings sections. `plugins/types.ts` describes each one. The app reads all of these from the registry, so a new feature never needs changes elsewhere. Loading plugins written by other people will come later.
+Every feature plugs in the same way: it exports a plugin object from its `plugin.ts`, and `plugins/builtin.ts` registers it. A plugin can add editor extensions, `/` menu items, commands with shortcuts, kinds for the + menu, the page for a kind, things under a page title, sidebar sections and filters, a right sidebar, Settings sections and on or off options. `plugins/types.ts` describes each one. The app reads all of these from the registry, so a new feature never needs changes elsewhere. Loading plugins written by other people will come later.
 
 In the browser, notes are stored in IndexedDB. The desktop app keeps them in one SQLite file, `notemax.db`, in the app's config folder. Both sit behind the same `DocStore` interface in `packages/core`, so the rest of the app doesn't care which one it gets.
 

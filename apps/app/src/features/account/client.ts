@@ -67,7 +67,8 @@ export async function signInWithGoogle(signal: AbortSignal): Promise<void> {
 export async function finishWebSignIn(params: URLSearchParams): Promise<string | undefined> {
   const { data, error } = await supabase.auth.getSession();
   // Drop the code from the address bar, so a reload does not try to use it twice.
-  history.replaceState(null, "", location.pathname + location.hash);
+  // The state is kept: it says which page this history entry is.
+  history.replaceState(history.state, "", location.pathname + location.hash);
   if (params.get("error_description")) return params.get("error_description")!;
   if (error) return error.message;
   if (!data.session) return "Google sign-in did not finish.";

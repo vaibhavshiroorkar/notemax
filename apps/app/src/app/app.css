@@ -1,7 +1,11 @@
-/* Left sidebar, page, right sidebar. A hidden side keeps its column at zero width. */
+/* Left sidebar, page, right sidebar. A hidden side keeps its column at zero width.
+   The widths are variables so the resize handles can change them. */
 .app {
+  --sidebar-width: 260px;
+  --side-panel-width: 240px;
+  position: relative;
   display: grid;
-  grid-template-columns: 260px 1fr 0;
+  grid-template-columns: min(var(--sidebar-width), 45vw) 1fr 0;
   height: 100vh;
 }
 
@@ -10,11 +14,59 @@
 }
 
 .app[data-side-panel="open"] {
-  grid-template-columns: 260px 1fr 240px;
+  grid-template-columns: min(var(--sidebar-width), 45vw) 1fr min(var(--side-panel-width), 45vw);
 }
 
 .app[data-sidebar="closed"][data-side-panel="open"] {
-  grid-template-columns: 0 1fr 240px;
+  grid-template-columns: 0 1fr min(var(--side-panel-width), 45vw);
+}
+
+/* Opening and closing slide the columns. Not while a resize handle is dragged,
+   where the width must follow the pointer exactly. */
+.app {
+  transition: grid-template-columns 0.18s ease;
+}
+
+.resizing .app {
+  transition: none;
+}
+
+/* While a side slides, its column is narrower than what is in it. Keeping the
+   contents at full width and clipping them makes them slide, not squeeze. */
+.sidebar > * {
+  min-width: min(var(--sidebar-width), 45vw);
+}
+
+.side-panel > * {
+  min-width: calc(min(var(--side-panel-width), 45vw) - 16px);
+}
+
+/* A side on its way out takes no more clicks. */
+.app[data-sidebar="closed"] .sidebar,
+.app[data-side-panel="closed"] .side-panel {
+  pointer-events: none;
+}
+
+/* Focus mode: only the page. The buttons and status come back on hover. */
+.app[data-focus] .status-bar,
+.app[data-focus] .sidebar-toggle,
+.app[data-focus] .side-panel-toggle {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.app[data-focus] .status-bar:hover,
+.app[data-focus] .sidebar-toggle:hover,
+.app[data-focus] .sidebar-toggle:focus-visible,
+.app[data-focus] .side-panel-toggle:hover,
+.app[data-focus] .side-panel-toggle:focus-visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app {
+    transition: none;
+  }
 }
 
 .main {
@@ -33,6 +85,7 @@
 .side-panel {
   grid-column: 3;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   background: var(--sidebar-bg);
   border-left: 1px solid var(--border);
@@ -47,7 +100,7 @@
 
 /* The status bar is pinned to the window corner; keep it off the right sidebar. */
 .app[data-side-panel="open"] .status-bar {
-  right: 256px;
+  right: calc(min(var(--side-panel-width), 45vw) + 16px);
 }
 
 @media (max-width: 700px) {
@@ -77,5 +130,36 @@
   .side-panel-toggle {
     position: fixed;
     z-index: 20;
+  }
+
+  /* The overlays slide in from their edge and back out. */
+  .sidebar,
+  .side-panel {
+    transition: transform 0.18s ease;
+  }
+
+  .app[data-sidebar="closed"] .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .app[data-side-panel="closed"] .side-panel {
+    transform: translateX(100%);
+  }
+
+  @starting-style {
+    .app[data-sidebar="open"] .sidebar {
+      transform: translateX(-100%);
+    }
+
+    .app[data-side-panel="open"] .side-panel {
+      transform: translateX(100%);
+    }
+  }
+}
+
+@media (max-width: 700px) and (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .side-panel {
+    transition: none;
   }
 }

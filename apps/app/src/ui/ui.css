@@ -197,7 +197,8 @@ kbd {
   background: var(--active);
 }
 
-/* Drop markers: a line for before or after, an outline for inside. */
+/* Drop markers: a line for before or after, an outline for inside. They stay
+   inside the row, since sidebar rows clip what is drawn outside them. */
 .row {
   position: relative;
 }
@@ -214,11 +215,11 @@ kbd {
 }
 
 .row[data-drop="before"]::before {
-  top: -1px;
+  top: 0;
 }
 
 .row[data-drop="after"]::after {
-  bottom: -1px;
+  bottom: 0;
 }
 
 .row[data-drop="inside"] {

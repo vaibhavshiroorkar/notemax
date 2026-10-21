@@ -42,3 +42,37 @@
   overflow-wrap: anywhere;
   user-select: all;
 }
+
+/* A label on the left and its control on the right. */
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+.settings-check {
+  cursor: pointer;
+}
+
+.settings-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.plugin-options + .plugin-options {
+  margin-top: 8px;
+}
+
+.plugin-options h4 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}

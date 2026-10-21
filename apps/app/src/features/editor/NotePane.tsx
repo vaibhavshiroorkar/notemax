@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react";
-import type * as Y from "yjs";
 import type { Editor as TiptapEditor } from "@tiptap/react";
-import { WELCOME_ID, renameNode, type SaveStatus, type Tree, type TreeNode } from "@notemax/core";
+import { WELCOME_ID, renameNode } from "@notemax/core";
 import { ChapterNav } from "@/features/books/ChapterNav";
 import { Backlinks } from "@/features/links/Backlinks";
-import type { LinkHub } from "@/features/links/link-hub";
 import { useLocalDoc } from "@/data/useLocalDoc";
+import { PageHeader } from "@/plugins/PageHeader";
+import type { PageProps } from "@/plugins/types";
 import { Editor } from "./Editor";
 import { useBodyIndex } from "./useBodyIndex";
+import { useRememberPosition } from "./usePosition";
 import { welcomeContent } from "./welcome";
 import "./editor.css";
 
@@ -19,24 +20,18 @@ function focusBody(editor: TiptapEditor) {
   editor.commands.focus("start");
 }
 
-export function NotePane({
-  node,
-  tree,
-  hub,
-  workspaceDoc,
-  onStatus,
-  onReady,
-}: {
-  node: TreeNode;
-  tree: Tree;
-  hub: LinkHub;
-  workspaceDoc: Y.Doc;
-  onStatus(status: SaveStatus): void;
-  onReady(): void;
-}) {
+// Opening a note should not pull focus out of a field someone is typing in.
+const isTyping = () => {
+  const el = document.activeElement;
+  return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || (el as HTMLElement).isContentEditable);
+};
+
+export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady }: PageProps) {
   const { local, status, openError } = useLocalDoc(node.id);
   const editorRef = useRef<TiptapEditor | null>(null);
   const focusWhenReady = useRef(false);
+  const articleRef = useRef<HTMLElement>(null);
+  const restorePosition = useRememberPosition(node.id);
 
   useEffect(() => onStatus(status), [status, onStatus]);
   useBodyIndex(local?.doc, workspaceDoc, node.id);
@@ -47,7 +42,7 @@ export function NotePane({
   const book = parent?.kind === "book" ? parent : undefined;
 
   return (
-    <article className="note">
+    <article className="note" ref={articleRef}>
       {book && <ChapterNav book={book} chapterId={node.id} onOpen={(id) => hub.open(id)} />}
       <input
         className="note-title"
@@ -66,6 +61,7 @@ export function NotePane({
           else focusWhenReady.current = true;
         }}
       />
+      <PageHeader node={node} app={app} />
       {local && (
         <Editor
           doc={local.doc}
@@ -75,9 +71,13 @@ export function NotePane({
           placeholder="Start writing..."
           onReady={(editor) => {
             editorRef.current = editor;
+            const returning = restorePosition(editor, articleRef.current?.closest(".main") ?? null);
             if (focusWhenReady.current) {
               focusWhenReady.current = false;
               focusBody(editor);
+            } else if (returning && !isTyping()) {
+              // Back to a note: the cursor is where it was, ready to keep writing.
+              editor.view.focus();
             }
             onReady();
           }}

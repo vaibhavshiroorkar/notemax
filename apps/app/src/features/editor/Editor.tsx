@@ -5,6 +5,7 @@ import Collaboration from "@tiptap/extension-collaboration";
 import { Placeholder } from "@tiptap/extensions";
 import type * as Y from "yjs";
 import type { LinkHub } from "@/features/links/link-hub";
+import { useOption } from "@/plugins/options";
 import { registry } from "@/plugins/registry";
 
 export function Editor({
@@ -23,6 +24,7 @@ export function Editor({
   placeholder?: string;
   onReady?: (editor: TiptapEditor) => void;
 }) {
+  const spellcheck = useOption("notes", "spellcheck");
   const editor = useEditor(
     {
       extensions: [
@@ -48,6 +50,11 @@ export function Editor({
     // Run once per editor instance; the callbacks are not meant to re-trigger it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
+
+  // Set on the live element, so switching it in Settings needs no new editor.
+  useEffect(() => {
+    editor?.view.dom.setAttribute("spellcheck", String(spellcheck));
+  }, [editor, spellcheck]);
 
   return <EditorContent editor={editor} className="editor" />;
 }

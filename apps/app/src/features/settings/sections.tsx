@@ -1,35 +1,6 @@
 import { useEffect, useState } from "react";
 import { isDesktop } from "@/platform/platform";
 import type { SettingsContext } from "@/plugins/types";
-import { getTheme, setTheme, type Theme } from "@/ui/theme";
-
-const themes: { value: Theme; label: string }[] = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-];
-
-export function AppearanceSection() {
-  const [theme, setThemeState] = useState(getTheme);
-
-  const chooseTheme = (next: Theme) => {
-    setThemeState(next);
-    setTheme(next);
-  };
-
-  return (
-    <section className="settings-section">
-      <h3>Appearance</h3>
-      <div className="segmented" role="radiogroup" aria-label="Theme">
-        {themes.map(({ value, label }) => (
-          <button key={value} role="radio" aria-checked={theme === value} onClick={() => chooseTheme(value)}>
-            {label}
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 // Must match DB_URL in apps/desktop/src-tauri/src/lib.rs. The SQL plugin keeps
 // the file in the app's config folder.

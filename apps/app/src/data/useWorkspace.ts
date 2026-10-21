@@ -10,7 +10,9 @@ export function useWorkspace() {
   useEffect(() => {
     if (!local) return;
     ensureWelcome(local.doc);
-    const refresh = () => setTree(readTree(local.doc));
+    // Passing the last tree keeps unchanged items as the same objects, which is
+    // what lets the sidebar skip rows a change did not touch.
+    const refresh = () => setTree((previous) => readTree(local.doc, previous));
     refresh();
     local.doc.on("update", refresh);
     return () => local.doc.off("update", refresh);

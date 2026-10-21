@@ -1,27 +1,14 @@
 import { useEffect } from "react";
-import type * as Y from "yjs";
-import { createNode, renameNode, type SaveStatus, type Tree, type TreeNode } from "@notemax/core";
+import { createNode, renameNode } from "@notemax/core";
+import { PageHeader } from "@/plugins/PageHeader";
+import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { useWordBackfill } from "./useWordBackfill";
 import "./books.css";
 
 const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
 
-export function BookPane({
-  node,
-  tree,
-  workspaceDoc,
-  onSelect,
-  onStatus,
-  onReady,
-}: {
-  node: TreeNode;
-  tree: Tree;
-  workspaceDoc: Y.Doc;
-  onSelect(id: string): void;
-  onStatus(status: SaveStatus): void;
-  onReady(): void;
-}) {
+export function BookPane({ node, app, tree, workspaceDoc, onSelect, onStatus, onReady }: PageProps) {
   const chapters = tree.items.get(node.id)?.children ?? [];
   useWordBackfill(chapters, workspaceDoc);
 
@@ -44,6 +31,7 @@ export function BookPane({
         autoFocus={node.title === ""}
         onChange={(event) => renameNode(workspaceDoc, node.id, event.target.value)}
       />
+      <PageHeader node={node} app={app} />
       <p className="book-summary">
         {plural(chapters.length, "chapter")}
         {chapters.length > 0 && `, ${counted ? plural(total, "word") : "counting words..."}`}

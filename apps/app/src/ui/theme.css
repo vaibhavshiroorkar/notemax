@@ -1,5 +1,6 @@
 /* Colors shared by the main window and the capture window. The theme setting
-   puts data-theme on <html>; without it the system setting decides. */
+   puts data-theme on <html>; without it the system setting decides. The accent
+   setting sets --accent-light and --accent-dark there too (ui/appearance.ts). */
 :root {
   color-scheme: light;
   font-family: system-ui, sans-serif;
@@ -12,7 +13,7 @@
   --active: rgba(0, 0, 0, 0.08);
   --border: rgba(0, 0, 0, 0.08);
   --danger: #c62828;
-  --accent: #2f6fdd;
+  --accent: var(--accent-light, #2f6fdd);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
@@ -29,7 +30,7 @@
     --active: rgba(255, 255, 255, 0.1);
     --border: rgba(255, 255, 255, 0.08);
     --danger: #ef6b6b;
-    --accent: #6ea0ff;
+    --accent: var(--accent-dark, #6ea0ff);
     --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   }
 }
@@ -44,6 +45,6 @@
   --active: rgba(255, 255, 255, 0.1);
   --border: rgba(255, 255, 255, 0.08);
   --danger: #ef6b6b;
-  --accent: #6ea0ff;
+  --accent: var(--accent-dark, #6ea0ff);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }

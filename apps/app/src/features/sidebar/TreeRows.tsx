@@ -1,25 +1,22 @@
-import type { DragEvent } from "react";
+import { memo, type DragEvent } from "react";
 import { canMove, type NodeKind, type Tree, type TreeItem } from "@notemax/core";
+import { prefetchDoc } from "@/data/docCache";
+import { useSelect } from "@/platform/store";
 import { Icon } from "@/ui/Icon";
-import { placementFor, zoneFor, type DropTarget, type Placement } from "./drag";
+import { dragged, endDrag, placementFor, startDrag, zoneFor, type Placement, type Zone } from "./drag";
+import { collapsed, dropTarget, editingId, markedId, toggleCollapsed } from "./state";
 
+/**
+ * Actions the rows share. The sidebar makes it once, so it never changes and
+ * never makes a row redraw. Anything that changes is read from a store.
+ */
 export interface RowContext {
-  tree: Tree;
-  activeId: string | null;
-  collapsed: Set<string>;
-  dragging: TreeItem | null;
-  dropTarget: DropTarget | null;
-  /** The folder whose name is being typed in its row. */
-  editingId: string | null;
-  edit(id: string | null): void;
+  /** The latest tree, for working out where a drop lands. */
+  tree(): Tree;
   rename(id: string, title: string): void;
-  toggle(id: string): void;
   select(id: string): void;
   add(kind: NodeKind, parentId: string): void;
   trash(id: string): void;
-  startDrag(item: TreeItem): void;
-  endDrag(): void;
-  hover(target: DropTarget | null): void;
   drop(placement: Placement): void;
 }
 
@@ -47,26 +44,51 @@ function FolderNameInput({ item, ctx }: { item: TreeItem; ctx: RowContext }) {
         autoFocus
         onFocus={(event) => event.target.select()}
         onChange={(event) => ctx.rename(item.id, event.target.value)}
-        onKeyDown={(event) => (event.key === "Enter" || event.key === "Escape") && ctx.edit(null)}
-        onBlur={() => ctx.edit(null)}
+        onKeyDown={(event) => (event.key === "Enter" || event.key === "Escape") && editingId.set(null)}
+        onBlur={() => editingId.set(null)}
       />
     </span>
   );
 }
 
-function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowContext }) {
+// Resting on a note for a moment, or pressing on it, starts loading it, so the
+// click usually finds it ready. Passing over rows on the way elsewhere does not.
+const HOVER_MS = 80;
+let hoverTimer: ReturnType<typeof setTimeout> | undefined;
+const prefetchOnHover = (id: string) => ({
+  onPointerEnter: () => {
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(() => prefetchDoc(id), HOVER_MS);
+  },
+  onPointerLeave: () => clearTimeout(hoverTimer),
+  onPointerDown: () => prefetchDoc(id),
+});
+
+const setDropTarget = (id: string, zone: Zone) => {
+  const current = dropTarget.get();
+  // Dragover fires many times a second; only a real change is worth telling the rows about.
+  if (current?.id !== id || current.zone !== zone) dropTarget.set({ id, zone });
+};
+
+// Memoized: the tree keeps unchanged items as the same objects, so a row redraws
+// only when its own item, or something inside it, changed.
+const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowContext }) {
+  const open = useSelect(collapsed, (closed) => !closed.has(item.id));
+  const editing = useSelect(editingId, (id) => id === item.id);
+  const current = useSelect(markedId, (id) => id === item.id);
+  const isDragged = useSelect(dragged, (d) => d?.id === item.id);
+  const dropZone = useSelect(dropTarget, (target) => (target?.id === item.id ? target.zone : undefined));
+
   // A book's chapters are listed in the book panel on the right, not here.
   const hasChildren = item.kind !== "book" && item.children.length > 0;
-  const open = !ctx.collapsed.has(item.id);
   const title = item.title || "Untitled";
-  const dropZone = ctx.dropTarget?.id === item.id ? ctx.dropTarget.zone : undefined;
-  // While a chapter is open, its book stays marked, since the chapter has no row here.
-  const current = item.id === ctx.activeId || (item.kind === "book" && ctx.tree.items.get(ctx.activeId ?? "")?.parentId === item.id);
 
   const allowedPlacement = (event: DragEvent) => {
-    if (!ctx.dragging) return null;
-    const placement = placementFor(ctx.tree, ctx.dragging, item, zoneFor(event, item, ctx.dragging));
-    return placement && !canMove(ctx.tree, ctx.dragging.id, placement.parentId) ? placement : null;
+    const moving = dragged.get();
+    if (!moving) return null;
+    const tree = ctx.tree();
+    const placement = placementFor(tree, moving, item, zoneFor(event, item, moving));
+    return placement && !canMove(tree, moving.id, placement.parentId) ? placement : null;
   };
 
   return (
@@ -75,24 +97,25 @@ function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowCont
         className="row"
         data-kind={item.kind}
         data-drop={dropZone}
-        data-dragging={ctx.dragging?.id === item.id || undefined}
+        data-dragging={isDragged || undefined}
         aria-current={current ? "page" : undefined}
         style={{ paddingLeft: 4 + depth * 14 }}
         // Off while naming, so selecting text in the name box does not start a drag.
-        draggable={ctx.editingId !== item.id}
+        draggable={!editing}
         onDragStart={(event) => {
           // Firefox only starts a drag when some data is set.
           event.dataTransfer.setData("text/plain", item.id);
           event.dataTransfer.effectAllowed = "move";
-          ctx.startDrag(item);
+          startDrag(item);
         }}
-        onDragEnd={ctx.endDrag}
+        onDragEnd={endDrag}
         onDragOver={(event) => {
-          if (!ctx.dragging) return;
-          if (!allowedPlacement(event)) return ctx.hover(null);
+          const moving = dragged.get();
+          if (!moving) return;
+          if (!allowedPlacement(event)) return dropTarget.get() && dropTarget.set(null);
           // Calling preventDefault is how a drop target says "you may drop here".
           event.preventDefault();
-          ctx.hover({ id: item.id, zone: zoneFor(event, item, ctx.dragging) });
+          setDropTarget(item.id, zoneFor(event, item, moving));
         }}
         onDrop={(event) => {
           event.preventDefault();
@@ -101,22 +124,29 @@ function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowCont
         }}
       >
         {hasChildren ? (
-          <button className="icon-button" aria-label={open ? `Collapse ${title}` : `Expand ${title}`} onClick={() => ctx.toggle(item.id)}>
+          <button className="icon-button" aria-label={open ? `Collapse ${title}` : `Expand ${title}`} onClick={() => toggleCollapsed(item.id)}>
             <Icon name={open ? "chevron-down" : "chevron-right"} />
           </button>
         ) : (
           <span className="icon-spacer" />
         )}
-        {item.kind === "folder" && ctx.editingId === item.id ? (
+        {item.kind === "folder" && editing ? (
           <FolderNameInput item={item} ctx={ctx} />
         ) : item.kind === "folder" ? (
           // Folders have no page of their own: clicking one opens or closes it.
           <button
             className="row-title icon-title"
             aria-expanded={open}
-            title="Double-click to rename"
-            onClick={() => ctx.toggle(item.id)}
-            onDoubleClick={() => ctx.edit(item.id)}
+            title="Double-click or F2 to rename"
+            onClick={() => toggleCollapsed(item.id)}
+            onDoubleClick={() => editingId.set(item.id)}
+            onKeyDown={(event) => {
+              if (event.key !== "F2") return;
+              // Keeps the app-wide F2 (rename the open page) from also running.
+              event.stopPropagation();
+              event.preventDefault();
+              editingId.set(item.id);
+            }}
           >
             <Icon name="folder" />
             <span>{title}</span>
@@ -128,7 +158,7 @@ function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowCont
             <span>{title}</span>
           </button>
         ) : (
-          <button className="row-title" onClick={() => ctx.select(item.id)}>
+          <button className="row-title" onClick={() => ctx.select(item.id)} {...prefetchOnHover(item.id)}>
             {title}
           </button>
         )}
@@ -154,4 +184,4 @@ function Row({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowCont
       {hasChildren && open && <Rows items={item.children} depth={depth + 1} ctx={ctx} />}
     </li>
   );
-}
+});

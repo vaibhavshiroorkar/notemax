@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { ROOT, WELCOME_ID, createNode, ensureWelcome, readTree, renameNode, restoreNode, trashNode } from "../src";
+import { ROOT, WELCOME_ID, addTag, createNode, duplicateNote, ensureWelcome, moveNode, readTree, renameNode, restoreNode, setWords, trashNode } from "../src";
 
 const titles = (items: { title: string }[]) => items.map((i) => i.title);
 
@@ -200,5 +200,106 @@ describe("workspaces from before folders", () => {
     writeRaw(doc, "book", { kind: "book", parentId: "root" });
     createNode(doc, "note", "book", "New chapter");
     expect(titles(readTree(doc).top[0].children)).toEqual(["New chapter"]);
+  });
+});
+
+describe("reading the tree again", () => {
+  function setup() {
+    const doc = new Y.Doc();
+    const a = createNode(doc, "folder", ROOT, "A");
+    const b = createNode(doc, "folder", ROOT, "B");
+    const a1 = createNode(doc, "note", a, "a1");
+    const a2 = createNode(doc, "note", a, "a2");
+    const b1 = createNode(doc, "note", b, "b1");
+    return { doc, a, b, a1, a2, b1, tree: readTree(doc) };
+  }
+
+  it("returns the same objects when nothing changed", () => {
+    const { doc, tree } = setup();
+    const again = readTree(doc, tree);
+    expect(again.top).toBe(tree.top);
+    for (const [id, item] of tree.items) expect(again.items.get(id)).toBe(item);
+    for (const [id, node] of tree.byId) expect(again.byId.get(id)).toBe(node);
+  });
+
+  it("replaces only the changed item and the items above it", () => {
+    const { doc, a, b, a1, a2, b1, tree } = setup();
+    renameNode(doc, a1, "a1 renamed");
+    const again = readTree(doc, tree);
+    expect(again.items.get(a1)).not.toBe(tree.items.get(a1));
+    expect(again.items.get(a1)!.title).toBe("a1 renamed");
+    expect(again.items.get(a)).not.toBe(tree.items.get(a));
+    expect(again.top).not.toBe(tree.top);
+    expect(again.items.get(a2)).toBe(tree.items.get(a2));
+    expect(again.items.get(b)).toBe(tree.items.get(b));
+    expect(again.items.get(b1)).toBe(tree.items.get(b1));
+  });
+
+  it("sees changes to words, tags, moves and the trash", () => {
+    const { doc, a, b, a1, b1, tree } = setup();
+    setWords(doc, b1, 12);
+    let again = readTree(doc, tree);
+    expect(again.items.get(b1)!.words).toBe(12);
+    expect(again.items.get(b)).not.toBe(tree.items.get(b));
+    expect(again.items.get(a)).toBe(tree.items.get(a));
+
+    const before = again;
+    addTag(doc, a1, "poetry");
+    again = readTree(doc, before);
+    expect(again.items.get(a1)!.tags).toEqual(["poetry"]);
+    expect(again.items.get(a1)).not.toBe(before.items.get(a1));
+
+    const beforeMove = again;
+    moveNode(doc, a1, b, 0);
+    again = readTree(doc, beforeMove);
+    expect(titles(again.items.get(a)!.children)).toEqual(["a2"]);
+    expect(titles(again.items.get(b)!.children)).toEqual(["a1", "b1"]);
+    expect(again.items.get(b1)).toBe(beforeMove.items.get(b1));
+
+    const beforeTrash = again;
+    trashNode(doc, b1);
+    again = readTree(doc, beforeTrash);
+    expect(titles(again.items.get(b)!.children)).toEqual(["a1"]);
+    expect(again.trash.map((n) => n.id)).toEqual([b1]);
+  });
+
+  it("gives the same tree as reading from scratch", () => {
+    const { doc, a1, b, tree } = setup();
+    renameNode(doc, a1, "x");
+    moveNode(doc, a1, b, 1);
+    const plain = (t: ReturnType<typeof readTree>) => JSON.stringify(t.top);
+    expect(plain(readTree(doc, tree))).toBe(plain(readTree(doc)));
+  });
+});
+
+describe("duplicating a note", () => {
+  it("puts the copy right after the note, with its tags, links and words", () => {
+    const doc = new Y.Doc();
+    const folder = createNode(doc, "folder", ROOT, "F");
+    const a = createNode(doc, "note", folder, "A");
+    createNode(doc, "note", folder, "B");
+    addTag(doc, a, "poetry");
+    setWords(doc, a, 42);
+    const copy = duplicateNote(doc, a);
+    const tree = readTree(doc);
+    expect(titles(tree.items.get(folder)!.children)).toEqual(["A", "A copy", "B"]);
+    const node = tree.byId.get(copy)!;
+    expect(node.tags).toEqual(["poetry"]);
+    expect(node.words).toBe(42);
+    expect(node.id).not.toBe(a);
+  });
+
+  it("works at the top level and for an untitled note", () => {
+    const doc = new Y.Doc();
+    const a = createNode(doc, "note", ROOT, "");
+    createNode(doc, "note", ROOT, "B");
+    duplicateNote(doc, a);
+    expect(titles(readTree(doc).top)).toEqual(["", "", "B"]);
+  });
+
+  it("refuses folders and books", () => {
+    const doc = new Y.Doc();
+    const folder = createNode(doc, "folder", ROOT, "F");
+    expect(() => duplicateNote(doc, folder)).toThrow();
   });
 });

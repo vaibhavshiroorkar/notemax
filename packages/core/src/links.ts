@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { hasTags } from "./tags";
 import type { NodeKind, Tree, TreeNode } from "./workspace";
 
 /** Name of the editor's link node. Stored in note bodies, so it must never change. */
@@ -17,19 +18,20 @@ export function extractLinks(body: Y.XmlFragment): string[] {
 /**
  * Visible items whose title matches `query`, best first: exact title, then
  * title start, then word start, then anywhere in the title. Only notes by
- * default, since links point at notes. Folders never open as pages.
+ * default, since links point at notes. Folders never open as pages. With
+ * `tags`, only items carrying all of them count (see hasTags).
  */
 export function searchNodes(
   tree: Tree,
   query: string,
-  { limit = 8, exclude, kinds = ["note"] }: { limit?: number; exclude?: string; kinds?: NodeKind[] } = {},
+  { limit = 8, exclude, kinds = ["note"], tags = [] }: { limit?: number; exclude?: string; kinds?: NodeKind[]; tags?: string[] } = {},
 ): TreeNode[] {
   const q = query.trim().toLowerCase();
   const scored: [number, TreeNode][] = [];
   for (const id of tree.visible) {
     if (id === exclude) continue;
     const node = tree.byId.get(id)!;
-    if (!kinds.includes(node.kind)) continue;
+    if (!kinds.includes(node.kind) || !hasTags(node, tags)) continue;
     const title = node.title.toLowerCase();
     let score: number;
     if (!q) score = 3;

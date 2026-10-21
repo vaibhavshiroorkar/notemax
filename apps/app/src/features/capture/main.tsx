@@ -1,10 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { initTheme } from "@/ui/theme";
+import { initAppearance } from "@/ui/appearance";
 import { Capture } from "./Capture";
 import "./capture.css";
 
-initTheme();
+initAppearance();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

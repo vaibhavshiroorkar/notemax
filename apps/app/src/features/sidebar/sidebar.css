@@ -111,3 +111,40 @@
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
+
+/* Shown above the list while a filter, like a tag, is on. */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 6px;
+  padding: 4px 4px 4px 8px;
+  border-radius: 6px;
+  background: var(--hover);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.row-where {
+  flex-shrink: 0;
+  max-width: 40%;
+  padding: 0 8px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row > span.row-title {
+  cursor: default;
+}
+
+/* Rows out of view skip layout and paint until they scroll in. With thousands
+   of notes this is what keeps startup and switching pages fast. 30px is a
+   note row; once a row has been seen, its real height is remembered. */
+.sidebar .row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 30px;
+}

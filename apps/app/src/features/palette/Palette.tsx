@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from "react";
-import { ROOT, searchNodes, type Tree, type TreeNode } from "@notemax/core";
+import { ROOT, normalizeTag, searchNodes, type Tree, type TreeNode } from "@notemax/core";
+import { recentPages } from "@/data/recent";
 import { registry } from "@/plugins/registry";
-import { formatShortcut } from "@/plugins/shortcuts";
+import { formatShortcut, shortcutFor } from "@/plugins/shortcuts";
 import type { AppContext, Command } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
@@ -25,13 +26,46 @@ function matchesCommand(command: Command, q: string): boolean {
   return title.includes(q) || [...title.split(/\s+/), ...(command.keywords ?? [])].some((word) => word.startsWith(q));
 }
 
+/** Splits "#fanfic dragon" into the tags and the words to look for in titles. */
+function splitTags(query: string) {
+  const tags: string[] = [];
+  const words = query.split(/\s+/).filter((word) => {
+    if (!word.startsWith("#")) return true;
+    const tag = normalizeTag(word);
+    if (tag) tags.push(tag);
+    return false;
+  });
+  return { tags, text: words.join(" ") };
+}
+
+const RECENT_SHOWN = 8;
+
+/** Recently opened notes and books that are still in the sidebar, the open one left out. */
+function recentNodes(app: AppContext): TreeNode[] {
+  return recentPages
+    .get()
+    .filter((id) => id !== app.activeId && app.tree.visible.has(id))
+    .map((id) => app.tree.byId.get(id)!)
+    .filter((node) => node.kind === "note" || node.kind === "book")
+    .slice(0, RECENT_SHOWN);
+}
+
 function search(app: AppContext, query: string): PaletteItem[] {
   // A leading > means commands only, as in most editors.
   const commandsOnly = query.startsWith(">");
+  if (!commandsOnly && query.includes("#")) {
+    // Tags narrow the pages. Commands have no tags, so they drop out.
+    const { tags, text } = splitTags(query);
+    return searchNodes(app.tree, text.trim().toLowerCase(), { kinds: ["note", "book"], tags, limit: 20 }).map((node) => ({
+      type: "page",
+      node,
+      where: whereOf(app.tree, node.id),
+    }));
+  }
   const q = (commandsOnly ? query.slice(1) : query).trim().toLowerCase();
-  const pages: PaletteItem[] = commandsOnly
-    ? []
-    : searchNodes(app.tree, q, { kinds: ["note", "book"] }).map((node) => ({ type: "page", node, where: whereOf(app.tree, node.id) }));
+  // Before anything is typed, the pages worth offering are the ones opened lately.
+  const found = commandsOnly ? [] : q ? searchNodes(app.tree, q, { kinds: ["note", "book"] }) : recentNodes(app);
+  const pages: PaletteItem[] = found.map((node) => ({ type: "page", node, where: whereOf(app.tree, node.id) }));
   const commands: PaletteItem[] = registry
     .commands(app)
     .filter((command) => command.id !== "palette.open" && matchesCommand(command, q))
@@ -57,7 +91,7 @@ export function Palette({ app, onClose }: { app: AppContext; onClose(): void }) 
       <input
         className="palette-input"
         aria-label="Search"
-        placeholder="Search notes and books, or type > for commands"
+        placeholder="Search notes and books, #tag to filter, > for commands"
         autoFocus
         value={query}
         onChange={(event) => setQuery(event.target.value)}
@@ -88,7 +122,7 @@ export function Palette({ app, onClose }: { app: AppContext; onClose(): void }) 
                 <Icon name="command" />
                 <span className="suggest-title">{item.command.title}</span>
               </span>
-              {item.command.shortcut && <kbd>{formatShortcut(item.command.shortcut)}</kbd>}
+              {shortcutFor(item.command) && <kbd>{formatShortcut(shortcutFor(item.command))}</kbd>}
             </>
           )
         }

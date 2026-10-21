@@ -1,0 +1,65 @@
+/* Bottom center, clear of the status bar in the corner. Clicks pass through the empty space. */
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* Colors flipped from the page, so a toast stands out in both themes. */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: min(480px, calc(100vw - 32px));
+  padding: 6px 6px 6px 14px;
+  border-radius: 8px;
+  background: var(--text);
+  color: var(--bg);
+  box-shadow: var(--shadow);
+  font-size: 14px;
+  pointer-events: auto;
+  animation: toast-in 0.16s ease-out;
+}
+
+.toast-message {
+  flex: 1;
+  min-width: 0;
+  padding-right: 6px;
+}
+
+.toast-action {
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: color-mix(in srgb, var(--accent) 55%, var(--bg));
+  font-weight: 600;
+}
+
+.toast-action:hover,
+.toast .toast-close:hover {
+  background: color-mix(in srgb, var(--bg) 15%, transparent);
+}
+
+.toast .toast-close {
+  color: inherit;
+  opacity: 0.7;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

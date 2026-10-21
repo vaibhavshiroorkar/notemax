@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { generateKeyBetween } from "fractional-indexing";
+import { normalizeTag } from "./tags";
 
 /** Parent id of everything at the top level of the sidebar. */
 export const ROOT = "root";
@@ -42,6 +43,14 @@ export interface TreeNode {
   links: string[];
   /** Words in the body, or null until the note is next opened. Kept here for the same reason as links. */
   words: number | null;
+  /** Sorted. Each one is its own `tag:` field, so tags added on two devices at once both survive. */
+  tags: string[];
+}
+
+export interface TagCount {
+  tag: string;
+  /** Visible items with this tag. */
+  count: number;
 }
 
 export interface TreeItem extends TreeNode {
@@ -61,11 +70,15 @@ export interface Tree {
   visible: Set<string>;
   /** For each target id, the visible nodes that link to it, sorted by title. */
   backlinks: Map<string, TreeNode[]>;
+  /** Every tag on a visible item, most used first. */
+  tags: TagCount[];
 }
 
 // Each node is its own Y.Map so that fields merge independently: a rename on one
 // device and a move on another both survive, instead of one overwriting the other.
 const nodesOf = (doc: Y.Doc) => doc.getMap<Y.Map<unknown>>("nodes");
+
+const TAG_PREFIX = "tag:";
 
 const kindOf = (fields: Y.Map<unknown>) => fields.get("kind") as NodeKind;
 const parentOf = (fields: Y.Map<unknown>): string => {
@@ -74,6 +87,8 @@ const parentOf = (fields: Y.Map<unknown>): string => {
 };
 
 function toNode(id: string, fields: Y.Map<unknown>): TreeNode {
+  const tags: string[] = [];
+  for (const key of fields.keys()) if (key.startsWith(TAG_PREFIX)) tags.push(key.slice(TAG_PREFIX.length));
   return {
     id,
     kind: kindOf(fields),
@@ -84,6 +99,7 @@ function toNode(id: string, fields: Y.Map<unknown>): TreeNode {
     deletedAt: (fields.get("deletedAt") as number | null | undefined) ?? null,
     links: (fields.get("links") as string[] | undefined) ?? [],
     words: (fields.get("words") as number | undefined) ?? null,
+    tags: tags.sort(),
   };
 }
 
@@ -94,9 +110,36 @@ function byPosition(a: TreeNode, b: TreeNode) {
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
-export function readTree(doc: Y.Doc): Tree {
+const sameList = <T>(a: readonly T[], b: readonly T[]) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+function sameNode(a: TreeNode, b: TreeNode): boolean {
+  return (
+    a.id === b.id &&
+    a.kind === b.kind &&
+    a.parentId === b.parentId &&
+    a.title === b.title &&
+    a.position === b.position &&
+    a.createdAt === b.createdAt &&
+    a.deletedAt === b.deletedAt &&
+    a.words === b.words &&
+    sameList(a.links, b.links) &&
+    sameList(a.tags, b.tags)
+  );
+}
+
+/**
+ * Pass the tree from the last call as `previous`, and every node, item and
+ * child list that did not change is the same object as before. React can then
+ * skip redrawing the parts of the sidebar that a change did not touch: typing
+ * in one note changes that note's item, its parents and nothing else.
+ */
+export function readTree(doc: Y.Doc, previous?: Tree): Tree {
   const byId = new Map<string, TreeNode>();
-  nodesOf(doc).forEach((fields, id) => byId.set(id, toNode(id, fields)));
+  nodesOf(doc).forEach((fields, id) => {
+    const node = toNode(id, fields);
+    const old = previous?.byId.get(id);
+    byId.set(id, old && sameNode(old, node) ? old : node);
+  });
 
   // A node whose parent may not hold it is shown in the nearest container
   // above that may, or at the top. That covers a note under a note (allowed
@@ -136,9 +179,14 @@ export function readTree(doc: Y.Doc): Tree {
   const items = new Map<string, TreeItem>();
   const place = (node: TreeNode, parentId: string): TreeItem => {
     visible.add(node.id);
-    const item: TreeItem = { ...node, parentId, children: [] };
+    const children = build(node.id);
+    const old = previous?.items.get(node.id);
+    // An item is reused only when it and everything below it are unchanged.
+    const item: TreeItem =
+      old && old.parentId === parentId && sameNode({ ...old, parentId: node.parentId }, node) && sameList(old.children, children)
+        ? old
+        : { ...node, parentId, children };
     items.set(node.id, item);
-    item.children = build(node.id);
     return item;
   };
   const build = (parentId: string): TreeItem[] =>
@@ -148,14 +196,15 @@ export function readTree(doc: Y.Doc): Tree {
       .sort(byPosition)
       .map((node) => place(node, parentId));
 
-  const top = build(ROOT);
+  const built = build(ROOT);
 
   // Two devices can make a loop by moving folder A into B and B into A at the
   // same time. Neither is then reachable from the top, so the sidebar would
   // silently lose them. Show them at the top instead. This is display only, so
   // every device computes the same result; the next real move fixes the data.
   const stranded = [...byId.values()].filter((node) => !visible.has(node.id) && !hiddenByTrash(node)).sort(byPosition);
-  for (const node of stranded) if (!visible.has(node.id)) top.push(place(node, ROOT));
+  for (const node of stranded) if (!visible.has(node.id)) built.push(place(node, ROOT));
+  const top = previous && sameList(previous.top, built) ? previous.top : built;
 
   const trash = [...byId.values()].filter((node) => node.deletedAt !== null).sort((a, b) => b.deletedAt! - a.deletedAt!);
 
@@ -171,7 +220,13 @@ export function readTree(doc: Y.Doc): Tree {
   }
   for (const sources of backlinks.values()) sources.sort((a, b) => a.title.localeCompare(b.title));
 
-  return { top, trash, byId, items, visible, backlinks };
+  const tagCounts = new Map<string, number>();
+  for (const id of visible) for (const tag of byId.get(id)!.tags) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  const tags = [...tagCounts]
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+
+  return { top, trash, byId, items, visible, backlinks, tags };
 }
 
 /** The placed children of ROOT or of a visible folder or book. */
@@ -256,6 +311,29 @@ export function createNode(doc: Y.Doc, kind: NodeKind, parentId: string, title =
   return id;
 }
 
+/**
+ * Copies a note into the place right after it, with " copy" on its title and
+ * the same tags, links and word count. Returns the new id. The body is stored
+ * apart from the tree, so the caller copies it.
+ */
+export function duplicateNote(doc: Y.Doc, id: string, copyId: string = crypto.randomUUID()): string {
+  const source = fieldsOf(doc, id);
+  if (kindOf(source) !== "note") throw new Error("only notes can be duplicated");
+  const tree = readTree(doc);
+  const item = tree.items.get(id);
+  const parentId = item?.parentId ?? ROOT;
+  const title = (source.get("title") as string | undefined) ?? "";
+  doc.transact(() => {
+    createNode(doc, "note", parentId, title ? `${title} copy` : "", copyId);
+    const copy = fieldsOf(doc, copyId);
+    for (const [key, value] of source.entries()) {
+      if (key === "links" || key === "words" || key.startsWith(TAG_PREFIX)) copy.set(key, Array.isArray(value) ? [...value] : value);
+    }
+    if (item) moveNode(doc, copyId, parentId, childrenOf(tree, parentId).indexOf(item) + 1);
+  });
+  return copyId;
+}
+
 /** Creates the welcome note on a brand-new workspace. Does nothing otherwise. */
 export function ensureWelcome(doc: Y.Doc) {
   if (nodesOf(doc).size === 0) createNode(doc, "note", ROOT, "Welcome", WELCOME_ID);
@@ -287,6 +365,19 @@ export function setLinks(doc: Y.Doc, id: string, targets: Iterable<string>) {
 export function setWords(doc: Y.Doc, id: string, words: number) {
   const fields = fieldsOf(doc, id);
   if (fields.get("words") !== words) fields.set("words", words);
+}
+
+/** Tags a node. Returns the tag as stored, or null when `raw` had nothing usable in it. */
+export function addTag(doc: Y.Doc, id: string, raw: string): string | null {
+  const tag = normalizeTag(raw);
+  if (!tag) return null;
+  const fields = fieldsOf(doc, id);
+  if (!fields.has(TAG_PREFIX + tag)) fields.set(TAG_PREFIX + tag, true);
+  return tag;
+}
+
+export function removeTag(doc: Y.Doc, id: string, tag: string) {
+  fieldsOf(doc, id).delete(TAG_PREFIX + tag);
 }
 
 export function trashNode(doc: Y.Doc, id: string) {

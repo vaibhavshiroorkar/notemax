@@ -1,0 +1,59 @@
+/* A wide invisible grab area over the pane's border, with a thin line drawn in the middle. */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  width: 9px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.resize-handle[data-side="left"] {
+  left: calc(min(var(--sidebar-width), 45vw) - 5px);
+}
+
+.resize-handle[data-side="right"] {
+  right: calc(min(var(--side-panel-width), 45vw) - 5px);
+}
+
+.resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 3px;
+  border-radius: 2px;
+  background: transparent;
+  transition: background-color 0.15s;
+}
+
+/* The delay keeps the line from flashing when the pointer only passes over. */
+.resize-handle:hover::after {
+  background: var(--accent);
+  transition-delay: 0.2s;
+}
+
+.resize-handle[data-dragging]::after,
+.resize-handle:focus-visible::after {
+  background: var(--accent);
+  transition-delay: 0s;
+}
+
+.resize-handle:focus-visible {
+  outline: none;
+}
+
+/* While dragging, the pointer may cross text or the editor; keep the resize cursor and stop text selection. */
+.resizing,
+.resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+@media (max-width: 700px) {
+  .resize-handle {
+    display: none;
+  }
+}

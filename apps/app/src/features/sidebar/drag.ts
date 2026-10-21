@@ -1,5 +1,6 @@
-import { useSyncExternalStore, type DragEvent } from "react";
+import type { DragEvent } from "react";
 import { childrenOf, holds, type Tree, type TreeItem } from "@notemax/core";
+import { createStore } from "@/platform/store";
 
 export type Zone = "before" | "after" | "inside";
 export type DropTarget = { id: string; zone: Zone };
@@ -30,23 +31,9 @@ export function placementFor(tree: Tree, dragged: TreeItem, target: TreeItem, zo
 
 // The left sidebar and the book panel are separate components, but a drag can
 // start in one and end in the other, so the dragged item lives outside both.
-let dragged: TreeItem | null = null;
-const listeners = new Set<() => void>();
+export const dragged = createStore<TreeItem | null>(null);
 
-function setDragged(item: TreeItem | null) {
-  dragged = item;
-  listeners.forEach((listener) => listener());
-}
+export const startDrag = (item: TreeItem) => dragged.set(item);
+export const endDrag = () => dragged.set(null);
 
-export const startDrag = (item: TreeItem) => setDragged(item);
-export const endDrag = () => setDragged(null);
-
-export function useDragging(): TreeItem | null {
-  return useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    () => dragged,
-  );
-}
+export const useDragging = (): TreeItem | null => dragged.use();
