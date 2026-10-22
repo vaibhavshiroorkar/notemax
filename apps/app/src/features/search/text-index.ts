@@ -1,7 +1,7 @@
 import * as Y from "yjs";
 import { WORKSPACE_DOC_ID, plainText, readTree, splitScoped, type Tree } from "@notemax/core";
 import { remoteEdit } from "@/features/sync/live";
-import { getStore, onLocalWrite } from "@/platform/platform";
+import { getStore, memoryOnly, onLocalWrite } from "@/platform/platform";
 import { currentWorkspace } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
 
@@ -33,6 +33,8 @@ function db(): Promise<IDBDatabase> {
 const key = (id: string) => `${currentWorkspace}:${id}`;
 
 async function loadSaved(): Promise<Map<string, Saved>> {
+  // A device that keeps no pages keeps no copy of their text either; the index lives in memory.
+  if (memoryOnly) return new Map();
   const tx = (await db()).transaction("texts", "readonly");
   const store = tx.objectStore("texts");
   const prefix = `${currentWorkspace}:`;
@@ -53,6 +55,7 @@ async function loadSaved(): Promise<Map<string, Saved>> {
 }
 
 async function save(id: string, saved: Saved | null) {
+  if (memoryOnly) return;
   const tx = (await db()).transaction("texts", "readwrite");
   if (saved) tx.objectStore("texts").put(saved, key(id));
   else tx.objectStore("texts").delete(key(id));

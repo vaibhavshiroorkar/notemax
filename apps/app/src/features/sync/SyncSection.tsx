@@ -158,7 +158,7 @@ export function SyncSection() {
           <button
             className="button"
             onClick={() => {
-              turnOffSync();
+              void turnOffSync();
               setOn(false);
             }}
           >

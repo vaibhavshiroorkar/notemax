@@ -1,5 +1,5 @@
-import { MAIN_WORKSPACE, createSqlStore, openIdbStore, scopedStore, type DocStore } from "@notemax/core";
-import { currentWorkspace } from "./prefs";
+import { MAIN_WORKSPACE, createMemoryStore, createSqlStore, openIdbStore, scopedStore, type DocStore } from "@notemax/core";
+import { currentWorkspace, getPref } from "./prefs";
 
 /** True inside the Tauri desktop app, false in a normal browser. */
 export const isDesktop = "__TAURI_INTERNALS__" in window;
@@ -14,7 +14,14 @@ export const DOC_CHANNEL = docChannelFor(currentWorkspace);
 // Must match DB_URL in apps/desktop/src-tauri/src/lib.rs, which creates the tables.
 const DESKTOP_DB_URL = "sqlite:notemax.db";
 
-async function openStore(): Promise<DocStore> {
+/**
+ * A device set not to keep pages (Settings, Setup) holds them in memory only,
+ * filled from Drive at start. It needs sync, so without it pages stay on disk.
+ * Fixed for the session: changing it reloads the app.
+ */
+export const memoryOnly = getPref("keepLocal") === "0" && getPref("syncOn") === "1";
+
+async function openDiskStore(): Promise<DocStore> {
   if (!isDesktop) return openIdbStore();
   // Loaded only on desktop, so the web build never pulls in Tauri code.
   const { default: Database } = await import("@tauri-apps/plugin-sql");
@@ -23,6 +30,53 @@ async function openStore(): Promise<DocStore> {
     execute: (sql, params) => db.execute(sql, params),
     select: <T,>(sql: string, params?: unknown[]) => db.select<T[]>(sql, params),
   });
+}
+
+let fill: ((store: DocStore) => Promise<void>) | null = null;
+/** How a memory-only device gets its pages at start. Sync sets it, so this file needs no sync code. */
+export function setMemoryFill(fillFrom: (store: DocStore) => Promise<void>) {
+  fill = fillFrom;
+}
+
+async function openStore(): Promise<DocStore> {
+  if (!memoryOnly) return openDiskStore();
+  const store = createMemoryStore();
+  if (!fill) throw new Error("This device keeps no pages, and sync is not here to bring them.");
+  try {
+    await fill(store);
+  } catch (error) {
+    throw new Error(`Could not get your pages from Google Drive (${error instanceof Error ? error.message : String(error)}). This device keeps no copy of them; check the connection and reload.`);
+  }
+  return store;
+}
+
+/**
+ * Erases every page kept on this device's disk, for a device that stops
+ * keeping them. The search index goes too, since it holds their text.
+ */
+export async function eraseDiskStore() {
+  const disk = await openDiskStore();
+  for (const docId of await disk.list()) await disk.remove(docId);
+  if (isDesktop) {
+    // SQLite keeps deleted rows in free pages until the file is rebuilt.
+    const { default: Database } = await import("@tauri-apps/plugin-sql");
+    await (await Database.load(DESKTOP_DB_URL)).execute("VACUUM");
+  } else {
+    await new Promise<void>((resolve) => {
+      const request = indexedDB.deleteDatabase("notemax-search");
+      request.onsuccess = request.onerror = request.onblocked = () => resolve();
+    });
+  }
+}
+
+/** Copies every page from memory to this device's disk, for a device that starts keeping them again. */
+export async function keepOnDisk() {
+  const memory = await getRawStore();
+  const disk = await openDiskStore();
+  for (const docId of await memory.list()) {
+    const { updates } = await memory.load(docId);
+    for (const update of updates) await disk.append(docId, update);
+  }
 }
 
 let rawPromise: Promise<DocStore> | undefined;

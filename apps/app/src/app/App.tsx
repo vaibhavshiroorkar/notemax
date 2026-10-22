@@ -10,7 +10,7 @@ import { Settings } from "@/features/settings/Settings";
 import { ShortcutsHelp } from "@/features/shortcuts/ShortcutsHelp";
 import { Sidebar } from "@/features/sidebar/Sidebar";
 import { StatusBar, pageStatus } from "@/features/status/StatusBar";
-import { requestPersistentStorage } from "@/platform/platform";
+import { memoryOnly, requestPersistentStorage } from "@/platform/platform";
 import { startAt } from "@/platform/mode";
 import { getPref, setPref } from "@/platform/prefs";
 import { useOption } from "@/plugins/options";
@@ -273,7 +273,8 @@ export function App() {
   // Kept on the page a moment after closing, so it can slide out.
   const leftMounted = usePresence(showLeft);
 
-  if (workspace.openError) return <p className="error">Could not open local storage: {workspace.openError}</p>;
+  // A device that keeps no pages explains its own failure: there is no local storage to blame.
+  if (workspace.openError) return <p className="error">{memoryOnly ? workspace.openError : `Could not open local storage: ${workspace.openError}`}</p>;
   if (!workspace.doc || !workspace.tree) return null;
 
   const { tree, doc } = workspace;

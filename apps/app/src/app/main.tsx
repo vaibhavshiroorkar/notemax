@@ -13,7 +13,8 @@ import { App } from "./App";
 
 initAppearance();
 startOffline();
-void startSettingsSync();
+// When storage cannot open, the app says why on screen; settings just wait for the next start.
+startSettingsSync().catch(() => {});
 enableLongPress();
 
 createRoot(document.getElementById("root")!).render(

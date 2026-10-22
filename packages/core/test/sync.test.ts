@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { createSqlStore, createSyncEngine, newKey, openIdbStore, openLocalDoc, unlockKey, type DocStore, type RemoteEntry, type SyncRemote, type SyncState, type SyncStatus } from "../src";
+import { createMemoryStore, createSqlStore, createSyncEngine, newKey, openIdbStore, openLocalDoc, unlockKey, type DocStore, type RemoteEntry, type SyncRemote, type SyncState, type SyncStatus } from "../src";
 import { memorySqlDatabase } from "./node-sqlite";
 
 // Few rounds, so the tests run fast. The app uses the real number.
@@ -96,6 +96,7 @@ async function device(name: string, drive: FakeDrive, key: CryptoKey, store: Doc
 describe.each([
   ["IndexedDB", (name: string) => openIdbStore(`sync-${name}-${Math.random()}`)],
   ["SQLite", async () => createSqlStore(memorySqlDatabase())],
+  ["memory", async () => createMemoryStore()],
 ])("sync with %s", (_name, freshStore) => {
   const setup = async () => {
     const drive = new FakeDrive();

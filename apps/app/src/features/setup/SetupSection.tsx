@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { onlineMode, startAt, type Mode } from "@/platform/mode";
 import { Segmented } from "@/ui/Segmented";
+import { KeepPagesRow } from "./KeepPagesRow";
 
 const modes = [
   { value: "offline" as const, label: "Offline" },
@@ -26,6 +27,7 @@ export function SetupSection() {
         {/* Neither is picked until chosen. */}
         <Segmented<Mode> label="Online features" value={(mode ?? "") as Mode} options={modes} onChange={(value) => onlineMode.set(value)} />
       </div>
+      <KeepPagesRow />
       <div className="setup-lists">
         <div>
           <h4 className="settings-subhead">Works offline</h4>

@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.55.0 (2026-10-23)
+
+- Settings, Setup: Keep pages on this device. Turn it off on a shared or borrowed computer: Notemax sends every waiting edit to your Google Drive, erases the pages from the device, and from then on gets them from Drive each time it opens and keeps them only in memory. Needs sync.
+- Such a device sends edits within a second and asks before closing while one is still on its way. The search index stays in memory there too.
+- Settings, Storage now says when sync keeps a copy in Drive, instead of "nothing leaves it".
+
 ## 0.54.0 (2026-10-23)
 
 - Phones: search and menus no longer show keyboard shortcuts, so titles have room. Quick settings drop them too.

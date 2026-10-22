@@ -19,7 +19,7 @@ import {
 import * as Y from "yjs";
 import { pastWelcomeContent, welcomeContent } from "@/features/editor/welcome";
 import { markTemporary } from "@/features/temporary/temporary";
-import { WORKSPACES_CHANNEL, docChannelFor, getRawStore, isDesktop, onLocalWrite } from "@/platform/platform";
+import { WORKSPACES_CHANNEL, docChannelFor, eraseDiskStore, getRawStore, isDesktop, keepOnDisk, memoryOnly, onLocalWrite, setMemoryFill } from "@/platform/platform";
 import { currentWorkspace } from "@/platform/prefs";
 import { getPref, removePref, setPref } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
@@ -57,7 +57,11 @@ export function deviceId(): string {
 
 export const syncIsOn = () => getPref(PREFS.on) === "1" && getPref(PREFS.key) !== null && getPref(PREFS.folder) !== null;
 
+// A device that keeps no pages starts each session with none, so where sync got to is not kept either.
+let memoryState: SyncState = { cursor: null, dirty: [] };
+
 function loadState(): SyncState {
+  if (memoryOnly) return memoryState;
   try {
     const value = JSON.parse(getPref(PREFS.state) ?? "") as SyncState;
     return { cursor: typeof value.cursor === "string" ? value.cursor : null, dirty: Array.isArray(value.dirty) ? value.dirty : [] };
@@ -66,11 +70,31 @@ function loadState(): SyncState {
   }
 }
 
+function saveState(state: SyncState) {
+  if (memoryOnly) memoryState = state;
+  else setPref(PREFS.state, JSON.stringify(state));
+}
+
+// The pages of a device that keeps none come from Drive before the app opens.
+setMemoryFill(async (store) => {
+  const fill = createSyncEngine({
+    store,
+    remote: driveRemote(getPref(PREFS.folder)!, deviceId()),
+    key: await importKey(getPref(PREFS.key)!),
+    device: deviceId(),
+    loadState,
+    saveState,
+    onRemoteUpdate: () => {},
+    onStatus: (status) => syncView.set(status),
+  });
+  await fill.sync();
+});
+
 let engine: SyncEngine | null = null;
 let stopRunning: (() => void) | null = null;
 
-/** How long after an edit to send it, so a burst of typing is sent once. */
-const SEND_AFTER_MS = 3000;
+/** How long after an edit to send it, so a burst of typing is sent once. Sooner when Drive holds the only copy. */
+const SEND_AFTER_MS = memoryOnly ? 800 : 3000;
 /** How often to look for other devices' edits while the app is open. */
 const POLL_MS = 30_000;
 
@@ -93,7 +117,7 @@ async function runEngine(signal: AbortSignal) {
     key,
     device: deviceId(),
     loadState,
-    saveState: (state) => setPref(PREFS.state, JSON.stringify(state)),
+    saveState,
     // Open pages in every window merge it, the way they merge another window's edits.
     onRemoteUpdate: tellOpenPages,
     // Asked in the workspace it belongs to. Elsewhere both edits are kept all the same.
@@ -167,7 +191,14 @@ async function runEngine(signal: AbortSignal) {
     if (update && link.live && goesLive(docId)) link.live.send(docId, update);
   });
   const poll = setInterval(run, POLL_MS);
-  const onWake = () => document.visibilityState === "visible" && run();
+  const onWake = () => (document.visibilityState === "visible" ? run() : memoryOnly && loadState().dirty.length && run());
+  // Drive holds the only copy, so closing with edits not yet sent asks first, and sends them meanwhile.
+  const onLeave = (event: BeforeUnloadEvent) => {
+    if (!memoryOnly || !loadState().dirty.length) return;
+    run();
+    event.preventDefault();
+  };
+  window.addEventListener("beforeunload", onLeave);
   window.addEventListener("online", run);
   window.addEventListener("focus", run);
   document.addEventListener("visibilitychange", onWake);
@@ -182,6 +213,7 @@ async function runEngine(signal: AbortSignal) {
   window.removeEventListener("online", run);
   window.removeEventListener("focus", run);
   document.removeEventListener("visibilitychange", onWake);
+  window.removeEventListener("beforeunload", onLeave);
   channels.forEach((channel) => channel.close());
   engine = null;
 }
@@ -209,6 +241,35 @@ export function syncNow() {
   void engine?.sync().catch(() => {});
 }
 
+/**
+ * Stops keeping pages on this device: sends every waiting edit, then erases
+ * the pages from disk. The app must reload after. Throws, erasing nothing,
+ * when an edit could not be sent.
+ */
+export async function stopKeepingPages() {
+  if (!engine) throw new Error("Sync runs in another Notemax tab or window. Close the others and try again.");
+  await engine.sync();
+  if (loadState().dirty.length) throw new Error("Some edits could not be sent to Drive yet, so nothing was erased. Check the connection and try again.");
+  stopSync();
+  // Set first: if erasing stops part way, the next start still takes the pages from Drive.
+  setPref("keepLocal", "0");
+  await eraseDiskStore();
+}
+
+/** Starts keeping pages on this device again: copies them from memory to disk, with what is still unsent. The app must reload after. */
+export async function keepPagesHere() {
+  await keepOnDisk();
+  const unsent = memoryState.dirty;
+  let saved: SyncState = { cursor: null, dirty: [] };
+  try {
+    saved = { ...saved, ...(JSON.parse(getPref(PREFS.state) ?? "{}") as Partial<SyncState>) };
+  } catch {
+    // Starting over from no cursor reads Drive again, which only costs time.
+  }
+  setPref(PREFS.state, JSON.stringify({ cursor: saved.cursor ?? null, dirty: [...new Set([...(saved.dirty ?? []), ...unsent])] } satisfies SyncState));
+  setPref("keepLocal", "1");
+}
+
 /** What the folder in Drive looks like, so Settings can ask for the right thing. */
 export async function folderState(): Promise<{ folder: string | null; hasPassphrase: boolean }> {
   const folder = await findFolder(false);
@@ -226,7 +287,7 @@ async function onlyWelcome(): Promise<boolean> {
   }
 }
 
-const plainText = (html: string) => (new DOMParser().parseFromString(html, "text/html").body.textContent ?? "").replace(/s+/g, "");
+const plainText = (html: string) => (new DOMParser().parseFromString(html, "text/html").body.textContent ?? "").replace(/\s+/g, "");
 
 /**
  * The Welcome note when someone wrote in it, so taking the notes from Drive
@@ -284,7 +345,7 @@ export async function turnOnSync(passphrase: string): Promise<"started" | "reloa
     key,
     device: deviceId(),
     loadState,
-    saveState: (state) => setPref(PREFS.state, JSON.stringify(state)),
+    saveState,
     onRemoteUpdate: () => {},
     onStatus: (status) => syncView.set(status),
   });
@@ -312,7 +373,9 @@ export async function turnOnSync(passphrase: string): Promise<"started" | "reloa
 }
 
 /** Stops syncing on this device. Its notes stay; the files in Drive stay for other devices. */
-export function turnOffSync() {
+export async function turnOffSync() {
+  // Pages held only in memory need a place to stay once Drive no longer brings them.
+  if (memoryOnly) await keepPagesHere();
   stopSync();
   for (const key of [PREFS.on, PREFS.key, PREFS.folder, PREFS.state]) removePref(key);
 }

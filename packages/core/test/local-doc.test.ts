@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { createSqlStore, openIdbStore, openLocalDoc, type DocStore } from "../src";
+import { createMemoryStore, createSqlStore, openIdbStore, openLocalDoc, type DocStore } from "../src";
 import { memorySqlDatabase } from "./node-sqlite";
 
 let dbCount = 0;
@@ -9,6 +9,7 @@ let dbCount = 0;
 const stores: [string, () => Promise<DocStore>][] = [
   ["IndexedDB", () => openIdbStore(`test-${++dbCount}`)],
   ["SQLite", async () => createSqlStore(memorySqlDatabase())],
+  ["memory", async () => createMemoryStore()],
 ];
 const text = (doc: Y.Doc) => doc.getText("t").toString();
 
