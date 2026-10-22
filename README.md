@@ -33,7 +33,7 @@
 ## Features
 
 **Write**
-- A clean editor with headings, lists, to-dos, quotes, code and pictures. Type `/` for blocks, or use Markdown shortcuts.
+- A clean editor with headings, lists, to-dos, quotes, code, pictures and videos. Type `/` for blocks, or use Markdown shortcuts.
 - Word-like formatting from the right sidebar: fonts, sizes, colors, highlight, alignment and spacing. Paste from Word or Google Docs and keep the formatting.
 - `[[Links]]` between notes. Renaming a note never breaks them, and each page lists what links to it.
 - Voice typing: speak and the words appear as you go.

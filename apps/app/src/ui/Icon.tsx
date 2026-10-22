@@ -1,6 +1,7 @@
 const paths = {
   "chevron-right": "M6 4l4 4-4 4",
   "chevron-down": "M4 6l4 4 4-4",
+  "chevron-left": "M10 4l-4 4 4 4",
   plus: "M8 3v10M3 8h10",
   trash: "M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8.5h6l.5-8.5",
   sidebar: "M2.5 3h11v10h-11zM6 3v10",
@@ -54,6 +55,7 @@ const paths = {
   page: "M4 2.5h8v11H4zM6 5.5h4M6 8h4M6 10.5h2",
   code: "M6 4.5L2.5 8 6 11.5M10 4.5l3.5 3.5-3.5 3.5",
   calendar: "M2.5 4h11v9.5h-11zM2.5 7h11M5.5 2.5v3M10.5 2.5v3",
+  video: "M2 4.5h8.5v7H2zM10.5 7l3.5-2v6l-3.5-2",
   eye: "M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8zM8 6.5a1.5 1.5 0 1 0 0 3a1.5 1.5 0 1 0 0-3z",
   lock: "M4 7.5h8v6H4zM5.5 7.5V5.5a2.5 2.5 0 0 1 5 0v2",
   target: "M8 2.5a5.5 5.5 0 1 0 0 11a5.5 5.5 0 1 0 0-11zM8 5.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5z",

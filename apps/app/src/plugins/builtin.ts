@@ -24,6 +24,7 @@ import { markdownFilesPlugin } from "@/features/markdown-files/plugin";
 import { datesPlugin } from "@/features/dates/plugin";
 import { searchPlugin } from "@/features/search/plugin";
 import { voicePlugin } from "@/features/voice/plugin";
+import { videoPlugin } from "@/features/video/plugin";
 import { codePlugin } from "@/features/code/plugin";
 import { historyPlugin } from "@/features/history/plugin";
 import { temporaryPlugin } from "@/features/temporary/plugin";
@@ -60,6 +61,7 @@ import { registerPlugin } from "./registry";
   imagesPlugin,
   // After Picture, so the / menu lists it there.
   voicePlugin,
+  videoPlugin,
   linksPlugin,
   pageInfoPlugin,
   graphPlugin,

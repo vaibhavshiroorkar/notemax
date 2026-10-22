@@ -72,6 +72,10 @@ function textBlocks(nodes: DocNode[], r: Resolve, indent: string): string[] {
       case "image":
         if (str(node.attrs?.alt)) out.push(`${indent}[Picture: ${str(node.attrs?.alt)}]`);
         break;
+      // Videos stay out of downloads, which would grow by the whole file; a line says one was there.
+      case "video":
+        out.push(`${indent}[Video: ${str(node.attrs?.name) || "video"}]`);
+        break;
       default:
         if (node.content?.some((c) => c.type === "paragraph" || c.type === "heading")) out.push(...textBlocks(kids(node), r, indent));
         else out.push(indent + inlineText(node, r));
@@ -156,6 +160,10 @@ function mdBlocks(nodes: DocNode[], r: Resolve): string[] {
         if (src) out.push(`![${str(node.attrs?.alt).replace(/[[\]]/g, "")}](${src})`);
         break;
       }
+      // As HTML, so a Markdown file kept beside the notes reads the video back when edited elsewhere.
+      case "video":
+        out.push(`<video data-asset="${escapeHtml(str(node.attrs?.asset))}" data-name="${escapeHtml(str(node.attrs?.name))}" controls></video>`);
+        break;
       default:
         out.push(...mdBlocks(kids(node), r));
     }
@@ -229,6 +237,8 @@ export function toHtml(nodes: DocNode[], r: Resolve): string {
           const style = width ? ` style="width:${width}%"` : "";
           return `<figure class="align-${escapeHtml(str(node.attrs?.align) || "center")}"><img src="${escapeHtml(src)}" alt="${escapeHtml(str(node.attrs?.alt))}"${style}></figure>`;
         }
+        case "video":
+          return `<p>[Video: ${escapeHtml(str(node.attrs?.name) || "video")}]</p>`;
         default:
           return toHtml(kids(node), r);
       }

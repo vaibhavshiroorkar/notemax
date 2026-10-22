@@ -160,6 +160,8 @@ export function buildDocx(title: string, parts: DocxPart[], r: Resolve & { pictu
             return para("", undefined, '<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="999999"/></w:pBdr>');
           case "image":
             return picture(node);
+          case "video":
+            return para(run(`[Video: ${typeof node.attrs?.name === "string" && node.attrs.name ? node.attrs.name : "video"}]`));
           default:
             return blocks(node.content ?? [], level, quote);
         }

@@ -12,13 +12,13 @@ async function stateOf(store: DocStore, docId: string): Promise<Uint8Array | nul
   return updates.length ? Y.mergeUpdates(updates) : null;
 }
 
-/** The pictures a note shows, by asset id. Other pages keep theirs inside their own doc. */
+/** The pictures and videos a note shows, by asset id. Other pages keep theirs inside their own doc. */
 function picturesIn(state: Uint8Array): string[] {
   const doc = new Y.Doc();
   try {
     Y.applyUpdate(doc, state);
     const found = new Set<string>();
-    for (const node of doc.getXmlFragment("content").createTreeWalker((n) => n instanceof Y.XmlElement && n.nodeName === "image")) {
+    for (const node of doc.getXmlFragment("content").createTreeWalker((n) => n instanceof Y.XmlElement && (n.nodeName === "image" || n.nodeName === "video"))) {
       const asset = (node as Y.XmlElement).getAttribute("asset");
       if (typeof asset === "string") found.add(asset);
     }

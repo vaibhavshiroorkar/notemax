@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.50.0 (2026-10-23)
+
+- Videos in notes: paste or drop one, or pick it from `/` Video. It plays in place, can be set to a quarter, half, three quarters or the full width, and syncs with the note. Up to 200 MB each.
+- Right-click a video to download it. Downloads of a note say where a video was; the Markdown files kept beside your notes keep the video itself.
+
 ## 0.49.0 (2026-10-23)
 
 - Home opens over the whole window, from the house button at the top left, Ctrl+K "Go Home" or Ctrl+Alt+H. Esc, the close button or picking a page takes you back to where you were.
