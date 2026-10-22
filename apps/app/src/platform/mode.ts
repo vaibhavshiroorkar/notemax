@@ -12,8 +12,8 @@ export const onlineMode = savedStore<Mode | null>("onlineMode", null, {
   encode: (value) => value ?? "",
 });
 
-/** Where a new window starts: the page open last time, or Home with every workspace. */
-export const startAt = savedStore<"last" | "home">("startAt", "last", {
-  decode: (raw) => (raw === "home" ? "home" : "last"),
+/** Where a new window starts: the page open last time, Home with every workspace, or the start page (Settings, Special pages). */
+export const startAt = savedStore<"last" | "home" | "page">("startAt", "last", {
+  decode: (raw) => (raw === "home" || raw === "page" ? raw : "last"),
   encode: (value) => value,
 });

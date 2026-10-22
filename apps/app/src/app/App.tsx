@@ -495,7 +495,7 @@ export function App() {
           onCollapse={() => setSidePanelOpen(false)}
         />
       )}
-      {settingsOpen && <Settings persistent={persistent} accountError={accountError} initialSection={settingsSection} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <Settings app={app} persistent={persistent} accountError={accountError} initialSection={settingsSection} onClose={() => setSettingsOpen(false)} />}
       {paletteOpen && <Palette app={app} onClose={() => setPaletteOpen(false)} />}
       {shortcutsOpen && (
         <ShortcutsHelp

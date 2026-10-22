@@ -10,6 +10,9 @@ export function pageInAddress(): string | null {
   return hash && !hash.startsWith("share=") ? hash : null;
 }
 
+/** The page the window was opened on, read before the app writes its own page into the address. */
+export const openedOnPage = pageInAddress();
+
 const addressOf = (page: string | null) => `${location.pathname}${location.search}${page ? `#${encodeURIComponent(page)}` : ""}`;
 
 /** Puts the open page in the address without adding a browser history entry. */

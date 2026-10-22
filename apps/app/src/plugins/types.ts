@@ -268,6 +268,7 @@ export interface PluginOption {
 }
 
 export interface SettingsContext {
+  app: AppContext;
   /** Whether the browser promised to keep local data. Unknown until it answers. */
   persistent?: boolean;
   accountError?: string;
@@ -280,6 +281,8 @@ export interface SettingsSection {
   order: number;
   title: string;
   icon: IconName;
+  /** The heading it sits under in the list of categories, like "Writing". Sections without one go under More. */
+  group?: string;
   /** More words that find this section in the settings search. The text of each setting is searched anyway. */
   keywords?: string[];
   when?(): boolean;

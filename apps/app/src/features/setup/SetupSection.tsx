@@ -46,9 +46,10 @@ export function SetupSection() {
       </div>
       <div className="settings-row">
         <label htmlFor={startId}>When Notemax opens</label>
-        <select id={startId} value={start} onChange={(event) => startAt.set(event.target.value === "home" ? "home" : "last")}>
+        <select id={startId} className="settings-select" value={start} onChange={(event) => startAt.set(event.target.value as typeof start)}>
           <option value="last">Where you left off</option>
           <option value="home">Home, with all workspaces</option>
+          <option value="page">The start page (Special pages)</option>
         </select>
       </div>
     </>

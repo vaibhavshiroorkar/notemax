@@ -11,7 +11,7 @@ const messageOf = (err: unknown) => (err instanceof Error ? err.message : String
  * The Account part of Settings. The Supabase library loads only when this
  * opens, so people who never sign in never load it or touch the network.
  */
-export function AccountSection({ accountError, compact }: SettingsContext & { compact?: boolean }) {
+export function AccountSection({ accountError, compact }: Pick<SettingsContext, "accountError"> & { compact?: boolean }) {
   const [client, setClient] = useState<Client>();
   // Undefined while loading, null when signed out.
   const [user, setUser] = useState<User | null>();

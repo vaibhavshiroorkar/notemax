@@ -11,8 +11,8 @@ export const datesPlugin: Plugin = {
   sidePanels: [{ id: "dates.calendar", title: "Calendar", order: 80, component: CalendarPanel }],
   pageSettings: [{ id: "dates.date", component: DateSetting }],
   commands: [
-    { id: "dates.today", title: "Open today's note", keywords: ["daily", "journal", "diary", "today"], shortcut: "Mod+Alt+D", run: (app) => openDay(app, todayKey()) },
-    { id: "dates.yesterday", title: "Open yesterday's note", keywords: ["daily", "journal", "diary"], run: (app) => openDay(app, shiftDay(todayKey(), -1)) },
-    { id: "dates.tomorrow", title: "Open tomorrow's note", keywords: ["daily", "journal", "plan"], run: (app) => openDay(app, shiftDay(todayKey(), 1)) },
+    { id: "dates.today", title: "Open today's note", keywords: ["daily", "journal", "diary", "today"], shortcut: "Mod+Alt+D", run: (app) => void openDay(app, todayKey()) },
+    { id: "dates.yesterday", title: "Open yesterday's note", keywords: ["daily", "journal", "diary"], run: (app) => void openDay(app, shiftDay(todayKey(), -1)) },
+    { id: "dates.tomorrow", title: "Open tomorrow's note", keywords: ["daily", "journal", "plan"], run: (app) => void openDay(app, shiftDay(todayKey(), 1)) },
   ],
 };

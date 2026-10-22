@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.51.0 (2026-10-23)
+
+- Special pages: give any page a job from its menu (Use as) or from Settings, Special pages. Daily notes can go into any folder, book or note, a note can be the template every new day starts from, and a start page can be where each new window opens.
+- Daily notes can be titled 2026-10-23, Oct 23, 2026 or Friday, October 23, 2026. A day is still found by its date, so renaming one never loses it.
+
 ## 0.50.0 (2026-10-23)
 
 - Videos in notes: paste or drop one, or pick it from `/` Video. It plays in place, can be set to a quarter, half, three quarters or the full width, and syncs with the note. Up to 200 MB each.

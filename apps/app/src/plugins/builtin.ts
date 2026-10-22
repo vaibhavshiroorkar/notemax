@@ -22,6 +22,7 @@ import { setupPlugin } from "@/features/setup/plugin";
 import { sharePlugin } from "@/features/share/plugin";
 import { markdownFilesPlugin } from "@/features/markdown-files/plugin";
 import { datesPlugin } from "@/features/dates/plugin";
+import { specialPlugin } from "@/features/special/plugin";
 import { searchPlugin } from "@/features/search/plugin";
 import { voicePlugin } from "@/features/voice/plugin";
 import { videoPlugin } from "@/features/video/plugin";
@@ -50,6 +51,7 @@ import { registerPlugin } from "./registry";
   sharePlugin,
   markdownFilesPlugin,
   datesPlugin,
+  specialPlugin,
   searchPlugin,
   trashPlugin,
   undoPlugin,

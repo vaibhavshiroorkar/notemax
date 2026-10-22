@@ -62,7 +62,7 @@ export function CalendarPanel({ app }: { app: AppContext }) {
               aria-label={`${date.toLocaleDateString(undefined, { dateStyle: "long" })}${pages ? `, ${pages.length} ${pages.length === 1 ? "page" : "pages"}` : ""}`}
               onClick={() => {
                 setPicked(key);
-                openDay(app, key);
+                void openDay(app, key);
               }}
               onMouseEnter={() => pages && setPicked(key)}
             >
@@ -72,7 +72,7 @@ export function CalendarPanel({ app }: { app: AppContext }) {
         })}
       </div>
       <div className="calendar-actions">
-        <button className="link-button" onClick={() => openDay(app, today)}>
+        <button className="link-button" onClick={() => void openDay(app, today)}>
           Today
         </button>
       </div>
