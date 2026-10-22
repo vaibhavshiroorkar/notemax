@@ -147,6 +147,9 @@ export function SyncSection() {
         <p className="settings-note">
           Your notes go to a folder called Notemax in your Google Drive, sealed with your passphrase. Google cannot read them, and Notemax sees only that folder.
         </p>
+        <p className="settings-note">
+          Your settings go along too: theme, fonts, shortcuts, plugins and the like. Zoom, open sidebars and sync itself stay with each device.
+        </p>
         <div className="settings-row">
           <div className="settings-row-text">
             <strong>Turn off sync on this device</strong>
@@ -169,7 +172,7 @@ export function SyncSection() {
 
   return (
     <>
-      <p>Keep your notes on all your devices through your own Google Drive. They are sealed with a passphrase before they leave this device.</p>
+      <p>Keep your notes and settings on all your devices through your own Google Drive. They are sealed with a passphrase before they leave this device.</p>
       {signedIn === undefined ? (
         <p>Loading...</p>
       ) : !signedIn ? (

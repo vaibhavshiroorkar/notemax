@@ -10,6 +10,7 @@ describe("workspaces", () => {
     expect(splitScoped("ws:w2:history:abc")).toEqual({ workspace: "w2", docId: "history:abc" });
     expect(splitScoped("asset:123")).toEqual({ workspace: "main", docId: "asset:123" });
     expect(splitScoped("workspaces")).toEqual({ workspace: null, docId: "workspaces" });
+    expect(splitScoped("settings")).toEqual({ workspace: null, docId: "settings" });
   });
 
   it("gives each workspace its own docs in one store", async () => {

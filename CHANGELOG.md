@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.47.0 (2026-10-22)
+
+- Settings follow you to every device with sync: theme, accent, fonts, text size, page width, paper, shortcuts, plugins, options, download format and the like. A change on one device shows on the others at once with live sync on.
+- A new device starts with the settings you already made. Zoom, open sidebars, the workspace on show and sync itself stay with each device.
+
 ## 0.46.0 (2026-10-22)
 
 - Copy or move pages to another workspace from the page menu (Copy to workspace, Move to workspace). What is inside them and their pictures go along, and links between them keep working.

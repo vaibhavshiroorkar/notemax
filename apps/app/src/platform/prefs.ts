@@ -32,25 +32,71 @@ export function getPref(key: string): string | null {
   }
 }
 
-export function setPref(key: string, value: string) {
+/**
+ * Settings that follow the person to every device, through the synced
+ * settings doc. A list of what may go, so nothing else ever does: what fits
+ * one screen (zoom, open sidebars), sync and its keys, and the workspace on
+ * show all stay on the device.
+ */
+export const SYNCED_PREFS: ReadonlySet<string> = new Set([
+  "theme",
+  "accent",
+  "font",
+  "fontFile",
+  "textSize",
+  "pageWidth",
+  "paperSize",
+  "options",
+  "pluginsOff",
+  "shortcuts",
+  "downloadFormat",
+  "trashKeepDays",
+  "versionEvery",
+  "graphChoices",
+  "graphPanelChoices",
+  "panelFolded",
+  "temporaryNoticeHidden",
+]);
+
+let outbox: ((key: string, value: string | null) => void) | null = null;
+
+/** Where synced settings changed here go: the settings doc, once it is open. */
+export function sendPrefsTo(send: (key: string, value: string | null) => void) {
+  outbox = send;
+}
+
+function write(key: string, value: string | null) {
   try {
-    localStorage.setItem(keyOf(key), value);
+    if (value === null) localStorage.removeItem(keyOf(key));
+    else localStorage.setItem(keyOf(key), value);
   } catch {
     // Not critical: the app falls back to defaults next time.
   }
 }
 
-/** Calls `listener` when another window, like the capture box, changes `key`. */
+export function setPref(key: string, value: string) {
+  write(key, value);
+  if (SYNCED_PREFS.has(key)) outbox?.(key, value);
+}
+
+export function removePref(key: string) {
+  write(key, null);
+  if (SYNCED_PREFS.has(key)) outbox?.(key, null);
+}
+
+const watchers = new Map<string, Set<() => void>>();
+
+/** Calls `listener` when another window, like the capture box, or another device changes `key`. */
 export function onPrefChangedElsewhere(key: string, listener: () => void) {
   window.addEventListener("storage", (event) => {
     if (event.key === keyOf(key)) listener();
   });
+  if (!watchers.has(key)) watchers.set(key, new Set());
+  watchers.get(key)!.add(listener);
 }
 
-export function removePref(key: string) {
-  try {
-    localStorage.removeItem(keyOf(key));
-  } catch {
-    // Nothing to remove when storage is blocked.
-  }
+/** Keeps a setting that came from another device, and tells everything watching it. */
+export function receivePref(key: string, value: string | null) {
+  write(key, value);
+  watchers.get(key)?.forEach((listener) => listener());
 }

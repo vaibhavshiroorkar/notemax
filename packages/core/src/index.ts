@@ -52,6 +52,7 @@ export { historyDocId, isHistoryDocId, listVersions, restoreBody, saveVersion, v
 export {
   MAIN_WORKSPACE,
   WORKSPACES_DOC_ID,
+  SETTINGS_DOC_ID,
   addWorkspace,
   moveWorkspace,
   readWorkspaces,

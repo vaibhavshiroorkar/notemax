@@ -10,15 +10,18 @@ import type { DocStore } from "./store";
 export const MAIN_WORKSPACE = "main";
 /** The list of workspaces: a doc of its own, outside every workspace, so it syncs too. */
 export const WORKSPACES_DOC_ID = "workspaces";
+/** Settings that follow the person to every device, like the theme. Outside every workspace too. */
+export const SETTINGS_DOC_ID = "settings";
+const OUTSIDE = new Set([WORKSPACES_DOC_ID, SETTINGS_DOC_ID]);
 
 const PREFIX = "ws:";
 
 /** The id a workspace's doc has in the shared store. */
 export const scopedId = (workspace: string, docId: string) => (workspace === MAIN_WORKSPACE ? docId : `${PREFIX}${workspace}:${docId}`);
 
-/** Which workspace a stored id belongs to, and its id inside that workspace. The list itself belongs to none. */
+/** Which workspace a stored id belongs to, and its id inside that workspace. The list and the settings belong to none. */
 export function splitScoped(stored: string): { workspace: string | null; docId: string } {
-  if (stored === WORKSPACES_DOC_ID) return { workspace: null, docId: stored };
+  if (OUTSIDE.has(stored)) return { workspace: null, docId: stored };
   if (!stored.startsWith(PREFIX)) return { workspace: MAIN_WORKSPACE, docId: stored };
   const end = stored.indexOf(":", PREFIX.length);
   if (end < 0) return { workspace: MAIN_WORKSPACE, docId: stored };

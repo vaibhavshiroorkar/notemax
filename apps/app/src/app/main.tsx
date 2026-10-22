@@ -7,11 +7,13 @@ import "@/ui/ui.css";
 // Built-in features register before the first render.
 import "@/plugins/builtin";
 import { startOffline } from "@/platform/offline";
+import { startSettingsSync } from "@/platform/settingsSync";
 import { loadCommunityPlugins } from "@/plugins/community";
 import { App } from "./App";
 
 initAppearance();
 startOffline();
+void startSettingsSync();
 enableLongPress();
 
 createRoot(document.getElementById("root")!).render(
