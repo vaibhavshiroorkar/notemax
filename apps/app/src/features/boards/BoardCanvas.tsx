@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
-import { CaptureUpdateAction, Excalidraw, MainMenu, getSceneVersion, reconcileElements } from "@excalidraw/excalidraw";
+import { CaptureUpdateAction, Excalidraw, Footer, MainMenu, getSceneVersion, reconcileElements } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import type * as Y from "yjs";
+import { BoardTools } from "./BoardTools";
 import { LOCAL, elementsOf, filesOf, missingFiles, readElements, writeElements, writeFiles, type StoredElement, type StoredFile } from "./board-sync";
 
 // This file is loaded only when a board opens, because Excalidraw is large.
@@ -89,6 +90,10 @@ export default function BoardCanvas({ doc, theme, onReady, onEdit }: { doc: Y.Do
         <MainMenu.Separator />
         <MainMenu.DefaultItems.ChangeCanvasBackground />
       </MainMenu>
+      {/* Sticky notes, frames, templates and votes, in one row at the bottom. */}
+      <Footer>
+        <BoardTools api={() => api.current as never} />
+      </Footer>
     </Excalidraw>
   );
 }

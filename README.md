@@ -37,7 +37,7 @@
 - Word-like formatting from the right sidebar: fonts, sizes, colors, highlight, alignment and spacing. Paste from Word or Google Docs and keep the formatting.
 - `[[Links]]` between notes. Renaming a note never breaks them, and each page lists what links to it.
 - Show a note as one long page, or as A4 or Letter sheets with page numbers.
-- Boards for sketching and diagrams, powered by Excalidraw.
+- Boards for sketching and diagrams, powered by Excalidraw, with sticky notes, frames, templates and dot votes.
 
 **Organize**
 - Folders, books and notes in one sidebar. Drag to sort, put pages inside pages, or pick several and move them together.

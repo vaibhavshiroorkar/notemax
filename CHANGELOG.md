@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.36.0 (2026-10-22)
+
+- Boards have tools like Miro's, in a row at the bottom: sticky notes in six colors, frames, and templates for Kanban, a retrospective, a brainstorm and SWOT.
+- Vote on stickies: select them and press Vote, again to count up. Clear votes takes them all off.
+- All of it is made of normal board shapes, so it saves, syncs, undoes and downloads like any drawing.
+
 ## 0.35.0 (2026-10-22)
 
 - Share a note by link and write in it together. Right-click a note and pick Share..., or press Ctrl+K and type Share this page. Whoever opens the link gets the page in their own Notemax, no account needed.
