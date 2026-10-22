@@ -1,6 +1,8 @@
 // Note bodies as plain text, Markdown and HTML. They read the editor's stored
 // JSON (the same shape Tiptap uses), so no editor has to be open.
 
+import { blockStyleHtml, textStyleOf } from "./styles";
+
 export interface DocNode {
   type: string;
   attrs?: Record<string, unknown>;
@@ -180,7 +182,13 @@ function htmlInline(node: DocNode, r: Resolve): string {
       let text = escapeHtml(inner);
       for (const mark of child.marks ?? []) {
         const tag = { bold: "strong", italic: "em", strike: "s", code: "code", underline: "u", highlight: "mark" }[mark.type];
-        if (tag) text = `<${tag}>${text}</${tag}>`;
+        if (mark.type === "highlight" && str(mark.attrs?.color)) text = `<mark style="background-color:${escapeHtml(str(mark.attrs?.color))}">${text}</mark>`;
+        else if (tag) text = `<${tag}>${text}</${tag}>`;
+        else if (mark.type === "textStyle") {
+          const { color, size, font } = textStyleOf([mark]);
+          const style = [color && `color:${color}`, size && `font-size:${size}px`, font && `font-family:${font}`].filter(Boolean).join(";");
+          if (style) text = `<span style="${escapeHtml(style)}">${text}</span>`;
+        }
         else if (mark.type === "link") text = `<a href="${escapeHtml(str(mark.attrs?.href))}">${text}</a>`;
       }
       return escapeHtml(before) + text + escapeHtml(after);
@@ -194,10 +202,10 @@ export function toHtml(nodes: DocNode[], r: Resolve): string {
       switch (node.type) {
         case "heading": {
           const level = Math.min(6, Number(node.attrs?.level ?? 1));
-          return `<h${level}>${htmlInline(node, r)}</h${level}>`;
+          return `<h${level}${blockStyleHtml(node)}>${htmlInline(node, r)}</h${level}>`;
         }
         case "paragraph":
-          return `<p>${htmlInline(node, r)}</p>`;
+          return `<p${blockStyleHtml(node)}>${htmlInline(node, r)}</p>`;
         case "bulletList":
           return `<ul>${toHtml(kids(node), r)}</ul>`;
         case "orderedList":

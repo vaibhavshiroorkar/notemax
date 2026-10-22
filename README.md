@@ -34,6 +34,7 @@
 
 **Write**
 - A clean editor with headings, lists, to-dos, quotes, code and pictures. Type `/` for blocks, or use Markdown shortcuts.
+- Word-like formatting from the right sidebar: fonts, sizes, colors, highlight, alignment and spacing. Paste from Word or Google Docs and keep the formatting.
 - `[[Links]]` between notes. Renaming a note never breaks them, and each page lists what links to it.
 - Show a note as one long page, or as A4 or Letter sheets with page numbers.
 - Boards for sketching and diagrams, powered by Excalidraw.
@@ -97,7 +98,6 @@ See [docs/architecture.md](docs/architecture.md) for the layout of the code and 
 
 ## Roadmap
 
-- A smoother editor: Word-like formatting, faithful copy and paste from Word
 - Version history, and plain Markdown files kept next to the database
 - Live sync between open devices, then shared pages
 - Split view, daily notes and a calendar

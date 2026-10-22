@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.30.0 (2026-10-22)
+
+- A Format section in the right sidebar of a note, like Word: paragraph style, font, size with - and +, bold, italic, underline, strikethrough, text color, highlight, alignment, line spacing, lists, indent and Clear formatting. It follows the cursor.
+- Pasting from Word or Google Docs keeps headings, nested lists, bold, italic, links, sizes, colors and centering, and drops Office markup, bullet characters and empty lines.
+- Copying out of a note hands Word the same: headings, lists, sizes and colors.
+- Web page and Word downloads keep sizes, colors, fonts, alignment, spacing and indents.
+
 ## 0.29.0 (2026-10-22)
 
 - The / menu groups its blocks (Basic, Lists, Blocks, Media), shows an icon and a short line for each, and finds them by initials or loose letters, like "bl" for Bulleted list. It fades in, and the pointer no longer steals the choice while you use the arrows.

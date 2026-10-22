@@ -1,0 +1,94 @@
+.format {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.format-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.format-label {
+  flex: 0 0 64px;
+  color: var(--muted);
+}
+
+.format-controls {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.format-controls select {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.format-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  color: var(--text);
+  font-family: Georgia, serif;
+  font-size: 15px;
+}
+
+.format-toggle:hover {
+  background: var(--hover);
+}
+
+.format-toggle[aria-pressed="true"] {
+  background: var(--active);
+  color: var(--accent);
+}
+
+.format-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+
+.format-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.format-swatch {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.format-swatch[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* "None" and "Default": a line across an empty circle. */
+.format-swatch[data-none] {
+  background: linear-gradient(135deg, transparent 45%, var(--muted) 45%, var(--muted) 55%, transparent 55%);
+}
+
+.format-empty {
+  margin: 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}

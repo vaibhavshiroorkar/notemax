@@ -1,4 +1,5 @@
 import type { DocNode, Resolve } from "./serialize";
+import { blockStyleDocx, firstFont, hexOf, textStyleOf } from "./styles";
 import { zip, type ZipEntry } from "./zip";
 
 /** A picture ready for Word: PNG, JPEG or GIF bytes and its size in pixels. */
@@ -51,7 +52,17 @@ export function buildDocx(title: string, parts: DocxPart[], r: Resolve & { pictu
       else if (mark.type === "italic") props.push("<w:i/>");
       else if (mark.type === "strike") props.push("<w:strike/>");
       else if (mark.type === "underline") props.push('<w:u w:val="single"/>');
-      else if (mark.type === "highlight") props.push('<w:highlight w:val="yellow"/>');
+      else if (mark.type === "highlight") {
+        const fill = hexOf(str(mark.attrs?.color));
+        props.push(fill ? `<w:shd w:val="clear" w:color="auto" w:fill="${fill}"/>` : '<w:highlight w:val="yellow"/>');
+      } else if (mark.type === "textStyle") {
+        const { color, size, font } = textStyleOf([mark]);
+        if (font) props.push(`<w:rFonts w:ascii="${esc(firstFont(font))}" w:hAnsi="${esc(firstFont(font))}" w:cs="${esc(firstFont(font))}"/>`);
+        const hex = color && hexOf(color);
+        if (hex) props.push(`<w:color w:val="${hex}"/>`);
+        // Half-points: a pixel is three quarters of a point.
+        if (size) props.push(`<w:sz w:val="${Math.round(size * 1.5)}"/>`);
+      }
       else if (mark.type === "code") props.push('<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/>');
     }
     const rPr = props.length ? `<w:rPr>${props.join("")}</w:rPr>` : "";
@@ -112,9 +123,9 @@ export function buildDocx(title: string, parts: DocxPart[], r: Resolve & { pictu
       .map((node) => {
         switch (node.type) {
           case "heading":
-            return para(inline(node), `Heading${Math.min(3, Number(node.attrs?.level ?? 1))}`);
+            return para(inline(node), `Heading${Math.min(3, Number(node.attrs?.level ?? 1))}`, blockStyleDocx(node));
           case "paragraph":
-            return para(inline(node), quote ? "Quote" : undefined);
+            return para(inline(node), quote ? "Quote" : undefined, blockStyleDocx(node));
           case "bulletList":
           case "orderedList":
           case "taskList": {

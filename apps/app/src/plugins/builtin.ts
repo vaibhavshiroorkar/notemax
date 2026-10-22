@@ -16,6 +16,7 @@ import { shortcutsPlugin } from "@/features/shortcuts/plugin";
 import { sidebarPlugin } from "@/features/sidebar/plugin";
 import { slashPlugin } from "@/features/slash/plugin";
 import { starPlugin } from "@/features/star/plugin";
+import { formatPlugin } from "@/features/format/plugin";
 import { historyPlugin } from "@/features/history/plugin";
 import { temporaryPlugin } from "@/features/temporary/plugin";
 import { trashPlugin } from "@/features/trash/plugin";
@@ -34,6 +35,7 @@ import { registerPlugin } from "./registry";
   starPlugin,
   temporaryPlugin,
   historyPlugin,
+  formatPlugin,
   trashPlugin,
   undoPlugin,
   booksPlugin,

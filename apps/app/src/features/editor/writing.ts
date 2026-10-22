@@ -85,6 +85,57 @@ export const Indent = Extension.create({
   },
 });
 
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    lineSpacing: {
+      /** Line spacing of the paragraphs in the selection, like "1.8". Null goes back to the default. */
+      setLineSpacing: (value: string | null) => ReturnType;
+    };
+  }
+}
+
+/** Line spacing per paragraph or heading, as in Word, rather than per run of text. */
+export const LineSpacing = Extension.create({
+  name: "lineSpacing",
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: INDENTED,
+        attributes: {
+          lineSpacing: {
+            default: null,
+            parseHTML: (el) => {
+              // Word writes "line-height:150%" or a plain number.
+              const raw = el.style.lineHeight;
+              if (!raw || raw === "normal") return null;
+              return raw.endsWith("%") ? String(parseFloat(raw) / 100) : /^[\d.]+$/.test(raw) ? raw : null;
+            },
+            renderHTML: (attrs) => (attrs.lineSpacing ? { style: `line-height: ${attrs.lineSpacing}` } : {}),
+          },
+        },
+      },
+    ];
+  },
+
+  addCommands() {
+    return {
+      setLineSpacing:
+        (value) =>
+        ({ tr, state, dispatch }: CommandProps) => {
+          const { from, to } = state.selection;
+          state.doc.nodesBetween(from, to, (node, pos) => {
+            if (!INDENTED.includes(node.type.name)) return;
+            tr.setNodeMarkup(pos, undefined, { ...node.attrs, lineSpacing: value });
+            return false;
+          });
+          dispatch?.(tr);
+          return true;
+        },
+    };
+  },
+});
+
 /** "1) " starts a numbered list, as "1. " does. It starts at the number typed. */
 export const ParenthesisList = Extension.create({
   name: "parenthesisList",
