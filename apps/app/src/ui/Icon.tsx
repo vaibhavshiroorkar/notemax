@@ -41,6 +41,7 @@ const paths = {
   "align-justify": "M2.5 4h11M2.5 8h11M2.5 12h11",
   indent: "M7 4h6.5M7 8h6.5M7 12h6.5M2.5 6l2 2-2 2",
   outdent: "M7 4h6.5M7 8h6.5M7 12h6.5M4.5 6l-2 2 2 2",
+  more: "M3 8a1 1 0 1 0 2 0a1 1 0 1 0-2 0M7 8a1 1 0 1 0 2 0a1 1 0 1 0-2 0M11 8a1 1 0 1 0 2 0a1 1 0 1 0-2 0",
   heading: "M4 3v10M11 3v10M4 8h7",
   "list-bullet": "M6.5 4h7M6.5 8h7M6.5 12h7M3 4h.5M3 8h.5M3 12h.5",
   "list-number": "M7 4h6.5M7 8h6.5M7 12h6.5M2.5 3l1-.5V6M2.5 10h1.5l-1.5 2.5H4",

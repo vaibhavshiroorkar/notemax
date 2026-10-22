@@ -19,7 +19,6 @@ export interface RowContext {
   /** Ctrl+click and Shift+click pick rows. Returns true when the click did that, so it opens nothing. */
   pick(item: TreeItem, event: MouseEvent): boolean;
   add(kind: NodeKind, parentId: string): void;
-  trash(id: string): void;
   drop(placement: Placement): void;
   /** Right click on a row. */
   menu(id: string, event: MouseEvent): void;
@@ -58,6 +57,8 @@ function NameInput({ item, ctx }: { item: TreeItem; ctx: RowContext }) {
     </span>
   );
 }
+
+const touchOnly = () => matchMedia("(pointer: coarse) and (hover: none)").matches;
 
 /** Double-click or F2 on a row renames it right there. */
 const renameHere = (id: string) => ({
@@ -135,7 +136,8 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
           startDrag(item);
         }}
         onDragEnd={endDrag}
-        onContextMenu={(event) => ctx.menu(item.id, event)}
+        // On a touch screen a long press starts a drag, not the menu; the ... button has the menu there.
+        onContextMenu={(event) => (touchOnly() ? event.preventDefault() : ctx.menu(item.id, event))}
         // Shift+click picks a range; without this it would also select the text between.
         onMouseDown={(event) => event.shiftKey && event.preventDefault()}
         // A middle click opens the page in a new tab, as in a browser.
@@ -222,8 +224,9 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
             <Icon name="plus" />
           </button>
         )}
-        <button className="icon-button row-action" aria-label={`Move ${title} to trash`} title="Move to trash" onClick={() => ctx.trash(item.id)}>
-          <Icon name="trash" />
+        {/* The page menu, with Move to trash in it. On a phone it is the way to the menu, since a long press drags. */}
+        <button className="icon-button row-action" aria-label={`More for ${title}`} aria-haspopup="menu" title="More" onClick={(event) => ctx.menu(item.id, event)}>
+          <Icon name="more" />
         </button>
       </div>
       {hasChildren && open && <Rows items={item.children} depth={depth + 1} ctx={ctx} />}

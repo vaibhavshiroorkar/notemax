@@ -81,7 +81,6 @@ export function Sidebar({ app }: { app: AppContext }) {
         if (kind === "folder") editingId.set(id);
         else appRef.current.open(id);
       },
-      trash: (id) => appRef.current.trash(id),
       menu(id, event) {
         const tree = appRef.current.tree;
         // A right click on one of several picked rows acts on all of them.

@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.32.0 (2026-10-22)
+
+- Each sidebar row has a ... button that opens its menu, in place of the trash button. Move to trash is in that menu.
+- On a touch screen a long press on a row no longer opens the menu, so it is free for dragging. The ... button shows all the time there.
+
 ## 0.31.0 (2026-10-22)
 
 - When a note was edited on two devices before they synced, Notemax keeps both changes, says so with a toast and a line under the title, and asks: keep both, keep this device's, or keep the other device's. Review shows both sides next to each other.

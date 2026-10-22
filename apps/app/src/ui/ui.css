@@ -260,8 +260,14 @@ kbd {
   opacity: 1;
 }
 
+/* No hover on touch screens, so the actions always show. */
+@media (hover: none) {
+  .row-action {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 700px) {
-  /* No hover on touch screens, so the actions always show. */
   .row-action {
     opacity: 1;
   }
