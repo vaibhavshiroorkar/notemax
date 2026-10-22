@@ -310,6 +310,15 @@
   right: calc(min(var(--side-panel-width), 45vw) + 16px);
 }
 
+/* What the sidebars take from the window's width, for the status bar to stay between them. */
+.app[data-sidebar="open"] {
+  --left-room: min(var(--sidebar-width), 45vw);
+}
+
+.app[data-side-panel="open"] {
+  --right-room: min(var(--side-panel-width), 45vw);
+}
+
 @media (max-width: 700px) {
   /* Both sides float over the page here, so match every attribute combination. */
   .app[data-sidebar][data-side-panel] {
@@ -322,6 +331,13 @@
 
   .app[data-side-panel="open"] .status-bar {
     right: 16px;
+  }
+
+  /* The sides float over the page here, so they take no room from the status bar. */
+  .app[data-sidebar],
+  .app[data-side-panel] {
+    --left-room: 0px;
+    --right-room: 0px;
   }
 
   /* The sides open over the page, below the top bar, so its buttons stay in reach. */

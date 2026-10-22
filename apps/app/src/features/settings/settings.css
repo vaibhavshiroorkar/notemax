@@ -54,8 +54,38 @@
   font-size: 14px;
 }
 
+/* A switch stays on the right of its text, however long the description under it. */
 .settings-check {
+  flex-wrap: nowrap;
   cursor: pointer;
+}
+
+.settings-check > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-check input {
+  flex-shrink: 0;
+}
+
+.text-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.text-size input {
+  width: 160px;
+  max-width: 40vw;
+  accent-color: var(--accent);
+}
+
+.text-size output {
+  min-width: 40px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .settings-check input {
@@ -177,6 +207,21 @@
 .settings-empty {
   color: var(--muted);
   font-size: 14px;
+}
+
+/* On a phone Settings fills the screen, and the list scrolls in all the room below the categories. */
+@media (max-width: 700px) {
+  .dialog.settings .dialog-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .settings-layout {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
 }
 
 @media (max-width: 600px) {

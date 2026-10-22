@@ -52,20 +52,3 @@
   outline-offset: 2px;
 }
 
-.text-size {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.text-size input {
-  width: 160px;
-  accent-color: var(--accent);
-}
-
-.text-size output {
-  min-width: 40px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}

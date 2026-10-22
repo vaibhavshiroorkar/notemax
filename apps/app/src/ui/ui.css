@@ -110,6 +110,11 @@ ul {
   width: min(440px, calc(100vw - 32px));
 }
 
+/* The dialog itself takes focus on touch screens; it needs no ring for that. */
+.dialog:focus {
+  outline: none;
+}
+
 .dialog::backdrop {
   background: rgba(0, 0, 0, 0.4);
 }

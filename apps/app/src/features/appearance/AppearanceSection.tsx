@@ -4,16 +4,15 @@ import {
   FONTS,
   PAGE_WIDTHS,
   PAGE_WIDTH_ORDER,
-  TEXT_SIZE,
   accent,
   font,
   pageWidth,
-  textSize,
   theme,
   type AccentName,
   type Font,
   type Theme,
 } from "@/ui/appearance";
+import { TextSizeSlider } from "@/features/settings/BasicRows";
 import { Segmented } from "@/ui/Segmented";
 import "./appearance.css";
 
@@ -26,7 +25,6 @@ const themes: { value: Theme; label: string }[] = [
 export function AppearanceSection() {
   const currentAccent = accent.use();
   const custom = !(currentAccent in ACCENTS);
-  const size = textSize.use();
 
   return (
     <>
@@ -68,21 +66,7 @@ export function AppearanceSection() {
           onChange={font.set}
         />
       </div>
-      <div className="settings-row">
-        <label htmlFor="text-size">Text size</label>
-        <span className="text-size">
-          <input
-            id="text-size"
-            type="range"
-            min={TEXT_SIZE.min}
-            max={TEXT_SIZE.max}
-            step={1}
-            value={size}
-            onChange={(event) => textSize.set(Number(event.target.value))}
-          />
-          <output htmlFor="text-size">{size} px</output>
-        </span>
-      </div>
+      <TextSizeSlider />
       <div className="settings-row">
         <span>Page width</span>
         <Segmented

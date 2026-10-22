@@ -27,13 +27,18 @@ export function Dialog({
     // screen that would pop the keyboard up over the dialog, so only fields
     // marked "always", where typing is the whole point, get it there.
     const field = ref.current?.querySelector<HTMLElement>("[data-autofocus]");
-    if (field && (field.dataset.autofocus === "always" || !matchMedia("(pointer: coarse)").matches)) field.focus();
+    const touch = matchMedia("(pointer: coarse)").matches;
+    if (field && (field.dataset.autofocus === "always" || !touch)) field.focus();
+    // On a touch screen nothing needs the keyboard yet, so the dialog itself takes focus,
+    // not the Close button, which would show a focus ring nobody asked for.
+    else if (touch) ref.current?.focus();
   }, []);
 
   return (
     <dialog
       ref={ref}
       className={`dialog ${className}`}
+      tabIndex={-1}
       aria-label={label}
       onClose={onClose}
       // A click on the dialog element itself, not its content, is a click on the backdrop.

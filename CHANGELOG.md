@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.20.0 (2026-10-22)
+
+- Settings: switches stay on the right even when their text is long.
+- Text size is a slider in Basics too, the same one as in Appearance.
+- Settings fills a phone screen, and the close button has no ring on touch screens.
+- The status bar stays between the sidebars and shortens its warning first.
+
 ## 0.19.0 (2026-10-22)
 
 - "Linked from" moved from under the page to the right sidebar.

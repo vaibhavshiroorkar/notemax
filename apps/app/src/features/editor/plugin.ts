@@ -21,7 +21,7 @@ export const notesPlugin: Plugin = {
     {
       id: "pages",
       label: "Show notes as pages",
-      description: "Sheets of paper like a printed document, instead of one long page. A note can choose for itself from its menu.",
+      description: "Sheets of paper like a printed document, instead of one long page. A note can choose for itself in the right sidebar or its menu.",
       section: "editor",
       quick: true,
       default: false,

@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { registry } from "@/plugins/registry";
 import { FONTS, TEXT_SIZE, clampTextSize, font, textSize, theme, type Font, type Theme } from "@/ui/appearance";
 import { Segmented } from "@/ui/Segmented";
@@ -53,6 +54,22 @@ export function TextSizeRow() {
   );
 }
 
+/** The text size as a slider, for Settings. Quick settings keeps the smaller - and + buttons. */
+export function TextSizeSlider() {
+  const size = textSize.use();
+  // Basics and Appearance can both show at once while searching, so each needs its own id.
+  const id = useId();
+  return (
+    <div className="settings-row">
+      <label htmlFor={id}>Text size</label>
+      <span className="text-size">
+        <input id={id} type="range" min={TEXT_SIZE.min} max={TEXT_SIZE.max} step={1} value={size} onChange={(event) => textSize.set(Number(event.target.value))} />
+        <output htmlFor={id}>{size} px</output>
+      </span>
+    </div>
+  );
+}
+
 /** Every switch a plugin marked `quick`. */
 export function QuickOptions() {
   return (
@@ -74,7 +91,7 @@ export function BasicsSection() {
       <p>The settings most people change. Every category on the left has these and more.</p>
       <ThemeRow />
       <FontRow />
-      <TextSizeRow />
+      <TextSizeSlider />
       <QuickOptions />
     </>
   );
