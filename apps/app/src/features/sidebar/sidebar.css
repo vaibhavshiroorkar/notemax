@@ -388,3 +388,27 @@
   right: 4px;
   max-width: calc(100% - 8px);
 }
+
+/* The Others flyout of the + menu: beside the menu on wide screens, below its button on a phone. */
+.menu-others {
+  position: relative;
+}
+
+.menu-others > .menu-item svg:last-child {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.menu-flyout {
+  top: -5px;
+  right: auto;
+  left: calc(100% + 4px);
+}
+
+@media (max-width: 700px) {
+  .menu-flyout {
+    position: static;
+    margin-top: 2px;
+    box-shadow: none;
+  }
+}

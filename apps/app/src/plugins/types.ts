@@ -183,6 +183,8 @@ export interface KindInfo {
   kind: NodeKind;
   label: string;
   icon: IconName;
+  /** Listed under Others in the + menu, so the everyday kinds stay up front. */
+  other?: boolean;
 }
 
 export interface PageProps {

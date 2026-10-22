@@ -39,6 +39,7 @@
 - Voice typing: speak and the words appear as you go.
 - Show a note as one long page, or as A4 or Letter sheets with page numbers.
 - Boards for sketching and diagrams, powered by Excalidraw, with sticky notes, frames, templates and dot votes.
+- Code pages: Python or JavaScript that runs right in the app, with its output below.
 
 **Organize**
 - Folders, books and notes in one sidebar. Drag to sort, put pages inside pages, or pick several and move them together.

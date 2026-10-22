@@ -1,0 +1,68 @@
+.code-page {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: var(--page-width, 720px);
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.code-bar select {
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.code-bar .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.code-input {
+  min-height: 320px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--code-bg, color-mix(in srgb, var(--text) 4%, var(--bg)));
+  color: var(--text);
+  font: 14px/1.55 ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+  tab-size: 4;
+  resize: vertical;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+.code-output {
+  max-height: 360px;
+  margin: 0;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text) 7%, var(--bg));
+  font: 13px/1.5 ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+  white-space: pre-wrap;
+}
+
+.code-err {
+  color: var(--danger, #e03131);
+}
+
+.code-info {
+  color: var(--muted);
+}
+
+@media (max-width: 700px) {
+  .code-page {
+    padding: 20px 12px 48px;
+  }
+}

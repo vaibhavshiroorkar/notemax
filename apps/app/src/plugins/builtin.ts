@@ -23,6 +23,7 @@ import { markdownFilesPlugin } from "@/features/markdown-files/plugin";
 import { datesPlugin } from "@/features/dates/plugin";
 import { searchPlugin } from "@/features/search/plugin";
 import { voicePlugin } from "@/features/voice/plugin";
+import { codePlugin } from "@/features/code/plugin";
 import { historyPlugin } from "@/features/history/plugin";
 import { temporaryPlugin } from "@/features/temporary/plugin";
 import { trashPlugin } from "@/features/trash/plugin";
@@ -51,6 +52,7 @@ import { registerPlugin } from "./registry";
   undoPlugin,
   booksPlugin,
   boardsPlugin,
+  codePlugin,
   tagsPlugin,
   slashPlugin,
   imagesPlugin,

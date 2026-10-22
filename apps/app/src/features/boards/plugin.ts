@@ -8,7 +8,7 @@ export const boardsPlugin: Plugin = {
   id: "boards",
   name: "Boards",
   description: "Drawing boards made with Excalidraw",
-  kinds: [{ kind: "board", label: "New board", icon: "board" }],
+  kinds: [{ kind: "board", label: "New board", icon: "board", other: true }],
   pageViews: [{ kind: "board", component: BoardPane }],
   exporters: BOARD_FORMATS,
   commands: [

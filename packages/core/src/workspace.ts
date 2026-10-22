@@ -15,8 +15,8 @@ export const WORKSPACE_DOC_ID = "workspace";
 const OLD_INBOX = "inbox";
 
 /**
- * A folder sorts things and has no body. Notes and boards (drawings) are
- * pages: each has a body of its own, kept in its own document under the
+ * A folder sorts things and has no body. Notes, boards (drawings) and code
+ * pages are pages: each has a body of its own, kept in its own document under the
  * node's id, and can hold sub-pages, as in a wiki. A book is something being
  * written: it holds its chapters in reading order, which may be notes, boards
  * or books of their own as parts.
@@ -25,9 +25,9 @@ const OLD_INBOX = "inbox";
  * mind maps that were removed. It is read as a page that holds nothing, so old
  * data is never lost or rewritten.
  */
-export type NodeKind = "folder" | "book" | "note" | "board";
+export type NodeKind = "folder" | "book" | "note" | "board" | "code";
 
-export const KINDS: readonly NodeKind[] = ["folder", "book", "note", "board"];
+export const KINDS: readonly NodeKind[] = ["folder", "book", "note", "board", "code"];
 
 /** Kinds that hold other items rather than a body of their own. */
 export const isContainer = (kind: NodeKind) => kind === "folder" || kind === "book";

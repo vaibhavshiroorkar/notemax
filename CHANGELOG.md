@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.43.0 (2026-10-22)
+
+- Code pages: write Python or JavaScript and press Run (or Ctrl+Enter). What it prints shows below, with how long it took. Stop ends code that runs forever.
+- Code runs on its own, so a long loop never freezes the app. Python downloads once, the first time it runs.
+- Download a code page as a .py or .js file.
+- The + menu lists notes, folders and books. Boards and code pages sit under Others.
+
 ## 0.42.0 (2026-10-22)
 
 - Voice typing: Ctrl+Shift+. (or Ctrl+K, or / Voice typing, or the mic above a phone's keyboard) writes what you say at the cursor. Words show while they are being heard and settle as each phrase ends. It keeps listening through pauses until you stop it.
