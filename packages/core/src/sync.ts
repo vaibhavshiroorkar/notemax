@@ -27,6 +27,8 @@ export interface SyncRemote {
   write(docId: string, data: Uint8Array): Promise<void>;
   /** Removes this device's file for a doc. */
   remove(docId: string): Promise<void>;
+  /** The docs this device has a file for. Lets a device find docs it never sent. */
+  listMine?(): Promise<string[]>;
 }
 
 /** What a device keeps between runs. */
@@ -67,6 +69,12 @@ export interface SyncEngine {
   markDirty(docId: string): void;
   /** Marks every local doc as changed, so all of them are sent. Used when sync is turned on. */
   markAllDirty(): Promise<void>;
+  /**
+   * Marks for sending the docs this device has that the remote has no file of
+   * its for, plus `also`. Finds edits whose mark was lost, as when the app was
+   * closed by force right after an edit, before the mark was saved.
+   */
+  catchUp(also?: string[]): Promise<void>;
   /** Reads what other devices wrote, then sends this device's edits. Runs one at a time. */
   sync(): Promise<void>;
   status(): SyncStatus;
@@ -162,6 +170,12 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     async markAllDirty() {
       const all = await store.list();
       save({ ...state, dirty: [...new Set([...state.dirty, ...all])] });
+    },
+    async catchUp(also = []) {
+      const sent = remote.listMine ? new Set(await remote.listMine()) : null;
+      const unsent = sent ? (await store.list()).filter((docId) => !sent.has(docId)) : [];
+      const marks = [...unsent, ...also].filter((docId) => !state.dirty.includes(docId));
+      if (marks.length) save({ ...state, dirty: [...state.dirty, ...new Set(marks)] });
     },
     sync() {
       // After the last run, whether it worked or not: a failed run must not stop every later one.

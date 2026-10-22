@@ -50,6 +50,28 @@ const SIGNED_IN_PAGE: &str = "<!doctype html><meta charset=utf-8><title>Notemax<
 
 /// Opens the sign-in page in the browser and waits for its redirect.
 /// A listener left over from an abandoned attempt is reused, not doubled.
+/// How long Quit waits for the main window to save and send before quitting anyway.
+const QUIT_WAIT: std::time::Duration = std::time::Duration::from_secs(8);
+
+/// Quit from the tray: the main window first saves open pages and sends waiting
+/// edits, then calls quit_now. A window that cannot answer does not hold Quit up.
+fn quit_softly(app: &AppHandle) {
+    if app.emit_to("main", "quit-requested", ()).is_err() {
+        app.exit(0);
+        return;
+    }
+    let app = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(QUIT_WAIT);
+        app.exit(0);
+    });
+}
+
+#[tauri::command]
+fn quit_now(app: AppHandle) {
+    app.exit(0);
+}
+
 #[tauri::command]
 fn open_sign_in(app: AppHandle, url: String) -> Result<(), String> {
     if !url.starts_with("https://") {
@@ -120,7 +142,7 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_sql::Builder::default().add_migrations(DB_URL, migrations).build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![open_sign_in])
+        .invoke_handler(tauri::generate_handler![open_sign_in, quit_now])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -157,7 +179,7 @@ pub fn run() {
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "open" => show_main(app),
                     "capture" => toggle_capture(app),
-                    "quit" => app.exit(0),
+                    "quit" => quit_softly(app),
                     _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {

@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.56.0 (2026-10-23)
+
+- Sync no longer misses an edit when the app was closed by force right after typing: at start it looks for pages it never sent and pages edited around the last sync, and sends them.
+- Edits go out as soon as the window is hidden or closed, instead of a few seconds later, so a phone that puts the app away still sends them.
+- Quit from the desktop tray saves open pages and sends waiting edits before it closes (it never waits more than 8 seconds).
+
 ## 0.55.0 (2026-10-23)
 
 - Settings, Setup: Keep pages on this device. Turn it off on a shared or borrowed computer: Notemax sends every waiting edit to your Google Drive, erases the pages from the device, and from then on gets them from Drive each time it opens and keeps them only in memory. Needs sync.

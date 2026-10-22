@@ -53,6 +53,7 @@ class FakeDrive {
       remove: async (docId) => {
         this.files.delete(`${docId}@${device}`);
       },
+      listMine: async () => [...this.files.values()].filter((f) => f.device === device).map((f) => f.docId),
     };
   }
 }
@@ -105,6 +106,31 @@ describe.each([
     const b = await device("phone", drive, key, await freshStore("b"));
     return { drive, key, a, b };
   };
+
+  it("sends an edit whose mark was lost, once it catches up", async () => {
+    const { drive, a, b } = await setup();
+    // Written to the store, but the app closed before marking it to send.
+    const local = await openLocalDoc(a.store, "note-1", { batchMs: 0 });
+    local.doc.getText("body").insert(0, "typed just before a crash");
+    await local.close();
+    await a.engine.sync();
+    expect(drive.files.size).toBe(0);
+    await a.engine.catchUp();
+    await a.engine.sync();
+    await b.engine.sync();
+    expect(await b.read("note-1")).toBe("typed just before a crash");
+  });
+
+  it("catching up marks only what was never sent, plus what it is told", async () => {
+    const { a } = await setup();
+    await a.type("sent", "one");
+    await a.engine.sync();
+    const local = await openLocalDoc(a.store, "unsent", { batchMs: 0 });
+    local.doc.getText("body").insert(0, "two");
+    await local.close();
+    await a.engine.catchUp(["recent"]);
+    expect(a.state().dirty.sort()).toEqual(["recent", "unsent"]);
+  });
 
   it("brings a note written on one device to another", async () => {
     const { a, b } = await setup();

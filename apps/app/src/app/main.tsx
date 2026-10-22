@@ -8,6 +8,7 @@ import "@/ui/ui.css";
 import "@/plugins/builtin";
 import { startOffline } from "@/platform/offline";
 import { startSettingsSync } from "@/platform/settingsSync";
+import { listenForQuit } from "@/platform/quit";
 import { loadCommunityPlugins } from "@/plugins/community";
 import { App } from "./App";
 
@@ -16,6 +17,7 @@ startOffline();
 // When storage cannot open, the app says why on screen; settings just wait for the next start.
 startSettingsSync().catch(() => {});
 enableLongPress();
+void listenForQuit();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -14,13 +14,17 @@ import {
   type SyncEngine,
   type SyncState,
   isHistoryDocId,
+  scopedId,
   splitScoped,
+  SETTINGS_DOC_ID,
+  WORKSPACES_DOC_ID,
 } from "@notemax/core";
 import * as Y from "yjs";
 import { pastWelcomeContent, welcomeContent } from "@/features/editor/welcome";
 import { markTemporary } from "@/features/temporary/temporary";
 import { WORKSPACES_CHANNEL, docChannelFor, eraseDiskStore, getRawStore, isDesktop, keepOnDisk, memoryOnly, onLocalWrite, setMemoryFill } from "@/platform/platform";
 import { currentWorkspace } from "@/platform/prefs";
+import { beforeQuit } from "@/platform/quit";
 import { getPref, removePref, setPref } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
 import { accountsEnabled } from "@/features/account/config";
@@ -43,7 +47,27 @@ export type SyncView =
 
 export const syncView = createStore<SyncView>({ state: "off" });
 
-const PREFS = { on: "syncOn", key: "syncKey", folder: "syncFolder", state: "syncState", device: "deviceId" };
+const PREFS = { on: "syncOn", key: "syncKey", folder: "syncFolder", state: "syncState", device: "deviceId", lastAt: "syncLastAt" };
+
+/** How far before the last good sync an edit still counts as maybe unsent: edit times are kept to the minute. */
+const EDIT_MARGIN_MS = 10 * 60_000;
+
+/**
+ * Docs that may hold edits whose mark to send was lost: every workspace's
+ * tree, the settings and the list of workspaces, and pages of the open
+ * workspace edited since shortly before the last good sync.
+ */
+async function maybeUnsent(store: DocStore): Promise<string[]> {
+  const ids = [SETTINGS_DOC_ID, WORKSPACES_DOC_ID, ...(await store.list()).filter((id) => splitScoped(id).docId === WORKSPACE_DOC_ID)];
+  const since = Number(getPref(PREFS.lastAt) ?? 0) - EDIT_MARGIN_MS;
+  const local = await openLocalDoc(store, scopedId(currentWorkspace, WORKSPACE_DOC_ID));
+  try {
+    for (const node of readTree(local.doc).byId.values()) if (node.editedAt > since) ids.push(scopedId(currentWorkspace, node.id));
+  } finally {
+    await local.close();
+  }
+  return ids;
+}
 
 /** This device's id in file names. Made once and kept. */
 export function deviceId(): string {
@@ -126,6 +150,7 @@ async function runEngine(signal: AbortSignal) {
       if (workspace === currentWorkspace) void recordConflict(docId, mine, theirs).catch(() => {});
     },
     onStatus(status) {
+      if (status.state === "idle" && status.lastSynced) setPref(PREFS.lastAt, String(status.lastSynced));
       if (status.state === "error") {
         const offline = !navigator.onLine || /Failed to fetch|NetworkError|network/i.test(status.message);
         syncView.set(offline ? { state: "offline", lastSynced: status.lastSynced } : { ...status, signIn: status.message === new NeedsSignIn().message });
@@ -191,7 +216,13 @@ async function runEngine(signal: AbortSignal) {
     if (update && link.live && goesLive(docId)) link.live.send(docId, update);
   });
   const poll = setInterval(run, POLL_MS);
-  const onWake = () => (document.visibilityState === "visible" ? run() : memoryOnly && loadState().dirty.length && run());
+  // Hidden, the window may never come back (a phone closes it, a laptop sleeps), so edits go out now.
+  const sendWaiting = () => loadState().dirty.length > 0 && run();
+  const onWake = () => (document.visibilityState === "visible" ? run() : sendWaiting());
+  window.addEventListener("pagehide", sendWaiting);
+  const stopQuitHook = beforeQuit(async () => {
+    if (loadState().dirty.length) await current.sync();
+  });
   // Drive holds the only copy, so closing with edits not yet sent asks first, and sends them meanwhile.
   const onLeave = (event: BeforeUnloadEvent) => {
     if (!memoryOnly || !loadState().dirty.length) return;
@@ -202,7 +233,13 @@ async function runEngine(signal: AbortSignal) {
   window.addEventListener("online", run);
   window.addEventListener("focus", run);
   document.addEventListener("visibilitychange", onWake);
-  run();
+  // A device that keeps pages may have lost marks in a forced close. One that keeps none started empty, so it has nothing to find.
+  if (memoryOnly) run();
+  else
+    void maybeUnsent(raw)
+      .then((ids) => current.catchUp(ids))
+      .catch(() => {})
+      .finally(run);
 
   await new Promise<void>((resolve) => signal.addEventListener("abort", () => resolve(), { once: true }));
   stopWrites();
@@ -214,6 +251,8 @@ async function runEngine(signal: AbortSignal) {
   window.removeEventListener("focus", run);
   document.removeEventListener("visibilitychange", onWake);
   window.removeEventListener("beforeunload", onLeave);
+  window.removeEventListener("pagehide", sendWaiting);
+  stopQuitHook();
   channels.forEach((channel) => channel.close());
   engine = null;
 }

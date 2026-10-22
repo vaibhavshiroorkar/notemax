@@ -166,6 +166,11 @@ export function driveRemote(folder: string, device: string): SyncRemote {
       mine.set(docId, file.id);
     },
 
+    async listMine() {
+      await loadMine();
+      return [...mine.keys()];
+    },
+
     async remove(docId) {
       await loadMine();
       const id = mine.get(docId);

@@ -1,5 +1,6 @@
 import { openLocalDoc, type LocalDoc } from "@notemax/core";
 import { DOC_CHANNEL, getStore } from "@/platform/platform";
+import { beforeQuit } from "@/platform/quit";
 
 // Opening a doc means reading it from storage, which takes tens of milliseconds
 // even for a short note. Docs stay open for a while after their page closes, so
@@ -84,4 +85,9 @@ export async function forgetDoc(docId: string) {
 // Idle docs may still hold the last batch of keystrokes from a page that just closed.
 const flushAll = () => entries.forEach((entry) => void entry.doc?.flush().catch(() => {}));
 addEventListener("pagehide", flushAll);
+beforeQuit(async () => {
+  await Promise.all([...entries.values()].map((entry) => entry.doc?.flush().catch(() => {})));
+  // The tree and other docs save in batches a fifth of a second apart; let the last one land.
+  await new Promise((resolve) => setTimeout(resolve, 300));
+});
 document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && flushAll());
