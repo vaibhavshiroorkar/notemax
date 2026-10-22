@@ -25,6 +25,7 @@ export {
   UNTRACKED,
   createNode,
   duplicateNote,
+  copyNodesTo,
   ensureWelcome,
   renameNode,
   setProp,

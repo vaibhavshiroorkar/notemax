@@ -44,7 +44,7 @@
 **Organize**
 - Books with chapters, parts and numbered subtopics, with Next and Previous at the end of each.
 - Folders, books and notes in one sidebar. Drag to sort, put pages inside pages, or pick several and move them together.
-- Workspaces for separate parts of your life, arranged on a Home page.
+- Workspaces for separate parts of your life, arranged on a Home page. Copy or move pages between them.
 - Share a note by link and write in it together, live and end-to-end encrypted.
 - Tabs, stars, tags, daily notes with a calendar, and a graph of how your pages connect.
 - Split view: drag tabs to any edge to work on pages side by side.

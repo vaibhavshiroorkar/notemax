@@ -402,6 +402,45 @@ export function duplicateNote(doc: Y.Doc, id: string, copyId: string = crypto.ra
   return copyId;
 }
 
+/**
+ * Copies a page and everything inside it from one workspace's tree to the end
+ * of another's top level. Trashed pages stay behind. Ids stay the same, so
+ * links between the copied pages keep working, unless the other workspace
+ * already uses one; that page gets a new id and links to it follow. Returns
+ * the ids, old to new. Bodies are stored apart, so the caller copies those.
+ */
+export function copyNodesTo(from: Y.Doc, id: string, to: Y.Doc): Map<string, string> {
+  const alive = (nodeId: string) => fieldsOf(from, nodeId).get("deletedAt") == null;
+  const ids = [id, ...descendantsOf(from, id)].filter(alive);
+  const kept = new Set(ids);
+  // A page inside a trashed one is left behind with it.
+  const copied = ids.filter((nodeId) => {
+    for (let at = nodeId; at !== id; at = parentOf(fieldsOf(from, at))) if (!kept.has(at)) return false;
+    return true;
+  });
+  const map = new Map(copied.map((nodeId) => [nodeId, nodesOf(to).has(nodeId) ? crypto.randomUUID() : nodeId]));
+
+  let last: string | null = null;
+  nodesOf(to).forEach((fields) => {
+    const position = fields.get("position") as string;
+    if (parentOf(fields) === ROOT && (last === null || position > last)) last = position;
+  });
+
+  to.transact(() => {
+    for (const nodeId of copied) {
+      const source = fieldsOf(from, nodeId);
+      const copy = new Y.Map<unknown>();
+      nodesOf(to).set(map.get(nodeId)!, copy);
+      for (const [key, value] of source.entries()) copy.set(key, Array.isArray(value) ? [...value] : value);
+      copy.set("parentId", nodeId === id ? ROOT : map.get(parentOf(source))!);
+      if (nodeId === id) copy.set("position", generateKeyBetween(last, null));
+      const links = source.get("links") as string[] | undefined;
+      if (links) copy.set("links", links.map((target) => map.get(target) ?? target));
+    }
+  });
+  return map;
+}
+
 /** Creates the welcome note on a brand-new workspace. Does nothing otherwise. */
 export function ensureWelcome(doc: Y.Doc) {
   if (nodesOf(doc).size === 0) createNode(doc, "note", ROOT, "Welcome", WELCOME_ID);

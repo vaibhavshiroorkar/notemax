@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.46.0 (2026-10-22)
+
+- Copy or move pages to another workspace from the page menu (Copy to workspace, Move to workspace). What is inside them and their pictures go along, and links between them keep working.
+- Moving puts the original in the trash here, only after the copy is stored, so nothing is lost if it fails.
+
 ## 0.45.0 (2026-10-22)
 
 - Chapters have subtopics: pages inside a chapter, numbered 6.1, 6.2 and 6.2.1. The + on a chapter in the Chapters panel adds one, and the open chapter lists its subtopics there.
