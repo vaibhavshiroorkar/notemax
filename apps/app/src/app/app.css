@@ -155,7 +155,7 @@
   overflow-y: auto;
 }
 
-/* Tabs shrink as more open, and scroll sideways past that. */
+/* Tabs shrink as more open, and past that the rest go into "+N". */
 .tab-strip {
   display: flex;
   flex: 1;
@@ -163,8 +163,6 @@
   gap: 2px;
   min-width: 0;
   height: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
 .tab {
@@ -226,6 +224,44 @@
 
 .tab-new {
   flex: none;
+}
+
+.tab-more-wrap {
+  position: relative;
+  flex: none;
+}
+
+.tab-more {
+  min-width: 36px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tab-more:hover,
+.tab-more[aria-expanded="true"] {
+  background: var(--hover);
+  color: var(--text);
+}
+
+/* Opens leftward from the button, so it stays on screen on a phone too. */
+.tab-more-menu {
+  width: min(260px, calc(100vw - 32px));
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.tab-more-item {
+  display: flex;
+  align-items: center;
+}
+
+.tab-more-item .menu-item {
+  flex: 1;
+  min-width: 0;
 }
 
 /* An empty tab. */
