@@ -335,7 +335,10 @@ export function App() {
     openPalette: () => setPaletteOpen(true),
     openShortcuts: () => setShortcutsOpen(true),
     toggleQuickSettings: () => setQuickOpen((open) => !open),
-    openOverlay: (id, options = {}) => setOverlay({ id, options }),
+    openOverlay: (id, options = {}) => {
+      setOverlay({ id, options });
+      clearOverlays();
+    },
   };
   appRef.current = app;
 

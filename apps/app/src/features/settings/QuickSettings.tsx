@@ -3,13 +3,15 @@ import { registry } from "@/plugins/registry";
 import { formatShortcut, shortcutFor } from "@/plugins/shortcuts";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
+import { touchOnly } from "@/ui/longPress";
 import { QuickOptions, TextSizeRow, ThemeRow } from "./BasicRows";
 import "./quick-settings.css";
 
 const keysOf = (commandId: string) => {
   const command = registry.allCommands().find((c) => c.id === commandId);
   const keys = command ? shortcutFor(command) : "";
-  return keys ? ` (${formatShortcut(keys)})` : "";
+  // A phone has no keys to press.
+  return keys && !touchOnly() ? ` (${formatShortcut(keys)})` : "";
 };
 
 /**

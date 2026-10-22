@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.54.0 (2026-10-23)
+
+- Phones: search and menus no longer show keyboard shortcuts, so titles have room. Quick settings drop them too.
+- Phones: opening Home or the account window from the sidebar puts the sidebar away first. Section titles in the right sidebar are easier to tap.
+
 ## 0.53.0 (2026-10-23)
 
 - The right sidebar starts small: every section folded, and Format, Versions, Mentioned in, Graph and Pages inside off. The Sections button at its bottom turns any of them on or off.

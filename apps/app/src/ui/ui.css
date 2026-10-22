@@ -403,3 +403,11 @@ kbd {
     transition: none;
   }
 }
+
+/* Keyboard shortcuts mean nothing on a phone, and crowd the titles beside them. */
+@media (pointer: coarse) and (hover: none) {
+  .palette kbd,
+  .context-menu-keys {
+    display: none;
+  }
+}

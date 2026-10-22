@@ -8,6 +8,7 @@ const useAs: ContextMenuItem = {
   id: "special.use-as",
   title: "Use as",
   group: "layout",
+  icon: "target",
   targets: ["page"],
   when: (target) => target.type === "page" && ROLES.some((role) => role.kinds.includes(target.node.kind)),
   submenu: (target, app) => {
