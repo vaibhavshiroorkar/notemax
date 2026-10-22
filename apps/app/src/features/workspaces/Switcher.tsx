@@ -42,6 +42,9 @@ export function Switcher({ app }: { app: AppContext }) {
         <span className="workspace-name">{current ? nameOf(current) : "My notes"}</span>
         <Icon name="chevron-down" />
       </button>
+      <button className="icon-button workspace-home" aria-label="Home" title="Home: all workspaces" onClick={() => app.openOverlay("home")}>
+        <Icon name="home" />
+      </button>
       {open && (
         <div className="menu workspace-menu" role="menu" aria-label="Workspaces">
           {list.map((workspace) => (
@@ -57,7 +60,7 @@ export function Switcher({ app }: { app: AppContext }) {
             role="menuitem"
             onClick={() => {
               setOpen(false);
-              app.openView("home");
+              app.openOverlay("home");
             }}
           >
             <Icon name="home" />

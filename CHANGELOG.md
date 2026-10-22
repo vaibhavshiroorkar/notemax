@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.49.0 (2026-10-23)
+
+- Home opens over the whole window, from the house button at the top left, Ctrl+K "Go Home" or Ctrl+Alt+H. Esc, the close button or picking a page takes you back to where you were.
+- On a phone, opening one sidebar closes the other, so they never cover each other.
+
 ## 0.48.0 (2026-10-23)
 
 - The first start asks how you will use Notemax: on this device only (offline, no account) or on all your devices (online). Until you answer, everything stays on as before.

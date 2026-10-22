@@ -14,7 +14,7 @@ import { Dot } from "./Switcher";
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-function Card({ workspace, app, count, onDragTo }: { workspace: WorkspaceInfo; app: AppContext; count: number | null; onDragTo(id: string): void }) {
+function Card({ workspace, app, count, onDragTo, onDone }: { workspace: WorkspaceInfo; app: AppContext; count: number | null; onDragTo(id: string): void; onDone(): void }) {
   const here = workspace.id === currentWorkspace;
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -44,7 +44,7 @@ function Card({ workspace, app, count, onDragTo }: { workspace: WorkspaceInfo; a
         onDragTo(event.dataTransfer.getData("application/x-notemax-workspace"));
       }}
     >
-      <button className="workspace-open" aria-label={here ? `${name}, open now` : `Open ${name}`} onClick={() => (here ? app.newTab() : switchTo(workspace.id))}>
+      <button className="workspace-open" aria-label={here ? `${name}, open now` : `Open ${name}`} onClick={() => (here ? onDone() : switchTo(workspace.id))}>
         <span className="workspace-card-title">
           <Dot color={workspace.color} />
           <strong>{name}</strong>
@@ -111,8 +111,11 @@ function Card({ workspace, app, count, onDragTo }: { workspace: WorkspaceInfo; a
   );
 }
 
-/** Home: every workspace as a card to open, rename, color, delete or drag into order, and what was open last here. */
-export function HomeView({ app }: { app: AppContext; options: Record<string, unknown> }) {
+/**
+ * Home: every workspace as a card to open, rename, color, delete or drag into
+ * order, and what was open last here. `onDone` puts Home away, back to the pages.
+ */
+export function HomeView({ app, onDone }: { app: AppContext; options: Record<string, unknown>; onDone(): void }) {
   const list = workspaceList.use();
   const [counts, setCounts] = useState<Record<string, number>>({});
   useEffect(() => void openList(), []);
@@ -164,6 +167,7 @@ export function HomeView({ app }: { app: AppContext; options: Record<string, unk
             workspace={workspace}
             app={app}
             count={workspace.id === currentWorkspace ? app.tree.visible.size : (counts[workspace.id] ?? null)}
+            onDone={onDone}
             onDragTo={(dragged) => dragged && dragged !== workspace.id && void move(dragged, list.findIndex((w) => w.id === workspace.id))}
           />
         ))}
@@ -195,7 +199,10 @@ export function HomeView({ app }: { app: AppContext; options: Record<string, unk
           <ul className="new-tab-list">
             {recent.map((item) => (
               <li key={item!.id}>
-                <button className="row-title icon-title" onClick={() => app.open(item!.id)}>
+                <button className="row-title icon-title" onClick={() => {
+                    app.open(item!.id);
+                    onDone();
+                  }}>
                   <Icon name={item!.kind === "note" ? "note" : registry.iconOf(item!.kind)} />
                   <span>{item!.title || "Untitled"}</span>
                 </button>

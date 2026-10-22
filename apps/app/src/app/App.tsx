@@ -86,7 +86,6 @@ export function App() {
     loadTabs(getPref("selectedId") ?? WELCOME_ID);
     const fromAddress = pageInAddress();
     if (fromAddress && currentVisit()?.page !== fromAddress) openPage(fromAddress);
-    else if (!fromAddress && startAt.get() === "home" && currentVisit()?.page !== viewPage("home")) openPage(viewPage("home"));
   });
   const tabs = layout.use();
   // Split view needs room: a phone shows the active pane alone.
@@ -109,7 +108,10 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
-  const [overlay, setOverlay] = useState<{ id: string; options: Record<string, unknown> } | null>(null);
+  // A window set to start at Home opens with Home over the pages, unless the address names a page.
+  const [overlay, setOverlay] = useState<{ id: string; options: Record<string, unknown> } | null>(() =>
+    startAt.get() === "home" && !pageInAddress() ? { id: "home", options: {} } : null,
+  );
   const closeQuick = useCallback(() => setQuickOpen(false), []);
   const [accountError, setAccountError] = useState<string>();
   const overrides = shortcutOverrides.use();
@@ -165,8 +167,15 @@ export function App() {
     return () => narrow.removeEventListener("change", onChange);
   }, []);
 
+  // On a phone the sides float over the page and would cover each other, so one opening closes the other.
+  const openSide = useCallback((side: "left" | "right", open: boolean) => {
+    setFocusMode(false);
+    (side === "left" ? setSidebarOpen : setSidePanelOpen)(open);
+    if (open && isNarrow()) (side === "left" ? setSidePanelOpen : setSidebarOpen)(false);
+  }, []);
+
   useEdgeSwipe(
-    () => setSidebarOpen(true),
+    () => openSide("left", true),
     () => {
       setSidebarOpen(false);
       setSidePanelOpen(false);
@@ -316,22 +325,9 @@ export function App() {
       setFocusMode(!focusMode);
     },
     // Asking for a sidebar is a way out of focus mode too.
-    toggleSidebar() {
-      if (focusMode) {
-        setFocusMode(false);
-        setSidebarOpen(true);
-      } else setSidebarOpen((open) => !open);
-    },
-    showSidebar() {
-      setFocusMode(false);
-      setSidebarOpen(true);
-    },
-    toggleSidePanel() {
-      if (focusMode) {
-        setFocusMode(false);
-        setSidePanelOpen(true);
-      } else setSidePanelOpen((open) => !open);
-    },
+    toggleSidebar: () => openSide("left", focusMode || !sidebarOpen),
+    showSidebar: () => openSide("left", true),
+    toggleSidePanel: () => openSide("right", focusMode || !sidePanelOpen),
     openSettings(section) {
       setSettingsSection(section);
       setSettingsOpen(true);
