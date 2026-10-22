@@ -48,6 +48,7 @@
 - Share a note by link and write in it together, live and end-to-end encrypted.
 - Tabs, stars, tags, daily notes with a calendar and a template, and a graph of how your pages connect.
 - Split view: drag tabs to any edge to work on pages side by side.
+- A right sidebar you arrange: turn sections on and off, and drag them into tabs.
 - Ctrl+K finds any page, any words inside your notes, or any command. The sidebar can search, sort, group and filter.
 
 **Keep it safe**

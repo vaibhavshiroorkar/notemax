@@ -104,6 +104,8 @@ export const registry = {
   /** The switched-off plugin that would open this kind, so the page can offer to switch it on. */
   pluginFor: (kind: NodeKind): Plugin | undefined => plugins.find((p) => p.pageViews?.some((view) => view.kind === kind)),
   /** The right sidebar's sections that apply right now, top first. */
+  /** Every section of the plugins that are on, wanted on this page or not, for the list that turns them on and off. */
+  allSidePanels: (): SidePanel[] => all((p) => p.sidePanels).sort((a, b) => a.order - b.order),
   sidePanels: (app: AppContext): SidePanel[] =>
     all((p) => p.sidePanels)
       .filter((panel) => panel.when?.(app) ?? true)

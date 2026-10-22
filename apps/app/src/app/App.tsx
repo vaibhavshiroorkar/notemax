@@ -473,7 +473,7 @@ export function App() {
         </div>
         {narrow ? <div className="page-scroll">{activePage}</div> : renderSplit(split, [])}
       </main>
-      <RightSidebar app={app} panels={panels} open={showRight} />
+      <RightSidebar app={app} panels={panels} all={registry.allSidePanels()} open={showRight} />
       {/* Phones only (CSS): a tap beside an open side closes it. */}
       {(showLeft || showRight) && (
         <div

@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.53.0 (2026-10-23)
+
+- The right sidebar starts small: every section folded, and Format, Versions, Mentioned in, Graph and Pages inside off. The Sections button at its bottom turns any of them on or off.
+- Drag a section by its title onto another to share that spot as tabs, or between two to give it a place of its own. The layout and what is open are kept, and follow you to your other devices.
+
 ## 0.52.0 (2026-10-23)
 
 - Settings has a new look: a wider window, categories under headings (General, Writing, Account and sync, Your data, Advanced), and real on/off switches.

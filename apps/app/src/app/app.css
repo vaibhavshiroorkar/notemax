@@ -450,9 +450,10 @@
 /* The right sidebar. A plugin fills it; this only places it. */
 .side-panel {
   grid-column: 3;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   background: var(--sidebar-bg);
   border-left: 1px solid var(--border);
   font-size: 14px;
@@ -593,15 +594,27 @@
   }
 }
 
-/* Sections of the right sidebar, each folded by its title. */
+/* Sections of the right sidebar, in slots. Each folds by its title; a slot with several shows tabs. */
 .side-panel-sections {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  padding: 8px 0 24px;
+  padding: 8px 0 16px;
 }
 
-.panel-section + .panel-section {
-  margin-top: 8px;
+.panel-section {
+  border-radius: 6px;
+}
+
+.panel-slot + .panel-slot {
+  margin-top: 2px;
+}
+
+.panel-section[data-drop] {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .panel-section-title {
@@ -622,14 +635,96 @@
   color: var(--text);
 }
 
-.panel-section-title svg {
+.panel-section-title svg,
+.panel-fold svg {
   width: 12px;
   height: 12px;
   transition: transform 0.15s;
 }
 
-.panel-section[data-folded] .panel-section-title svg {
+.panel-section[data-folded] .panel-section-title svg,
+.panel-section[data-folded] .panel-fold svg {
   transform: rotate(-90deg);
+}
+
+.panel-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px 0 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.panel-fold {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 6px 4px 6px 8px;
+  color: var(--muted);
+}
+
+.panel-tabs .panel-tab {
+  width: auto;
+  flex-shrink: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.panel-tab[aria-selected="true"] {
+  background: var(--hover);
+  color: var(--text);
+}
+
+/* Where a dragged section can go to get a slot of its own. */
+.panel-gap {
+  height: 10px;
+  margin: 0 12px;
+  border-radius: 4px;
+}
+
+.panel-gap[data-over] {
+  height: 24px;
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.side-panel-bottom {
+  position: relative;
+  flex-shrink: 0;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+}
+
+.panels-menu {
+  bottom: calc(100% + 4px);
+  top: auto;
+  left: 8px;
+  right: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.panels-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.panels-menu-item input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.panels-menu-note {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.panels-menu hr {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid var(--border);
 }
 
 .panel-empty {
