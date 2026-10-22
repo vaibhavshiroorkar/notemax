@@ -1,0 +1,108 @@
+/* The graph fills the page area of its tab. */
+.graph-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 20px 36px;
+}
+
+.graph-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+}
+
+.graph-title {
+  margin: 0 8px 0 0;
+  font-size: 18px;
+}
+
+.graph-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.graph-option input {
+  accent-color: var(--accent);
+}
+
+.graph-option select {
+  padding: 2px 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.graph-find {
+  flex: 1;
+  min-width: 160px;
+  max-width: 280px;
+  margin: 0 0 0 auto;
+}
+
+.graph-canvas {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.graph-footer {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* The small graph in the right sidebar. */
+.graph-panel {
+  padding: 0 8px 8px;
+}
+
+.graph-panel-canvas {
+  display: block;
+  width: 100%;
+  height: 220px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  cursor: grab;
+  touch-action: none;
+}
+
+.graph-panel-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.graph-panel-count {
+  flex: 1;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.graph-panel-bar select {
+  padding: 1px 2px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+
+.graph-panel-bar [aria-pressed="true"] {
+  background: var(--active);
+  color: var(--accent);
+}

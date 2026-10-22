@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { DRIVE_SCOPE, forgetDriveAccess, rememberGoogleTokens } from "@/features/sync/google";
 import { isDesktop } from "@/platform/platform";
 import { SUPABASE_KEY, SUPABASE_URL } from "./config";
 
@@ -16,6 +17,9 @@ export const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!, {
   },
 });
 
+// Drive access for sync, and a refresh token (offline, and consent so Google sends it again).
+const GOOGLE_OPTIONS = { scopes: DRIVE_SCOPE, queryParams: { access_type: "offline", prompt: "consent" } };
+
 const cancelled = () => new DOMException("Sign-in was cancelled", "AbortError");
 
 /**
@@ -24,14 +28,14 @@ const cancelled = () => new DOMException("Sign-in was cancelled", "AbortError");
  */
 export async function signInWithGoogle(signal: AbortSignal): Promise<void> {
   if (!isDesktop) {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin } });
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { ...GOOGLE_OPTIONS, redirectTo: location.origin } });
     if (error) throw error;
     return;
   }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: SIGN_IN_REDIRECT, skipBrowserRedirect: true },
+    options: { ...GOOGLE_OPTIONS, redirectTo: SIGN_IN_REDIRECT, skipBrowserRedirect: true },
   });
   if (error) throw error;
 
@@ -53,6 +57,7 @@ export async function signInWithGoogle(signal: AbortSignal): Promise<void> {
     if (!code) throw new Error(params.get("error_description") ?? "Google sign-in did not finish.");
     const exchange = await supabase.auth.exchangeCodeForSession(code);
     if (exchange.error) throw exchange.error;
+    rememberGoogleTokens(exchange.data.session);
   } finally {
     stop();
   }
@@ -72,6 +77,7 @@ export async function finishWebSignIn(params: URLSearchParams): Promise<string |
   if (params.get("error_description")) return params.get("error_description")!;
   if (error) return error.message;
   if (!data.session) return "Google sign-in did not finish.";
+  rememberGoogleTokens(data.session);
   return undefined;
 }
 
@@ -79,4 +85,6 @@ export async function finishWebSignIn(params: URLSearchParams): Promise<string |
 export async function signOut(): Promise<void> {
   const { error } = await supabase.auth.signOut({ scope: "local" });
   if (error) throw error;
+  // Sync on this device stops with the account. Notes stay here.
+  forgetDriveAccess();
 }

@@ -62,8 +62,7 @@ export function AccountSection({ accountError }: SettingsContext) {
   const avatar = user?.user_metadata.avatar_url as string | undefined;
 
   return (
-    <section className="settings-section">
-      <h3>Account</h3>
+    <>
       {user === undefined ? (
         <p>Loading...</p>
       ) : user ? (
@@ -78,7 +77,7 @@ export function AccountSection({ accountError }: SettingsContext) {
               Sign out
             </button>
           </div>
-          <p>Nothing is synced yet. Your notes stay on this device.</p>
+          <p>To keep your notes on all your devices, turn on Sync in the Sync section.</p>
         </>
       ) : waiting ? (
         <>
@@ -89,13 +88,13 @@ export function AccountSection({ accountError }: SettingsContext) {
         </>
       ) : (
         <>
-          <p>Optional. Notemax works fully without an account. Later, an account will let you sync between devices and publish books.</p>
+          <p>Optional. Notemax works fully without an account. Signing in lets you sync your notes between devices through your own Google Drive, and later publish books.</p>
           <button className="button" onClick={signIn} disabled={!client}>
             Continue with Google
           </button>
         </>
       )}
       {error && <p className="warning">{error}</p>}
-    </section>
+    </>
   );
 }

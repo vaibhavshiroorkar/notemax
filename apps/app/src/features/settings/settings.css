@@ -76,3 +76,207 @@
   font-size: 12px;
   font-weight: 600;
 }
+
+/* Categories on the left, the chosen one on the right. */
+.settings {
+  width: min(760px, calc(100vw - 32px));
+}
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 16px;
+  height: min(520px, calc(100vh - 140px));
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.settings-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.settings-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: left;
+}
+
+.settings-nav-item:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.settings-nav-item[aria-current="page"] {
+  background: var(--active);
+  color: var(--text);
+}
+
+.settings-content {
+  min-width: 0;
+  overflow-y: auto;
+}
+
+/* Only a section with a shown section before it gets a dividing line, since search hides some. */
+.settings-content .settings-section {
+  padding-top: 0;
+  border-top: none;
+}
+
+.settings-content .settings-section:not([hidden]) ~ .settings-section:not([hidden]) {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* While searching inside a category, only the matching rows show. */
+.settings-section[data-partial] > p {
+  display: none;
+}
+
+.settings-description {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.settings-empty {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .settings-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .settings-search {
+    flex-basis: 100%;
+  }
+}
+
+.settings-subhead {
+  margin: 20px 0 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.plugin-always {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.plugin-version {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.settings-section .settings-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.settings-error {
+  display: block;
+  margin: 4px 0;
+  color: var(--danger, #c92a2a);
+  font-size: 12px;
+}
+
+.community-install {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.community-install .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.community-link {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.community-link input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.community-row {
+  align-items: flex-start;
+}
+
+.community-row .settings-description {
+  overflow-wrap: anywhere;
+}
+
+.community-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+}
+
+.community-actions input {
+  accent-color: var(--accent);
+}
+
+.settings-select {
+  max-width: 260px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}

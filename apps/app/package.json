@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "0.18.1",
     "@notemax/core": "workspace:*",
     "@supabase/supabase-js": "^2.118.0",
     "@tauri-apps/api": "^2.12.3",
@@ -22,11 +23,13 @@
     "@tiptap/starter-kit": "^3.31.4",
     "@tiptap/suggestion": "3.31.4",
     "@tiptap/y-tiptap": "^3.0.9",
+    "d3-force": "3.0.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "yjs": "^13.6.33"
   },
   "devDependencies": {
+    "@types/d3-force": "3.0.10",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",

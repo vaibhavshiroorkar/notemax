@@ -1,0 +1,154 @@
+import * as Y from "yjs";
+import { open, seal } from "./crypt";
+import type { DocStore } from "./store";
+
+// Sync through a folder of files that every device can read, like a folder in
+// the user's Google Drive. Each device writes only its own files: one per doc,
+// holding everything that device has of the doc. Others read those files and
+// merge them in with Yjs. Since no device ever overwrites another's file, two
+// devices editing the same note offline both keep their text.
+
+/** One device's file for one doc, as the remote lists it. */
+export interface RemoteEntry {
+  docId: string;
+  device: string;
+  /** Whatever the remote needs to read the file again, like a Drive file id. */
+  ref: string;
+}
+
+export interface SyncRemote {
+  /** Files written since `cursor`, or every file when it is null, and the cursor for next time. */
+  changes(cursor: string | null): Promise<{ entries: RemoteEntry[]; cursor: string }>;
+  read(ref: string): Promise<Uint8Array>;
+  /** Writes this device's file for a doc, replacing its last one. */
+  write(docId: string, data: Uint8Array): Promise<void>;
+  /** Removes this device's file for a doc. */
+  remove(docId: string): Promise<void>;
+}
+
+/** What a device keeps between runs. */
+export interface SyncState {
+  /** Where reading the remote's changes left off. */
+  cursor: string | null;
+  /** Docs with edits made here that have not reached the remote yet. */
+  dirty: string[];
+}
+
+export type SyncStatus =
+  | { state: "idle"; lastSynced: number | null }
+  | { state: "syncing"; lastSynced: number | null }
+  | { state: "error"; lastSynced: number | null; message: string };
+
+export interface SyncEngineOptions {
+  /** The local store, written to directly so that merged-in edits are not sent back out. */
+  store: DocStore;
+  remote: SyncRemote;
+  key: CryptoKey;
+  device: string;
+  loadState(): SyncState;
+  saveState(state: SyncState): void;
+  /** Called with each update that came in, so pages that are open merge it at once. */
+  onRemoteUpdate(docId: string, update: Uint8Array): void;
+  onStatus?(status: SyncStatus): void;
+}
+
+export interface SyncEngine {
+  /** A doc changed on this device. It is sent on the next sync. */
+  markDirty(docId: string): void;
+  /** Marks every local doc as changed, so all of them are sent. Used when sync is turned on. */
+  markAllDirty(): Promise<void>;
+  /** Reads what other devices wrote, then sends this device's edits. Runs one at a time. */
+  sync(): Promise<void>;
+  status(): SyncStatus;
+}
+
+export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
+  const { store, remote, key, device } = options;
+  let state = options.loadState();
+  let status: SyncStatus = { state: "idle", lastSynced: null };
+  let running: Promise<void> = Promise.resolve();
+
+  const setStatus = (next: SyncStatus) => {
+    status = next;
+    options.onStatus?.(next);
+  };
+  const save = (next: SyncState) => {
+    state = next;
+    options.saveState(next);
+  };
+
+  /** Everything the store has of a doc as one update, or null when it has nothing. */
+  async function localUpdate(docId: string): Promise<Uint8Array | null> {
+    const { updates } = await store.load(docId);
+    return updates.length ? Y.mergeUpdates(updates) : null;
+  }
+
+  async function pull() {
+    const { entries, cursor } = await remote.changes(state.cursor);
+    for (const entry of entries) {
+      if (entry.device === device) continue;
+      const incoming = await open(key, await remote.read(entry.ref));
+      const local = await localUpdate(entry.docId);
+      // Only what this device lacks, so the store does not grow by a whole copy on every sync.
+      const fresh = local ? Y.diffUpdate(incoming, Y.encodeStateVectorFromUpdate(local)) : incoming;
+      if (local && isEmptyUpdate(fresh, local)) continue;
+      await store.append(entry.docId, fresh);
+      options.onRemoteUpdate(entry.docId, fresh);
+    }
+    // Only after every file was merged: a failure part way reads them all again next time,
+    // which is harmless because merging the same edits twice changes nothing.
+    save({ ...state, cursor });
+  }
+
+  async function push() {
+    for (const docId of [...state.dirty]) {
+      const update = await localUpdate(docId);
+      if (update) await remote.write(docId, await seal(key, update));
+      else await remote.remove(docId);
+      save({ ...state, dirty: state.dirty.filter((id) => id !== docId) });
+    }
+  }
+
+  return {
+    markDirty(docId) {
+      if (!state.dirty.includes(docId)) save({ ...state, dirty: [...state.dirty, docId] });
+    },
+    async markAllDirty() {
+      const all = await store.list();
+      save({ ...state, dirty: [...new Set([...state.dirty, ...all])] });
+    },
+    sync() {
+      // After the last run, whether it worked or not: a failed run must not stop every later one.
+      running = running.catch(() => {}).then(async () => {
+        setStatus({ state: "syncing", lastSynced: status.lastSynced });
+        try {
+          await pull();
+          await push();
+          setStatus({ state: "idle", lastSynced: Date.now() });
+        } catch (err) {
+          setStatus({ state: "error", lastSynced: status.lastSynced, message: err instanceof Error ? err.message : String(err) });
+          throw err;
+        }
+      });
+      return running;
+    },
+    status: () => status,
+  };
+}
+
+/**
+ * Whether merging `update` into a doc whose state is `local` would change
+ * nothing: no new items and no deletions it does not already have.
+ */
+function isEmptyUpdate(update: Uint8Array, local: Uint8Array): boolean {
+  const before = new Y.Doc();
+  Y.applyUpdate(before, local);
+  const vector = Y.encodeStateVector(before);
+  let changed = false;
+  before.on("update", () => (changed = true));
+  Y.applyUpdate(before, update);
+  // A state vector only counts items. Deletions show up as an update event.
+  return !changed && sameBytes(vector, Y.encodeStateVector(before));
+}
+
+const sameBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((x, i) => x === b[i]);

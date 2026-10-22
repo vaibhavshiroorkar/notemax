@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { ROOT, normalizeTag, searchNodes, type Tree, type TreeNode } from "@notemax/core";
+import { KINDS, ROOT, normalizeTag, searchNodes, type Tree, type TreeNode } from "@notemax/core";
 import { recentPages } from "@/data/recent";
 import { registry } from "@/plugins/registry";
 import { formatShortcut, shortcutFor } from "@/plugins/shortcuts";
@@ -39,6 +39,8 @@ function splitTags(query: string) {
 }
 
 const RECENT_SHOWN = 8;
+// Everything that opens as a page. Folders only sort things.
+const PAGE_KINDS = KINDS.filter((kind) => kind !== "folder");
 
 /** Recently opened notes and books that are still in the sidebar, the open one left out. */
 function recentNodes(app: AppContext): TreeNode[] {
@@ -46,7 +48,7 @@ function recentNodes(app: AppContext): TreeNode[] {
     .get()
     .filter((id) => id !== app.activeId && app.tree.visible.has(id))
     .map((id) => app.tree.byId.get(id)!)
-    .filter((node) => node.kind === "note" || node.kind === "book")
+    .filter((node) => node.kind !== "folder")
     .slice(0, RECENT_SHOWN);
 }
 
@@ -56,7 +58,7 @@ function search(app: AppContext, query: string): PaletteItem[] {
   if (!commandsOnly && query.includes("#")) {
     // Tags narrow the pages. Commands have no tags, so they drop out.
     const { tags, text } = splitTags(query);
-    return searchNodes(app.tree, text.trim().toLowerCase(), { kinds: ["note", "book"], tags, limit: 20 }).map((node) => ({
+    return searchNodes(app.tree, text.trim().toLowerCase(), { kinds: PAGE_KINDS, tags, limit: 20 }).map((node) => ({
       type: "page",
       node,
       where: whereOf(app.tree, node.id),
@@ -64,7 +66,7 @@ function search(app: AppContext, query: string): PaletteItem[] {
   }
   const q = (commandsOnly ? query.slice(1) : query).trim().toLowerCase();
   // Before anything is typed, the pages worth offering are the ones opened lately.
-  const found = commandsOnly ? [] : q ? searchNodes(app.tree, q, { kinds: ["note", "book"] }) : recentNodes(app);
+  const found = commandsOnly ? [] : q ? searchNodes(app.tree, q, { kinds: PAGE_KINDS }) : recentNodes(app);
   const pages: PaletteItem[] = found.map((node) => ({ type: "page", node, where: whereOf(app.tree, node.id) }));
   const commands: PaletteItem[] = registry
     .commands(app)
@@ -91,7 +93,7 @@ export function Palette({ app, onClose }: { app: AppContext; onClose(): void }) 
       <input
         className="palette-input"
         aria-label="Search"
-        placeholder="Search notes and books, #tag to filter, > for commands"
+        placeholder="Search pages, #tag to filter, > for commands"
         autoFocus
         value={query}
         onChange={(event) => setQuery(event.target.value)}
@@ -111,7 +113,7 @@ export function Palette({ app, onClose }: { app: AppContext; onClose(): void }) 
           item.type === "page" ? (
             <>
               <span className="palette-item">
-                <Icon name={item.node.kind === "book" ? "book" : "note"} />
+                <Icon name={registry.iconOf(item.node.kind)} />
                 <span className="suggest-title">{item.node.title || "Untitled"}</span>
               </span>
               {item.where && <span className="suggest-detail">{item.where}</span>}

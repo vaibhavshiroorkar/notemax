@@ -6,7 +6,8 @@ import { TagsSection } from "./TagsSection";
 export const tagsPlugin: Plugin = {
   id: "tags",
   name: "Tags",
-  pageHeader: [{ id: "tags.bar", kinds: ["note", "book"], component: TagBar }],
+  description: "Tags on pages, and filtering the sidebar by them",
+  pageHeader: [{ id: "tags.bar", kinds: ["note", "book", "board"], component: TagBar }],
   sidebarSections: [{ id: "tags.list", order: 50, component: TagsSection }],
   useSidebarFilter() {
     const tags = tagFilter.use();
@@ -17,6 +18,21 @@ export const tagsPlugin: Plugin = {
       clear: () => tagFilter.set([]),
     };
   },
+  contextMenu: [
+    {
+      id: "tags.add",
+      title: "Add a tag",
+      group: "tags",
+      targets: ["page"],
+      when: (target) => target.type === "page" && target.node.kind !== "folder",
+      run(target, app) {
+        if (target.type !== "page") return;
+        app.open(target.node.id);
+        // The tag bar of the page that opens asks for the tag.
+        requestAnimationFrame(() => addTagRequests.set(addTagRequests.get() + 1));
+      },
+    },
+  ],
   commands: [
     {
       id: "tags.add",

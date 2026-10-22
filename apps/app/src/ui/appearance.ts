@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { savedStore } from "@/platform/store";
 
 export type Theme = "system" | "light" | "dark";
@@ -95,4 +96,20 @@ function apply() {
 export function initAppearance() {
   apply();
   for (const store of [theme, accent, font, pageWidth, textSize]) store.subscribe(apply);
+}
+
+const darkQuery = () => window.matchMedia("(prefers-color-scheme: dark)");
+
+/** "light" or "dark" as shown right now: the user's choice, or the system's when they chose System. */
+export function useShownTheme(): "light" | "dark" {
+  const chosen = theme.use();
+  const system = useSyncExternalStore(
+    (listener) => {
+      const query = darkQuery();
+      query.addEventListener("change", listener);
+      return () => query.removeEventListener("change", listener);
+    },
+    () => darkQuery().matches,
+  );
+  return chosen === "system" ? (system ? "dark" : "light") : chosen;
 }

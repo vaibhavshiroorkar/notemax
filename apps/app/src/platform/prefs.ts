@@ -26,3 +26,11 @@ export function onPrefChangedElsewhere(key: string, listener: () => void) {
     if (event.key === PREFIX + key) listener();
   });
 }
+
+export function removePref(key: string) {
+  try {
+    localStorage.removeItem(PREFIX + key);
+  } catch {
+    // Nothing to remove when storage is blocked.
+  }
+}

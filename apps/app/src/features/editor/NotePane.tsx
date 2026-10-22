@@ -1,12 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Editor as TiptapEditor } from "@tiptap/react";
 import { WELCOME_ID, renameNode } from "@notemax/core";
 import { ChapterNav } from "@/features/books/ChapterNav";
-import { Backlinks } from "@/features/links/Backlinks";
 import { useLocalDoc } from "@/data/useLocalDoc";
-import { PageHeader } from "@/plugins/PageHeader";
+import { useOption } from "@/plugins/options";
+import { PageFooter, PageHeader } from "@/plugins/PageHeader";
+import { registry } from "@/plugins/registry";
 import type { PageProps } from "@/plugins/types";
 import { Editor } from "./Editor";
+import { KeyboardBar } from "./KeyboardBar";
+import { PAGE_GAP, PAGE_MARGIN, PAPER, paperSize } from "./pages";
 import { useBodyIndex } from "./useBodyIndex";
 import { useRememberPosition } from "./usePosition";
 import { welcomeContent } from "./welcome";
@@ -26,9 +29,31 @@ const isTyping = () => {
   return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || (el as HTMLElement).isContentEditable);
 };
 
+const WIDE_ENOUGH = "(min-width: 900px)";
+
+function useRoomForSheets() {
+  const [wide, setWide] = useState(() => matchMedia(WIDE_ENOUGH).matches);
+  useEffect(() => {
+    const query = matchMedia(WIDE_ENOUGH);
+    const onChange = () => setWide(query.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+  return wide;
+}
+
 export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady }: PageProps) {
   const { local, status, openError } = useLocalDoc(node.id);
+  const pagesByDefault = useOption("notes", "pages");
+  const roomForSheets = useRoomForSheets();
+  // The note's own choice wins over the setting. A window too narrow for a sheet shows one long page.
+  const chosen = node.props.layout === "pages" || node.props.layout === "infinite" ? node.props.layout : pagesByDefault ? "pages" : "infinite";
+  const layout = roomForSheets ? chosen : "infinite";
+  const paper = PAPER[paperSize.use()];
+  const [pages, setPages] = useState(1);
   const editorRef = useRef<TiptapEditor | null>(null);
+  // The same editor as a value, for the phone's keyboard bar.
+  const [editor, setEditor] = useState<TiptapEditor | null>(null);
   const focusWhenReady = useRef(false);
   const articleRef = useRef<HTMLElement>(null);
   const restorePosition = useRememberPosition(node.id);
@@ -42,8 +67,23 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
   const book = parent?.kind === "book" ? parent : undefined;
 
   return (
-    <article className="note" ref={articleRef}>
-      {book && <ChapterNav book={book} chapterId={node.id} onOpen={(id) => hub.open(id)} />}
+    <article
+      className="note"
+      ref={articleRef}
+      data-layout={layout}
+      style={
+        layout === "pages"
+          ? ({ "--sheet-width": `${paper.width}px`, "--sheet-height": `${paper.height}px`, "--sheet-margin": `${PAGE_MARGIN}px`, "--sheet-gap": `${PAGE_GAP}px`, "--sheets": pages } as CSSProperties)
+          : undefined
+      }
+    >
+      {layout === "pages" &&
+        Array.from({ length: pages }, (_, i) => (
+          <span key={i} className="page-number" aria-hidden="true" style={{ top: i * (paper.height + PAGE_GAP) + paper.height - PAGE_MARGIN / 2 - 8 }}>
+            {i + 1}
+          </span>
+        ))}
+      {book && registry.isOn("books") && <ChapterNav book={book} chapterId={node.id} onOpen={(id) => hub.open(id)} />}
       <input
         className="note-title"
         value={node.title}
@@ -69,9 +109,12 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
           hub={hub}
           initialContent={node.id === WELCOME_ID ? welcomeContent : undefined}
           placeholder="Start writing..."
+          layout={layout}
+          onPages={setPages}
           onReady={(editor) => {
             editorRef.current = editor;
-            const returning = restorePosition(editor, articleRef.current?.closest(".main") ?? null);
+            setEditor(editor);
+            const returning = restorePosition(editor, articleRef.current?.closest(".page-scroll") ?? null);
             if (focusWhenReady.current) {
               focusWhenReady.current = false;
               focusBody(editor);
@@ -83,7 +126,8 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
           }}
         />
       )}
-      {local && <Backlinks tree={tree} noteId={node.id} hub={hub} />}
+      {local && <PageFooter node={node} app={app} />}
+      {editor && <KeyboardBar editor={editor} />}
     </article>
   );
 }

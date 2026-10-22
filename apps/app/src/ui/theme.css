@@ -15,6 +15,9 @@
   --danger: #c62828;
   --accent: var(--accent-light, #2f6fdd);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  /* Page layout: the sheets and the desk they lie on. */
+  --paper: #ffffff;
+  --desk: #e9e9e6;
 }
 
 /* The dark colors appear twice, because CSS cannot share one block between a
@@ -32,6 +35,8 @@
     --danger: #ef6b6b;
     --accent: var(--accent-dark, #6ea0ff);
     --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --paper: #232323;
+    --desk: #141414;
   }
 }
 
@@ -47,4 +52,6 @@
   --danger: #ef6b6b;
   --accent: var(--accent-dark, #6ea0ff);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --paper: #232323;
+  --desk: #141414;
 }

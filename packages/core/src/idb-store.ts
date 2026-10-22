@@ -52,6 +52,18 @@ class IdbStore implements DocStore {
     await tx.done;
   }
 
+  async list() {
+    const ids: string[] = [];
+    // Jumps from one doc to the next instead of reading every update.
+    let cursor = await this.db.transaction("updates").store.index("byDoc").openKeyCursor();
+    while (cursor) {
+      const docId = cursor.key[0];
+      ids.push(docId);
+      cursor = await cursor.continue([docId, Infinity]);
+    }
+    return ids;
+  }
+
   async remove(docId: string) {
     const tx = this.db.transaction("updates", "readwrite");
     let cursor = await tx.store.index("byDoc").openCursor(docRange(docId));

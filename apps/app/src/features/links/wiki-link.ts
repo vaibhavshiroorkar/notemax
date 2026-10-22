@@ -11,6 +11,8 @@ export interface WikiLinkOptions {
   hub: LinkHub;
   /** The note being edited, left out of the menu so it cannot link to itself. */
   currentId: string;
+  /** The [[ menu. Off while the Links plugin is off; existing links still show. */
+  menu: boolean;
 }
 
 const suggestionKey = new PluginKey("wikiLinkSuggestion");
@@ -28,7 +30,7 @@ export const WikiLink = Node.create<WikiLinkOptions>({
   selectable: true,
 
   addOptions() {
-    return { hub: undefined as unknown as LinkHub, currentId: "" };
+    return { hub: undefined as unknown as LinkHub, currentId: "", menu: true };
   },
 
   addAttributes() {
@@ -105,7 +107,8 @@ export const WikiLink = Node.create<WikiLinkOptions>({
   },
 
   addProseMirrorPlugins() {
-    const { hub, currentId } = this.options;
+    const { hub, currentId, menu } = this.options;
+    if (!menu) return [];
     return [
       Suggestion<LinkMenuItem, LinkMenuItem>({
         editor: this.editor,

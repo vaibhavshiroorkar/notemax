@@ -1,0 +1,71 @@
+/* A board fills the page area: a slim header, then the canvas to the edges. */
+.board {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.board-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 8px 16px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.board-title {
+  min-width: 8ch;
+  max-width: 100%;
+  padding: 2px 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  field-sizing: content;
+}
+
+.board-header .tag-bar {
+  margin: 0;
+}
+
+.board-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.board-loading {
+  padding: 24px;
+  color: var(--muted);
+}
+
+/* Fade the board's toolbars until the pointer or keyboard is on them, so the
+   drawing comes first. Settings, Appearance turns this off. */
+.board[data-calm] .excalidraw .Island,
+.board[data-calm] .excalidraw .main-menu-trigger,
+.board[data-calm] .excalidraw .help-icon,
+.board[data-calm] .excalidraw .undo-redo-buttons,
+.board[data-calm] .excalidraw .zoom-actions {
+  opacity: 0.3;
+  transition: opacity 0.2s;
+}
+
+.board[data-calm] .excalidraw .Island:hover,
+.board[data-calm] .excalidraw .Island:focus-within,
+.board[data-calm] .excalidraw .main-menu-trigger:hover,
+.board[data-calm] .excalidraw .help-icon:hover,
+.board[data-calm] .excalidraw .undo-redo-buttons:hover,
+.board[data-calm] .excalidraw .zoom-actions:hover {
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  .board-header {
+    padding: 52px 12px 6px;
+  }
+}

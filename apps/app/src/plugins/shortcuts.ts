@@ -46,8 +46,25 @@ function keyOf(event: KeyboardEvent): string {
   if (event.key === " ") return "Space";
   if (/^[a-z0-9]$/i.test(event.key)) return event.key.toUpperCase();
   const code = /^(?:Key([A-Z])|Digit([0-9]))$/.exec(event.code);
-  return code ? (code[1] ?? code[2]) : event.key;
+  if (code) return code[1] ?? code[2];
+  // Shift turns \ into | and [ into {, so a shortcut like Mod+Shift+\ reads the key itself.
+  if (event.shiftKey && PUNCTUATION[event.code]) return PUNCTUATION[event.code];
+  return event.key;
 }
+
+const PUNCTUATION: Record<string, string> = {
+  Backslash: "\\",
+  BracketLeft: "[",
+  BracketRight: "]",
+  Slash: "/",
+  Period: ".",
+  Comma: ",",
+  Semicolon: ";",
+  Quote: "'",
+  Minus: "-",
+  Equal: "=",
+  Backquote: "`",
+};
 
 export function matchesShortcut(event: KeyboardEvent, shortcut: string): boolean {
   const want = parse(shortcut);
@@ -79,5 +96,6 @@ export function formatShortcut(shortcut: string): string {
   return shortcut
     .replace(/\bMod\b/, isMac ? "Cmd" : "Ctrl")
     .replace(/\bAlt\b/, isMac ? "Option" : "Alt")
-    .replace(/[a-z]$/, (letter) => letter.toUpperCase());
+    // A lone letter key is shown in capitals, like on the keyboard. Names like Enter stay as they are.
+    .replace(/(^|\+)([a-z])$/, (_, before: string, letter: string) => before + letter.toUpperCase());
 }

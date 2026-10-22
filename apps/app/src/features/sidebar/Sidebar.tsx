@@ -4,6 +4,7 @@ import { registry } from "@/plugins/registry";
 import { formatShortcut, shortcutFor, shortcutOverrides } from "@/plugins/shortcuts";
 import type { AppContext } from "@/plugins/types";
 import { useSelect } from "@/platform/store";
+import { contextMenuHandler, pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { AddMenu } from "./AddMenu";
 import { dragged, endDrag, useDragging } from "./drag";
@@ -49,6 +50,7 @@ export function Sidebar({ app }: { app: AppContext }) {
         else appRef.current.open(id);
       },
       trash: (id) => appRef.current.trash(id),
+      menu: (id, event) => pageMenu(appRef.current.tree.byId.get(id))(event),
       drop({ parentId, index }) {
         const moving = dragged.get();
         if (!moving) return;
@@ -94,14 +96,14 @@ export function Sidebar({ app }: { app: AppContext }) {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-scroll">
+      <div className="sidebar-scroll" onContextMenu={contextMenuHandler(() => ({ type: "sidebar" }))}>
         <section className="section">
           <header className="section-header" data-drop={headerActive ? "inside" : undefined} onDragOver={headerDrop.onDragOver} onDrop={headerDrop.onDrop}>
             <span>Notes</span>
             <AddMenu onAdd={(kind) => ctx.add(kind, ROOT)} />
           </header>
           {filters.length ? (
-            <FilteredList tree={tree} filters={filters} activeId={activeId} onSelect={app.open} />
+            <FilteredList tree={tree} filters={filters} activeId={activeId} onSelect={app.open} onMenu={(id, event) => pageMenu(tree.byId.get(id))(event)} />
           ) : tree.top.length ? (
             <Rows items={tree.top} depth={0} ctx={ctx} />
           ) : (
@@ -114,7 +116,7 @@ export function Sidebar({ app }: { app: AppContext }) {
         <TrashSection tree={tree} doc={doc} />
       </div>
       <footer className="sidebar-footer">
-        <button className="footer-button" onClick={app.openSettings} title={settingsKeys ? `Settings (${formatShortcut(settingsKeys)})` : "Settings"}>
+        <button className="footer-button" onClick={() => app.openSettings()} title={settingsKeys ? `Settings (${formatShortcut(settingsKeys)})` : "Settings"}>
           <Icon name="settings" />
           <span>Settings</span>
         </button>

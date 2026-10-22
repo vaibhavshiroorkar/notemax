@@ -39,3 +39,66 @@
 .link-button:hover {
   text-decoration: underline;
 }
+
+/* The list of every shortcut (Ctrl+/). */
+.shortcuts-help {
+  width: min(620px, calc(100vw - 32px));
+}
+
+.shortcuts-help-list {
+  max-height: min(480px, calc(100vh - 220px));
+  overflow-y: auto;
+  columns: 2 260px;
+  column-gap: 24px;
+}
+
+.shortcuts-help-list section {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
+.shortcuts-help-list h3 {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.shortcuts-help-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shortcut-help-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 0;
+  font-size: 13px;
+}
+
+.keys {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 3px;
+}
+
+.keys kbd {
+  min-width: 1.6em;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--hover);
+  font: inherit;
+  font-size: 12px;
+  text-align: center;
+}
+
+.shortcuts-help-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}

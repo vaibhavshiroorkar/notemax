@@ -23,4 +23,7 @@ export interface DocStore {
 
   /** Erase every update of a doc. */
   remove(docId: string): Promise<void>;
+
+  /** Every doc with at least one update, in no set order. Sync uses it to upload everything once. */
+  list(): Promise<string[]>;
 }

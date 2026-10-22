@@ -24,7 +24,19 @@ const stepWidth = (step: number) => {
 export const appearancePlugin: Plugin = {
   id: "appearance",
   name: "Appearance",
-  settings: [{ id: "appearance", order: 10, component: AppearanceSection }],
+  description: "Theme, font, text size and colors",
+  required: true,
+  options: [
+    {
+      id: "fadeControls",
+      label: "Fade sidebars and buttons until you point at them",
+      description: "Keeps the page in front. Board toolbars fade too.",
+      section: "appearance",
+      quick: true,
+      default: true,
+    },
+  ],
+  settings: [{ id: "appearance", order: 10, title: "Appearance", icon: "contrast", keywords: ["theme", "dark", "light", "color", "colour", "scheme", "look", "font"], component: AppearanceSection }],
   commands: [
     themeCommand("light", "Use the light theme"),
     themeCommand("dark", "Use the dark theme"),

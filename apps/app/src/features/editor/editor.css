@@ -3,7 +3,7 @@
   max-width: var(--page-width, 720px);
   margin: 0 auto;
   font-family: var(--note-font, inherit);
-  padding: 56px 24px 96px;
+  padding: 32px 24px 96px;
 }
 
 .note-title {
@@ -117,4 +117,50 @@
   margin: 0;
   accent-color: var(--accent);
   cursor: pointer;
+}
+
+/* Pages: the note sits on sheets of paper with a gap between them, like a
+   printed document. The sheets are drawn by the background; the editor's page
+   layout (pages.ts) moves blocks so none crosses the bottom of a sheet. */
+.page-scroll:has(> .note[data-layout="pages"]),
+.page-scroll:has(> * > .note[data-layout="pages"]) {
+  background: var(--desk);
+}
+
+.note[data-layout="pages"] {
+  position: relative;
+  box-sizing: border-box;
+  width: var(--sheet-width);
+  max-width: none;
+  min-height: calc(var(--sheets) * (var(--sheet-height) + var(--sheet-gap)) - var(--sheet-gap));
+  margin: 48px auto;
+  padding: var(--sheet-margin);
+  background: repeating-linear-gradient(to bottom, var(--paper) 0 var(--sheet-height), transparent var(--sheet-height) calc(var(--sheet-height) + var(--sheet-gap)));
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.12)) drop-shadow(0 4px 12px rgb(0 0 0 / 0.08));
+}
+
+.note[data-layout="pages"] .editor .ProseMirror {
+  min-height: 0;
+}
+
+.page-number {
+  position: absolute;
+  left: 0;
+  right: 0;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 700px) {
+  /* Narrow margins on a phone, and room at the end for the keyboard's toolbar. */
+  .note {
+    padding: 20px 16px 160px;
+  }
+
+  .note-title {
+    font-size: calc(var(--note-size, 16px) * 1.6);
+  }
 }

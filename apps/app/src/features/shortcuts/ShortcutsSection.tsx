@@ -20,8 +20,7 @@ export function ShortcutsSection() {
   };
 
   return (
-    <section className="settings-section">
-      <h3>Keyboard shortcuts</h3>
+    <>
       <p>Click a shortcut and press new keys. They need Ctrl or Alt, or a function key. Backspace removes one, Esc cancels.</p>
       {note && <p className="shortcut-note" role="status">{note}</p>}
       <ul className="shortcut-list">
@@ -67,6 +66,6 @@ export function ShortcutsSection() {
           );
         })}
       </ul>
-    </section>
+    </>
   );
 }

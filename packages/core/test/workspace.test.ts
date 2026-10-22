@@ -303,3 +303,24 @@ describe("duplicating a note", () => {
     expect(() => duplicateNote(doc, folder)).toThrow();
   });
 });
+
+describe("page settings", () => {
+  it("sets, reads and clears one setting at a time, and merges two devices", async () => {
+    const { ROOT, createNode, readTree, setProp } = await import("../src");
+    const a = new Y.Doc();
+    const id = createNode(a, "note", ROOT, "Chapter");
+    expect(readTree(a).byId.get(id)!.props).toEqual({});
+    const b = new Y.Doc();
+    Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+    setProp(a, id, "layout", "pages");
+    setProp(b, id, "goal", 2000);
+    Y.applyUpdate(a, Y.encodeStateAsUpdate(b));
+    Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+    expect(readTree(b).byId.get(id)!.props).toEqual({ layout: "pages", goal: 2000 });
+    const before = readTree(a);
+    setProp(a, id, "layout", null);
+    const after = readTree(a, before);
+    expect(after.byId.get(id)!.props).toEqual({ goal: 2000 });
+    expect(after.byId.get(id)).not.toBe(before.byId.get(id));
+  });
+});

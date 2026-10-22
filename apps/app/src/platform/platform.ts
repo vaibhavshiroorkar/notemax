@@ -20,8 +20,53 @@ async function openStore(): Promise<DocStore> {
   });
 }
 
+let rawPromise: Promise<DocStore> | undefined;
+/** The store itself. Sync writes edits from other devices here, so they are not sent back out. */
+export const getRawStore = () => (rawPromise ??= openStore());
+
+const writeListeners = new Set<(docId: string) => void>();
+// Other windows and tabs say what they saved here, so the one that syncs hears of every edit.
+const WRITES_CHANNEL = "notemax-writes";
+let writes: BroadcastChannel | undefined;
+
+/**
+ * Calls `listener` with the doc id of every edit saved in any window of this
+ * app on this device. Sync uses it to know what to send.
+ */
+export function onLocalWrite(listener: (docId: string) => void): () => void {
+  if (!writes) {
+    writes = new BroadcastChannel(WRITES_CHANNEL);
+    writes.onmessage = ({ data }: MessageEvent<string>) => writeListeners.forEach((l) => l(data));
+  }
+  writeListeners.add(listener);
+  return () => writeListeners.delete(listener);
+}
+
+function tracked(store: DocStore): DocStore {
+  const channel = new BroadcastChannel(WRITES_CHANNEL);
+  const tell = (docId: string) => {
+    writeListeners.forEach((listener) => listener(docId));
+    channel.postMessage(docId);
+  };
+  return {
+    load: (docId) => store.load(docId),
+    list: () => store.list(),
+    // Compaction rewrites what is already there, so it is not an edit.
+    compact: (docId, merged, upTo) => store.compact(docId, merged, upTo),
+    async append(docId, update) {
+      await store.append(docId, update);
+      tell(docId);
+    },
+    async remove(docId) {
+      await store.remove(docId);
+      tell(docId);
+    },
+  };
+}
+
 let storePromise: Promise<DocStore> | undefined;
-export const getStore = () => (storePromise ??= openStore());
+/** The store everything in the app saves to. */
+export const getStore = () => (storePromise ??= getRawStore().then(tracked));
 
 /**
  * Browsers may delete a site's storage when the disk runs low, unless the site

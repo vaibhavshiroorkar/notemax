@@ -1,14 +1,16 @@
-import { registry } from "@/plugins/registry";
 import type { Plugin } from "@/plugins/types";
 import { SIDEBAR, SIDE_PANEL, sidePanelWidth, sidebarWidth } from "@/ui/layout";
+import { PAGE_MENU } from "./menu";
 
 export const sidebarPlugin: Plugin = {
   id: "sidebar",
   name: "Sidebar",
+  required: true,
   kinds: [{ kind: "folder", label: "New folder", icon: "folder" }],
+  contextMenu: PAGE_MENU,
   commands: [
     { id: "sidebar.toggle", title: "Show or hide the sidebar", keywords: ["sidebar", "panel"], shortcut: "Mod+\\", run: (app) => app.toggleSidebar() },
-    { id: "sidebar.toggle-right", title: "Show or hide the right sidebar", keywords: ["chapters", "panel"], when: (app) => !!registry.sidePanel(app), run: (app) => app.toggleSidePanel() },
+    { id: "sidebar.toggle-right", title: "Show or hide the right sidebar", keywords: ["chapters", "panel", "graph"], shortcut: "Mod+Shift+\\", run: (app) => app.toggleSidePanel() },
     {
       id: "sidebar.reset-widths",
       title: "Reset sidebar widths",

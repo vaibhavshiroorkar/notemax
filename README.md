@@ -12,11 +12,19 @@ It's early and built as a personal tool first, so things change often.
 - Ctrl+K to jump to any note or book, or to run any command. It opens on your recent pages. Type `#tag` there to search by tag.
 - Back and forward between pages (Ctrl+[ and Ctrl+], or the mouse side buttons). Each note opens where you left it, with the same scroll and cursor.
 - Tags on notes and books. Click a tag to see everything that has it.
+- Boards for drawing, made with Excalidraw and saved like notes. A graph of how your pages link, for everything or around one page.
+- Pictures: paste or drop them into a note, drag the handles to resize, and place them left, center or right with text flowing beside.
+- Notes can show as one long page or as A4 or Letter sheets with page numbers, for all notes or per note.
+- Download any page as plain text, Markdown, a web page, Word, PDF, or an EPUB for books. Boards download as PNG or SVG. "Download everything" gives a folder of Markdown files you can open in other apps.
+- Right-click menus on pages, in notes and in the sidebar, with the keys for each action.
 - Notes, folders and books in one sidebar. Drag to sort or to nest.
-- A page for each book, with its chapters in order and word counts. While a book is open, its chapters sit in a panel on the right, where you can add, reorder and trash them.
+- A page for each book, with its chapters in order and word counts. The word count also sits at the top right of a book and each of its chapters. While a book is open, its chapters sit in a panel on the right, where you can add, reorder and trash them.
 - `[[` links between notes, and a "Linked from" list under each note. Renaming a note never breaks links to it.
 - Trash with Undo, restore and delete forever. Duplicate a note, rename with F2.
-- Make it yours: light or dark theme, accent color, font, text size and page width. Drag the sidebars to resize them. Focus mode hides everything but the page. Change any keyboard shortcut, and turn plugin options on or off.
+- Make it yours: light or dark theme, accent color, font, text size and page width. Drag the sidebars to resize them. Focus mode hides everything but the page. Sidebars and buttons fade until you point at them (you can turn that off). Change any keyboard shortcut, and turn plugin options on or off.
+- A right sidebar on every page, with a small graph around the open page. Books add their chapters to it.
+- Plugins: switch built-in features off if you don't use them, or install plugins written by others (off until you allow them). See [docs/plugins.md](docs/plugins.md).
+- Settings sorted into categories, with a search box. Quick settings (Ctrl+.) for the switches you flip often, and a list of every shortcut (Ctrl+/).
 - Stays fast with thousands of notes: typing, switching pages and startup are tested with 5,000 notes.
 - A desktop app with a tray icon and quick capture: press Ctrl+Alt+N in any app to jot a note down.
 - Edits are saved to disk within a fraction of a second, and the status bar always tells you whether they are.
@@ -48,7 +56,7 @@ data/        hooks that open notes and the workspace
 
 Imports between folders use `@/`, like `@/ui/Icon`. Imports inside a feature stay relative.
 
-Every feature plugs in the same way: it exports a plugin object from its `plugin.ts`, and `plugins/builtin.ts` registers it. A plugin can add editor extensions, `/` menu items, commands with shortcuts, kinds for the + menu, the page for a kind, things under a page title, sidebar sections and filters, a right sidebar, Settings sections and on or off options. `plugins/types.ts` describes each one. The app reads all of these from the registry, so a new feature never needs changes elsewhere. Loading plugins written by other people will come later.
+Every feature plugs in the same way: it exports a plugin object from its `plugin.ts`, and `plugins/builtin.ts` registers it. A plugin can add editor extensions, `/` menu items, commands with shortcuts, kinds for the + menu, the page for a kind, things under a page title or at its top right, sidebar sections and filters, a right sidebar, Settings categories, on or off options (which can also show in quick settings) shortcut hints for keys they handle themselves, and full-window views like the graph, right-click menu items and download formats. `plugins/types.ts` describes each one. The app reads all of these from the registry, so a new feature never needs changes elsewhere. Plugins written by other people use the same API, described in [docs/plugins.md](docs/plugins.md).
 
 In the browser, notes are stored in IndexedDB. The desktop app keeps them in one SQLite file, `notemax.db`, in the app's config folder. Both sit behind the same `DocStore` interface in `packages/core`, so the rest of the app doesn't care which one it gets.
 
@@ -72,13 +80,13 @@ Accounts are optional, and the app works fully without them. To try Google sign-
 
 Roughly in this order:
 
-1. Editing: better paste, and images.
-2. Desktop polish: installer, app icon, start with the system.
-3. Keeping data safe: version history, Markdown export, importers and backups.
-4. Finding things: full-text search, unlinked mentions and a graph view.
-5. Sync between devices, encrypted, through your own Google Drive.
-6. Writing tools for books: outline view, word count goals, chapter navigation.
-7. Publishing books as fast public sites.
+1. Sidebar and layout: tabs, multi-select, starred pages, search and filter, folder guide lines.
+2. Board and settings polish.
+3. Keeping data safe: version history, plain Markdown files kept next to the database (two-way), backups, and sync through your own Google Drive.
+4. Split view, daily notes and a calendar.
+5. New tools: code pages, voice typing, full-text search, unlinked mentions.
+6. Several workspaces.
+7. Writing tools for books, and publishing books as fast public sites.
 
 ## License
 

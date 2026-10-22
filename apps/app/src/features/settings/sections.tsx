@@ -19,8 +19,7 @@ export function StorageSection({ persistent }: SettingsContext) {
   }, []);
 
   return (
-    <section className="settings-section">
-      <h3>Storage</h3>
+    <>
       {isDesktop ? (
         <>
           <p>Your notes are saved in one file on this computer. Nothing leaves it.</p>
@@ -36,6 +35,6 @@ export function StorageSection({ persistent }: SettingsContext) {
           )}
         </>
       )}
-    </section>
+    </>
   );
 }

@@ -107,6 +107,7 @@ describe.each(stores)("%s store", (_name, freshStore) => {
         load: (id) => real.load(id),
         compact: (id, m, s) => real.compact(id, m, s),
         remove: (id) => real.remove(id),
+        list: () => real.list(),
         append: async (id, u) => {
           if (failNext) {
             failNext = false;

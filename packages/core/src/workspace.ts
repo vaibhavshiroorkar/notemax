@@ -16,9 +16,20 @@ const OLD_INBOX = "inbox";
 
 /**
  * A folder sorts things and holds anything but itself. A book is something
- * being written: it holds only notes, its chapters, in reading order.
+ * being written: it holds only notes, its chapters, in reading order. Notes
+ * and boards (drawings) are pages: each has a body of its own, kept in its own
+ * document under the node's id.
+ *
+ * A kind read from storage may be one this version no longer has, like the
+ * mind maps that were removed. It is read as a page that holds nothing, so old
+ * data is never lost or rewritten.
  */
-export type NodeKind = "folder" | "book" | "note";
+export type NodeKind = "folder" | "book" | "note" | "board";
+
+export const KINDS: readonly NodeKind[] = ["folder", "book", "note", "board"];
+
+/** Kinds that hold other items rather than a body of their own. */
+export const isContainer = (kind: NodeKind) => kind === "folder" || kind === "book";
 
 /** Whether a `parent` may hold a `child`. ROOT holds everything. */
 export function holds(parent: NodeKind, child: NodeKind): boolean {
@@ -45,7 +56,14 @@ export interface TreeNode {
   words: number | null;
   /** Sorted. Each one is its own `tag:` field, so tags added on two devices at once both survive. */
   tags: string[];
+  /**
+   * Small settings of one page, like its layout or a chapter's status. Each is
+   * its own `prop:` field, so changes to different ones on two devices merge.
+   */
+  props: Readonly<Record<string, PropValue>>;
 }
+
+export type PropValue = string | number | boolean;
 
 export interface TagCount {
   tag: string;
@@ -79,6 +97,8 @@ export interface Tree {
 const nodesOf = (doc: Y.Doc) => doc.getMap<Y.Map<unknown>>("nodes");
 
 const TAG_PREFIX = "tag:";
+const PROP_PREFIX = "prop:";
+const NO_PROPS: Readonly<Record<string, PropValue>> = Object.freeze({});
 
 const kindOf = (fields: Y.Map<unknown>) => fields.get("kind") as NodeKind;
 const parentOf = (fields: Y.Map<unknown>): string => {
@@ -88,7 +108,11 @@ const parentOf = (fields: Y.Map<unknown>): string => {
 
 function toNode(id: string, fields: Y.Map<unknown>): TreeNode {
   const tags: string[] = [];
-  for (const key of fields.keys()) if (key.startsWith(TAG_PREFIX)) tags.push(key.slice(TAG_PREFIX.length));
+  let props: Record<string, PropValue> | null = null;
+  for (const key of fields.keys()) {
+    if (key.startsWith(TAG_PREFIX)) tags.push(key.slice(TAG_PREFIX.length));
+    else if (key.startsWith(PROP_PREFIX)) (props ??= {})[key.slice(PROP_PREFIX.length)] = fields.get(key) as PropValue;
+  }
   return {
     id,
     kind: kindOf(fields),
@@ -100,6 +124,7 @@ function toNode(id: string, fields: Y.Map<unknown>): TreeNode {
     links: (fields.get("links") as string[] | undefined) ?? [],
     words: (fields.get("words") as number | undefined) ?? null,
     tags: tags.sort(),
+    props: props ?? NO_PROPS,
   };
 }
 
@@ -112,6 +137,11 @@ function byPosition(a: TreeNode, b: TreeNode) {
 
 const sameList = <T>(a: readonly T[], b: readonly T[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
+function sameProps(a: Readonly<Record<string, PropValue>>, b: Readonly<Record<string, PropValue>>) {
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
+}
+
 function sameNode(a: TreeNode, b: TreeNode): boolean {
   return (
     a.id === b.id &&
@@ -123,7 +153,8 @@ function sameNode(a: TreeNode, b: TreeNode): boolean {
     a.deletedAt === b.deletedAt &&
     a.words === b.words &&
     sameList(a.links, b.links) &&
-    sameList(a.tags, b.tags)
+    sameList(a.tags, b.tags) &&
+    sameProps(a.props, b.props)
   );
 }
 
@@ -251,7 +282,7 @@ export function canMove(tree: Tree, id: string, parentId: string): string | null
   if (parentId === ROOT) return null;
   const target = tree.items.get(parentId);
   if (!target) return "the target is not in the tree";
-  if (target.kind === "note") return "only folders and books can hold notes";
+  if (!isContainer(target.kind)) return "only folders and books can hold notes";
   if (!holds(target.kind, tree.items.get(id)!.kind)) return "a book holds only notes";
   if (isInside(tree, parentId, id)) return "a folder cannot go inside itself";
   return null;
@@ -285,7 +316,7 @@ export function moveNode(doc: Y.Doc, id: string, parentId: string, index: number
 
 /** Adds a node at the end of ROOT or of a folder or book that may hold it. */
 export function createNode(doc: Y.Doc, kind: NodeKind, parentId: string, title = "", id: string = crypto.randomUUID()): string {
-  if (kind !== "note" && kind !== "folder" && kind !== "book") throw new Error(`unknown kind ${kind}`);
+  if (!KINDS.includes(kind)) throw new Error(`unknown kind ${kind}`);
   if (parentId !== ROOT) {
     const parent = nodesOf(doc).get(parentId);
     if (!parent) throw new Error(`no folder or book with id ${parentId}`);
@@ -327,7 +358,7 @@ export function duplicateNote(doc: Y.Doc, id: string, copyId: string = crypto.ra
     createNode(doc, "note", parentId, title ? `${title} copy` : "", copyId);
     const copy = fieldsOf(doc, copyId);
     for (const [key, value] of source.entries()) {
-      if (key === "links" || key === "words" || key.startsWith(TAG_PREFIX)) copy.set(key, Array.isArray(value) ? [...value] : value);
+      if (key === "links" || key === "words" || key.startsWith(TAG_PREFIX) || key.startsWith(PROP_PREFIX)) copy.set(key, Array.isArray(value) ? [...value] : value);
     }
     if (item) moveNode(doc, copyId, parentId, childrenOf(tree, parentId).indexOf(item) + 1);
   });
@@ -347,6 +378,15 @@ function fieldsOf(doc: Y.Doc, id: string) {
 
 export function renameNode(doc: Y.Doc, id: string, title: string) {
   fieldsOf(doc, id).set("title", title);
+}
+
+/** Sets one of a page's small settings. Null removes it, so the page goes back to the default. */
+export function setProp(doc: Y.Doc, id: string, key: string, value: PropValue | null) {
+  const fields = fieldsOf(doc, id);
+  const field = PROP_PREFIX + key;
+  if (value === null) {
+    if (fields.has(field)) fields.delete(field);
+  } else if (fields.get(field) !== value) fields.set(field, value);
 }
 
 /**

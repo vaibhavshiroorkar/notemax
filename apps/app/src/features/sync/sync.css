@@ -1,0 +1,66 @@
+.settings-row-text {
+  display: flex;
+  flex: 1 1 240px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-row-text > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.sync-state[data-state="error"] {
+  color: var(--danger);
+}
+
+.sync-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+}
+
+.sync-form p {
+  margin: 0;
+}
+
+.sync-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.sync-field input {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  /* 16px keeps phones from zooming in on the field. */
+  font: inherit;
+  font-size: 16px;
+}
+
+.sync-field input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.sync-form .button-primary {
+  align-self: flex-start;
+}
+
+/* In the status bar. */
+.status-sync {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.status-sync[data-state="error"] {
+  color: var(--danger);
+}

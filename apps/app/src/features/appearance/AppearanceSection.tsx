@@ -29,8 +29,7 @@ export function AppearanceSection() {
   const size = textSize.use();
 
   return (
-    <section className="settings-section">
-      <h3>Appearance</h3>
+    <>
       <div className="settings-row">
         <span>Theme</span>
         <Segmented label="Theme" value={theme.use()} options={themes} onChange={theme.set} />
@@ -93,6 +92,6 @@ export function AppearanceSection() {
           onChange={pageWidth.set}
         />
       </div>
-    </section>
+    </>
   );
 }

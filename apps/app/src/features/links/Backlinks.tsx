@@ -1,10 +1,11 @@
-import type { Tree } from "@notemax/core";
-import type { LinkHub } from "./link-hub";
+import type { TreeNode } from "@notemax/core";
+import type { AppContext } from "@/plugins/types";
 import "./links.css";
 
 /** The notes that link to this one, shown under the body. */
-export function Backlinks({ tree, noteId, hub }: { tree: Tree; noteId: string; hub: LinkHub }) {
-  const sources = tree.backlinks.get(noteId) ?? [];
+export function Backlinks({ node, app }: { node: TreeNode; app: AppContext }) {
+  const { tree, hub } = app;
+  const sources = tree.backlinks.get(node.id) ?? [];
   return (
     <section className="backlinks" aria-label="Backlinks">
       <h2 className="backlinks-heading">

@@ -14,10 +14,23 @@
 }
 
 @media (max-width: 700px) {
+  /* Only what needs attention: sync, and saving trouble. All saved needs no words. */
   .status-bar {
     left: 16px;
+    bottom: max(8px, env(safe-area-inset-bottom));
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 4px 12px;
+    font-size: 11px;
+  }
+
+  .status-words,
+  .status-bar[data-state="saved"] .status-save {
+    display: none;
+  }
+
+  /* Out of the way of the keyboard's toolbar. */
+  :root[data-keyboard] .status-bar {
+    display: none;
   }
 }

@@ -2,14 +2,15 @@ import { useEffect, useState, type DragEvent } from "react";
 import { canMove, createNode, moveNode, type TreeItem } from "@notemax/core";
 import { endDrag, placementFor, startDrag, useDragging, type DropTarget, type Placement } from "@/features/sidebar/drag";
 import type { AppContext } from "@/plugins/types";
+import { pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { bookOf } from "./book-of";
 import "./books.css";
 
 /**
- * The right-hand sidebar for a book: its chapters in reading order. It shows
- * while the book or one of its chapters is open, so the left sidebar can keep
- * each book to a single row.
+ * A book's chapters in reading order, as a section of the right sidebar. It
+ * shows while the book or one of its chapters is open, so the left sidebar can
+ * keep each book to a single row.
  */
 export function BookPanel({ app }: { app: AppContext }) {
   const { tree, doc, activeId, open: onSelect } = app;
@@ -32,7 +33,7 @@ export function BookPanel({ app }: { app: AppContext }) {
     endDrag();
   };
 
-  // Anywhere in the panel that is not a chapter row means "at the end".
+  // Anywhere in the section that is not a chapter row means "at the end".
   const panelDrop = {
     onDragOver(event: DragEvent) {
       if (!accepts(dragging)) return;
@@ -43,8 +44,8 @@ export function BookPanel({ app }: { app: AppContext }) {
   };
 
   return (
-    <aside className="side-panel book-panel" aria-label="Chapters" data-drop={dropTarget?.id === book.id ? "inside" : undefined} {...panelDrop}>
-      <button className="book-panel-title" aria-current={activeId === book.id ? "page" : undefined} onClick={() => onSelect(book.id)}>
+    <div className="book-panel" role="group" aria-label="Chapters" data-drop={dropTarget?.id === book.id ? "inside" : undefined} {...panelDrop}>
+      <button className="book-panel-title" onContextMenu={pageMenu(tree.byId.get(book.id))} aria-current={activeId === book.id ? "page" : undefined} onClick={() => onSelect(book.id)}>
         <Icon name="book" />
         <span>{bookTitle}</span>
       </button>
@@ -72,6 +73,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                   startDrag(chapter);
                 }}
                 onDragEnd={endDrag}
+                onContextMenu={pageMenu(tree.byId.get(chapter.id))}
                 onDragOver={(event) => {
                   if (!accepts(dragging) || dragging.id === chapter.id) return;
                   event.preventDefault();
@@ -109,6 +111,6 @@ export function BookPanel({ app }: { app: AppContext }) {
         <Icon name="plus" />
         <span>Add chapter</span>
       </button>
-    </aside>
+    </div>
   );
 }

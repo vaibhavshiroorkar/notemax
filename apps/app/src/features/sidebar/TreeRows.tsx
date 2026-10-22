@@ -1,7 +1,8 @@
-import { memo, type DragEvent } from "react";
-import { canMove, type NodeKind, type Tree, type TreeItem } from "@notemax/core";
+import { memo, type DragEvent, type MouseEvent } from "react";
+import { canMove, isContainer, type NodeKind, type Tree, type TreeItem } from "@notemax/core";
 import { prefetchDoc } from "@/data/docCache";
 import { useSelect } from "@/platform/store";
+import { registry } from "@/plugins/registry";
 import { Icon } from "@/ui/Icon";
 import { dragged, endDrag, placementFor, startDrag, zoneFor, type Placement, type Zone } from "./drag";
 import { collapsed, dropTarget, editingId, markedId, toggleCollapsed } from "./state";
@@ -18,6 +19,8 @@ export interface RowContext {
   add(kind: NodeKind, parentId: string): void;
   trash(id: string): void;
   drop(placement: Placement): void;
+  /** Right click on a row. */
+  menu(id: string, event: MouseEvent): void;
 }
 
 export function Rows({ items, depth, ctx }: { items: TreeItem[]; depth: number; ctx: RowContext }) {
@@ -109,6 +112,7 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
           startDrag(item);
         }}
         onDragEnd={endDrag}
+        onContextMenu={(event) => ctx.menu(item.id, event)}
         onDragOver={(event) => {
           const moving = dragged.get();
           if (!moving) return;
@@ -157,9 +161,15 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
             <Icon name="book" />
             <span>{title}</span>
           </button>
-        ) : (
+        ) : item.kind === "note" ? (
           <button className="row-title" onClick={() => ctx.select(item.id)} {...prefetchOnHover(item.id)}>
             {title}
+          </button>
+        ) : (
+          // Other pages, like boards, show the icon their plugin gave them.
+          <button className="row-title icon-title" onClick={() => ctx.select(item.id)} {...prefetchOnHover(item.id)}>
+            <Icon name={registry.iconOf(item.kind)} />
+            <span>{title}</span>
           </button>
         )}
         {item.kind === "book" && item.children.length > 0 && (
@@ -167,7 +177,7 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
             {item.children.length}
           </span>
         )}
-        {item.kind !== "note" && (
+        {isContainer(item.kind) && (
           <button
             className="icon-button row-action"
             aria-label={item.kind === "book" ? `Add chapter to ${title}` : `Add note inside ${title}`}

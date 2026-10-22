@@ -36,6 +36,11 @@ export function createSqlStore(db: SqlDatabase): DocStore {
     async remove(docId) {
       await db.execute("DELETE FROM updates WHERE doc_id = $1", [docId]);
     },
+
+    async list() {
+      const rows = await db.select<{ doc_id: string }>("SELECT DISTINCT doc_id FROM updates");
+      return rows.map((row) => row.doc_id);
+    },
   };
 }
 

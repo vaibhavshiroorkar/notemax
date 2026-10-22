@@ -1,5 +1,7 @@
+import type { MouseEvent } from "react";
 import { ROOT, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
 import type { SidebarFilter } from "@/plugins/types";
+import { registry } from "@/plugins/registry";
 import { Icon } from "@/ui/Icon";
 
 /** Every visible item, chapters included, in the order the sidebar shows them. */
@@ -19,11 +21,13 @@ export function FilteredList({
   filters,
   activeId,
   onSelect,
+  onMenu,
 }: {
   tree: Tree;
   filters: SidebarFilter[];
   activeId: string | null;
   onSelect(id: string): void;
+  onMenu(id: string, event: MouseEvent): void;
 }) {
   const matches = inOrder(tree.top).filter((item) => filters.every((filter) => filter.matches(item as TreeNode)));
 
@@ -44,7 +48,7 @@ export function FilteredList({
             const where = whereOf(tree, item);
             return (
               <li key={item.id}>
-                <div className="row" data-kind={item.kind} aria-current={item.id === activeId ? "page" : undefined}>
+                <div className="row" data-kind={item.kind} aria-current={item.id === activeId ? "page" : undefined} onContextMenu={(event) => onMenu(item.id, event)}>
                   {item.kind === "folder" ? (
                     // Folders have no page to open.
                     <span className="row-title icon-title">
@@ -53,7 +57,7 @@ export function FilteredList({
                     </span>
                   ) : (
                     <button className="row-title icon-title" onClick={() => onSelect(item.id)}>
-                      <Icon name={item.kind === "book" ? "book" : "note"} />
+                      <Icon name={registry.iconOf(item.kind)} />
                       <span>{title}</span>
                     </button>
                   )}

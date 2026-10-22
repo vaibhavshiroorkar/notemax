@@ -7,6 +7,14 @@
   display: grid;
   grid-template-columns: min(var(--sidebar-width), 45vw) 1fr 0;
   height: 100vh;
+  /* A phone's address bar comes and goes; dvh is the height actually shown. */
+  height: 100dvh;
+}
+
+/* Buttons only a phone needs, like search in place of Ctrl+K. */
+.phone-only,
+.scrim {
+  display: none;
 }
 
 .app[data-sidebar="closed"] {
@@ -31,6 +39,29 @@
   transition: none;
 }
 
+/* Nothing in the layout may make the window itself scroll. Without this, a
+   sliding sidebar pushed the page wider for a moment and a scrollbar blinked
+   at the bottom. */
+.app {
+  overflow: hidden;
+}
+
+/* A grid item will not shrink below its contents unless told to, which is what
+   pushed the page wider while a side slid shut. */
+.sidebar,
+.side-panel {
+  min-width: 0;
+}
+
+/* The status bar moves aside for the right sidebar at the same pace it slides. */
+.status-bar {
+  transition: right 0.18s ease;
+}
+
+.resizing .status-bar {
+  transition: none;
+}
+
 /* While a side slides, its column is narrower than what is in it. Keeping the
    contents at full width and clipping them makes them slide, not squeeze. */
 .sidebar > * {
@@ -47,38 +78,203 @@
   pointer-events: none;
 }
 
+/* Calm: the sides and controls fade until the pointer or keyboard is on them,
+   so the page comes first (Settings, Appearance). Only where there is a
+   pointer to hover with; on a touch screen nothing could bring them back. */
+@media (hover: hover) {
+  .app[data-calm] .sidebar,
+  .app[data-calm] .side-panel {
+    opacity: 0.55;
+    transition: opacity 0.25s;
+  }
+
+  .app[data-calm] .main-top,
+  .app[data-calm] .status-bar {
+    opacity: 0.35;
+    transition: opacity 0.25s;
+  }
+
+  .app[data-calm] .sidebar:hover,
+  .app[data-calm] .sidebar:focus-within,
+  .app[data-calm] .side-panel:hover,
+  .app[data-calm] .side-panel:focus-within,
+  .app[data-calm] .main-top:hover,
+  .app[data-calm] .main-top:focus-within,
+  .app[data-calm] .main-top:has(.quick-settings),
+  .app[data-calm] .status-bar:hover {
+    opacity: 1;
+  }
+}
+
 /* Focus mode: only the page. The buttons and status come back on hover. */
 .app[data-focus] .status-bar,
-.app[data-focus] .sidebar-toggle,
-.app[data-focus] .side-panel-toggle {
+.app[data-focus] .main-top {
   opacity: 0;
   transition: opacity 0.2s;
 }
 
 .app[data-focus] .status-bar:hover,
-.app[data-focus] .sidebar-toggle:hover,
-.app[data-focus] .sidebar-toggle:focus-visible,
-.app[data-focus] .side-panel-toggle:hover,
-.app[data-focus] .side-panel-toggle:focus-visible {
+.app[data-focus] .main-top:hover,
+.app[data-focus] .main-top:focus-within {
   opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .app {
+  .app,
+  .status-bar {
     transition: none;
   }
 }
 
+/* The page area: tabs and page buttons on top, the page below scrolls on its own. */
 .main {
   grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main-top {
   position: relative;
+  z-index: 5;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
-.sidebar-toggle {
-  position: absolute;
-  top: 12px;
-  left: 12px;
+/* Tabs shrink as more open, and scroll sideways past that. */
+.tab-strip {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  height: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  display: flex;
+  flex: 0 1 180px;
+  align-items: center;
+  gap: 6px;
+  min-width: 72px;
+  height: 30px;
+  padding: 0 4px 0 10px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: default;
+  user-select: none;
+}
+
+.tab:hover {
+  background: var(--hover);
+}
+
+.tab[aria-selected="true"] {
+  background: var(--active);
+  color: var(--text);
+}
+
+.tab > svg {
+  flex: none;
+}
+
+.tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-close {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+}
+
+.tab:hover .tab-close,
+.tab[aria-selected="true"] .tab-close,
+.tab-close:focus-visible {
+  opacity: 1;
+}
+
+.tab[data-drop="before"] {
+  box-shadow: inset 2px 0 var(--accent);
+}
+
+.tab[data-drop="after"] {
+  box-shadow: inset -2px 0 var(--accent);
+}
+
+.tab-new {
+  flex: none;
+}
+
+/* An empty tab. */
+.new-tab {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+
+.new-tab-title {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+
+.new-tab-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.new-tab-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.new-tab-heading {
+  margin: 32px 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.new-tab-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.new-tab-list .row-title {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.new-tab-list .row-title:hover {
+  background: var(--hover);
 }
 
 /* The right sidebar. A plugin fills it; this only places it. */
@@ -92,10 +288,21 @@
   font-size: 14px;
 }
 
-.side-panel-toggle {
-  position: absolute;
-  top: 12px;
-  right: 12px;
+/* Top right of the page: things plugins put there, quick settings, and the right sidebar button. */
+.page-toolbar {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-words {
+  padding: 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* The status bar is pinned to the window corner; keep it off the right sidebar. */
@@ -117,19 +324,55 @@
     right: 16px;
   }
 
+  /* The sides open over the page, below the top bar, so its buttons stay in reach. */
   .side-panel {
     position: fixed;
-    inset: 0 0 0 auto;
-    width: 260px;
+    inset: var(--top-bar) 0 0 auto;
+    width: min(85vw, 320px);
     z-index: 10;
-    padding-top: 36px;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: var(--shadow);
   }
 
-  /* Both toggles stay above the overlays so they can always be closed. */
-  .sidebar-toggle,
-  .side-panel-toggle {
+  .scrim {
+    display: block;
     position: fixed;
+    inset: var(--top-bar) 0 0;
+    z-index: 9;
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .app {
+    --top-bar: calc(44px + env(safe-area-inset-top));
+  }
+
+  .main-top {
     z-index: 20;
+    height: var(--top-bar);
+    gap: 2px;
+    padding: env(safe-area-inset-top) max(4px, env(safe-area-inset-right)) 0 max(4px, env(safe-area-inset-left));
+  }
+
+  .phone-only {
+    display: inline-flex;
+  }
+
+  /* Room is short: the page's own buttons are in its menu and in search. */
+  .page-toolbar > :not(.quick-settings-button, .side-panel-toggle, .quick-settings) {
+    display: none;
+  }
+
+  .tab {
+    flex-basis: 140px;
+    min-width: 64px;
+  }
+
+  .tab:not([aria-selected="true"]) .tab-close {
+    display: none;
+  }
+
+  .new-tab {
+    padding: 32px 16px;
   }
 
   /* The overlays slide in from their edge and back out. */
@@ -162,4 +405,66 @@
   .side-panel {
     transition: none;
   }
+}
+
+/* Sections of the right sidebar, each folded by its title. */
+.side-panel-sections {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0 24px;
+}
+
+.panel-section + .panel-section {
+  margin-top: 8px;
+}
+
+.panel-section-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 6px 12px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.panel-section-title:hover {
+  color: var(--text);
+}
+
+.panel-section-title svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.15s;
+}
+
+.panel-section[data-folded] .panel-section-title svg {
+  transform: rotate(-90deg);
+}
+
+.panel-empty {
+  margin: 8px 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* A part a plugin draws that broke. */
+.safe-error {
+  margin: 8px 12px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--hover);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.plugin-off {
+  max-width: 420px;
+  margin: 120px auto 0;
+  color: var(--muted);
+  text-align: center;
 }

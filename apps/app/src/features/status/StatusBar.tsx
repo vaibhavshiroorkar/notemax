@@ -1,5 +1,9 @@
 import type { SaveStatus } from "@notemax/core";
 import { createStore } from "@/platform/store";
+import { useOption } from "@/plugins/options";
+import { registry } from "@/plugins/registry";
+import type { AppContext } from "@/plugins/types";
+import { Safe } from "@/ui/Safe";
 import "./status.css";
 
 /**
@@ -27,11 +31,13 @@ function wordsLabel(words: number): string {
 }
 
 export function StatusBar({
+  app,
   workspaceStatus,
   words,
   persistent,
   readyMs,
 }: {
+  app: AppContext;
   workspaceStatus: SaveStatus;
   /** In the open page, or null when it has none or they are not counted yet. */
   words: number | null;
@@ -39,13 +45,19 @@ export function StatusBar({
   readyMs: number | undefined;
 }) {
   const status = worst(workspaceStatus, pageStatus.use());
+  const showWords = useOption("notes", "statusWords");
   return (
     <footer className="status-bar" data-state={status.state} role="status">
-      {!!words && <span className="status-words">{wordsLabel(words)}</span>}
-      <span>
+      {showWords && !!words && <span className="status-words">{wordsLabel(words)}</span>}
+      <span className="status-save">
         {labels[status.state]}
         {status.state === "error" && `: ${status.message}. Retrying, keep this tab open.`}
       </span>
+      {registry.statusItems().map(({ id, component: Item }) => (
+        <Safe key={id} name={id}>
+          <Item app={app} />
+        </Safe>
+      ))}
       {persistent === false && <span className="warning">The browser may clear these notes if disk space runs low.</span>}
       {import.meta.env.DEV && readyMs !== undefined && <span>ready in {Math.round(readyMs)} ms</span>}
     </footer>

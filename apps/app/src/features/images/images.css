@@ -1,0 +1,133 @@
+/* A picture's box. Without a width it takes the picture's own size, up to the text width. */
+.image-block {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 1em auto;
+}
+
+/* Left and right let the text flow beside the picture. */
+.image-block[data-align="left"] {
+  float: left;
+  margin: 0.3em 1.25em 0.6em 0;
+}
+
+.image-block[data-align="right"] {
+  float: right;
+  margin: 0.3em 0 0.6em 1.25em;
+}
+
+.ProseMirror::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.ProseMirror .node-image.ProseMirror-selectednode {
+  outline: none;
+}
+
+.image-frame {
+  position: relative;
+  line-height: 0;
+}
+
+.image-frame img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+/* With a width set, the picture fills its box. */
+.image-block[style] .image-frame img {
+  width: 100%;
+}
+
+.image-block[data-selected] img {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.image-handle {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 44px;
+  margin-top: -22px;
+  border: 2px solid var(--bg);
+  border-radius: 4px;
+  background: var(--accent);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.image-handle[data-side="left"] {
+  left: -6px;
+}
+
+.image-handle[data-side="right"] {
+  right: -6px;
+}
+
+.image-size {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.65);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.image-bar {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  line-height: 1.2;
+}
+
+.image-bar-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.image-bar-button:hover {
+  background: var(--hover);
+}
+
+.image-bar-button[aria-pressed="true"] {
+  background: var(--active);
+  color: var(--accent);
+}
+
+.image-bar-line {
+  width: 1px;
+  height: 16px;
+  margin: 0 2px;
+  background: var(--border);
+}
+
+.image-missing {
+  padding: 24px 32px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}

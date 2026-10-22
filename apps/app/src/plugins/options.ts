@@ -11,7 +11,7 @@ const values = savedStore<Record<string, boolean>>("options", {}, {
 });
 
 function defaultOf(pluginId: string, optionId: string): boolean {
-  const option = registry.plugins().find((p) => p.id === pluginId)?.options?.find((o) => o.id === optionId);
+  const option = registry.optionOf(pluginId, optionId);
   if (!option) throw new Error(`plugin "${pluginId}" has no option "${optionId}"`);
   return option.default;
 }

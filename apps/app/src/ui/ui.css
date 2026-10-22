@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+/* The hidden attribute always hides, even on elements whose class sets display. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -255,6 +260,46 @@ kbd {
   .row-action {
     opacity: 1;
   }
+
+  /* Big dialogs take the whole screen on a phone. */
+  .dialog.settings,
+  .dialog.shortcuts-help {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+  }
+
+  .dialog.settings .dialog-body,
+  .dialog.shortcuts-help .dialog-body {
+    padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Fingers need bigger targets than a mouse pointer. */
+@media (pointer: coarse) {
+  .icon-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .row {
+    min-height: 40px;
+  }
+
+  .tab {
+    height: 34px;
+  }
+
+  /* Phones zoom in on a field with smaller text; 16px keeps them from it. */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
 }
 
 .footer-button {
@@ -271,4 +316,33 @@ kbd {
 .footer-button:hover {
   background: var(--hover);
   color: var(--text);
+}
+
+.button-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.button-primary:hover {
+  background: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+.prompt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.prompt-field input {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
 }
