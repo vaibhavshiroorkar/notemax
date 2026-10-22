@@ -17,7 +17,8 @@ export const graphPlugin: Plugin = {
   id: "graph",
   name: "Graph",
   description: "Pages and their links as dots and lines, full size and small in the right sidebar",
-  sidePanels: [{ id: "graph.panel", title: "Graph", order: 20, when: (app) => app.activeId !== null, component: GraphPanel }],
+  // Last in the right sidebar: it is the largest section and the least often read.
+  sidePanels: [{ id: "graph.panel", title: "Graph", order: 90, when: (app) => app.activeId !== null, component: GraphPanel }],
   views: [{ id: "graph", title: "Graph", icon: "graph", component: GraphView }],
   pageCorner: [{ id: "graph.button", component: GraphButton }],
   commands: [

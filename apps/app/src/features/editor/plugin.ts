@@ -3,6 +3,7 @@ import type { AppContext, Plugin } from "@/plugins/types";
 import { duplicate } from "./duplicate";
 import { EditorSection } from "./EditorSection";
 import { LAYOUT_MENU, layoutOf, toggleLayout } from "./layout";
+import { LayoutSetting } from "./LayoutSetting";
 import { EDITOR_MENU } from "./menu";
 import { NotePane } from "./NotePane";
 
@@ -13,6 +14,7 @@ export const notesPlugin: Plugin = {
   name: "Notes",
   description: "Writing pages",
   required: true,
+  pageSettings: [{ id: "notes.layout", kinds: ["note"], component: LayoutSetting }],
   settings: [{ id: "editor", order: 20, title: "Editor", icon: "text", keywords: ["writing", "typing", "notes", "pages", "paper", "layout"], component: EditorSection }],
   options: [
     { id: "spellcheck", label: "Check spelling while typing", section: "editor", quick: true, default: true },

@@ -22,10 +22,10 @@ It's early and built as a personal tool first, so things change often.
 - Search page titles from the sidebar, sort by title, created or edited time, group by kind, and filter by tags or stars.
 - Tabs: middle-click a page or press Ctrl+T for a new one, Ctrl+W to close, and each tab has its own Back and Forward.
 - A page for each book, with its chapters in order and word counts. The word count also sits at the top right of a book and each of its chapters. While a book is open, its chapters sit in a panel on the right, where you can add, reorder and trash them.
-- `[[` links between notes, and a "Linked from" list under each note. Renaming a note never breaks links to it.
+- `[[` links between notes, and a "Linked from" list in the right sidebar. Renaming a note never breaks links to it.
 - Trash with Undo, in a box at the bottom left with its own search, restore, delete forever and empty trash. Duplicate a note, rename with F2.
 - Make it yours: light or dark theme, accent color, font, text size and page width. Drag the sidebars to resize them. Focus mode hides everything but the page. Sidebars and buttons fade until you point at them (you can turn that off). Change any keyboard shortcut, and turn plugin options on or off.
-- A right sidebar on every page, with a small graph around the open page. Books add their chapters to it.
+- A right sidebar on every page: "This page" with its dates, words, links and layout, the pages that link to it, and a small graph around it. Books add their chapters to it.
 - Plugins: switch built-in features off if you don't use them, or install plugins written by others (off until you allow them). See [docs/plugins.md](docs/plugins.md).
 - Settings sorted into categories, with a search box. Quick settings (Ctrl+.) for the switches you flip often, and a list of every shortcut (Ctrl+/).
 - Stays fast with thousands of notes: typing, switching pages and startup are tested with 5,000 notes.

@@ -74,6 +74,7 @@ Every field is optional.
 | `sidePanels` | A section of the right sidebar, with `order` and `when(app)`. |
 | `pageCorner` | The top right of a page. |
 | `pageHeader` | Under a page's title. |
+| `pageSettings` | A row in the right sidebar's "This page" section, like a note's layout. |
 | `pageFooter` | At the end of a page. |
 | `sidebarSections` | The left sidebar, between the pages and the trash. With an `order` below 0, above the pages, like Starred. |
 | `useSidebarFilter` | A React hook. While it returns a filter, the sidebar lists only what passes it. |

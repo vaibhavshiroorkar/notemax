@@ -9,6 +9,7 @@ import { graphPlugin } from "@/features/graph/plugin";
 import { imagesPlugin } from "@/features/images/plugin";
 import { linksPlugin } from "@/features/links/plugin";
 import { navigationPlugin } from "@/features/navigation/plugin";
+import { pageInfoPlugin } from "@/features/page-info/plugin";
 import { palettePlugin } from "@/features/palette/plugin";
 import { settingsPlugin } from "@/features/settings/plugin";
 import { shortcutsPlugin } from "@/features/shortcuts/plugin";
@@ -33,6 +34,7 @@ import { registerPlugin } from "./registry";
   slashPlugin,
   imagesPlugin,
   linksPlugin,
+  pageInfoPlugin,
   graphPlugin,
   downloadsPlugin,
   palettePlugin,

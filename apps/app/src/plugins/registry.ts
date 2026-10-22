@@ -117,6 +117,7 @@ export const registry = {
   sidebarFilterChoices: (): SidebarFilterChoice[] => all((p) => p.sidebarFilterChoices),
   starters: () => all((p) => (p.start ? [p.start.bind(p)] : [])),
   pageCorner: (kind: NodeKind): PageAddon[] => all((p) => p.pageCorner).filter((addon) => addon.kinds?.includes(kind) ?? true),
+  pageSettings: (kind: NodeKind): PageAddon[] => all((p) => p.pageSettings).filter((addon) => addon.kinds?.includes(kind) ?? true),
   /** Every option of the plugins that are on, with its plugin, in plugin order. */
   options: (): { plugin: Plugin; option: PluginOption }[] => on().flatMap((plugin) => (plugin.options ?? []).map((option) => ({ plugin, option }))),
   /** An option's plugin even when it is off, so reading its value never fails. */

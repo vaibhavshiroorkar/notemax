@@ -1,14 +1,15 @@
 import { NodeSelection } from "@tiptap/pm/state";
 import { WIKI_LINK } from "@notemax/core";
 import type { ContextTarget, Plugin } from "@/plugins/types";
-import { Backlinks } from "./Backlinks";
+import { BacklinksPanel } from "./Backlinks";
 import { WikiLink } from "./wiki-link";
 
 export const linksPlugin: Plugin = {
   id: "links",
   name: "Links between notes",
   description: "[[ links to other pages, and the list of pages that link here",
-  pageFooter: [{ id: "links.backlinks", kinds: ["note"], component: Backlinks }],
+  // In the right sidebar rather than under the page, where it sat in the way of the end of a note.
+  sidePanels: [{ id: "links.backlinks", title: "Linked from", order: 30, when: (app) => app.activeId !== null, component: BacklinksPanel }],
   contextMenu: [
     {
       id: "links.to-page",

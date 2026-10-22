@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.19.0 (2026-10-22)
+
+- "Linked from" moved from under the page to the right sidebar.
+- A "This page" section in the right sidebar: what the page is, when it was made and last edited, its words and links, and a note's layout.
+- The small graph sits at the bottom of the right sidebar.
+
 ## 0.18.0 (2026-10-22)
 
 - Search page titles from the magnifier by +, or Ctrl+K "Search page titles". Matches inside folders show too.

@@ -1,18 +1,14 @@
-import type { TreeNode } from "@notemax/core";
 import type { AppContext } from "@/plugins/types";
 import "./links.css";
 
-/** The notes that link to this one, shown under the body. */
-export function Backlinks({ node, app }: { node: TreeNode; app: AppContext }) {
-  const { tree, hub } = app;
-  const sources = tree.backlinks.get(node.id) ?? [];
+/** The pages that link to the open one, in the right sidebar. */
+export function BacklinksPanel({ app }: { app: AppContext }) {
+  const { tree, hub, activeId } = app;
+  const sources = (activeId && tree.backlinks.get(activeId)) || [];
   return (
-    <section className="backlinks" aria-label="Backlinks">
-      <h2 className="backlinks-heading">
-        {sources.length ? `Linked from ${sources.length} ${sources.length === 1 ? "note" : "notes"}` : "Linked from"}
-      </h2>
+    <div className="backlinks" aria-label="Backlinks">
       {sources.length === 0 ? (
-        <p className="backlinks-empty">No notes link here yet. Type [[ in another note to link to this one.</p>
+        <p className="backlinks-empty">No pages link here yet. Type [[ in another note to link to this one.</p>
       ) : (
         <ul className="backlinks-list">
           {sources.map((source) => (
@@ -25,6 +21,6 @@ export function Backlinks({ node, app }: { node: TreeNode; app: AppContext }) {
           ))}
         </ul>
       )}
-    </section>
+    </div>
   );
 }

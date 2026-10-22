@@ -21,21 +21,10 @@
   outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
-.backlinks {
-  margin-top: 48px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.backlinks-heading {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-}
-
+/* "Linked from" in the right sidebar: narrow, so the folder goes under the title. */
 .backlinks-empty {
   margin: 0;
+  padding: 0 8px;
   font-size: 13px;
   color: var(--muted);
 }
@@ -48,11 +37,10 @@
 
 .backlink {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  flex-direction: column;
+  gap: 1px;
   width: 100%;
   padding: 4px 8px;
-  margin-left: -8px;
   border-radius: 6px;
   text-align: left;
 }
@@ -62,7 +50,10 @@
 }
 
 .backlink-title {
+  overflow: hidden;
   color: var(--accent);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .backlink-where {

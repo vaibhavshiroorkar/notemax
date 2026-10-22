@@ -48,6 +48,8 @@ export interface Plugin {
   pageFooter?: PageAddon[];
   /** Small things at the top right of a page, like a book's word count. */
   pageCorner?: PageAddon[];
+  /** Rows in the right sidebar's "This page" section, like a note's layout. */
+  pageSettings?: PageAddon[];
   settings?: SettingsSection[];
   /** On or off choices, shown in Settings. Read them with useOption. */
   options?: PluginOption[];
