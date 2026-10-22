@@ -3,6 +3,7 @@ import { canMove, isContainer, type NodeKind, type Tree, type TreeItem } from "@
 import { prefetchDoc } from "@/data/docCache";
 import { useSelect } from "@/platform/store";
 import { registry } from "@/plugins/registry";
+import { dragRowMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { dragged, endDrag, placementFor, startDrag, zoneFor, type Placement, type Zone } from "./drag";
 import { collapsed, dropTarget, editingId, markedId, selection, sidebarView, sortItems, toggleCollapsed } from "./state";
@@ -57,8 +58,6 @@ function NameInput({ item, ctx }: { item: TreeItem; ctx: RowContext }) {
     </span>
   );
 }
-
-const touchOnly = () => matchMedia("(pointer: coarse) and (hover: none)").matches;
 
 /** Double-click or F2 on a row renames it right there. */
 const renameHere = (id: string) => ({
@@ -136,8 +135,7 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
           startDrag(item);
         }}
         onDragEnd={endDrag}
-        // On a touch screen a long press starts a drag, not the menu; the ... button has the menu there.
-        onContextMenu={(event) => (touchOnly() ? event.preventDefault() : ctx.menu(item.id, event))}
+        onContextMenu={dragRowMenu((event) => ctx.menu(item.id, event))}
         // Shift+click picks a range; without this it would also select the text between.
         onMouseDown={(event) => event.shiftKey && event.preventDefault()}
         // A middle click opens the page in a new tab, as in a browser.

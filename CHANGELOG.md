@@ -3,6 +3,14 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.44.0 (2026-10-22)
+
+- Phones: a hold in a note opens the menu and leaves the cursor and the keyboard where they were. A double tap selects a word. Lifting the finger after a hold no longer taps too.
+- Phones: a hold on a sidebar row or a chapter only drags it; the ... button has the menu. Before, the hold also opened the sidebar's own menu.
+- Chapters in a book's panel have a ... button with the page menu, in place of the trash button.
+- The status bar at the bottom shows when something changes, then fades. Point at it to see it again. Trouble saving stays in view.
+- Lists stay one list when a line between two parts is removed, so numbers keep counting and Tab can nest any item.
+
 ## 0.43.0 (2026-10-22)
 
 - Code pages: write Python or JavaScript and press Run (or Ctrl+Enter). What it prints shows below, with how long it took. Stop ends code that runs forever.

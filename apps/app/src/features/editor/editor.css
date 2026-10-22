@@ -175,3 +175,10 @@
     font-size: calc(var(--note-size, 16px) * 1.6);
   }
 }
+
+/* A long press opens the note menu, so the phone's own bubble would only cover it. */
+@media (hover: none) {
+  .ProseMirror {
+    -webkit-touch-callout: none;
+  }
+}

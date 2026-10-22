@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import type { SaveStatus } from "@notemax/core";
 import { createStore } from "@/platform/store";
 import { useOption } from "@/plugins/options";
@@ -22,6 +23,9 @@ const labels: Record<SaveStatus["state"], string> = {
 const severity: Record<SaveStatus["state"], number> = { saved: 0, saving: 1, error: 2 };
 const worst = (a: SaveStatus, b: SaveStatus) => (severity[b.state] > severity[a.state] ? b : a);
 
+/** How long the bar stays after its text last changed. */
+const SHOW_MS = 3000;
+
 // A common estimate for silent reading of prose.
 const WORDS_PER_MINUTE = 230;
 
@@ -35,19 +39,39 @@ export function StatusBar({
   workspaceStatus,
   words,
   persistent,
-  readyMs,
 }: {
   app: AppContext;
   workspaceStatus: SaveStatus;
   /** In the open page, or null when it has none or they are not counted yet. */
   words: number | null;
   persistent: boolean | undefined;
-  readyMs: number | undefined;
 }) {
   const status = worst(workspaceStatus, pageStatus.use());
   const showWords = useOption("notes", "statusWords");
+  const bar = useRef<HTMLElement>(null);
+  const [quiet, setQuiet] = useState(false);
+
+  // The bar shows when anything in it changes, then fades. Watching its text
+  // covers the items plugins add too. Pointing at it brings it back.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const wake = () => {
+      setQuiet(false);
+      clearTimeout(timer);
+      timer = setTimeout(() => setQuiet(true), SHOW_MS);
+    };
+    wake();
+    const watch = new MutationObserver(wake);
+    watch.observe(bar.current!, { childList: true, subtree: true, characterData: true });
+    return () => {
+      watch.disconnect();
+      clearTimeout(timer);
+    };
+  }, []);
+
   return (
-    <footer className="status-bar" data-state={status.state} role="status">
+    // Trouble saving stays until it is fixed.
+    <footer ref={bar} className="status-bar" data-state={status.state} data-quiet={(quiet && status.state !== "error") || undefined} role="status">
       {showWords && !!words && <span className="status-words">{wordsLabel(words)}</span>}
       <span className="status-save">
         {labels[status.state]}
@@ -59,7 +83,6 @@ export function StatusBar({
         </Safe>
       ))}
       {persistent === false && <span className="warning">The browser may clear these notes if disk space runs low.</span>}
-      {import.meta.env.DEV && readyMs !== undefined && <span>ready in {Math.round(readyMs)} ms</span>}
     </footer>
   );
 }

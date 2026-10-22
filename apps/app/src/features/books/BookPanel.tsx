@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties, type DragEvent } from "react";
 import { canMove, createNode, moveNode, type TreeItem } from "@notemax/core";
 import { endDrag, placementFor, startDrag, useDragging, type DropTarget, type Placement, type Zone } from "@/features/sidebar/drag";
 import type { AppContext } from "@/plugins/types";
-import { pageMenu } from "@/ui/ContextMenu";
+import { dragRowMenu, pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { bookOf, readingOrder } from "./reading";
 import "./books.css";
@@ -79,7 +79,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                   startDrag(chapter);
                 }}
                 onDragEnd={endDrag}
-                onContextMenu={pageMenu(tree.byId.get(chapter.id))}
+                onContextMenu={dragRowMenu(pageMenu(tree.byId.get(chapter.id)))}
                 onDragOver={(event) => {
                   const where = placement(event);
                   // Otherwise the panel underneath would take over the marker.
@@ -98,13 +98,9 @@ export function BookPanel({ app }: { app: AppContext }) {
                   <span className="chapter-number">{number ?? <Icon name="book" />}</span>
                   <span className="chapter-title">{title}</span>
                 </button>
-                <button
-                  className="icon-button row-action"
-                  aria-label={`Move ${title} to trash`}
-                  title="Move to trash"
-                  onClick={() => app.trash(chapter.id)}
-                >
-                  <Icon name="trash" />
+                {/* The page menu, with Move to trash in it. On a phone it is the way to the menu, since a long press drags. */}
+                <button className="icon-button row-action" aria-label={`More for ${title}`} aria-haspopup="menu" title="More" onClick={pageMenu(tree.byId.get(chapter.id))}>
+                  <Icon name="more" />
                 </button>
               </li>
             );

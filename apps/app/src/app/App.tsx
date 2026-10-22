@@ -102,7 +102,6 @@ export function App() {
   const [sidePanelOpen, setSidePanelOpen] = useState(() => !isNarrow() && getPref("sidePanelOpen") !== "false");
   const [focusMode, setFocusMode] = useState(false);
   const [persistent, setPersistent] = useState<boolean>();
-  const [readyMs, setReadyMs] = useState<number>();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<string>();
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -210,8 +209,10 @@ export function App() {
   }, [hub, workspace.doc, workspace.tree]);
 
   // Only the first page to open counts toward startup time.
-  // performance.now() counts from the moment the page started loading.
-  const onReady = useCallback(() => setReadyMs((ms) => ms ?? performance.now()), []);
+  // A mark, not text on screen: it shows in the browser's performance panel.
+  const onReady = useCallback(() => {
+    if (!performance.getEntriesByName("notemax:ready").length) performance.mark("notemax:ready");
+  }, []);
 
   // Shortcuts belong to commands, so a plugin's shortcut works like a built-in one.
   // The listener is added once and reads the latest context through this ref.
@@ -515,7 +516,7 @@ export function App() {
       <ContextMenuHost app={app} />
       <PromptHost />
       <Toasts />
-      <StatusBar app={app} workspaceStatus={workspace.status} words={activeNode?.kind === "note" ? activeNode.words : null} persistent={persistent} readyMs={readyMs} />
+      <StatusBar app={app} workspaceStatus={workspace.status} words={activeNode?.kind === "note" ? activeNode.words : null} persistent={persistent} />
     </div>
   );
 }

@@ -62,6 +62,23 @@
   transition: none;
 }
 
+/* Status text is for the moment it changes; after that it fades until pointed at. */
+.app .status-bar {
+  transition:
+    right 0.18s ease,
+    opacity 0.6s ease;
+}
+
+.app .status-bar[data-quiet]:not(:hover) {
+  opacity: 0;
+}
+
+/* Trouble saving is never faded, not even while writing in calm mode. */
+.app .status-bar[data-state="error"],
+.app[data-calm] .status-bar[data-state="error"] {
+  opacity: 1;
+}
+
 /* While a side slides, its column is narrower than what is in it. Keeping the
    contents at full width and clipping them makes them slide, not squeeze. */
 .sidebar > * {

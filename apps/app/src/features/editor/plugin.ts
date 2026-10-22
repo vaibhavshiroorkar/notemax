@@ -5,6 +5,7 @@ import { EditorSection } from "./EditorSection";
 import { LAYOUT_MENU, layoutOf, toggleLayout } from "./layout";
 import { LayoutSetting } from "./LayoutSetting";
 import { WordPaste } from "./word-paste";
+import { JoinLists } from "./lists";
 import { Indent, LineSpacing, ParenthesisList } from "./writing";
 import { EDITOR_MENU } from "./menu";
 import { NotePane } from "./NotePane";
@@ -52,7 +53,7 @@ export const notesPlugin: Plugin = {
     { title: "The browser's own menu, with spelling suggestions", keys: "Shift+Right click" },
   ],
   contentExtensions: () => [TaskList, TaskItem.configure({ nested: true }), Indent, LineSpacing],
-  editorExtensions: () => [ParenthesisList, WordPaste],
+  editorExtensions: () => [ParenthesisList, WordPaste, JoinLists],
   kinds: [{ kind: "note", label: "New note", icon: "note" }],
   pageViews: [{ kind: "note", component: NotePane }],
   contextMenu: [

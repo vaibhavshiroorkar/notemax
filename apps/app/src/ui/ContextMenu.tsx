@@ -6,6 +6,7 @@ import { registry } from "@/plugins/registry";
 import { formatShortcut } from "@/plugins/shortcuts";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
 import { Icon } from "./Icon";
+import { fromTouch, touchOnly } from "./longPress";
 import "./context-menu.css";
 
 interface Open {
@@ -52,6 +53,17 @@ const expand = (items: ContextMenuItem[], target: ContextTarget, app: AppContext
 /** The menu for a page, from its row in a list, its dot in the graph and so on. */
 export const pageMenu = (node: TreeNode | undefined) => contextMenuHandler(() => (node ? { type: "page", node } : null));
 
+/**
+ * For rows that drag and have a ... button: on a touch-only screen a long
+ * press starts the drag, so it must not also open the menu, nor the menu of
+ * the list around the row.
+ */
+export const dragRowMenu = (handler: (event: ReactMouseEvent) => void) => (event: ReactMouseEvent) => {
+  if (!touchOnly()) return handler(event);
+  event.preventDefault();
+  event.stopPropagation();
+};
+
 // Groups the built-in plugins use, top to bottom, so a menu reads the same
 // whichever plugin added what. Other groups follow in the order they appear.
 const GROUPS = ["open", "clipboard", "create", "edit", "duplicate", "format", "block", "insert", "link", "image", "tags", "layout", "share", "select", "danger"];
@@ -96,12 +108,18 @@ export function ContextMenuHost({ app }: { app: AppContext }) {
     const onScroll = (event: Event) => {
       if (!(event.target as Element).closest?.(".context-menu")) close();
     };
+    // When a finger opened the menu it has no focus, so Esc is heard here.
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !(event.target as Element).closest?.(".context-menu")) close();
+    };
     document.addEventListener("pointerdown", onPointer, true);
+    document.addEventListener("keydown", onKey);
     window.addEventListener("blur", close);
     window.addEventListener("resize", close);
     document.addEventListener("scroll", onScroll, true);
     return () => {
       document.removeEventListener("pointerdown", onPointer, true);
+      document.removeEventListener("keydown", onKey);
       window.removeEventListener("blur", close);
       window.removeEventListener("resize", close);
       document.removeEventListener("scroll", onScroll, true);
@@ -157,8 +175,10 @@ function MenuList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Not when a finger opened it: taking focus from a note puts the phone's
+  // keyboard away, which shifts the page and closes the menu again.
   useEffect(() => {
-    if (place.ready) (ref.current?.querySelector<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])') ?? ref.current)?.focus();
+    if (place.ready && !fromTouch()) (ref.current?.querySelector<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])') ?? ref.current)?.focus();
   }, [place.ready]);
 
   const buttons = () => [...(ref.current?.querySelectorAll<HTMLElement>(':scope > [role="menuitem"]:not([aria-disabled="true"])') ?? [])];
@@ -283,7 +303,7 @@ function MenuButton({
       onMouseDown={(event) => event.preventDefault()}
       onClick={(event) => onActivate(event.currentTarget, event.detail === 0)}
       onPointerEnter={(event) => {
-        if (!disabled) event.currentTarget.focus();
+        if (!disabled && event.pointerType !== "touch") event.currentTarget.focus();
         onHover(event.currentTarget);
       }}
     >
