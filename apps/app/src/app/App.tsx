@@ -163,8 +163,8 @@ export function App() {
   }, []);
 
   const select = useCallback(
-    (id: string, options?: { newTab?: boolean }) => {
-      openPage(id, options);
+    (id: string, where?: { newTab?: boolean; fromTrash?: boolean }) => {
+      openPage(id, { newTab: where?.newTab, options: where?.fromTrash ? { fromTrash: true } : undefined });
       clearOverlays();
     },
     [clearOverlays],
@@ -224,9 +224,11 @@ export function App() {
   }, []);
 
   // A new tab and a view, like the graph, have no page of the tree open.
+  // A page opened from the trash stays open to be looked at. One trashed while open moves on.
+  const lookingInTrash = (tree: Tree, id: string) => visit?.options?.fromTrash === true && tree.byId.has(id) && tree.byId.get(id)!.kind !== "folder";
   const activeId =
     workspace.tree && selectedId
-      ? isPage(workspace.tree, selectedId)
+      ? isPage(workspace.tree, selectedId) || lookingInTrash(workspace.tree, selectedId)
         ? selectedId
         : // The selected page was trashed or is gone: show the last page that is still around.
           // Read without watching: the list changes on every page opened, and only matters here when the tree changes.

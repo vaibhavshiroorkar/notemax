@@ -359,8 +359,12 @@
 .trash-box-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   padding: 2px 4px 8px;
+}
+
+.trash-box-header strong {
+  margin-right: auto;
 }
 
 .trash-box .link-button.danger {

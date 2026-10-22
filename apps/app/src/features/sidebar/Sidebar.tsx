@@ -223,7 +223,7 @@ export function Sidebar({ app }: { app: AppContext }) {
                 <Item app={app} />
               </Safe>
             ))}
-            <TrashBox tree={tree} doc={doc} />
+            <TrashBox tree={tree} doc={doc} onOpenAll={() => app.openView("trash")} />
             <button className="footer-icon footer-button" aria-label="Settings" onClick={() => app.openSettings()} title={settingsTitle}>
               <Icon name="gear" />
             </button>
@@ -234,7 +234,7 @@ export function Sidebar({ app }: { app: AppContext }) {
               <Icon name="gear" />
               <span>Settings</span>
             </button>
-            <TrashBox tree={tree} doc={doc} />
+            <TrashBox tree={tree} doc={doc} onOpenAll={() => app.openView("trash")} />
           </>
         )}
       </footer>

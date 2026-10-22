@@ -45,7 +45,7 @@
 
 **Keep it safe**
 - A status bar that always says whether your work is saved.
-- Trash with Undo, and downloads as text, Markdown, HTML, Word, PDF, EPUB, PNG or SVG.
+- Undo for page changes, a trash you can search and restore from, and downloads as text, Markdown, HTML, Word, PDF, EPUB, PNG or SVG.
 - Sync between devices through Google Drive, end-to-end encrypted.
 
 **Make it yours**
@@ -97,7 +97,7 @@ See [docs/architecture.md](docs/architecture.md) for the layout of the code and 
 
 ## Roadmap
 
-- A better trash, and version history for long-term backups
+- Version history for long-term backups
 - A smoother editor: Word-like formatting, faithful copy and paste from Word
 - Version history, and plain Markdown files kept next to the database
 - Live sync between open devices, then shared pages

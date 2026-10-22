@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.27.0 (2026-10-22)
+
+- The trash opens as a page of its own ("Open as a page" in the trash box, or Ctrl+K). It shows where each page was and when it was deleted, and has search, sorting, and Restore or Delete forever for several pages at once.
+- Open a page from the trash to read it before restoring. A line under its title says it is in the trash, with Restore.
+- Pages can leave the trash by themselves after 7, 30 or 90 days. By default they stay until you empty it.
+
 ## 0.26.0 (2026-10-22)
 
 - When more tabs are open than fit, the rest fold into a "+N" button. Its menu switches to a hidden tab or closes it, and the open tab always stays in view.

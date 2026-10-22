@@ -105,8 +105,11 @@ export interface AppContext {
   hub: LinkHub;
   /** The page of the tree that is open, or null for a new tab or a view. */
   activeId: string | null;
-  /** Opens a page in this tab, or in a new tab next to it. */
-  open(id: string, where?: { newTab?: boolean }): void;
+  /**
+   * Opens a page in this tab, or in a new tab next to it. A page in the trash
+   * opens only with `fromTrash`, to look at it; otherwise the tab moves on.
+   */
+  open(id: string, where?: { newTab?: boolean; fromTrash?: boolean }): void;
   /** Opens a plugin's view, like the graph, as a page. */
   openView(id: string, options?: Record<string, unknown>, where?: { newTab?: boolean }): void;
   /** Adds a note, book or folder at the top level and opens it. */
