@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.52.0 (2026-10-23)
+
+- Settings has a new look: a wider window, categories under headings (General, Writing, Account and sync, Your data, Advanced), and real on/off switches.
+- On a phone, Settings opens on the list of categories. Tap one to open it, and Settings at the top goes back. Search shows its results right under the search box.
+
 ## 0.51.0 (2026-10-23)
 
 - Special pages: give any page a job from its menu (Use as) or from Settings, Special pages. Daily notes can go into any folder, book or note, a note can be the template every new day starts from, and a start page can be where each new window opens.

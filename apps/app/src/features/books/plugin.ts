@@ -26,7 +26,7 @@ export const booksPlugin: Plugin = {
   pageCorner: [{ id: "books.words", kinds: ["book", "note"], component: BookWordCount }],
   pageFooter: [{ id: "books.steps", kinds: ["note"], component: ChapterFooter }],
   pageSettings: [{ id: "books.subtopics", kinds: ["note"], component: SubtopicSetting }],
-  settings: [{ id: "books", order: 30, title: "Books", icon: "book", keywords: ["chapters", "writing"] }],
+  settings: [{ id: "books", order: 30, group: "Writing", title: "Books", icon: "book", keywords: ["chapters", "writing"] }],
   options: [
     {
       id: "wordCount",

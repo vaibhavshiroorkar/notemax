@@ -18,7 +18,7 @@ export const notesPlugin: Plugin = {
   description: "Writing pages",
   required: true,
   pageSettings: [{ id: "notes.layout", kinds: ["note"], component: LayoutSetting }],
-  settings: [{ id: "editor", order: 20, title: "Editor", icon: "text", keywords: ["writing", "typing", "notes", "pages", "paper", "layout"], component: EditorSection }],
+  settings: [{ id: "editor", order: 20, group: "Writing", title: "Editor", icon: "text", keywords: ["writing", "typing", "notes", "pages", "paper", "layout"], component: EditorSection }],
   options: [
     { id: "spellcheck", label: "Check spelling while typing", section: "editor", quick: true, default: true },
     {

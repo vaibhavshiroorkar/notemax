@@ -9,9 +9,9 @@ export const settingsPlugin: Plugin = {
   description: "This window",
   required: true,
   settings: [
-    { id: "basics", order: 0, title: "Basics", icon: "settings", keywords: ["common", "main", "general"], component: BasicsSection },
-    { id: "plugins", order: 80, title: "Plugins", icon: "plug", component: PluginOptionsSection },
-    { id: "storage", order: 90, title: "Storage", icon: "storage", keywords: ["database", "disk", "data"], component: StorageSection },
+    { id: "basics", order: 0, group: "General", title: "Basics", icon: "settings", keywords: ["common", "main", "general"], component: BasicsSection },
+    { id: "plugins", order: 80, group: "Advanced", title: "Plugins", icon: "plug", component: PluginOptionsSection },
+    { id: "storage", order: 65, group: "Your data", title: "Storage", icon: "storage", keywords: ["database", "disk", "data"], component: StorageSection },
   ],
   commands: [
     { id: "settings.open", title: "Open settings", keywords: ["preferences", "options"], shortcut: "Mod+,", run: (app) => app.openSettings() },

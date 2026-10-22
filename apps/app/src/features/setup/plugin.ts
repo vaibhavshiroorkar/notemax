@@ -10,6 +10,6 @@ export const setupPlugin: Plugin = {
   required: true,
   // Under the workspace switcher, above the pages.
   sidebarSections: [{ id: "setup.card", order: -25, component: SetupCard }],
-  settings: [{ id: "setup", order: 5, title: "Setup", icon: "settings", keywords: ["offline", "online", "account", "start", "home", "first"], component: SetupSection }],
+  settings: [{ id: "setup", order: 5, group: "General", title: "Setup", icon: "settings", keywords: ["offline", "online", "account", "start", "home", "first"], component: SetupSection }],
   commands: [{ id: "setup.open", title: "Setup: offline or online", keywords: ["offline", "online", "start"], run: (app) => app.openSettings("setup") }],
 };

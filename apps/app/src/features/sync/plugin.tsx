@@ -50,7 +50,7 @@ export const syncPlugin: Plugin = {
   name: "Sync",
   online: true,
   description: "Your notes on every device, through your own Google Drive",
-  settings: [{ id: "sync", order: 45, title: "Sync", icon: "upload", keywords: ["google drive", "devices", "backup", "passphrase", "phone"], when: () => accountsEnabled, component: SyncSection }],
+  settings: [{ id: "sync", order: 45, group: "Account and sync", title: "Sync", icon: "upload", keywords: ["google drive", "devices", "backup", "passphrase", "phone"], when: () => accountsEnabled, component: SyncSection }],
   statusItems: [
     { id: "sync.status", component: SyncStatus },
     { id: "sync.notice", component: RemoteEditNotice },

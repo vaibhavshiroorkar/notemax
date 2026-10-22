@@ -40,7 +40,7 @@ export const appearancePlugin: Plugin = {
       default: true,
     },
   ],
-  settings: [{ id: "appearance", order: 10, title: "Appearance", icon: "contrast", keywords: ["theme", "dark", "light", "color", "colour", "scheme", "look", "font"], component: AppearanceSection }],
+  settings: [{ id: "appearance", order: 10, group: "General", title: "Appearance", icon: "contrast", keywords: ["theme", "dark", "light", "color", "colour", "scheme", "look", "font"], component: AppearanceSection }],
   commands: [
     themeCommand("light", "Use the light theme"),
     themeCommand("dark", "Use the dark theme"),

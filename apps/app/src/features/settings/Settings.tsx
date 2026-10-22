@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useLayoutEffect, useRef, useState } from "react";
 import { setOption, useOption } from "@/plugins/options";
 import { registry } from "@/plugins/registry";
 import type { Plugin, PluginOption, SettingsContext, SettingsSection } from "@/plugins/types";
@@ -15,7 +15,7 @@ export function OptionRow({ plugin, option }: { plugin: Plugin; option: PluginOp
         {option.label}
         {option.description && <span className="settings-description">{option.description}</span>}
       </span>
-      <input type="checkbox" checked={on} onChange={(event) => setOption(plugin.id, option.id, event.target.checked)} />
+      <input type="checkbox" role="switch" checked={on} onChange={(event) => setOption(plugin.id, option.id, event.target.checked)} />
     </label>
   );
 }
@@ -24,7 +24,10 @@ function SectionBody({ section, ctx }: { section: SettingsSection; ctx: Settings
   const Body = section.component;
   return (
     <section className="settings-section" data-section={section.id}>
-      <h3>{section.title}</h3>
+      <h3>
+        <Icon name={section.icon} />
+        {section.title}
+      </h3>
       {Body && <Body {...ctx} />}
       {registry
         .options()
@@ -36,6 +39,15 @@ function SectionBody({ section, ctx }: { section: SettingsSection; ctx: Settings
   );
 }
 
+const groupOf = (section: SettingsSection) => section.group ?? "More";
+
+/** Sections by order, with each group kept together where its first section falls. */
+function grouped(sections: SettingsSection[]): SettingsSection[] {
+  const firstAt = new Map<string, number>();
+  sections.forEach((section, i) => firstAt.has(groupOf(section)) || firstAt.set(groupOf(section), i));
+  return [...sections].sort((a, b) => firstAt.get(groupOf(a))! - firstAt.get(groupOf(b))!);
+}
+
 // Settings opens where it was left, until the app restarts.
 let lastSection: string | undefined;
 
@@ -43,15 +55,18 @@ const words = (query: string) => query.toLowerCase().split(/\s+/).filter(Boolean
 const matches = (text: string, query: string[]) => query.every((word) => text.toLowerCase().includes(word));
 
 /**
- * The Settings dialog: categories on the left, one shown at a time. Searching
- * shows every category with a match and hides the settings that do not match.
- * It reads the rows' own text, so a plugin's settings are searchable with no
- * extra work.
+ * The Settings dialog: categories on the left in groups, one shown at a time.
+ * Searching shows every category with a match and hides the settings that do
+ * not match. It reads the rows' own text, so a plugin's settings are
+ * searchable with no extra work. A phone shows the list of categories first,
+ * then one category with a way back.
  */
 export function Settings({ onClose, initialSection, ...ctx }: SettingsContext & { onClose(): void; initialSection?: string }) {
-  const sections = registry.settings();
+  const sections = grouped(registry.settings());
   const [current, setCurrent] = useState(() => sections.find((s) => s.id === (initialSection ?? lastSection))?.id ?? sections[0]?.id);
   lastSection = current;
+  // Phones only: the list of categories, or one category.
+  const [pane, setPane] = useState<"list" | "section">(() => (initialSection ? "section" : "list"));
   const [query, setQuery] = useState("");
   const [found, setFound] = useState(true);
   const content = useRef<HTMLDivElement>(null);
@@ -84,38 +99,55 @@ export function Settings({ onClose, initialSection, ...ctx }: SettingsContext & 
   });
 
   const shown = searching ? sections : sections.filter((s) => s.id === current);
+  const currentTitle = sections.find((s) => s.id === current)?.title ?? "Settings";
 
   return (
     <Dialog label="Settings" onClose={onClose} className="settings">
-      <header className="settings-header">
-        <h2 className="dialog-title">Settings</h2>
-        <button className="icon-button" aria-label="Close settings" onClick={onClose}>
-          <Icon name="close" />
-        </button>
-      </header>
-      <div className="settings-layout">
+      <div className="settings-layout" data-pane={searching ? "search" : pane}>
         <nav className="settings-nav" aria-label="Settings categories">
+          <header className="settings-header">
+            <h2 className="dialog-title">Settings</h2>
+            <button className="icon-button settings-close" aria-label="Close settings" onClick={onClose}>
+              <Icon name="close" />
+            </button>
+          </header>
           <label className="settings-search">
             <Icon name="search" />
             <input type="search" placeholder="Search settings" aria-label="Search settings" data-autofocus value={query} onChange={(event) => setQuery(event.target.value)} />
           </label>
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              className="settings-nav-item"
-              aria-current={!searching && section.id === current ? "page" : undefined}
-              onClick={() => {
-                setQuery("");
-                setCurrent(section.id);
-              }}
-            >
-              <Icon name={section.icon} />
-              <span>{section.title}</span>
-            </button>
-          ))}
+          <div className="settings-nav-list">
+            {sections.map((section, i) => (
+              <Fragment key={section.id}>
+                {(i === 0 || groupOf(section) !== groupOf(sections[i - 1])) && <p className="settings-nav-group">{groupOf(section)}</p>}
+                <button
+                  className="settings-nav-item"
+                  aria-current={!searching && section.id === current ? "page" : undefined}
+                  onClick={() => {
+                    setQuery("");
+                    setCurrent(section.id);
+                    setPane("section");
+                  }}
+                >
+                  <Icon name={section.icon} />
+                  <span>{section.title}</span>
+                  <Icon name="chevron-right" />
+                </button>
+              </Fragment>
+            ))}
+          </div>
           <p className="settings-version">Notemax {APP_VERSION}</p>
         </nav>
         <div className="settings-content" ref={content}>
+          <header className="settings-content-top">
+            <button className="settings-back" onClick={() => (searching ? setQuery("") : setPane("list"))}>
+              <Icon name="chevron-left" />
+              {searching ? "Clear search" : "Settings"}
+            </button>
+            <span className="settings-content-title">{searching ? "Search" : currentTitle}</span>
+            <button className="icon-button" aria-label="Close settings" onClick={onClose}>
+              <Icon name="close" />
+            </button>
+          </header>
           {shown.map((section) => (
             <SectionBody key={section.id} section={section} ctx={ctx} />
           ))}

@@ -51,7 +51,7 @@ export const downloadsPlugin: Plugin = {
   name: "Downloads",
   description: "Save pages as text, Markdown, Word, PDF, EPUB and more, or everything at once",
   exporters: PAGE_FORMATS,
-  settings: [{ id: "downloads", order: 60, title: "Downloads", icon: "download", keywords: ["export", "save", "markdown", "pdf", "word", "epub", "backup"], component: DownloadsSection }],
+  settings: [{ id: "downloads", order: 60, group: "Your data", title: "Downloads", icon: "download", keywords: ["export", "save", "markdown", "pdf", "word", "epub", "backup"], component: DownloadsSection }],
   options: [
     {
       id: "askWhere",

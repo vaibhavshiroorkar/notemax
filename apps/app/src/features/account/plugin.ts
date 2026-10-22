@@ -6,5 +6,5 @@ export const accountPlugin: Plugin = {
   id: "account",
   name: "Account",
   description: "Sign in to back up and, later, share. Optional",
-  settings: [{ id: "account", order: 40, title: "Account", icon: "user", keywords: ["google", "sign in"], when: () => accountsEnabled, component: AccountSection }],
+  settings: [{ id: "account", order: 40, group: "Account and sync", title: "Account", icon: "user", keywords: ["google", "sign in"], when: () => accountsEnabled, component: AccountSection }],
 };

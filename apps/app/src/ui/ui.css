@@ -284,7 +284,6 @@ kbd {
     border-radius: 0;
   }
 
-  .dialog.settings .dialog-body,
   .dialog.shortcuts-help .dialog-body {
     padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
   }
@@ -356,4 +355,51 @@ kbd {
   color: var(--text);
   font: inherit;
   font-size: 14px;
+}
+
+/* An on/off setting: a checkbox drawn as a sliding switch. */
+.settings-row input[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--muted) 45%, transparent);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.settings-row input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s;
+}
+
+.settings-row input[type="checkbox"]:checked {
+  background: var(--accent);
+}
+
+.settings-row input[type="checkbox"]:checked::before {
+  transform: translateX(14px);
+}
+
+.settings-row input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-row input[type="checkbox"],
+  .settings-row input[type="checkbox"]::before {
+    transition: none;
+  }
 }

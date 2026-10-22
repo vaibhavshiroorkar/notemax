@@ -42,7 +42,7 @@ export const historyPlugin: Plugin = {
   description: "Earlier versions of each note, to look at or restore",
   sidePanels: [{ id: "history.versions", title: "Versions", order: 40, when: onNote, component: VersionsPanel }],
   overlays: [{ id: "history.preview", component: VersionPreview }],
-  settings: [{ id: "history", order: 52, title: "History", icon: "history", keywords: ["versions", "backup", "restore", "undo", "snapshot"], component: HistorySection }],
+  settings: [{ id: "history", order: 52, group: "Your data", title: "History", icon: "history", keywords: ["versions", "backup", "restore", "undo", "snapshot"], component: HistorySection }],
   commands: [
     {
       id: "history.show",
