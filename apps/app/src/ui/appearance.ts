@@ -1,9 +1,10 @@
 import { useSyncExternalStore } from "react";
+import { loadAsset } from "@notemax/core";
+import { getSharedStore } from "@/platform/platform";
 import { savedStore } from "@/platform/store";
 
 export type Theme = "system" | "light" | "dark";
 export type Font = "sans" | "serif" | "mono";
-export type PageWidth = "narrow" | "normal" | "wide" | "full";
 
 /** Each accent has a darker shade for light backgrounds and a lighter one for dark. */
 export const ACCENTS = {
@@ -23,13 +24,27 @@ export const FONTS: Record<Font, { label: string; stack: string }> = {
   mono: { label: "Mono", stack: 'ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace' },
 };
 
-export const PAGE_WIDTHS: Record<PageWidth, { label: string; css: string }> = {
-  narrow: { label: "Narrow", css: "600px" },
-  normal: { label: "Normal", css: "720px" },
-  wide: { label: "Wide", css: "900px" },
-  full: { label: "Full", css: "none" },
-};
-export const PAGE_WIDTH_ORDER: PageWidth[] = ["narrow", "normal", "wide", "full"];
+/** The page's width in pixels. 0 means as wide as the window. */
+export const PAGE_WIDTH = { min: 480, max: 1600, step: 20, normal: 720 };
+// Names the width was saved as before it was a number.
+const OLD_WIDTHS: Record<string, number> = { narrow: 600, normal: 720, wide: 900, full: 0 };
+
+/** The family name a loaded font file is known by. */
+const FILE_FONT = "Notemax Custom";
+
+/** The CSS font list for a font setting: a preset, "custom:<family>" for one on this device, or "file". */
+export function fontStack(value: string): string {
+  if (value in FONTS) return FONTS[value as Font].stack;
+  const family = value === "file" ? FILE_FONT : value.slice("custom:".length).replace(/["\\]/g, "");
+  return `"${family}", system-ui, sans-serif`;
+}
+
+/** What to call a font setting in a list. */
+export function fontLabel(value: string): string {
+  if (value in FONTS) return FONTS[value as Font].label;
+  if (value === "file") return fontFile.get()?.name ?? "Font file";
+  return value.slice("custom:".length);
+}
 
 export const TEXT_SIZE = { min: 14, max: 22, normal: 16 };
 // Defined before the stores below, which call it while reading saved values.
@@ -56,8 +71,27 @@ export const accent = savedStore<string>("accent", "blue", {
   },
   encode: (value) => value,
 });
-export const font = savedStore<Font>("font", "sans", oneOf(Object.keys(FONTS) as Font[]));
-export const pageWidth = savedStore<PageWidth>("pageWidth", "normal", oneOf(PAGE_WIDTH_ORDER));
+/** A preset from FONTS, "custom:<family>" for a font installed on this device, or "file" for one loaded from a file. */
+export const font = savedStore<string>("font", "sans", {
+  decode(raw) {
+    if (raw in FONTS || raw === "file" || /^custom:.+/.test(raw)) return raw;
+    throw new Error(`unknown font ${raw}`);
+  },
+  encode: (value) => value,
+});
+/** The loaded font file: its name, and the picture-style asset that keeps its bytes. */
+export const fontFile = savedStore<{ name: string; asset: string } | null>("fontFile", null);
+export const clampPageWidth = (width: number) => (width === 0 ? 0 : Math.min(PAGE_WIDTH.max, Math.max(PAGE_WIDTH.min, Math.round(width))));
+// Plain text, like the names it was saved as before it became a number.
+export const pageWidth = savedStore<number>("pageWidth", PAGE_WIDTH.normal, {
+  decode(raw) {
+    if (raw in OLD_WIDTHS) return OLD_WIDTHS[raw];
+    const width = Number(raw);
+    if (!Number.isFinite(width)) throw new Error(`bad page width ${raw}`);
+    return clampPageWidth(width);
+  },
+  encode: String,
+});
 export const textSize = savedStore<number>("textSize", TEXT_SIZE.normal, {
   decode(raw) {
     const size = Number(raw);
@@ -83,9 +117,22 @@ function apply() {
   const colors = accentColors(accent.get());
   root.style.setProperty("--accent-light", colors.light);
   root.style.setProperty("--accent-dark", colors.dark);
-  root.style.setProperty("--note-font", FONTS[font.get()].stack);
+  root.style.setProperty("--note-font", fontStack(font.get()));
   root.style.setProperty("--note-size", `${textSize.get()}px`);
-  root.style.setProperty("--page-width", PAGE_WIDTHS[pageWidth.get()].css);
+  root.style.setProperty("--page-width", pageWidth.get() ? `${pageWidth.get()}px` : "none");
+  if (font.get() === "file") void loadFontFile();
+}
+
+let loadedFont: string | null = null;
+/** Makes a loaded font file usable, once per file. */
+async function loadFontFile() {
+  const file = fontFile.get();
+  if (!file || loadedFont === file.asset) return;
+  const asset = await loadAsset(await getSharedStore(), file.asset);
+  if (!asset) return;
+  const face = await new FontFace(FILE_FONT, asset.bytes as BufferSource).load();
+  document.fonts.add(face);
+  loadedFont = file.asset;
 }
 
 /**
@@ -95,7 +142,7 @@ function apply() {
  */
 export function initAppearance() {
   apply();
-  for (const store of [theme, accent, font, pageWidth, textSize]) store.subscribe(apply);
+  for (const store of [theme, accent, font, fontFile, pageWidth, textSize]) store.subscribe(apply);
 }
 
 const darkQuery = () => window.matchMedia("(prefers-color-scheme: dark)");

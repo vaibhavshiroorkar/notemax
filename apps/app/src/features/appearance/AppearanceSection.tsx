@@ -1,18 +1,8 @@
-import type { CSSProperties } from "react";
-import {
-  ACCENTS,
-  FONTS,
-  PAGE_WIDTHS,
-  PAGE_WIDTH_ORDER,
-  accent,
-  font,
-  pageWidth,
-  theme,
-  type AccentName,
-  type Font,
-  type Theme,
-} from "@/ui/appearance";
-import { TextSizeSlider } from "@/features/settings/BasicRows";
+import { useId, type CSSProperties } from "react";
+import { ACCENTS, PAGE_WIDTH, accent, clampPageWidth, pageWidth, theme, type AccentName, type Theme } from "@/ui/appearance";
+import { FontRow, TextSizeSlider } from "@/features/settings/BasicRows";
+import { isDesktop } from "@/platform/platform";
+import { ZOOM, zoom } from "./zoom";
 import { Segmented } from "@/ui/Segmented";
 import "./appearance.css";
 
@@ -57,25 +47,71 @@ export function AppearanceSection() {
           </label>
         </div>
       </div>
-      <div className="settings-row">
-        <span>Font</span>
-        <Segmented
-          label="Font"
-          value={font.use()}
-          options={(Object.keys(FONTS) as Font[]).map((value) => ({ value, label: FONTS[value].label, style: { fontFamily: FONTS[value].stack } }))}
-          onChange={font.set}
-        />
-      </div>
+      <FontRow />
       <TextSizeSlider />
-      <div className="settings-row">
-        <span>Page width</span>
-        <Segmented
-          label="Page width"
-          value={pageWidth.use()}
-          options={PAGE_WIDTH_ORDER.map((value) => ({ value, label: PAGE_WIDTHS[value].label }))}
-          onChange={pageWidth.set}
-        />
-      </div>
+      <PageWidthRow />
+      <ZoomRow />
     </>
+  );
+}
+
+/** A slider in pixels, and a switch for the whole window's width. */
+function PageWidthRow() {
+  const width = pageWidth.use();
+  const id = useId();
+  const full = width === 0;
+  return (
+    <div className="settings-row">
+      <label htmlFor={id}>Page width</label>
+      <span className="text-size">
+        <input
+          id={id}
+          type="range"
+          min={PAGE_WIDTH.min}
+          max={PAGE_WIDTH.max}
+          step={PAGE_WIDTH.step}
+          disabled={full}
+          value={full ? PAGE_WIDTH.max : width}
+          onChange={(event) => pageWidth.set(clampPageWidth(Number(event.target.value)))}
+        />
+        <output htmlFor={id}>{full ? "Full" : `${width} px`}</output>
+        <label className="page-full">
+          <input type="checkbox" checked={full} onChange={(event) => pageWidth.set(event.target.checked ? 0 : PAGE_WIDTH.normal)} />
+          Full
+        </label>
+      </span>
+    </div>
+  );
+}
+
+/** The whole app's size. The desktop app's own; a browser has its zoom already. */
+function ZoomRow() {
+  const percent = zoom.use();
+  const id = useId();
+  if (!isDesktop)
+    return (
+      <div className="settings-row">
+        <span>
+          Zoom
+          <span className="settings-description">Use your browser's zoom: Ctrl and the mouse wheel. Text size above changes only the note's text.</span>
+        </span>
+      </div>
+    );
+  return (
+    <div className="settings-row">
+      <label htmlFor={id}>
+        Zoom
+        <span className="settings-description">Everything, not just the text. Ctrl and the mouse wheel change it too.</span>
+      </label>
+      <span className="text-size">
+        <input id={id} type="range" min={ZOOM.min} max={ZOOM.max} step={ZOOM.step} value={percent} onChange={(event) => zoom.set(Number(event.target.value))} />
+        <output htmlFor={id}>{percent}%</output>
+        {percent !== ZOOM.normal && (
+          <button className="link-button" onClick={() => zoom.set(ZOOM.normal)}>
+            Reset
+          </button>
+        )}
+      </span>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { registry } from "@/plugins/registry";
-import { FONTS, TEXT_SIZE, clampTextSize, font, textSize, theme, type Font, type Theme } from "@/ui/appearance";
+import { FontPicker } from "@/features/appearance/FontPicker";
+import { TEXT_SIZE, clampTextSize, textSize, theme, type Theme } from "@/ui/appearance";
 import { Segmented } from "@/ui/Segmented";
 import { OptionRow } from "./Settings";
 
@@ -26,12 +27,7 @@ export function FontRow() {
   return (
     <div className="settings-row">
       <span>Font</span>
-      <Segmented
-        label="Font"
-        value={font.use()}
-        options={(Object.keys(FONTS) as Font[]).map((value) => ({ value, label: FONTS[value].label, style: { fontFamily: FONTS[value].stack } }))}
-        onChange={font.set}
-      />
+      <FontPicker />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { TreeNode } from "@notemax/core";
 import type { AppContext, ContextMenuItem, ContextTarget, Plugin } from "@/plugins/types";
 import { openContextMenu } from "@/ui/ContextMenu";
+import { SearchSelect } from "@/ui/SearchSelect";
 import { defaultFor, defaultFormat, download, downloadEverything, formatsFor } from "./download";
 import { PAGE_FORMATS } from "./formats";
 
@@ -33,13 +34,13 @@ function DownloadsSection() {
           Default format
           <span className="settings-description">Used by Ctrl+Shift+E. Pages that cannot be saved this way use their first format.</span>
         </span>
-        <select className="settings-select" value={format} onChange={(event) => defaultFormat.set(event.target.value)}>
-          {all.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.label}
-            </option>
-          ))}
-        </select>
+        <SearchSelect
+          label="Default format"
+          value={format}
+          shown={{ label: all.find((f) => f.id === format)?.label ?? format }}
+          choices={all.map((f) => ({ value: f.id, label: f.label }))}
+          onChange={defaultFormat.set}
+        />
       </label>
     </>
   );

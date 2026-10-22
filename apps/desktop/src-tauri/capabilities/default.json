@@ -1,12 +1,13 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "What the app windows may do: core features, the local notes database, and letting the capture box hide or move itself.",
+  "description": "What the app windows may do: core features, the local notes database, letting the capture box hide or move itself, and zooming the app.",
   "windows": ["main", "capture"],
   "permissions": [
     "core:default",
     "core:window:allow-hide",
     "core:window:allow-start-dragging",
+    "core:webview:allow-set-webview-zoom",
     "sql:default",
     "sql:allow-execute"
   ]

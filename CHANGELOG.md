@@ -3,6 +3,15 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.37.0 (2026-10-22)
+
+- A board's own tools no longer fade; they are the tools in hand.
+- Open an .excalidraw file as a board: drop it on the app, right-click empty sidebar space, or Ctrl+K "Open an Excalidraw file as a board".
+- Fonts: a searchable list with the presets, any font installed on your device by name (or listed, where the browser allows), and a font file you load.
+- Page width is a slider in pixels, with a Full switch. Widths saved before still load.
+- Zoom in the desktop app: Ctrl and the mouse wheel, or a slider in Appearance, separate from text size. In a browser, its own zoom does this.
+- The default download format is a searchable list too.
+
 ## 0.36.0 (2026-10-22)
 
 - Boards have tools like Miro's, in a row at the bottom: sticky notes in six colors, frames, and templates for Kanban, a retrospective, a brainstorm and SWOT.

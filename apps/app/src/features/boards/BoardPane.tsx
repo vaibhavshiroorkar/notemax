@@ -1,7 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
 import { renameNode, touchNode } from "@notemax/core";
 import { useLocalDoc } from "@/data/useLocalDoc";
-import { useOption } from "@/plugins/options";
 import { PageHeader } from "@/plugins/PageHeader";
 import type { PageProps } from "@/plugins/types";
 import { useShownTheme } from "@/ui/appearance";
@@ -13,13 +12,13 @@ const BoardCanvas = lazy(() => import("./BoardCanvas"));
 export function BoardPane({ node, app, workspaceDoc, onStatus, onReady }: PageProps) {
   const { local, status, openError } = useLocalDoc(node.id);
   const theme = useShownTheme();
-  const calm = useOption("appearance", "fadeControls");
   useEffect(() => onStatus(status), [status, onStatus]);
 
   if (openError) return <p className="error">Could not open this board: {openError}</p>;
 
+  // Excalidraw's own controls never fade, unlike the app's: on a board they are the tools in hand.
   return (
-    <div className="board" data-calm={calm || undefined}>
+    <div className="board">
       <header className="board-header">
         <input
           className="board-title"

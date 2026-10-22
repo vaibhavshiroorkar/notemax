@@ -44,26 +44,6 @@
   color: var(--muted);
 }
 
-/* Fade the board's toolbars until the pointer or keyboard is on them, so the
-   drawing comes first. Settings, Appearance turns this off. */
-.board[data-calm] .excalidraw .Island,
-.board[data-calm] .excalidraw .main-menu-trigger,
-.board[data-calm] .excalidraw .help-icon,
-.board[data-calm] .excalidraw .undo-redo-buttons,
-.board[data-calm] .excalidraw .zoom-actions {
-  opacity: 0.3;
-  transition: opacity 0.2s;
-}
-
-.board[data-calm] .excalidraw .Island:hover,
-.board[data-calm] .excalidraw .Island:focus-within,
-.board[data-calm] .excalidraw .main-menu-trigger:hover,
-.board[data-calm] .excalidraw .help-icon:hover,
-.board[data-calm] .excalidraw .undo-redo-buttons:hover,
-.board[data-calm] .excalidraw .zoom-actions:hover {
-  opacity: 1;
-}
-
 @media (max-width: 700px) {
   .board-header {
     padding: 52px 12px 6px;
