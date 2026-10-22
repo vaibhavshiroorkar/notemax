@@ -41,6 +41,7 @@ const paths = {
   "align-justify": "M2.5 4h11M2.5 8h11M2.5 12h11",
   indent: "M7 4h6.5M7 8h6.5M7 12h6.5M2.5 6l2 2-2 2",
   outdent: "M7 4h6.5M7 8h6.5M7 12h6.5M4.5 6l-2 2 2 2",
+  mic: "M6 3.5a2 2 0 0 1 4 0v4a2 2 0 0 1-4 0zM3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2",
   home: "M2.5 7.5L8 3l5.5 4.5M4 6.5v7h3v-4h2v4h3v-7",
   more: "M3 8a1 1 0 1 0 2 0a1 1 0 1 0-2 0M7 8a1 1 0 1 0 2 0a1 1 0 1 0-2 0M11 8a1 1 0 1 0 2 0a1 1 0 1 0-2 0",
   heading: "M4 3v10M11 3v10M4 8h7",

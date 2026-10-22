@@ -1,0 +1,27 @@
+.voice-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--danger, #e03131);
+  font-size: 12px;
+}
+
+.voice-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: voice-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes voice-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-dot {
+    animation: none;
+  }
+}

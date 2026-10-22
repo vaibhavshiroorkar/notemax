@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Editor } from "@tiptap/react";
+import { canListen, listening, startVoice, stopVoice } from "@/features/voice/voice";
+import { Icon } from "@/ui/Icon";
 import "./keyboard-bar.css";
 
 // Phones have no shortcuts and no right click for formatting, so while the
@@ -31,6 +33,7 @@ function listType(editor: Editor) {
 
 export function KeyboardBar({ editor }: { editor: Editor }) {
   const [focused, setFocused] = useState(false);
+  const hearing = listening.use();
   // Redraw on every change of the selection, so the buttons show what is on.
   const [, setTick] = useState(0);
   const active = focused && touchScreen();
@@ -85,6 +88,7 @@ export function KeyboardBar({ editor }: { editor: Editor }) {
     <div className="keyboard-bar" role="toolbar" aria-label="Formatting" style={{ bottom: offset }}>
       {button("Undo", "\u21b6", () => run((c) => c.undo()), false, !editor.can().undo())}
       {button("Redo", "\u21b7", () => run((c) => c.redo()), false, !editor.can().redo())}
+      {canListen() && button(hearing ? "Stop voice typing" : "Voice typing", <Icon name="mic" />, () => (hearing ? stopVoice() : startVoice(editor)), hearing)}
       {button(level ? `Heading ${level}, tap for the next size` : "Make a heading", level ? `H${level}` : "H", () =>
         run((c) => (level === 3 ? c.setParagraph() : c.setHeading({ level: ((level ?? 0) + 1) as 1 | 2 | 3 }))),
         !!level,

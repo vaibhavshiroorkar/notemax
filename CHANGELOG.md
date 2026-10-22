@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.42.0 (2026-10-22)
+
+- Voice typing: Ctrl+Shift+. (or Ctrl+K, or / Voice typing, or the mic above a phone's keyboard) writes what you say at the cursor. Words show while they are being heard and settle as each phrase ends. It keeps listening through pauses until you stop it.
+- Works where the browser can turn speech into text: Chrome and Edge.
+
 ## 0.41.0 (2026-10-22)
 
 - Ctrl+K finds words inside notes, not just titles, with the words around each match. Every word you type must be there, in any order.

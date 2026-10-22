@@ -22,6 +22,7 @@ import { sharePlugin } from "@/features/share/plugin";
 import { markdownFilesPlugin } from "@/features/markdown-files/plugin";
 import { datesPlugin } from "@/features/dates/plugin";
 import { searchPlugin } from "@/features/search/plugin";
+import { voicePlugin } from "@/features/voice/plugin";
 import { historyPlugin } from "@/features/history/plugin";
 import { temporaryPlugin } from "@/features/temporary/plugin";
 import { trashPlugin } from "@/features/trash/plugin";
@@ -53,6 +54,8 @@ import { registerPlugin } from "./registry";
   tagsPlugin,
   slashPlugin,
   imagesPlugin,
+  // After Picture, so the / menu lists it there.
+  voicePlugin,
   linksPlugin,
   pageInfoPlugin,
   graphPlugin,
