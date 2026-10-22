@@ -3,7 +3,7 @@ import { createNode, renameNode } from "@notemax/core";
 import { PageHeader } from "@/plugins/PageHeader";
 import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
-import { bookWords, chaptersIn, readingOrder } from "./reading";
+import { allStops, bookWords, chaptersIn, readingOrder, subtopicsOf } from "./reading";
 import { useWordBackfill } from "./useWordBackfill";
 import "./books.css";
 
@@ -14,7 +14,7 @@ export function BookPane({ node, app, tree, workspaceDoc, onSelect, onStatus, on
   const entries = book ? readingOrder(book) : [];
   const chapters = book ? chaptersIn(book) : [];
   useWordBackfill(
-    chapters.filter((chapter) => chapter.kind === "note"),
+    (book ? allStops(book) : []).flatMap(({ item }) => (item.kind === "note" ? [item] : [])),
     workspaceDoc,
   );
 
@@ -46,7 +46,7 @@ export function BookPane({ node, app, tree, workspaceDoc, onSelect, onStatus, on
 
       {entries.length > 0 ? (
         <ol className="chapter-list" aria-label="Chapters">
-          {entries.map(({ item, depth, number }) => (
+          {entries.map(({ item, depth, number }) => [
             <li key={item.id} style={{ "--depth": depth } as CSSProperties}>
               <button className="chapter" data-part={number === null || undefined} onClick={() => onSelect(item.id)}>
                 <span className="chapter-number">{number ?? <Icon name="book" />}</span>
@@ -55,8 +55,17 @@ export function BookPane({ node, app, tree, workspaceDoc, onSelect, onStatus, on
                   {item.kind === "board" ? "Board" : item.kind === "note" && item.words !== null ? plural(item.words, "word") : ""}
                 </span>
               </button>
-            </li>
-          ))}
+            </li>,
+            ...(number === null ? [] : subtopicsOf(item, String(number))).map((sub) => (
+              <li key={sub.item.id} style={{ "--depth": depth + sub.depth } as CSSProperties}>
+                <button className="chapter" onClick={() => onSelect(sub.item.id)}>
+                  <span className="chapter-number">{sub.label}</span>
+                  <span className="chapter-title">{sub.item.title || "Untitled"}</span>
+                  <span className="chapter-words">{sub.item.kind === "note" && sub.item.words !== null ? plural(sub.item.words, "word") : ""}</span>
+                </button>
+              </li>
+            )),
+          ])}
         </ol>
       ) : (
         <p className="book-empty">No chapters yet. Drag notes, boards or books onto the book in the sidebar, or add a new one.</p>

@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.45.0 (2026-10-22)
+
+- Chapters have subtopics: pages inside a chapter, numbered 6.1, 6.2 and 6.2.1. The + on a chapter in the Chapters panel adds one, and the open chapter lists its subtopics there.
+- Next and Previous at the end of every chapter and subtopic, and Ctrl+K "Next chapter" and "Previous chapter". The last one leads back to the book.
+- A chapter can show its subtopics in its own page (This page, Subtopics: All in this page). Each one is still a page of its own, edited right there.
+- The book page lists subtopics under their chapter, word counts include them, and book downloads carry them as headings under their chapter.
+
 ## 0.44.0 (2026-10-22)
 
 - Phones: a hold in a note opens the menu and leaves the cursor and the keyboard where they were. A double tap selects a word. Lifting the finger after a hold no longer taps too.

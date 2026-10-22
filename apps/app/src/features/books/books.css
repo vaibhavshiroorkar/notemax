@@ -174,3 +174,101 @@
   color: var(--muted);
   font-size: 13px;
 }
+
+/* Next and previous at the end of a chapter or subtopic. */
+.chapter-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 48px;
+}
+
+.chapter-step {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.chapter-step[data-step="next"] {
+  grid-column: 2;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.chapter-step:hover {
+  background: var(--hover);
+}
+
+.chapter-step-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.chapter-step[data-step="previous"] .chapter-step-hint svg {
+  transform: scaleX(-1);
+}
+
+.chapter-step-title {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chapter-step .chapter-number {
+  min-width: 0;
+}
+
+/* Subtopics shown in their chapter's own page. */
+.inline-subtopics {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.inline-subtopic {
+  padding-left: calc((var(--depth, 1) - 1) * 24px);
+}
+
+.inline-subtopic-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 1.4em;
+  font-weight: 600;
+}
+
+.inline-subtopic-title input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.inline-note-loading {
+  min-height: 3em;
+}
+
+/* A subtopic's text is as tall as what is written, not a whole page. */
+.inline-subtopic .editor .ProseMirror {
+  min-height: 2em;
+}
+
+/* With its subtopics below, the chapter's own text needs no room to click into. */
+.note:has(> .inline-subtopics) > .editor .ProseMirror {
+  min-height: 4em;
+}

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Editor as TiptapEditor } from "@tiptap/react";
 import { WELCOME_ID, renameNode } from "@notemax/core";
 import { ChapterNav } from "@/features/books/ChapterNav";
+import { InlineSubtopics } from "@/features/books/InlineSubtopics";
+import { bookOf, inlineSubtopics } from "@/features/books/reading";
 import { useLocalDoc } from "@/data/useLocalDoc";
 import { useVersions } from "@/features/history/versions";
 import { useShare } from "@/features/share/useShare";
@@ -11,6 +13,7 @@ import { PageFooter, PageHeader } from "@/plugins/PageHeader";
 import { registry } from "@/plugins/registry";
 import type { PageProps } from "@/plugins/types";
 import { Editor } from "./Editor";
+import { InlineNote } from "./InlineNote";
 import { KeyboardBar } from "./KeyboardBar";
 import { PAGE_GAP, PAGE_MARGIN, PAPER, paperSize } from "./pages";
 import { useBodyIndex } from "./useBodyIndex";
@@ -51,7 +54,9 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
   const roomForSheets = useRoomForSheets();
   // The note's own choice wins over the setting. A window too narrow for a sheet shows one long page.
   const chosen = node.props.layout === "pages" || node.props.layout === "infinite" ? node.props.layout : pagesByDefault ? "pages" : "infinite";
-  const layout = roomForSheets ? chosen : "infinite";
+  // A chapter showing its subtopics in its page is one long page: sheets would cut through them.
+  const together = registry.isOn("books") && inlineSubtopics(tree, node.id).length > 0;
+  const layout = roomForSheets && !together ? chosen : "infinite";
   const paper = PAPER[paperSize.use()];
   const [pages, setPages] = useState(1);
   const editorRef = useRef<TiptapEditor | null>(null);
@@ -76,7 +81,7 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
 
   if (openError) return <p className="error">Could not open this note: {openError}</p>;
 
-  const inBook = tree.items.get(tree.items.get(node.id)?.parentId ?? "")?.kind === "book";
+  const inBook = !!bookOf(tree, node.id);
 
   return (
     <article
@@ -136,6 +141,15 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
             }
             onReady();
           }}
+        />
+      )}
+      {local && together && (
+        <InlineSubtopics
+          tree={tree}
+          chapterId={node.id}
+          workspaceDoc={workspaceDoc}
+          onOpen={(id) => hub.open(id)}
+          renderNote={(id) => <InlineNote id={id} hub={hub} workspaceDoc={workspaceDoc} />}
         />
       )}
       {local && <PageFooter node={node} app={app} />}

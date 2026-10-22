@@ -1,6 +1,6 @@
-import type { Asset, TreeNode } from "@notemax/core";
+import type { Asset, TreeItem, TreeNode } from "@notemax/core";
 import type { AppContext, Exporter } from "@/plugins/types";
-import { readingOrder } from "@/features/books/reading";
+import { readingOrder, subtopicsOf } from "@/features/books/reading";
 import { registry } from "@/plugins/registry";
 import { dataUrl, extOf, loadBody, loadPictures, resolver } from "./content";
 import { buildDocx, type DocxImage } from "./docx";
@@ -36,8 +36,8 @@ async function partsOf(node: TreeNode, app: AppContext): Promise<{ title: string
   const book = app.tree.items.get(node.id);
   if (node.kind !== "book" || !book) return { title, parts: [{ body: await loadBody(node.id) }], made };
   const parts: Part[] = [];
-  for (const { item, depth, number } of readingOrder(book)) {
-    const part: Part = { title: item.title || (number === null ? "Untitled part" : "Untitled"), body: EMPTY, level: depth };
+  const partOf = async (item: TreeItem, title: string, level: number) => {
+    const part: Part = { title, body: EMPTY, level };
     if (item.kind === "note") part.body = await loadBody(item.id);
     else if (item.kind === "board") {
       const picture = await boardPicture(item.id, app);
@@ -47,7 +47,12 @@ async function partsOf(node: TreeNode, app: AppContext): Promise<{ title: string
         part.body = { type: "doc", content: [{ type: "image", attrs: { asset: id } }] };
       }
     }
-    parts.push(part);
+    return part;
+  };
+  for (const { item, depth, number } of readingOrder(book)) {
+    parts.push(await partOf(item, item.title || (number === null ? "Untitled part" : "Untitled"), depth));
+    // Subtopics follow their chapter, a heading level further in.
+    if (number !== null) for (const sub of subtopicsOf(item, String(number))) parts.push(await partOf(sub.item, sub.item.title || "Untitled", depth + sub.depth));
   }
   return { title, parts, made };
 }
