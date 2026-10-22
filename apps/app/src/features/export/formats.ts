@@ -2,7 +2,7 @@ import type { Asset, TreeItem, TreeNode } from "@notemax/core";
 import type { AppContext, Exporter } from "@/plugins/types";
 import { readingOrder, subtopicsOf } from "@/features/books/reading";
 import { registry } from "@/plugins/registry";
-import { dataUrl, extOf, loadBody, loadPictures, resolver } from "./content";
+import { dataUrl, extOf, isWritten, loadBody, loadPictures, resolver } from "./content";
 // The Word and EPUB writers load on the first download in those formats, not at start.
 import type { DocxImage } from "./docx";
 import { printHtml } from "./save";
@@ -12,7 +12,7 @@ import { zip } from "./zip";
 interface Part {
   title?: string;
   body: DocNode;
-  /** 0 for a chapter right in the book, 1 for one inside a part, and so on. A part itself has an empty body. */
+  /** 0 for a chapter right in the book, 1 for one inside a part, and so on. A part's body is its description. */
   level?: number;
 }
 
@@ -36,9 +36,13 @@ async function partsOf(node: TreeNode, app: AppContext): Promise<{ title: string
   const book = app.tree.items.get(node.id);
   if (node.kind !== "book" || !book) return { title, parts: [{ body: await loadBody(node.id) }], made };
   const parts: Part[] = [];
+  // The book's description comes before the first chapter.
+  const intro = await loadBody(book.id);
+  if (isWritten(intro)) parts.push({ body: intro });
   const partOf = async (item: TreeItem, title: string, level: number) => {
     const part: Part = { title, body: EMPTY, level };
-    if (item.kind === "note") part.body = await loadBody(item.id);
+    // A part (a book inside the book) has a description of its own, like the book.
+    if (item.kind === "note" || item.kind === "book") part.body = await loadBody(item.id);
     else if (item.kind === "board") {
       const picture = await boardPicture(item.id, app);
       if (picture) {

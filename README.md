@@ -42,7 +42,7 @@
 - Code pages: Python or JavaScript that runs right in the app, with its output below.
 
 **Organize**
-- Books with chapters, parts and numbered subtopics, with Next and Previous at the end of each.
+- Books with a description, chapters, parts and numbered subtopics, with Next and Previous at the end of each. Read or write the whole book on one page.
 - Folders, books and notes in one sidebar. Drag to sort, put pages inside pages, or pick several and move them together.
 - Workspaces for separate parts of your life, arranged on a Home page. Copy or move pages between them.
 - Share a note by link and write in it together, live and end-to-end encrypted.

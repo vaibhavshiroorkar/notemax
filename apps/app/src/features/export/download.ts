@@ -2,7 +2,7 @@ import type { Asset, TreeItem, TreeNode } from "@notemax/core";
 import { savedStore } from "@/platform/store";
 import { registry } from "@/plugins/registry";
 import type { AppContext, Exporter } from "@/plugins/types";
-import { extOf, fileName, loadBody, loadPictures } from "./content";
+import { extOf, fileName, isWritten, loadBody, loadPictures } from "./content";
 import { saveFile } from "./save";
 import { toMarkdown } from "./serialize";
 import { zip, type ZipEntry } from "./zip";
@@ -53,8 +53,10 @@ export async function downloadEverything(app: AppContext, from: TreeItem[] = app
       return candidate;
     };
 
-    const markdownFile = async (id: string, path: string, heading?: string) => {
+    // A book's description is skipped when it is empty, so a book with none keeps a tidy folder.
+    const markdownFile = async (id: string, path: string, heading?: string, skipEmpty = false) => {
       const body = await loadBody(id);
+      if (skipEmpty && !isWritten(body)) return;
       for (const [asset, file] of await loadPictures([body])) pictures.set(asset, file);
       // Links to pictures are relative to the file, so they work from any folder.
       const up = "../".repeat(path.split("/").length - 1);
@@ -82,6 +84,7 @@ export async function downloadEverything(app: AppContext, from: TreeItem[] = app
         const title = (numbered ? `${String(i + 1).padStart(2, "0")} ` : "") + safe(node.title);
         if (node.kind === "folder") await walk(item.children, `${dir}${title}/`);
         else if (node.kind === "book") {
+          await markdownFile(node.id, `${dir}${title}/00 About this book.md`, undefined, true);
           await walk(item.children, `${dir}${title}/`, true);
           if (!item.children.length) entries.push({ path: unique(`${dir}${title}/`), data: "" });
         } else {

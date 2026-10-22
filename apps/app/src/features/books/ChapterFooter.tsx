@@ -5,7 +5,7 @@ import { bookOf, readingStops, type Stop } from "./reading";
 
 const name = (stop: Stop) => stop.item.title || "Untitled";
 
-/** At the end of a chapter or subtopic: on to the next one, or back to the one before. */
+/** At the end of a chapter or subtopic: on to the next one, or back to the one before, each with an arrow pointing its way. */
 export function ChapterFooter({ node, app }: { node: TreeNode; app: AppContext }) {
   const book = bookOf(app.tree, node.id);
   if (!book || book.id === node.id) return null;
@@ -20,12 +20,12 @@ export function ChapterFooter({ node, app }: { node: TreeNode; app: AppContext }
     <nav className="chapter-footer" aria-label="Next and previous">
       {previous ? (
         <button className="chapter-step" data-step="previous" onClick={() => app.open(previous.item.id)}>
-          <span className="chapter-step-hint">
-            <Icon name="chevron-right" />
-            Previous
-          </span>
-          <span className="chapter-step-title">
-            <span className="chapter-number">{previous.label}</span> {name(previous)}
+          <Icon name="arrow-left" />
+          <span className="chapter-step-text">
+            <span className="chapter-step-hint">Previous</span>
+            <span className="chapter-step-title">
+              <span className="chapter-number">{previous.label}</span> {name(previous)}
+            </span>
           </span>
         </button>
       ) : (
@@ -33,18 +33,21 @@ export function ChapterFooter({ node, app }: { node: TreeNode; app: AppContext }
       )}
       {next ? (
         <button className="chapter-step" data-step="next" onClick={() => app.open(next.item.id)}>
-          <span className="chapter-step-hint">
-            Next
-            <Icon name="chevron-right" />
+          <span className="chapter-step-text">
+            <span className="chapter-step-hint">Next</span>
+            <span className="chapter-step-title">
+              <span className="chapter-number">{next.label}</span> {name(next)}
+            </span>
           </span>
-          <span className="chapter-step-title">
-            <span className="chapter-number">{next.label}</span> {name(next)}
-          </span>
+          <Icon name="arrow-right" />
         </button>
       ) : (
         <button className="chapter-step" data-step="next" onClick={() => app.open(book.id)}>
-          <span className="chapter-step-hint">The end</span>
-          <span className="chapter-step-title">Back to {book.title || "Untitled book"}</span>
+          <span className="chapter-step-text">
+            <span className="chapter-step-hint">The end</span>
+            <span className="chapter-step-title">Back to {book.title || "Untitled book"}</span>
+          </span>
+          <Icon name="book" />
         </button>
       )}
     </nav>

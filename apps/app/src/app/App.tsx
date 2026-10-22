@@ -27,6 +27,7 @@ import { PromptHost } from "@/ui/Prompt";
 import { Toasts } from "@/ui/Toasts";
 import { usePresence } from "@/ui/usePresence";
 import { useEdgeSwipe } from "./useEdgeSwipe";
+import { useHidingBars } from "./useHidingBars";
 import { RightSidebar } from "./RightSidebar";
 import { pageInAddress, showInAddress, startBrowserNavigation } from "./history";
 import { NewTabPage } from "./NewTabPage";
@@ -174,6 +175,9 @@ export function App() {
     if (open && isNarrow()) (side === "left" ? setSidePanelOpen : setSidebarOpen)(false);
   }, []);
 
+  const frame = useRef<HTMLDivElement>(null);
+  useHidingBars(frame, visit?.page ?? null);
+
   useEdgeSwipe(
     () => openSide("left", true),
     () => {
@@ -270,6 +274,10 @@ export function App() {
   }, [activeId, selectedId]);
 
   const showLeft = sidebarOpen && !focusMode;
+  // A side opened by a swipe brings the hidden phone bar back, with its buttons.
+  useEffect(() => {
+    if ((sidebarOpen || sidePanelOpen) && frame.current) delete frame.current.dataset.bars;
+  }, [sidebarOpen, sidePanelOpen]);
   // Kept on the page a moment after closing, so it can slide out.
   const leftMounted = usePresence(showLeft);
 
@@ -422,6 +430,7 @@ export function App() {
 
   return (
     <div
+      ref={frame}
       className="app"
       data-sidebar={showLeft ? "open" : "closed"}
       data-side-panel={showRight ? "open" : "closed"}

@@ -3,6 +3,14 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.58.0 (2026-10-23)
+
+- A book has text of its own: write a description above its chapters. Parts (books inside a book) have one too. Downloads of the book start with it.
+- Whole book: switch a book page from Chapters to Whole book to see every part, chapter and subtopic on one page, in order, and write in any of them right there. Chapters further down load as you scroll near them.
+- Previous and Next show arrows pointing their way, at the end of each chapter and as arrow buttons in the book line at the top of each chapter.
+- Phones: the top bar slides away while you read down and comes back as soon as you scroll up a little, with the book line and its arrows, so going back is always near.
+- The Home button sits to the left of the workspace name, and is no longer in the workspace menu.
+
 ## 0.57.0 (2026-10-23)
 
 - A lighter start: the Word and EPUB writers and the Markdown reader load the first time they are needed, so the app downloads about 50 KB less before it opens.

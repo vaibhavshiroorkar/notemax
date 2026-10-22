@@ -10,7 +10,7 @@ export function Dot({ color }: { color: string }) {
   return <span className="workspace-dot" data-none={!color || undefined} style={color ? { background: color } : undefined} aria-hidden="true" />;
 }
 
-/** The workspace at the top left: its name, and a menu to switch, go Home, or start another. */
+/** The workspace at the top left: Home beside it, its name, and a menu to switch or start another. */
 export function Switcher({ app }: { app: AppContext }) {
   const list = workspaceList.use();
   const [open, setOpen] = useState(false);
@@ -37,13 +37,13 @@ export function Switcher({ app }: { app: AppContext }) {
 
   return (
     <div className="workspace-switch" ref={wrapper}>
+      <button className="icon-button workspace-home" aria-label="Home" title="Home: all workspaces" onClick={() => app.openOverlay("home")}>
+        <Icon name="home" />
+      </button>
       <button className="workspace-current" aria-haspopup="menu" aria-expanded={open} title="Switch workspace" onClick={() => setOpen(!open)}>
         <Dot color={current?.color ?? ""} />
         <span className="workspace-name">{current ? nameOf(current) : "My notes"}</span>
         <Icon name="chevron-down" />
-      </button>
-      <button className="icon-button workspace-home" aria-label="Home" title="Home: all workspaces" onClick={() => app.openOverlay("home")}>
-        <Icon name="home" />
       </button>
       {open && (
         <div className="menu workspace-menu" role="menu" aria-label="Workspaces">
@@ -55,17 +55,6 @@ export function Switcher({ app }: { app: AppContext }) {
             </button>
           ))}
           <hr />
-          <button
-            className="menu-item"
-            role="menuitem"
-            onClick={() => {
-              setOpen(false);
-              app.openOverlay("home");
-            }}
-          >
-            <Icon name="home" />
-            Home: arrange workspaces
-          </button>
           <button className="menu-item" role="menuitem" onClick={() => void startNew()}>
             <Icon name="plus" />
             New workspace

@@ -1,15 +1,27 @@
 import { useEffect, type CSSProperties } from "react";
-import { createNode, renameNode } from "@notemax/core";
+import { createNode, renameNode, setProp } from "@notemax/core";
+import { InlineNote } from "@/features/editor/InlineNote";
 import { PageHeader } from "@/plugins/PageHeader";
 import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
+import { Segmented } from "@/ui/Segmented";
+import { WholeBook } from "./WholeBook";
 import { allStops, bookWords, chaptersIn, readingOrder, subtopicsOf } from "./reading";
 import { useWordBackfill } from "./useWordBackfill";
 import "./books.css";
 
 const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
 
-export function BookPane({ node, app, tree, workspaceDoc, onSelect, onStatus, onReady }: PageProps) {
+type BookView = "chapters" | "whole";
+const VIEWS: { value: BookView; label: string }[] = [
+  { value: "chapters", label: "Chapters" },
+  { value: "whole", label: "Whole book" },
+];
+
+export function BookPane(props: PageProps) {
+  const { node, app, tree, workspaceDoc, hub, onSelect, onStatus, onReady } = props;
+  // A page setting, so the choice syncs with the book and each book keeps its own.
+  const view: BookView = node.props.bookView === "whole" ? "whole" : "chapters";
   const book = tree.items.get(node.id);
   const entries = book ? readingOrder(book) : [];
   const chapters = book ? chaptersIn(book) : [];
@@ -18,7 +30,7 @@ export function BookPane({ node, app, tree, workspaceDoc, onSelect, onStatus, on
     workspaceDoc,
   );
 
-  // This page has no body of its own, so nothing here is waiting to be saved.
+  // The description saves itself like any note; the page around it has nothing waiting.
   useEffect(() => {
     onStatus({ state: "saved" });
     onReady();
@@ -38,13 +50,24 @@ export function BookPane({ node, app, tree, workspaceDoc, onSelect, onStatus, on
         onChange={(event) => renameNode(workspaceDoc, node.id, event.target.value)}
       />
       <PageHeader node={node} app={app} />
-      <p className="book-summary">
-        {parts > 0 && `${plural(parts, "part")}, `}
-        {plural(chapters.length, "chapter")}
-        {chapters.length > 0 && `, ${total !== null ? plural(total, "word") : "counting words..."}`}
-      </p>
+      <div className="book-bar">
+        <p className="book-summary">
+          {parts > 0 && `${plural(parts, "part")}, `}
+          {plural(chapters.length, "chapter")}
+          {chapters.length > 0 && `, ${total !== null ? plural(total, "word") : "counting words..."}`}
+        </p>
+        {entries.length > 0 && (
+          <Segmented<BookView> label="Show the book as" value={view} options={VIEWS} onChange={(next) => setProp(workspaceDoc, node.id, "bookView", next === "whole" ? "whole" : null)} />
+        )}
+      </div>
 
-      {entries.length > 0 ? (
+      <div className="book-description">
+        <InlineNote id={node.id} hub={hub} workspaceDoc={workspaceDoc} placeholder="Write a description of the book..." />
+      </div>
+
+      {book && view === "whole" && entries.length > 0 ? (
+        <WholeBook book={book} props={props} />
+      ) : entries.length > 0 ? (
         <ol className="chapter-list" aria-label="Chapters">
           {entries.map(({ item, depth, number }) => [
             <li key={item.id} style={{ "--depth": depth } as CSSProperties}>

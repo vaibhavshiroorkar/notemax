@@ -2,6 +2,8 @@ const paths = {
   "chevron-right": "M6 4l4 4-4 4",
   "chevron-down": "M4 6l4 4 4-4",
   "chevron-left": "M10 4l-4 4 4 4",
+  "arrow-left": "M13 8H3M7 4L3 8l4 4",
+  "arrow-right": "M3 8h10M9 4l4 4-4 4",
   plus: "M8 3v10M3 8h10",
   trash: "M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8.5h6l.5-8.5",
   sidebar: "M2.5 3h11v10h-11zM6 3v10",

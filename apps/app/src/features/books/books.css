@@ -185,35 +185,60 @@
 
 .chapter-step {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
-  padding: 10px 14px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 8px;
   text-align: left;
 }
 
+/* The arrow points the way the button goes, big enough to read at a glance. */
+.chapter-step > svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+
+.chapter-step[data-step="previous"]:hover > svg {
+  transform: translateX(-3px);
+}
+
+.chapter-step[data-step="next"]:hover > svg {
+  transform: translateX(3px);
+}
+
+.chapter-step-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .chapter-step[data-step="next"] {
   grid-column: 2;
-  align-items: flex-end;
   text-align: right;
+}
+
+.chapter-step[data-step="next"] .chapter-step-text {
+  align-items: flex-end;
 }
 
 .chapter-step:hover {
   background: var(--hover);
 }
 
-.chapter-step-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--muted);
+.chapter-step:hover > svg {
+  color: var(--text);
 }
 
-.chapter-step[data-step="previous"] .chapter-step-hint svg {
-  transform: scaleX(-1);
+.chapter-step-hint {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .chapter-step-title {
@@ -225,6 +250,101 @@
 
 .chapter-step .chapter-number {
   min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapter-step > svg {
+    transition: none;
+  }
+}
+
+/* Previous and next chapter beside the book line at the top of a chapter. */
+.note-book-steps {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.note-book-steps .icon-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* The book's own text, above its chapters. */
+.book-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.book-bar .book-summary {
+  margin: 0;
+}
+
+.book-description {
+  margin-bottom: 24px;
+}
+
+/* The whole book on one page. */
+.whole-book {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.whole-piece {
+  padding-left: calc(var(--depth, 0) * 20px);
+}
+
+.whole-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.whole-title input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.whole-piece[data-part] .whole-title input {
+  font-size: 26px;
+}
+
+.whole-title > svg {
+  color: var(--muted);
+}
+
+.whole-title .icon-button {
+  opacity: 0;
+}
+
+.whole-piece:hover .whole-title .icon-button,
+.whole-title .icon-button:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .whole-title .icon-button {
+    opacity: 1;
+  }
+}
+
+.lazy-mount {
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--hover) 50%, transparent);
 }
 
 /* Subtopics shown in their chapter's own page. */
@@ -263,8 +383,10 @@
   min-height: 3em;
 }
 
-/* A subtopic's text is as tall as what is written, not a whole page. */
-.inline-subtopic .editor .ProseMirror {
+/* A subtopic's text, a book's description and each piece of the whole book are as tall as what is written, not a whole page. */
+.inline-subtopic .editor .ProseMirror,
+.book-description .editor .ProseMirror,
+.whole-piece .editor .ProseMirror {
   min-height: 2em;
 }
 

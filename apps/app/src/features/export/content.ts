@@ -21,6 +21,9 @@ export async function withPageDoc<T>(id: string, read: (doc: Y.Doc) => T): Promi
   }
 }
 
+/** A body with anything in it beyond empty paragraphs. */
+export const isWritten = (body: DocNode) => (body.content ?? []).some((block) => block.type !== "paragraph" || (block.content?.length ?? 0) > 0);
+
 export const loadBody = (id: string): Promise<DocNode> =>
   withPageDoc(id, (doc) => yXmlFragmentToProsemirrorJSON(doc.getXmlFragment("content")) as DocNode);
 
