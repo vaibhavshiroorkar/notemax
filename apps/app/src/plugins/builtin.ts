@@ -17,6 +17,7 @@ import { sidebarPlugin } from "@/features/sidebar/plugin";
 import { slashPlugin } from "@/features/slash/plugin";
 import { starPlugin } from "@/features/star/plugin";
 import { temporaryPlugin } from "@/features/temporary/plugin";
+import { undoPlugin } from "@/features/undo/plugin";
 import { syncPlugin } from "@/features/sync/plugin";
 import { tagsPlugin } from "@/features/tags/plugin";
 import { registerPlugin } from "./registry";
@@ -30,6 +31,7 @@ import { registerPlugin } from "./registry";
   sidebarPlugin,
   starPlugin,
   temporaryPlugin,
+  undoPlugin,
   booksPlugin,
   boardsPlugin,
   tagsPlugin,

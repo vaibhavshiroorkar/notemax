@@ -295,7 +295,7 @@ export type ContextTarget =
   | { type: "editor"; editor: Editor; noteId: string }
   /** Empty space in the left sidebar. */
   | { type: "sidebar" }
-  /** The download button at the top right of a page. */
+  /** The format list that "Download this page as..." opens. */
   | { type: "download"; node: TreeNode }
   /** A tab above the page. */
   | { type: "tab"; tabId: string };

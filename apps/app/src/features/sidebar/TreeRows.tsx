@@ -1,4 +1,4 @@
-import { memo, type CSSProperties, type DragEvent, type MouseEvent } from "react";
+import { memo, type CSSProperties, type DragEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { canMove, isContainer, type NodeKind, type Tree, type TreeItem } from "@notemax/core";
 import { prefetchDoc } from "@/data/docCache";
 import { useSelect } from "@/platform/store";
@@ -39,14 +39,15 @@ export function Rows({ items, depth, ctx }: { items: readonly TreeItem[]; depth:
   );
 }
 
-/** Renames a folder in place. Every keystroke is saved, so Enter, Esc and clicking away all just finish. */
-function FolderNameInput({ item, ctx }: { item: TreeItem; ctx: RowContext }) {
+/** Renames a row in place. Every keystroke is saved, so Enter, Esc and clicking away all just finish. */
+function NameInput({ item, ctx }: { item: TreeItem; ctx: RowContext }) {
+  const folder = item.kind === "folder";
   return (
     <span className="row-title">
       <input
         className="folder-name"
-        aria-label="Folder name"
-        placeholder="Folder name"
+        aria-label={folder ? "Folder name" : "Page name"}
+        placeholder={folder ? "Folder name" : "Untitled"}
         value={item.title}
         autoFocus
         onFocus={(event) => event.target.select()}
@@ -57,6 +58,18 @@ function FolderNameInput({ item, ctx }: { item: TreeItem; ctx: RowContext }) {
     </span>
   );
 }
+
+/** Double-click or F2 on a row renames it right there. */
+const renameHere = (id: string) => ({
+  onDoubleClick: () => editingId.set(id),
+  onKeyDown(event: KeyboardEvent) {
+    if (event.key !== "F2") return;
+    // Keeps the app-wide F2 (rename the open page) from also running.
+    event.stopPropagation();
+    event.preventDefault();
+    editingId.set(id);
+  },
+});
 
 // Resting on a note for a moment, or pressing on it, starts loading it, so the
 // click usually finds it ready. Passing over rows on the way elsewhere does not.
@@ -158,8 +171,8 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
             <Icon name={item.kind === "note" ? "note" : registry.iconOf(item.kind)} />
           </span>
         )}
-        {item.kind === "folder" && editing ? (
-          <FolderNameInput item={item} ctx={ctx} />
+        {editing ? (
+          <NameInput item={item} ctx={ctx} />
         ) : item.kind === "folder" ? (
           // Folders have no page of their own: clicking one opens or closes it.
           <button
@@ -167,29 +180,22 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
             aria-expanded={open}
             title="Double-click or F2 to rename"
             onClick={(event) => ctx.pick(item, event) || toggleCollapsed(item.id)}
-            onDoubleClick={() => editingId.set(item.id)}
-            onKeyDown={(event) => {
-              if (event.key !== "F2") return;
-              // Keeps the app-wide F2 (rename the open page) from also running.
-              event.stopPropagation();
-              event.preventDefault();
-              editingId.set(item.id);
-            }}
+            {...renameHere(item.id)}
           >
             <span>{title}</span>
           </button>
         ) : item.kind === "book" ? (
           // A book opens its own page, with the chapters in order. It is renamed there.
-          <button className="row-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)}>
+          <button className="row-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)} {...renameHere(item.id)}>
             <span>{title}</span>
           </button>
         ) : item.kind === "note" ? (
-          <button className="row-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)} {...prefetchOnHover(item.id)}>
+          <button className="row-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)} {...prefetchOnHover(item.id)} {...renameHere(item.id)}>
             {title}
           </button>
         ) : (
           // Other pages, like boards. Their icon comes from their plugin.
-          <button className="row-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)} {...prefetchOnHover(item.id)}>
+          <button className="row-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)} {...prefetchOnHover(item.id)} {...renameHere(item.id)}>
             <span>{title}</span>
           </button>
         )}

@@ -104,6 +104,13 @@ export interface Tree {
 // device and a move on another both survive, instead of one overwriting the other.
 const nodesOf = (doc: Y.Doc) => doc.getMap<Y.Map<unknown>>("nodes");
 
+/**
+ * The origin of changes that Undo skips: indexes the app keeps current, like
+ * word counts, links and edited times, and erasing forever, which cannot come
+ * back. Nobody chose to make the first kind, so undoing them would surprise.
+ */
+export const UNTRACKED = "notemax:untracked";
+
 const TAG_PREFIX = "tag:";
 const PROP_PREFIX = "prop:";
 const NO_PROPS: Readonly<Record<string, PropValue>> = Object.freeze({});
@@ -421,7 +428,7 @@ const EDITED_STEP_MS = 60_000;
 export function touchNode(doc: Y.Doc, id: string, now = Date.now()) {
   const fields = fieldsOf(doc, id);
   const last = (fields.get("editedAt") as number | undefined) ?? (fields.get("createdAt") as number | undefined) ?? 0;
-  if (now - last >= EDITED_STEP_MS) fields.set("editedAt", now);
+  if (now - last >= EDITED_STEP_MS) doc.transact(() => fields.set("editedAt", now), UNTRACKED);
 }
 
 /** Sets one of a page's small settings. Null removes it, so the page goes back to the default. */
@@ -442,13 +449,13 @@ export function setLinks(doc: Y.Doc, id: string, targets: Iterable<string>) {
   const next = [...new Set(targets)].filter((target) => target !== id).sort();
   const current = (fields.get("links") as string[] | undefined) ?? [];
   if (next.length === current.length && next.every((target, i) => target === current[i])) return;
-  fields.set("links", next);
+  doc.transact(() => fields.set("links", next), UNTRACKED);
 }
 
 /** Records the body's word count. Writes only when it changed, like setLinks. */
 export function setWords(doc: Y.Doc, id: string, words: number) {
   const fields = fieldsOf(doc, id);
-  if (fields.get("words") !== words) fields.set("words", words);
+  if (fields.get("words") !== words) doc.transact(() => fields.set("words", words), UNTRACKED);
 }
 
 /** Tags a node. Returns the tag as stored, or null when `raw` had nothing usable in it. */
@@ -498,7 +505,7 @@ export function descendantsOf(doc: Y.Doc, id: string): string[] {
 export function deleteForever(doc: Y.Doc, id: string): string[] {
   if (fieldsOf(doc, id).get("deletedAt") == null) throw new Error("only notes in the trash can be deleted forever");
   const ids = [id, ...descendantsOf(doc, id)];
-  doc.transact(() => ids.forEach((nodeId) => nodesOf(doc).delete(nodeId)));
+  doc.transact(() => ids.forEach((nodeId) => nodesOf(doc).delete(nodeId)), UNTRACKED);
   return ids;
 }
 
@@ -527,4 +534,13 @@ export function onNodesAdded(doc: Y.Doc, listener: (ids: string[]) => void): () 
   };
   nodesOf(doc).observe(observer);
   return () => nodesOf(doc).unobserve(observer);
+}
+
+/**
+ * Undo and redo for changes to the tree made on this device: new pages, moves,
+ * renames, tags, the trash. Edits merged in from elsewhere and UNTRACKED
+ * bookkeeping are left out. Typing that comes fast is one step.
+ */
+export function treeUndo(doc: Y.Doc): Y.UndoManager {
+  return new Y.UndoManager(nodesOf(doc), { trackedOrigins: new Set([null]), captureTimeout: 600 });
 }

@@ -1,7 +1,6 @@
 import type { TreeNode } from "@notemax/core";
 import type { AppContext, ContextMenuItem, ContextTarget, Plugin } from "@/plugins/types";
 import { openContextMenu } from "@/ui/ContextMenu";
-import { Icon } from "@/ui/Icon";
 import { defaultFor, defaultFormat, download, downloadEverything, formatsFor } from "./download";
 import { PAGE_FORMATS } from "./formats";
 
@@ -22,32 +21,13 @@ function formatItems(target: ContextTarget, app: AppContext): ContextMenuItem[] 
   }));
 }
 
-/** The download button at the top right of a page. */
-function DownloadButton({ node }: { node: TreeNode; app: AppContext }) {
-  if (!formatsFor(node.kind).length) return null;
-  return (
-    <button
-      className="icon-button"
-      aria-label="Download this page"
-      aria-haspopup="menu"
-      title="Download"
-      onClick={(event) => {
-        const rect = event.currentTarget.getBoundingClientRect();
-        openContextMenu({ type: "download", node }, rect.right - 220, rect.bottom + 4);
-      }}
-    >
-      <Icon name="download" />
-    </button>
-  );
-}
-
 function DownloadsSection() {
   const format = defaultFormat.use();
   // Formats any built-in page kind offers, without repeats, for the default picker.
   const all = [...new Map(["note", "book", "board"].flatMap((kind) => formatsFor(kind as TreeNode["kind"])).map((f) => [f.id, f])).values()];
   return (
     <>
-      <p>Download a page from its menu (right click it), from the button at the top right of a page, or with Ctrl+Shift+E.</p>
+      <p>Download a page from its menu (right click it in the sidebar), or with Ctrl+Shift+E.</p>
       <label className="settings-row">
         <span>
           Default format
@@ -70,7 +50,6 @@ export const downloadsPlugin: Plugin = {
   name: "Downloads",
   description: "Save pages as text, Markdown, Word, PDF, EPUB and more, or everything at once",
   exporters: PAGE_FORMATS,
-  pageCorner: [{ id: "downloads.button", component: DownloadButton }],
   settings: [{ id: "downloads", order: 60, title: "Downloads", icon: "download", keywords: ["export", "save", "markdown", "pdf", "word", "epub", "backup"], component: DownloadsSection }],
   options: [
     {
@@ -96,8 +75,7 @@ export const downloadsPlugin: Plugin = {
       keywords: ["export", "format", "pdf", "word", "docx", "epub", "html"],
       when: (app) => !!app.activeId && formatsFor(app.tree.byId.get(app.activeId)!.kind).length > 0,
       run(app) {
-        const button = document.querySelector('[aria-label="Download this page"]')?.getBoundingClientRect();
-        openContextMenu({ type: "download", node: app.tree.byId.get(app.activeId!)! }, button ? button.right - 220 : innerWidth / 2 - 110, button ? button.bottom + 4 : 80);
+        openContextMenu({ type: "download", node: app.tree.byId.get(app.activeId!)! }, innerWidth / 2 - 110, 80);
       },
     },
     {

@@ -97,7 +97,7 @@ See [docs/architecture.md](docs/architecture.md) for the layout of the code and 
 
 ## Roadmap
 
-- A better trash, undo for sidebar changes, and renaming pages right in the sidebar
+- A better trash, and version history for long-term backups
 - A smoother editor: Word-like formatting, faithful copy and paste from Word
 - Version history, and plain Markdown files kept next to the database
 - Live sync between open devices, then shared pages

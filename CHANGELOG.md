@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.25.0 (2026-10-22)
+
+- Rename any page right in the sidebar: double-click its row, press F2 on it, or pick Rename from its menu.
+- Ctrl+Z and Ctrl+Y (or Ctrl+Shift+Z) undo and redo changes to your pages outside a note: new pages, moves, renames, tags and the trash. A note keeps its own undo while you type in it.
+- No download button at the top right of a page. Right-click the page in the sidebar, or press Ctrl+Shift+E.
+
 ## 0.24.0 (2026-10-22)
 
 - Pages can hold pages. Drop a note, board or book onto the middle of a note to put it inside, and the note keeps its icon with an arrow on hover.

@@ -70,7 +70,8 @@ export const PAGE_MENU: ContextMenuItem[] = [
     targets: ["page"],
     run(target, app) {
       const node = nodeOf(target)!;
-      if (node.kind === "folder") editingId.set(node.id);
+      // In the sidebar when the page has a row there, else in the page's own title, like a chapter.
+      if (node.kind === "folder" || document.querySelector(`.sidebar .row[data-id="${CSS.escape(node.id)}"]`)) editingId.set(node.id);
       else renamePage(app, node.id);
     },
   },

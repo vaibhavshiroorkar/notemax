@@ -21,6 +21,8 @@ export {
   moveNodes,
   touchNode,
   onNodesAdded,
+  treeUndo,
+  UNTRACKED,
   createNode,
   duplicateNote,
   ensureWelcome,

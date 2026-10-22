@@ -1,4 +1,4 @@
-import { onNodesAdded, setProp, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
+import { UNTRACKED, onNodesAdded, setProp, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
 import type * as Y from "yjs";
 import { syncIsOn } from "@/features/sync/runtime";
 import { isDesktop } from "@/platform/platform";
@@ -19,6 +19,7 @@ export const onlyHere = () => !isDesktop && !syncIsOn();
 
 export function markTemporary(doc: Y.Doc, ids: string[]) {
   const now = Date.now();
+  // Untracked, so undoing a new page takes it away in one step, mark and all.
   doc.transact(() => {
     for (const id of ids) {
       // Gone already, like a page made and deleted in one go.
@@ -26,7 +27,7 @@ export function markTemporary(doc: Y.Doc, ids: string[]) {
         setProp(doc, id, TEMPORARY, now);
       } catch {}
     }
-  });
+  }, UNTRACKED);
 }
 
 /** Drops the mark: the pages become normal pages. */
