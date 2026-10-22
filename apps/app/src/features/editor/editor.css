@@ -76,6 +76,17 @@
   border-top-color: var(--accent);
 }
 
+/* ui.css clears every list for menus and sidebars. Lists in a note get their bullets back. */
+.editor ul:not([data-type="taskList"]) {
+  margin: revert;
+  padding-left: 1.6em;
+  list-style: revert;
+}
+
+.editor ol {
+  padding-left: 1.6em;
+}
+
 .editor ul[data-type="taskList"] {
   padding-left: 4px;
   list-style: none;

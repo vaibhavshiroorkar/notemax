@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.22.0 (2026-10-22)
+
+- Bullet lists in notes show their bullets again.
+- A shorter README with screenshots, and the code layout moved to docs/architecture.md.
+
 ## 0.21.0 (2026-10-22)
 
 - Pages made in a browser before signing in are marked temporary, with a clock on their row and a line under the title, since only that browser has them.

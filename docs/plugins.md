@@ -78,6 +78,7 @@ Every field is optional.
 | `pageFooter` | At the end of a page. |
 | `sidebarSections` | The left sidebar, between the pages and the trash. With an `order` below 0, above the pages, like Starred. |
 | `useSidebarFilter` | A React hook. While it returns a filter, the sidebar lists only what passes it. |
+| `rowMarks` | A small icon at the end of a page's row in the left sidebar, with `icon`, `label` and `when(node)`, like the clock on temporary pages. |
 | `sidebarFilterChoices` | Choices in the sidebar's filter panel (the funnel by +), like "Starred only". |
 | `sidebarFooter` | The bar at the bottom of the left sidebar, left of the Settings cog, like the account and sync. |
 | `overlays` | Full-window views, opened with `app.openOverlay(id)`. |
