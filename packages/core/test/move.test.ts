@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { ROOT, canMove, createNode, moveNode, readTree, trashNode } from "../src";
+import { ROOT, canMove, createNode, moveNode, moveNodes, readTree, trashNode } from "../src";
 
 const titles = (items: { title: string }[]) => items.map((i) => i.title);
 
@@ -155,5 +155,44 @@ describe("moves on two devices", () => {
       expect(placements).toHaveLength(1);
     }
     expect(readTree(laptop).byId.get(note)!.parentId).toBe(readTree(phone).byId.get(note)!.parentId);
+  });
+});
+
+describe("moveNodes", () => {
+  it("moves several pages together, in the order given, before a sibling", () => {
+    const { doc, folder, other, a, c, idea } = setup();
+    moveNodes(doc, [c, a], other, null);
+    expect(titles(readTree(doc).top[1].children)).toEqual(["C", "A"]);
+    moveNodes(doc, [idea], other, a);
+    expect(titles(readTree(doc).top[1].children)).toEqual(["C", "Idea", "A"]);
+    expect(titles(readTree(doc).top[0].children)).toEqual(["B", "Sub"]);
+    void folder;
+  });
+
+  it("reorders inside one folder, even when the target is one of the moved", () => {
+    const { doc, folder, a, b, c, sub } = setup();
+    // Drop A and C just before B: they land there, B follows.
+    moveNodes(doc, [a, c], folder, b);
+    expect(titles(readTree(doc).top[0].children)).toEqual(["A", "C", "B", "Sub"]);
+    // A target that is itself moving means the next sibling that is not.
+    moveNodes(doc, [sub, b], folder, sub);
+    expect(titles(readTree(doc).top[0].children)).toEqual(["A", "C", "Sub", "B"]);
+  });
+
+  it("leaves a page that is inside a moved folder where it is, inside that folder", () => {
+    const { doc, folder, other, a } = setup();
+    moveNodes(doc, [folder, a], other, null);
+    const tree = readTree(doc);
+    expect(titles(tree.top)).toEqual(["Other", "Idea"]);
+    expect(titles(tree.top[0].children)).toEqual(["Folder"]);
+    expect(titles(tree.top[0].children[0].children)).toEqual(["A", "B", "C", "Sub"]);
+  });
+
+  it("skips what cannot go there, like a folder into itself", () => {
+    const { doc, folder, sub, idea } = setup();
+    moveNodes(doc, [folder, idea], sub, null);
+    const tree = readTree(doc);
+    expect(titles(tree.top)).toEqual(["Folder", "Other"]);
+    expect(titles(tree.items.get(sub)!.children)).toEqual(["Idea"]);
   });
 });

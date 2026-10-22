@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, type DragEvent } from "react";
-import { ROOT, canMove, createNode, moveNode, renameNode, type Tree } from "@notemax/core";
+import { ROOT, canMove, childrenOf, createNode, moveNodes, renameNode, type Tree } from "@notemax/core";
 import { registry } from "@/plugins/registry";
 import { formatShortcut, shortcutFor, shortcutOverrides } from "@/plugins/shortcuts";
 import type { AppContext } from "@/plugins/types";
@@ -10,7 +10,7 @@ import { Safe } from "@/ui/Safe";
 import { AddMenu } from "./AddMenu";
 import { dragged, endDrag, useDragging } from "./drag";
 import { FilteredList } from "./FilteredList";
-import { dropTarget, editingId, expand, markedId } from "./state";
+import { clearSelection, dropTarget, editingId, expand, markedId, plainClick, selectRange, selectedInOrder, selection, toggleSelected } from "./state";
 import { Rows, type RowContext } from "./TreeRows";
 import { TrashSection } from "./TrashSection";
 import "./sidebar.css";
@@ -35,6 +35,7 @@ export function Sidebar({ app }: { app: AppContext }) {
   const settingsKeys = settingsShortcut && shortcutFor(settingsShortcut, overrides);
   const settingsTitle = settingsKeys ? `Settings (${formatShortcut(settingsKeys)})` : "Settings";
   const footerItems = registry.sidebarFooter();
+  const sections = registry.sidebarSections();
 
   // The row actions read the latest app through this, so they can stay one object for good.
   const appRef = useRef(app);
@@ -43,7 +44,16 @@ export function Sidebar({ app }: { app: AppContext }) {
     () => ({
       tree: () => appRef.current.tree,
       rename: (id, title) => renameNode(doc, id, title),
-      select: (id) => appRef.current.open(id),
+      select: (id, newTab) => appRef.current.open(id, newTab ? { newTab } : undefined),
+      pick(item, event) {
+        if (event.ctrlKey || event.metaKey) toggleSelected(item.id, markedId.get());
+        else if (event.shiftKey) selectRange(appRef.current.tree, item.id, markedId.get());
+        else {
+          plainClick(item.id);
+          return false;
+        }
+        return true;
+      },
       add(kind, parentId) {
         const id = createNode(doc, kind, parentId);
         expand(parentId);
@@ -53,17 +63,38 @@ export function Sidebar({ app }: { app: AppContext }) {
         else appRef.current.open(id);
       },
       trash: (id) => appRef.current.trash(id),
-      menu: (id, event) => pageMenu(appRef.current.tree.byId.get(id))(event),
+      menu(id, event) {
+        const tree = appRef.current.tree;
+        // A right click on one of several picked rows acts on all of them.
+        if (selection.get().size > 1 && selection.get().has(id)) {
+          const nodes = selectedInOrder(tree).flatMap((picked) => tree.byId.get(picked) ?? []);
+          return contextMenuHandler(() => ({ type: "pages", nodes }))(event);
+        }
+        pageMenu(tree.byId.get(id))(event);
+      },
       drop({ parentId, index }) {
         const moving = dragged.get();
         if (!moving) return;
-        moveNode(doc, moving.id, parentId, index);
+        const tree = appRef.current.tree;
+        // Dragging one of several picked rows moves them all, in the order they are shown.
+        const group = selection.get().size > 1 && selection.get().has(moving.id) ? selectedInOrder(tree) : [moving.id];
+        const nextId = childrenOf(tree, parentId).filter((item) => item.id !== moving.id)[index]?.id ?? null;
+        moveNodes(doc, group, parentId, nextId);
         expand(parentId);
         endDrag();
       },
     }),
     [doc],
   );
+
+  // Esc lets go of picked rows. Only while there are some, so Esc elsewhere is left alone.
+  const picked = selection.use().size > 0;
+  useEffect(() => {
+    if (!picked) return;
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && clearSelection();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [picked]);
 
   // A drag that started in the book panel may end there, so clear any marker left here.
   useEffect(() => {
@@ -100,6 +131,11 @@ export function Sidebar({ app }: { app: AppContext }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-scroll" onContextMenu={contextMenuHandler(() => ({ type: "sidebar" }))}>
+        {sections
+          .filter((section) => section.order < 0)
+          .map(({ id, component: Section }) => (
+            <Section key={id} app={app} />
+          ))}
         <section className="section">
           <header className="section-header" data-drop={headerActive ? "inside" : undefined} onDragOver={headerDrop.onDragOver} onDrop={headerDrop.onDrop}>
             <span>Notes</span>
@@ -113,9 +149,11 @@ export function Sidebar({ app }: { app: AppContext }) {
             <p className="empty">No notes yet. Use + to start one.</p>
           )}
         </section>
-        {registry.sidebarSections().map(({ id, component: Section }) => (
-          <Section key={id} app={app} />
-        ))}
+        {sections
+          .filter((section) => section.order >= 0)
+          .map(({ id, component: Section }) => (
+            <Section key={id} app={app} />
+          ))}
         <TrashSection tree={tree} doc={doc} />
       </div>
       <footer className="sidebar-footer">

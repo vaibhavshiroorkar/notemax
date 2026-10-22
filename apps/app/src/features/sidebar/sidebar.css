@@ -164,3 +164,27 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 30px;
 }
+
+/* One faint line per level, down from the folder's arrow, so nesting is easy to follow. */
+.sidebar ul.guided {
+  position: relative;
+}
+
+.sidebar ul.guided::before {
+  position: absolute;
+  top: 0;
+  bottom: 4px;
+  left: var(--guide);
+  border-left: 1px solid var(--border);
+  content: "";
+  pointer-events: none;
+}
+
+/* Rows picked with Ctrl+click or Shift+click. */
+.row[aria-selected="true"] {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.row[aria-selected="true"]:hover {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+}

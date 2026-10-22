@@ -35,7 +35,7 @@ export interface Plugin {
   sidePanels?: SidePanel[];
   /** Shown under the title of a note or book page, like its tags. */
   pageHeader?: PageAddon[];
-  /** Extra sections in the left sidebar, between the notes and the trash. */
+  /** Extra sections in the left sidebar: between the notes and the trash, or above the notes with an order below 0. */
   sidebarSections?: SidebarSection[];
   /**
    * A React hook. While it returns a filter, the sidebar lists only the items
@@ -105,8 +105,8 @@ export interface AppContext {
   openView(id: string, options?: Record<string, unknown>, where?: { newTab?: boolean }): void;
   /** Adds a note, book or folder at the top level and opens it. */
   create(kind: NodeKind): void;
-  /** Moves an item to the trash and offers Undo for a few seconds. */
-  trash(id: string): void;
+  /** Moves one item or several to the trash and offers Undo for a few seconds. */
+  trash(ids: string | readonly string[]): void;
   /** A short message at the bottom of the window, with an optional button. */
   notify(message: string, action?: { label: string; run(): void }): void;
   /** Back and forward through opened pages, like a browser. */
@@ -211,7 +211,7 @@ export interface PageAddon {
 
 export interface SidebarSection {
   id: string;
-  /** Sections are sorted by this, low first. */
+  /** Sections are sorted by this, low first. Below 0 they show above the notes, like Starred. */
   order: number;
   component: ComponentType<{ app: AppContext }>;
 }
@@ -269,6 +269,8 @@ export interface ShortcutHint {
 export type ContextTarget =
   /** A page: its row in a sidebar, its title, or its dot in the graph. */
   | { type: "page"; node: TreeNode }
+  /** Several rows picked with Ctrl+click or Shift+click, in the order the sidebar shows them. */
+  | { type: "pages"; nodes: TreeNode[] }
   /** Inside a note. The editor's selection says what is under the pointer. */
   | { type: "editor"; editor: Editor; noteId: string }
   /** Empty space in the left sidebar. */

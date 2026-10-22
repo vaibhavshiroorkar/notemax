@@ -75,7 +75,7 @@ Every field is optional.
 | `pageCorner` | The top right of a page. |
 | `pageHeader` | Under a page's title. |
 | `pageFooter` | At the end of a page. |
-| `sidebarSections` | The left sidebar, between the pages and the trash. |
+| `sidebarSections` | The left sidebar, between the pages and the trash. With an `order` below 0, above the pages, like Starred. |
 | `sidebarFooter` | The bar at the bottom of the left sidebar, left of the Settings cog, like the account and sync. |
 | `overlays` | Full-window views, opened with `app.openOverlay(id)`. |
 | `views` | Pages of their own that open in a tab, like the graph. Open one with `app.openView(id)`. |
@@ -94,9 +94,11 @@ Community plugins cannot add new kinds of pages yet.
 Each item names the `targets` it shows on:
 
 - `page`: a page's row in a sidebar, its title in the chapter list, or its dot in the graph.
+- `pages`: several rows picked with Ctrl+click or Shift+click. Read `target.nodes`, in the order the sidebar shows them.
 - `editor`: inside a note. Read `target.editor` for the selection.
 - `sidebar`: empty space in the left sidebar.
 - `download`: the download button at the top right of a page.
+- `tab`: a tab above the page.
 
 Items with the same `group` sit together, with a line between groups. Built-in groups keep a fixed order (open, clipboard, create, edit, duplicate, format, block, insert, link, image, tags, layout, share, select, danger). New groups go after them. `when` hides an item, `disabled` greys it out, `submenu` opens a small menu to the side, and `danger` draws it in red.
 

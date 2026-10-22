@@ -14,6 +14,7 @@ import { settingsPlugin } from "@/features/settings/plugin";
 import { shortcutsPlugin } from "@/features/shortcuts/plugin";
 import { sidebarPlugin } from "@/features/sidebar/plugin";
 import { slashPlugin } from "@/features/slash/plugin";
+import { starPlugin } from "@/features/star/plugin";
 import { syncPlugin } from "@/features/sync/plugin";
 import { tagsPlugin } from "@/features/tags/plugin";
 import { registerPlugin } from "./registry";
@@ -25,6 +26,7 @@ import { registerPlugin } from "./registry";
 [
   notesPlugin,
   sidebarPlugin,
+  starPlugin,
   booksPlugin,
   boardsPlugin,
   tagsPlugin,

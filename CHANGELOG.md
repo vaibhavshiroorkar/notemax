@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.17.0 (2026-10-22)
+
+- Pick several pages with Ctrl+click or Shift+click, then drag, star or trash them together. Esc lets go.
+- Star pages to keep them at the top of the sidebar, from a right click, the star at the top right of a page, or Ctrl+K.
+- Folder rows lose their icon and always show their arrow, with a guide line down each level.
+- Middle-click a page in the sidebar to open it in a new tab.
+
 ## 0.16.0 (2026-10-22)
 
 - An account bar at the bottom left: your name, how sync is going, a sync button and the Settings cog. A click opens sign-in and sync.

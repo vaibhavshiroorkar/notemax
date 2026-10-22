@@ -1,11 +1,11 @@
-import { memo, type DragEvent, type MouseEvent } from "react";
+import { memo, type CSSProperties, type DragEvent, type MouseEvent } from "react";
 import { canMove, isContainer, type NodeKind, type Tree, type TreeItem } from "@notemax/core";
 import { prefetchDoc } from "@/data/docCache";
 import { useSelect } from "@/platform/store";
 import { registry } from "@/plugins/registry";
 import { Icon } from "@/ui/Icon";
 import { dragged, endDrag, placementFor, startDrag, zoneFor, type Placement, type Zone } from "./drag";
-import { collapsed, dropTarget, editingId, markedId, toggleCollapsed } from "./state";
+import { collapsed, dropTarget, editingId, markedId, selection, toggleCollapsed } from "./state";
 
 /**
  * Actions the rows share. The sidebar makes it once, so it never changes and
@@ -15,7 +15,9 @@ export interface RowContext {
   /** The latest tree, for working out where a drop lands. */
   tree(): Tree;
   rename(id: string, title: string): void;
-  select(id: string): void;
+  select(id: string, newTab?: boolean): void;
+  /** Ctrl+click and Shift+click pick rows. Returns true when the click did that, so it opens nothing. */
+  pick(item: TreeItem, event: MouseEvent): boolean;
   add(kind: NodeKind, parentId: string): void;
   trash(id: string): void;
   drop(placement: Placement): void;
@@ -25,8 +27,10 @@ export interface RowContext {
 
 export function Rows({ items, depth, ctx }: { items: TreeItem[]; depth: number; ctx: RowContext }) {
   if (!items.length) return null;
+  // A nested list draws a guide line down from its folder's chevron, so each level is easy to follow.
+  const guide = depth > 0 ? ({ "--guide": `${16 + (depth - 1) * 14}px` } as CSSProperties) : undefined;
   return (
-    <ul>
+    <ul className={guide ? "guided" : undefined} style={guide}>
       {items.map((item) => (
         <Row key={item.id} item={item} depth={depth} ctx={ctx} />
       ))}
@@ -37,8 +41,7 @@ export function Rows({ items, depth, ctx }: { items: TreeItem[]; depth: number; 
 /** Renames a folder in place. Every keystroke is saved, so Enter, Esc and clicking away all just finish. */
 function FolderNameInput({ item, ctx }: { item: TreeItem; ctx: RowContext }) {
   return (
-    <span className="row-title icon-title">
-      <Icon name="folder" />
+    <span className="row-title">
       <input
         className="folder-name"
         aria-label="Folder name"
@@ -79,11 +82,15 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
   const open = useSelect(collapsed, (closed) => !closed.has(item.id));
   const editing = useSelect(editingId, (id) => id === item.id);
   const current = useSelect(markedId, (id) => id === item.id);
-  const isDragged = useSelect(dragged, (d) => d?.id === item.id);
+  const selected = useSelect(selection, (picked) => picked.has(item.id));
+  // A picked row fades with the one being dragged, since they all move together.
+  const isDragged = useSelect(dragged, (d) => !!d && (d.id === item.id || (selected && selection.get().has(d.id))));
   const dropZone = useSelect(dropTarget, (target) => (target?.id === item.id ? target.zone : undefined));
 
   // A book's chapters are listed in the book panel on the right, not here.
   const hasChildren = item.kind !== "book" && item.children.length > 0;
+  // A folder always shows its arrow, even empty, so it reads as a folder without an icon.
+  const foldable = hasChildren || item.kind === "folder";
   const title = item.title || "Untitled";
 
   const allowedPlacement = (event: DragEvent) => {
@@ -98,10 +105,12 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
     <li>
       <div
         className="row"
+        data-id={item.id}
         data-kind={item.kind}
         data-drop={dropZone}
         data-dragging={isDragged || undefined}
         aria-current={current ? "page" : undefined}
+        aria-selected={selected || undefined}
         style={{ paddingLeft: 4 + depth * 14 }}
         // Off while naming, so selecting text in the name box does not start a drag.
         draggable={!editing}
@@ -113,6 +122,10 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
         }}
         onDragEnd={endDrag}
         onContextMenu={(event) => ctx.menu(item.id, event)}
+        // Shift+click picks a range; without this it would also select the text between.
+        onMouseDown={(event) => event.shiftKey && event.preventDefault()}
+        // A middle click opens the page in a new tab, as in a browser.
+        onAuxClick={(event) => event.button === 1 && item.kind !== "folder" && ctx.select(item.id, true)}
         onDragOver={(event) => {
           const moving = dragged.get();
           if (!moving) return;
@@ -127,7 +140,7 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
           if (placement) ctx.drop(placement);
         }}
       >
-        {hasChildren ? (
+        {foldable ? (
           <button className="icon-button" aria-label={open ? `Collapse ${title}` : `Expand ${title}`} onClick={() => toggleCollapsed(item.id)}>
             <Icon name={open ? "chevron-down" : "chevron-right"} />
           </button>
@@ -139,10 +152,10 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
         ) : item.kind === "folder" ? (
           // Folders have no page of their own: clicking one opens or closes it.
           <button
-            className="row-title icon-title"
+            className="row-title"
             aria-expanded={open}
             title="Double-click or F2 to rename"
-            onClick={() => toggleCollapsed(item.id)}
+            onClick={(event) => ctx.pick(item, event) || toggleCollapsed(item.id)}
             onDoubleClick={() => editingId.set(item.id)}
             onKeyDown={(event) => {
               if (event.key !== "F2") return;
@@ -152,22 +165,21 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
               editingId.set(item.id);
             }}
           >
-            <Icon name="folder" />
             <span>{title}</span>
           </button>
         ) : item.kind === "book" ? (
           // A book opens its own page, with the chapters in order. It is renamed there.
-          <button className="row-title icon-title" onClick={() => ctx.select(item.id)}>
+          <button className="row-title icon-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)}>
             <Icon name="book" />
             <span>{title}</span>
           </button>
         ) : item.kind === "note" ? (
-          <button className="row-title" onClick={() => ctx.select(item.id)} {...prefetchOnHover(item.id)}>
+          <button className="row-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)} {...prefetchOnHover(item.id)}>
             {title}
           </button>
         ) : (
           // Other pages, like boards, show the icon their plugin gave them.
-          <button className="row-title icon-title" onClick={() => ctx.select(item.id)} {...prefetchOnHover(item.id)}>
+          <button className="row-title icon-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)} {...prefetchOnHover(item.id)}>
             <Icon name={registry.iconOf(item.kind)} />
             <span>{title}</span>
           </button>

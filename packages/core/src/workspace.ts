@@ -314,6 +314,28 @@ export function moveNode(doc: Y.Doc, id: string, parentId: string, index: number
   });
 }
 
+/**
+ * Moves several nodes under `parentId`, together and in the order given, just
+ * before `nextId` (or at the end when it is null). A node inside another one
+ * being moved goes along with it, and a node that may not go there is skipped.
+ */
+export function moveNodes(doc: Y.Doc, ids: string[], parentId: string, nextId: string | null) {
+  const tree = readTree(doc);
+  const moving = ids.filter((id) => !ids.some((other) => other !== id && isInside(tree, id, other)) && !canMove(tree, id, parentId));
+  const set = new Set(moving);
+  // When the target is moving too, the block goes before the next sibling that stays.
+  const siblings = childrenOf(tree, parentId);
+  const from = nextId === null ? siblings.length : siblings.findIndex((item) => item.id === nextId);
+  const anchor = from < 0 ? null : (siblings.slice(from).find((item) => !set.has(item.id))?.id ?? null);
+  doc.transact(() => {
+    for (const id of moving) {
+      const rest = childrenOf(readTree(doc), parentId).filter((item) => item.id !== id);
+      const at = anchor === null ? rest.length : rest.findIndex((item) => item.id === anchor);
+      moveNode(doc, id, parentId, at);
+    }
+  });
+}
+
 /** Adds a node at the end of ROOT or of a folder or book that may hold it. */
 export function createNode(doc: Y.Doc, kind: NodeKind, parentId: string, title = "", id: string = crypto.randomUUID()): string {
   if (!KINDS.includes(kind)) throw new Error(`unknown kind ${kind}`);

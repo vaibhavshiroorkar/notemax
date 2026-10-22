@@ -1,0 +1,16 @@
+.starred {
+  margin-bottom: 16px;
+}
+
+.star-button[data-on] {
+  color: #f0b400;
+}
+
+/* Filled when on. CSS beats the icon's fill="none" attribute. */
+.star-button[data-on] svg {
+  fill: currentColor;
+}
+
+.starred .row {
+  padding-left: 6px;
+}

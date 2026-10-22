@@ -18,6 +18,7 @@ export {
   isInside,
   canMove,
   moveNode,
+  moveNodes,
   createNode,
   duplicateNote,
   ensureWelcome,

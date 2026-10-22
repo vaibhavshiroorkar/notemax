@@ -259,16 +259,19 @@ export function App() {
       // A folder has no page; it is named in its sidebar row instead.
       if (kind !== "folder") select(id);
     },
-    trash(id) {
-      const node = tree.byId.get(id);
-      const wasOpen = id === activeId;
-      trashNode(doc, id);
-      showToast(`Moved "${node?.title || `Untitled ${node?.kind ?? "note"}`}" to trash`, {
+    trash(ids) {
+      const list = typeof ids === "string" ? [ids] : [...ids];
+      if (!list.length) return;
+      const node = tree.byId.get(list[0]);
+      const wasOpen = activeId !== null && list.includes(activeId) ? activeId : null;
+      doc.transact(() => list.forEach((id) => trashNode(doc, id)));
+      const what = list.length > 1 ? `${list.length} pages` : `"${node?.title || `Untitled ${node?.kind ?? "note"}`}"`;
+      showToast(`Moved ${what} to trash`, {
         label: "Undo",
         run() {
-          restoreNode(doc, id);
+          doc.transact(() => list.forEach((id) => restoreNode(doc, id)));
           // The tab moved on to another page; Undo brings the page back to it.
-          if (wasOpen) replacePage(id);
+          if (wasOpen) replacePage(wasOpen);
         },
       });
     },

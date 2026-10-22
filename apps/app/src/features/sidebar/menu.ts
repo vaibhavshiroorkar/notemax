@@ -2,7 +2,7 @@ import { ROOT, createNode, isContainer, type TreeNode } from "@notemax/core";
 import { isDesktop } from "@/platform/platform";
 import { registry } from "@/plugins/registry";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
-import { editingId, expand } from "./state";
+import { clearSelection, editingId, expand } from "./state";
 
 const nodeOf = (target: ContextTarget): TreeNode | null => (target.type === "page" ? target.node : null);
 const isPage = (target: ContextTarget) => !!nodeOf(target) && nodeOf(target)!.kind !== "folder";
@@ -100,6 +100,30 @@ export const PAGE_MENU: ContextMenuItem[] = [
     danger: true,
     targets: ["page"],
     run: (target, app) => app.trash(nodeOf(target)!.id),
+  },
+  {
+    id: "pages.trash",
+    title: "Move to trash",
+    group: "danger",
+    targets: ["pages"],
+    // Made when the menu opens, so the title can say how many.
+    items: (target) =>
+      target.type !== "pages"
+        ? []
+        : [
+            {
+              id: "pages.trash.all",
+              title: `Move ${target.nodes.length} pages to trash`,
+              group: "danger",
+              icon: "trash",
+              danger: true,
+              targets: ["pages"],
+              run(_target: ContextTarget, app: AppContext) {
+                app.trash(target.nodes.map((node) => node.id));
+                clearSelection();
+              },
+            },
+          ],
   },
   {
     id: "sidebar.new",
