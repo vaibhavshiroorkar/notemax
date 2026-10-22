@@ -48,6 +48,9 @@ export const imagesPlugin: Plugin = {
     {
       title: "Picture",
       hint: "paste or drop",
+      description: "From your device",
+      icon: "image",
+      group: "Media",
       keywords: ["image", "photo", "picture", "img", "upload"],
       apply: (chain) =>
         chain.command(({ editor }) => {

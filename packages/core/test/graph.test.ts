@@ -28,6 +28,14 @@ describe("graph", () => {
     expect(nodes.find((n) => n.id === b)!.degree).toBe(2);
   });
 
+  it("says how deep each page sits, so higher pages can be drawn bigger", () => {
+    const { doc, a, b, folder } = workspace();
+    const sub = createNode(doc, "note", a, "Under A");
+    const { nodes } = buildGraph(readTree(doc), { containers: true });
+    const level = (id: string) => nodes.find((n) => n.id === id)!.level;
+    expect([level(folder), level(b), level(a), level(sub)]).toEqual([0, 0, 1, 2]);
+  });
+
   it("can show folders joined to what they hold, and hide lonely pages", () => {
     const { doc, folder, a, lonely } = workspace();
     const withFolders = buildGraph(readTree(doc), { containers: true });

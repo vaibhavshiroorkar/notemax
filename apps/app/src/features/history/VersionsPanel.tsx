@@ -45,7 +45,7 @@ export function VersionsPanel({ app }: { app: AppContext }) {
             <li key={version.id}>
               <button className="version-row" onClick={() => app.openOverlay("history.preview", { pageId: id, versionId: version.id })}>
                 <span>{whenOf(version.time)}</span>
-                {version.words !== null && <span className="version-words">{version.words.toLocaleString()} words</span>}
+                {version.words !== null && <span className="version-words">{version.words.toLocaleString()} {version.words === 1 ? "word" : "words"}</span>}
               </button>
             </li>
           ))}

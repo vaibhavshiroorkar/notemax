@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
+import { Fragment, useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
 import "./suggestion.css";
 
 export interface SuggestionListHandle {
@@ -18,6 +18,7 @@ export function SuggestionList<T>({
   empty,
   itemKey,
   renderItem,
+  groupOf,
 }: {
   ref?: Ref<SuggestionListHandle>;
   items: T[];
@@ -27,6 +28,8 @@ export function SuggestionList<T>({
   empty: ReactNode;
   itemKey(item: T): string;
   renderItem(item: T): ReactNode;
+  /** A heading above the first item of each group, like "Lists". */
+  groupOf?(item: T): string;
 }) {
   const [index, setIndex] = useState(0);
   const list = useRef<HTMLDivElement>(null);
@@ -50,20 +53,30 @@ export function SuggestionList<T>({
   return (
     <div ref={list} className={`suggest-menu ${className ?? ""}`} role="listbox" aria-label={label}>
       {items.length === 0 && <div className="suggest-empty">{empty}</div>}
-      {items.map((item, i) => (
-        <button
-          key={itemKey(item)}
-          role="option"
-          aria-selected={i === index}
-          className="suggest-item"
-          // Keep focus in the editor, so the suggestion stays open until the click lands.
-          onMouseDown={(event) => event.preventDefault()}
-          onMouseEnter={() => setIndex(i)}
-          onClick={() => command(item)}
-        >
-          {renderItem(item)}
-        </button>
-      ))}
+      {items.map((item, i) => {
+        const group = groupOf?.(item);
+        return (
+          <Fragment key={itemKey(item)}>
+            {group && group !== (i > 0 ? groupOf!(items[i - 1]) : undefined) && (
+              <div className="suggest-group" role="presentation">
+                {group}
+              </div>
+            )}
+            <button
+              role="option"
+              aria-selected={i === index}
+              className="suggest-item"
+              // Keep focus in the editor, so the suggestion stays open until the click lands.
+              onMouseDown={(event) => event.preventDefault()}
+              // Move, not enter: arrow keys scroll the list under a still pointer, which must not take the choice back.
+              onMouseMove={() => i !== index && setIndex(i)}
+              onClick={() => command(item)}
+            >
+              {renderItem(item)}
+            </button>
+          </Fragment>
+        );
+      })}
     </div>
   );
 }

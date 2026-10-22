@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.29.0 (2026-10-22)
+
+- The / menu groups its blocks (Basic, Lists, Blocks, Media), shows an icon and a short line for each, and finds them by initials or loose letters, like "bl" for Bulleted list. It fades in, and the pointer no longer steals the choice while you use the arrows.
+- Typing "1) " starts a numbered list, like "1. ", at the number you typed.
+- Tab indents a paragraph or heading and Shift+Tab pulls it back, as in Word. In a list they nest the item, and in a code block Tab types a tab. Tab no longer jumps out of the note.
+- Graph dots are bigger the higher a page sits in the sidebar.
+
 ## 0.28.0 (2026-10-22)
 
 - Version history for notes. Notemax keeps how a note was before you started editing, one version every 10 minutes of editing, and how you left it. Old versions thin out to one a day, then one a week.

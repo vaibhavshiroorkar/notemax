@@ -4,6 +4,7 @@ import { duplicate } from "./duplicate";
 import { EditorSection } from "./EditorSection";
 import { LAYOUT_MENU, layoutOf, toggleLayout } from "./layout";
 import { LayoutSetting } from "./LayoutSetting";
+import { Indent, ParenthesisList } from "./writing";
 import { EDITOR_MENU } from "./menu";
 import { NotePane } from "./NotePane";
 
@@ -42,13 +43,15 @@ export const notesPlugin: Plugin = {
     { title: "Quote", keys: "Mod+Shift+B" },
     { title: "Code block", keys: "Mod+Alt+C" },
     { title: "Line break inside a block", keys: "Shift+Enter" },
-    { title: "Indent or outdent a list item", keys: "Tab" },
+    { title: "Indent a paragraph, or nest a list item", keys: "Tab" },
+    { title: "Outdent it again", keys: "Shift+Tab" },
     { title: "Undo", keys: "Mod+Z" },
     { title: "Redo", keys: "Mod+Shift+Z" },
     { title: "Paste as plain text", keys: "Mod+Shift+V" },
     { title: "The browser's own menu, with spelling suggestions", keys: "Shift+Right click" },
   ],
-  contentExtensions: () => [TaskList, TaskItem.configure({ nested: true })],
+  contentExtensions: () => [TaskList, TaskItem.configure({ nested: true }), Indent],
+  editorExtensions: () => [ParenthesisList],
   kinds: [{ kind: "note", label: "New note", icon: "note" }],
   pageViews: [{ kind: "note", component: NotePane }],
   contextMenu: [

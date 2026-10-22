@@ -7,7 +7,14 @@ type Line = SimulationLinkDatum<Dot> & { kind: Graph["edges"][number]["kind"] };
 
 const ZOOM = { min: 0.1, max: 4 };
 
-const radiusOf = (dot: Dot, compact: boolean) => (dot.depth === 0 ? (compact ? 7 : 9) : (compact ? 3 : 3.5) + Math.sqrt(dot.degree) * (compact ? 1.2 : 1.6));
+// Pages higher in the tree get bigger dots, top-level ones the biggest, and
+// busier pages grow a little. The page a local graph centers on is never small.
+const LEVEL_RADIUS = [8, 6.5, 5.5, 4.5];
+const radiusOf = (dot: Dot, compact: boolean) => {
+  const base = LEVEL_RADIUS[Math.min(dot.level ?? LEVEL_RADIUS.length - 1, LEVEL_RADIUS.length - 1)] + Math.sqrt(dot.degree) * 0.8;
+  const size = dot.depth === 0 ? Math.max(base, 9) : base;
+  return compact ? size * 0.75 : size;
+};
 
 /** Colors from the theme, read on every draw so the graph follows light and dark. */
 function palette(el: Element) {

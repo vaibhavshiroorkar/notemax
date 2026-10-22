@@ -1,4 +1,4 @@
-import { isContainer, type NodeKind, type Tree } from "./workspace";
+import { ROOT, isContainer, type NodeKind, type Tree } from "./workspace";
 
 export interface GraphNode {
   id: string;
@@ -9,6 +9,8 @@ export interface GraphNode {
   degree: number;
   /** Steps from the center page in a local graph, 0 for the center. Undefined in a full graph. */
   depth?: number;
+  /** How deep the page sits in the sidebar: 0 at the top level. Undefined for tags. */
+  level?: number;
 }
 
 export interface GraphEdge {
@@ -118,12 +120,19 @@ export function buildGraph(tree: Tree, { around, containers = false, hideLonely 
   const degree = new Map<string, number>();
   for (const edge of edges) for (const end of [edge.source, edge.target]) degree.set(end, (degree.get(end) ?? 0) + 1);
 
+  // Counted along the shown tree, so a page moved into a folder grows smaller at once.
+  const levelOf = (id: string) => {
+    let level = 0;
+    for (let item = tree.items.get(id); item && item.parentId !== ROOT && level < 64; item = tree.items.get(item.parentId)) level++;
+    return level;
+  };
+
   const nodes = ids
     .filter((id) => !hideLonely || degree.has(id) || id === around?.center)
     .map((id): GraphNode => {
       const node = tree.byId.get(id);
       if (!node) return { id, title: `#${id.slice(4)}`, kind: "tag", degree: degree.get(id) ?? 0, depth: depthOf.get(id) };
-      return { id, title: node.title, kind: node.kind, degree: degree.get(id) ?? 0, depth: depthOf.get(id) };
+      return { id, title: node.title, kind: node.kind, degree: degree.get(id) ?? 0, depth: depthOf.get(id), level: levelOf(id) };
     });
   return { nodes, edges };
 }

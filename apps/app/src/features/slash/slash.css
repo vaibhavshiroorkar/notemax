@@ -1,7 +1,40 @@
 .slash-menu {
-  width: 240px;
-  /* All ten items fit without scrolling. */
-  max-height: 420px;
+  width: 280px;
+  max-height: min(420px, 50vh);
+}
+
+.slash-menu .suggest-item {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.slash-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--muted);
+}
+
+.slash-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.slash-description {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .slash-hint {

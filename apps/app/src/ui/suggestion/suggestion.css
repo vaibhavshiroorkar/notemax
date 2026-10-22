@@ -8,6 +8,34 @@
   border-radius: 8px;
   background: var(--bg);
   box-shadow: var(--shadow);
+  animation: suggest-in 120ms ease-out;
+  transform-origin: top left;
+}
+
+@keyframes suggest-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .suggest-menu {
+    animation: none;
+  }
+}
+
+.suggest-group {
+  padding: 8px 8px 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.suggest-group:first-child {
+  padding-top: 4px;
 }
 
 .suggest-item {
@@ -19,6 +47,7 @@
   padding: 6px 8px;
   border-radius: 6px;
   text-align: left;
+  transition: background-color 80ms;
 }
 
 .suggest-item[aria-selected="true"] {

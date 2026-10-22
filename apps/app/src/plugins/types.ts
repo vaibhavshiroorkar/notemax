@@ -165,6 +165,11 @@ export interface SlashItem {
   /** The Markdown shortcut that does the same thing, so the menu teaches it. */
   hint: string;
   keywords: string[];
+  /** A few words under the title, like "Big section heading". */
+  description?: string;
+  icon?: IconName;
+  /** Items with the same group sit together under its name, like "Lists". */
+  group?: string;
   apply(chain: ChainedCommands): ChainedCommands;
 }
 
