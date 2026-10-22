@@ -20,6 +20,7 @@ import type {
   SidebarFilterChoice,
   SidebarFooterItem,
   SidebarSection,
+  SwitcherButton,
   SidePanel,
   SlashItem,
   StatusItem,
@@ -133,6 +134,7 @@ export const registry = {
   /** An option's plugin even when it is off, so reading its value never fails. */
   optionOf: (pluginId: string, optionId: string): PluginOption | undefined => plugins.find((p) => p.id === pluginId)?.options?.find((o) => o.id === optionId),
   sidebarSections: (): SidebarSection[] => all((p) => p.sidebarSections).sort((a, b) => a.order - b.order),
+  switcherButtons: (): SwitcherButton[] => all((p) => p.switcherButtons).filter((button) => button.when?.() ?? true),
   /** Hooks: the sidebar starts over when this list changes, so they are always called in the same order. */
   sidebarFilterHooks: (): (() => SidebarFilter | null)[] => all((p) => (p.useSidebarFilter ? [p.useSidebarFilter] : undefined)),
   /** What a right click on this thing offers, from every plugin, in groups. */

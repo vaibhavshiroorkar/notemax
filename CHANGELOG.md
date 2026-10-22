@@ -3,6 +3,14 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.59.0 (2026-10-23)
+
+- Community: a people button beside Home opens it over the whole window. Read everyone's posts, or only the people you follow, and search posts and people.
+- Post a note or book from its menu (Post to community...). Readers see it as it was when you posted; later edits stay private until you update the post, and you can take it down any time. The first time, you pick a unique username and confirm the work is yours to post.
+- Profiles show the name, a few words, posts, followers and following, with Follow and Edit profile.
+- Someone else's post can never run code in your app: only plain formatting, web links and https pictures show.
+- Needs the community tables on the server (supabase/migrations/20261023000000_community.sql). Off on devices set up to work offline.
+
 ## 0.58.0 (2026-10-23)
 
 - A book has text of its own: write a description above its chapters. Parts (books inside a book) have one too. Downloads of the book start with it.

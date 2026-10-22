@@ -20,6 +20,7 @@ import { formatPlugin } from "@/features/format/plugin";
 import { workspacesPlugin } from "@/features/workspaces/plugin";
 import { setupPlugin } from "@/features/setup/plugin";
 import { sharePlugin } from "@/features/share/plugin";
+import { communityPlugin } from "@/features/community/plugin";
 import { markdownFilesPlugin } from "@/features/markdown-files/plugin";
 import { datesPlugin } from "@/features/dates/plugin";
 import { specialPlugin } from "@/features/special/plugin";
@@ -49,6 +50,7 @@ import { registerPlugin } from "./registry";
   workspacesPlugin,
   setupPlugin,
   sharePlugin,
+  communityPlugin,
   markdownFilesPlugin,
   datesPlugin,
   specialPlugin,

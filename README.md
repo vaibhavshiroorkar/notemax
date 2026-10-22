@@ -46,6 +46,7 @@
 - Folders, books and notes in one sidebar. Drag to sort, put pages inside pages, or pick several and move them together.
 - Workspaces for separate parts of your life, arranged on a Home page. Copy or move pages between them.
 - Share a note by link and write in it together, live and end-to-end encrypted.
+- A community: post notes and books, follow writers, and search everything posted.
 - Tabs, stars, tags, daily notes with a calendar and a template, and a graph of how your pages connect.
 - Split view: drag tabs to any edge to work on pages side by side.
 - A right sidebar you arrange: turn sections on and off, and drag them into tabs.

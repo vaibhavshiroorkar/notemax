@@ -77,6 +77,7 @@ Every field is optional.
 | `pageSettings` | A row in the right sidebar's "This page" section, like a note's layout. |
 | `pageFooter` | At the end of a page. |
 | `sidebarSections` | The left sidebar, between the pages and the trash. With an `order` below 0, above the pages, like Starred. |
+| `switcherButtons` | A small button at the top left beside Home, with `label`, `icon`, `when()` and `run(app)`, for a place as big as the window, like the community. |
 | `useSidebarFilter` | A React hook. While it returns a filter, the sidebar lists only what passes it. |
 | `rowMarks` | A small icon at the end of a page's row in the left sidebar, with `icon`, `label` and `when(node)`, like the clock on temporary pages. |
 | `sidebarFilterChoices` | Choices in the sidebar's filter panel (the funnel by +), like "Starred only". |

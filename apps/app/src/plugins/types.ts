@@ -39,6 +39,8 @@ export interface Plugin {
   pageHeader?: PageAddon[];
   /** Extra sections in the left sidebar: between the notes and the trash, or above the notes with an order below 0. */
   sidebarSections?: SidebarSection[];
+  /** Small buttons at the top left, beside Home, for places as big as the window, like the community. */
+  switcherButtons?: SwitcherButton[];
   /**
    * A React hook. While it returns a filter, the sidebar lists only the items
    * that pass it. It is called on every sidebar render.
@@ -235,6 +237,15 @@ export interface SidebarSection {
 }
 
 /** A small icon on a sidebar row. Keep `when` cheap: it runs for every row that redraws. */
+export interface SwitcherButton {
+  id: string;
+  /** The tooltip and the words a screen reader says. */
+  label: string;
+  icon: IconName;
+  when?(): boolean;
+  run(app: AppContext): void;
+}
+
 export interface RowMark {
   id: string;
   icon: IconName;

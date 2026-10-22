@@ -9,7 +9,7 @@ import { printHtml } from "./save";
 import { escapeHtml, htmlDocument, toHtml, toMarkdown, toPlainText, type DocNode } from "./serialize";
 import { zip } from "./zip";
 
-interface Part {
+export interface Part {
   title?: string;
   body: DocNode;
   /** 0 for a chapter right in the book, 1 for one inside a part, and so on. A part's body is its description. */
@@ -30,7 +30,12 @@ async function boardPicture(id: string, app: AppContext): Promise<Asset | null> 
  * A page's text in parts: one for a note, one per chapter for a book, with
  * its parts as headings. `made` holds the pictures drawn for boards.
  */
-async function partsOf(node: TreeNode, app: AppContext): Promise<{ title: string; parts: Part[]; made: Map<string, Asset> }> {
+/**
+ * A page as titled parts in reading order: a note is one part; a book is its
+ * description, then its parts, chapters and subtopics. Boards become pictures,
+ * unless `boards` is false, as for a community post, which cannot carry them.
+ */
+export async function partsOf(node: TreeNode, app: AppContext, { boards = true } = {}): Promise<{ title: string; parts: Part[]; made: Map<string, Asset> }> {
   const title = node.title || (node.kind === "book" ? "Untitled book" : "Untitled");
   const made = new Map<string, Asset>();
   const book = app.tree.items.get(node.id);
@@ -43,7 +48,7 @@ async function partsOf(node: TreeNode, app: AppContext): Promise<{ title: string
     const part: Part = { title, body: EMPTY, level };
     // A part (a book inside the book) has a description of its own, like the book.
     if (item.kind === "note" || item.kind === "book") part.body = await loadBody(item.id);
-    else if (item.kind === "board") {
+    else if (item.kind === "board" && boards) {
       const picture = await boardPicture(item.id, app);
       if (picture) {
         const id = `board-${item.id}`;

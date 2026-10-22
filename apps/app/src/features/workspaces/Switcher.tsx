@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { currentWorkspace } from "@/platform/prefs";
+import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { askText } from "@/ui/Prompt";
@@ -40,6 +41,11 @@ export function Switcher({ app }: { app: AppContext }) {
       <button className="icon-button workspace-home" aria-label="Home" title="Home: all workspaces" onClick={() => app.openOverlay("home")}>
         <Icon name="home" />
       </button>
+      {registry.switcherButtons().map((button) => (
+        <button key={button.id} className="icon-button workspace-home" aria-label={button.label} title={button.label} onClick={() => button.run(app)}>
+          <Icon name={button.icon} />
+        </button>
+      ))}
       <button className="workspace-current" aria-haspopup="menu" aria-expanded={open} title="Switch workspace" onClick={() => setOpen(!open)}>
         <Dot color={current?.color ?? ""} />
         <span className="workspace-name">{current ? nameOf(current) : "My notes"}</span>

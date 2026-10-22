@@ -1,0 +1,313 @@
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { toHtml } from "@/features/export/serialize";
+import type { AppContext } from "@/plugins/types";
+import { Dialog } from "@/ui/Dialog";
+import { Icon } from "@/ui/Icon";
+import { safeHtml } from "@/ui/safeHtml";
+import { feed, follow, myId, myProfile, profilePage, readPost, searchPeople, searchPosts, type Post, type Profile, type ProfilePage } from "./api";
+import { ProfileForm } from "./ProfileForm";
+
+/** Where the community screen is: a place and what it needs to show it. */
+export type Place = { view: "feed"; following: boolean } | { view: "search"; words: string } | { view: "profile"; username: string } | { view: "post"; id: string } | { view: "me" };
+
+const when = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
+const nameOf = (profile?: Profile) => profile?.display_name || profile?.username || "Someone";
+// Readers have none of the author's pages or pictures; the snapshot already holds what shows.
+const NOTHING = { title: () => null, image: () => null };
+
+/** A loader's result, with its error in words, and a way to load again. */
+function useLoad<T>(load: () => Promise<T>, deps: unknown[]): { data?: T; error?: string; loading: boolean; reload(): void } {
+  const [state, setState] = useState<{ data?: T; error?: string; loading: boolean }>({ loading: true });
+  const [round, setRound] = useState(0);
+  useEffect(() => {
+    let live = true;
+    setState((old) => ({ data: old.data, loading: true }));
+    load().then(
+      (data) => live && setState({ data, loading: false }),
+      (error: unknown) => live && setState({ error: error instanceof Error ? error.message : String(error), loading: false }),
+    );
+    return () => {
+      live = false;
+    };
+    // The caller names what the load depends on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...deps, round]);
+  return { ...state, reload: () => setRound((n) => n + 1) };
+}
+
+function Avatar({ profile, size = 28 }: { profile?: Profile; size?: number }) {
+  const [broken, setBroken] = useState(false);
+  if (profile?.avatar_url && !broken) return <img className="community-avatar" src={profile.avatar_url} alt="" width={size} height={size} referrerPolicy="no-referrer" onError={() => setBroken(true)} />;
+  return (
+    <span className="community-avatar" data-initial style={{ width: size, height: size }} aria-hidden="true">
+      {nameOf(profile).slice(0, 1).toUpperCase()}
+    </span>
+  );
+}
+
+function Byline({ profile, go, children }: { profile?: Profile; go(place: Place): void; children?: ReactNode }) {
+  return (
+    <span className="community-byline">
+      <button className="community-person" onClick={() => profile && go({ view: "profile", username: profile.username })}>
+        <Avatar profile={profile} size={22} />
+        <span>{nameOf(profile)}</span>
+        {profile && <span className="community-handle">@{profile.username}</span>}
+      </button>
+      {children}
+    </span>
+  );
+}
+
+function PostList({ posts, go, empty }: { posts: Post[]; go(place: Place): void; empty: ReactNode }) {
+  if (!posts.length) return <p className="community-empty">{empty}</p>;
+  return (
+    <ul className="community-posts">
+      {posts.map((post) => (
+        <li key={post.id} className="community-card">
+          <Byline profile={post.profile} go={go}>
+            <span className="community-meta">{when(post.published_at)}</span>
+          </Byline>
+          <button className="community-card-open" onClick={() => go({ view: "post", id: post.id })}>
+            <strong className="community-card-title">
+              {post.kind === "book" && <Icon name="book" />}
+              {post.title}
+            </strong>
+            {post.summary && <span className="community-summary">{post.summary}</span>}
+            <span className="community-meta">
+              {plural(post.words, "word")}
+              {post.tags.map((tag) => (
+                <span key={tag} className="community-tag">
+                  #{tag}
+                </span>
+              ))}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Status({ error, loading, children }: { error?: string; loading: boolean; children: ReactNode }) {
+  if (error) return <p className="community-error">{error}</p>;
+  if (loading) return <p className="community-empty" aria-busy="true">Loading...</p>;
+  return <>{children}</>;
+}
+
+function FeedView({ following, go, signedIn }: { following: boolean; go(place: Place): void; signedIn: boolean }) {
+  const { data, error, loading } = useLoad(() => feed(following), [following]);
+  return (
+    <>
+      <div className="community-tabs" role="tablist" aria-label="Feed">
+        <button role="tab" aria-selected={!following} onClick={() => go({ view: "feed", following: false })}>
+          Everyone
+        </button>
+        <button role="tab" aria-selected={following} disabled={!signedIn} title={signedIn ? undefined : "Sign in to follow people"} onClick={() => go({ view: "feed", following: true })}>
+          Following
+        </button>
+      </div>
+      <Status error={error} loading={loading && !data}>
+        <PostList
+          posts={data ?? []}
+          go={go}
+          empty={following ? "Nobody you follow has posted yet. Find people with the search above." : "Nothing here yet. Post a note or book from its menu (Post to community) to be the first."}
+        />
+      </Status>
+    </>
+  );
+}
+
+function SearchView({ words, go }: { words: string; go(place: Place): void }) {
+  const posts = useLoad(() => searchPosts(words), [words]);
+  const people = useLoad(() => searchPeople(words), [words]);
+  return (
+    <>
+      <h2 className="community-heading">People</h2>
+      <Status error={people.error} loading={people.loading && !people.data}>
+        {people.data?.length ? (
+          <ul className="community-people">
+            {people.data.map((person) => (
+              <li key={person.id}>
+                <button className="community-person" onClick={() => go({ view: "profile", username: person.username })}>
+                  <Avatar profile={person} />
+                  <span>{nameOf(person)}</span>
+                  <span className="community-handle">@{person.username}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="community-empty">Nobody by that name.</p>
+        )}
+      </Status>
+      <h2 className="community-heading">Posts</h2>
+      <Status error={posts.error} loading={posts.loading && !posts.data}>
+        <PostList posts={posts.data ?? []} go={go} empty={`No posts match "${words}".`} />
+      </Status>
+    </>
+  );
+}
+
+function ProfileView({ username, go, me }: { username: string; go(place: Place): void; me: string | null }) {
+  const { data, error, loading, reload } = useLoad<ProfilePage | null>(() => profilePage(username), [username]);
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string>();
+  if (error || (loading && !data)) return <Status error={error} loading>{null}</Status>;
+  if (!data) return <p className="community-empty">Nobody goes by @{username}.</p>;
+  const { profile, posts, followers, following, followed } = data;
+  const toggle = async () => {
+    setBusy(true);
+    setProblem(undefined);
+    try {
+      await follow(profile.id, !followed);
+      reload();
+    } catch (failure) {
+      setProblem(failure instanceof Error ? failure.message : String(failure));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <header className="community-profile">
+        <Avatar profile={profile} size={64} />
+        <div className="community-profile-text">
+          <h2>{nameOf(profile)}</h2>
+          <span className="community-handle">@{profile.username}</span>
+          {profile.bio && <p>{profile.bio}</p>}
+          <span className="community-meta">
+            {plural(posts.length, "post")} - {plural(followers, "follower")} - {following.toLocaleString()} following
+          </span>
+        </div>
+        {profile.id === me ? (
+          <button className="button" onClick={() => go({ view: "me" })}>
+            Edit profile
+          </button>
+        ) : (
+          followed !== null && (
+            <button className={followed ? "button" : "button button-primary"} disabled={busy} onClick={() => void toggle()}>
+              {followed ? "Following" : "Follow"}
+            </button>
+          )
+        )}
+      </header>
+      {problem && <p className="community-error">{problem}</p>}
+      <PostList posts={posts} go={go} empty={profile.id === me ? "You have not posted yet." : "No posts yet."} />
+    </>
+  );
+}
+
+function PostView({ id, go }: { id: string; go(place: Place): void }) {
+  const { data: post, error, loading } = useLoad(() => readPost(id), [id]);
+  if (error || (loading && !post)) return <Status error={error} loading>{null}</Status>;
+  if (!post) return <p className="community-empty">This post was taken down.</p>;
+  return (
+    <article className="community-post">
+      <Byline profile={post.profile} go={go}>
+        <span className="community-meta">
+          {when(post.published_at)}
+          {post.updated_at.slice(0, 10) !== post.published_at.slice(0, 10) && `, updated ${when(post.updated_at)}`}
+        </span>
+      </Byline>
+      <h1>{post.title}</h1>
+      {post.summary && <p className="community-summary">{post.summary}</p>}
+      {post.tags.length > 0 && (
+        <p className="community-meta">
+          {post.tags.map((tag) => (
+            <button key={tag} className="community-tag" onClick={() => go({ view: "search", words: tag })}>
+              #{tag}
+            </button>
+          ))}
+        </p>
+      )}
+      {post.parts.map((part, i) => {
+        const level = Math.min(2 + (part.level ?? 0), 6);
+        const Heading = `h${level}` as "h2";
+        return (
+          <section key={i} className="community-part">
+            {part.title && <Heading>{part.title}</Heading>}
+            <div className="community-body" dangerouslySetInnerHTML={{ __html: safeHtml(toHtml(part.body.content ?? [], NOTHING)) }} />
+          </section>
+        );
+      })}
+    </article>
+  );
+}
+
+/**
+ * The community over the whole window: everyone's posts or the people
+ * followed, search across posts and people, profiles, and posts to read.
+ * Reading needs no account; posting and following do.
+ */
+export function CommunityScreen({ app, options, onClose }: { app: AppContext; options: Record<string, unknown>; onClose(): void }) {
+  const first: Place = typeof options.username === "string" ? { view: "profile", username: options.username } : options.place === "me" ? { view: "me" } : { view: "feed", following: false };
+  const [trail, setTrail] = useState<Place[]>([first]);
+  const place = trail.at(-1)!;
+  const go = useCallback((next: Place) => setTrail((old) => [...old, next]), []);
+  const back = () => setTrail((old) => (old.length > 1 ? old.slice(0, -1) : old));
+  const [query, setQuery] = useState("");
+  const [me, setMe] = useState<string | null>(null);
+  const [mine, setMine] = useState<Profile | null>(null);
+  useEffect(() => {
+    void myId().then(setMe, () => setMe(null));
+    void myProfile().then(setMine, () => setMine(null));
+  }, [place]);
+
+  return (
+    <Dialog label="Community" onClose={onClose} className="community-screen">
+      <header className="community-top">
+        <button className="icon-button" aria-label="Back" title="Back" disabled={trail.length < 2} onClick={back}>
+          <Icon name="arrow-left" />
+        </button>
+        <button className="community-title" onClick={() => go({ view: "feed", following: false })}>
+          Community
+        </button>
+        <form
+          className="community-search"
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (query.trim()) go({ view: "search", words: query.trim() });
+          }}
+        >
+          <Icon name="search" />
+          <input type="search" placeholder="Search posts and people" aria-label="Search the community" value={query} onChange={(event) => setQuery(event.target.value)} />
+        </form>
+        {me ? (
+          <button className="community-person" onClick={() => go(mine ? { view: "profile", username: mine.username } : { view: "me" })}>
+            <Avatar profile={mine ?? undefined} />
+            <span className="community-me">{mine ? "My profile" : "Pick a username"}</span>
+          </button>
+        ) : (
+          <button
+            className="button"
+            onClick={() => {
+              onClose();
+              app.openOverlay("account");
+            }}
+          >
+            Sign in to post
+          </button>
+        )}
+        <button className="icon-button" aria-label="Close community" title="Close (Esc)" onClick={onClose}>
+          <Icon name="close" />
+        </button>
+      </header>
+      <main className="community-page">
+        {place.view === "feed" && <FeedView following={place.following} go={go} signedIn={!!me} />}
+        {place.view === "search" && <SearchView key={place.words} words={place.words} go={go} />}
+        {place.view === "profile" && <ProfileView key={place.username} username={place.username} go={go} me={me} />}
+        {place.view === "post" && <PostView key={place.id} id={place.id} go={go} />}
+        {place.view === "me" && (
+          <ProfileForm
+            onSaved={(saved) => {
+              setMine(saved);
+              go({ view: "profile", username: saved.username });
+            }}
+          />
+        )}
+      </main>
+    </Dialog>
+  );
+}
