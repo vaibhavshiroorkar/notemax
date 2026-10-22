@@ -76,12 +76,58 @@ export const selectedInOrder = (tree: Tree): string[] => shownOrder(tree).filter
 function shownOrder(tree: Tree): string[] {
   const out: string[] = [];
   const closed = collapsed.get();
+  const { sort } = sidebarView.get();
   const walk = (items: readonly TreeItem[]) => {
-    for (const item of items) {
+    for (const item of sortItems(items, sort)) {
       out.push(item.id);
       if (item.kind !== "book" && !closed.has(item.id)) walk(item.children);
     }
   };
-  walk(tree.top);
+  for (const group of topGroups(tree)) walk(group.items);
   return out;
 }
+
+export type SortBy = "manual" | "title" | "created" | "edited";
+export type GroupBy = "none" | "kind";
+const SORTS: SortBy[] = ["manual", "title", "created", "edited"];
+
+/** How the sidebar orders and groups its rows. Kept across restarts. */
+export const sidebarView = savedStore<{ sort: SortBy; group: GroupBy }>(
+  "sidebarView",
+  { sort: "manual", group: "none" },
+  {
+    decode(raw) {
+      const value = JSON.parse(raw) as { sort?: SortBy; group?: GroupBy };
+      return { sort: SORTS.includes(value.sort!) ? value.sort! : "manual", group: value.group === "kind" ? "kind" : "none" };
+    },
+  },
+);
+
+const byTitle = (a: TreeItem, b: TreeItem) => (a.title || "Untitled").localeCompare(b.title || "Untitled", undefined, { numeric: true, sensitivity: "base" });
+
+/** One level of rows in the chosen order. Sorted, folders stay above pages, as in a file manager. */
+export function sortItems(items: readonly TreeItem[], sort: SortBy): readonly TreeItem[] {
+  if (sort === "manual") return items;
+  const key = sort === "title" ? byTitle : sort === "created" ? (a: TreeItem, b: TreeItem) => b.createdAt - a.createdAt : (a: TreeItem, b: TreeItem) => b.editedAt - a.editedAt;
+  const folder = (item: TreeItem) => (item.kind === "folder" ? 0 : 1);
+  return [...items].sort((a, b) => folder(a) - folder(b) || (folder(a) === 0 ? byTitle(a, b) : key(a, b)));
+}
+
+// Headings when the top level is grouped by kind, in the + menu's order.
+const GROUP_NAMES: Record<string, string> = { folder: "Folders", note: "Notes", book: "Books", board: "Boards" };
+
+// Kinds a plugin added go after the known ones.
+const groupRank = (kind: string) => (kind in GROUP_NAMES ? Object.keys(GROUP_NAMES).indexOf(kind) : 99);
+
+/** The top level, in groups with a heading when grouped by kind. Each group's rows are not sorted yet. */
+export function topGroups(tree: Tree): { label: string | null; items: TreeItem[] }[] {
+  if (sidebarView.get().group === "none") return [{ label: null, items: tree.top }];
+  const groups = new Map<string, TreeItem[]>();
+  for (const item of tree.top) groups.set(item.kind, [...(groups.get(item.kind) ?? []), item]);
+  return [...groups.entries()]
+    .sort(([a], [b]) => groupRank(a) - groupRank(b))
+    .map(([kind, items]) => ({ label: GROUP_NAMES[kind] ?? kind, items }));
+}
+
+/** The title search under the Notes heading. Null while it is closed. */
+export const titleQuery = createStore<string | null>(null);

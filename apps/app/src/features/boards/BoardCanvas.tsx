@@ -13,7 +13,7 @@ type Api = Parameters<NonNullable<Parameters<typeof Excalidraw>[0]["excalidrawAP
 type Elements = Parameters<typeof reconcileElements>[0];
 type RemoteElements = Parameters<typeof reconcileElements>[1];
 
-export default function BoardCanvas({ doc, theme, onReady }: { doc: Y.Doc; theme: "light" | "dark"; onReady(): void }) {
+export default function BoardCanvas({ doc, theme, onReady, onEdit }: { doc: Y.Doc; theme: "light" | "dark"; onReady(): void; onEdit(): void }) {
   const api = useRef<Api | null>(null);
   // onChange fires on every pointer move. The scene version only changes when
   // an element does, so most calls end right there.
@@ -66,7 +66,7 @@ export default function BoardCanvas({ doc, theme, onReady }: { doc: Y.Doc; theme
         const version = getSceneVersion(elements);
         if (version !== savedVersion.current) {
           savedVersion.current = version;
-          writeElements(doc, elements as unknown as StoredElement[]);
+          if (writeElements(doc, elements as unknown as StoredElement[])) onEdit();
         }
         writeFiles(doc, files as unknown as Record<string, StoredFile>);
       }}

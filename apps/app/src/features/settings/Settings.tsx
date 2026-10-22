@@ -4,6 +4,7 @@ import { registry } from "@/plugins/registry";
 import type { Plugin, PluginOption, SettingsContext, SettingsSection } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
+import { APP_VERSION } from "@/version";
 import "./settings.css";
 
 export function OptionRow({ plugin, option }: { plugin: Plugin; option: PluginOption }) {
@@ -112,7 +113,7 @@ export function Settings({ onClose, initialSection, ...ctx }: SettingsContext & 
               <span>{section.title}</span>
             </button>
           ))}
-          <p className="settings-version">Notemax {__APP_VERSION__}</p>
+          <p className="settings-version">Notemax {APP_VERSION}</p>
         </nav>
         <div className="settings-content" ref={content}>
           {shown.map((section) => (

@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 import type * as Y from "yjs";
-import { countWords, extractLinks, setLinks, setWords } from "@notemax/core";
+import { countWords, extractLinks, setLinks, setWords, touchNode } from "@notemax/core";
 
 // How long typing must pause before links and words are recounted. There is
 // no need to scan the body on every keystroke.
 const SCAN_MS = 500;
 
-/** Keeps the workspace's copy of this note's links and word count in step with its body. */
+/** Keeps the workspace's copy of this note's links, word count and edited time in step with its body. */
 export function useBodyIndex(body: Y.Doc | undefined, workspaceDoc: Y.Doc, noteId: string) {
   useEffect(() => {
     if (!body) return;
@@ -24,7 +24,10 @@ export function useBodyIndex(body: Y.Doc | undefined, workspaceDoc: Y.Doc, noteI
       clearTimeout(timer);
       timer = setTimeout(() => {
         timer = undefined;
-        scan();
+        workspaceDoc.transact(() => {
+          scan();
+          touchNode(workspaceDoc, noteId);
+        });
       }, SCAN_MS);
     };
     body.on("update", onUpdate);

@@ -45,6 +45,8 @@ export interface TreeNode {
   /** Fractional index: siblings sort by plain string comparison. */
   position: string;
   createdAt: number;
+  /** When its title or body last changed, to the minute. The created time until then. */
+  editedAt: number;
   /** Set when the node is in the trash. It stays there until deleted forever. */
   deletedAt: number | null;
   /**
@@ -120,6 +122,7 @@ function toNode(id: string, fields: Y.Map<unknown>): TreeNode {
     title: (fields.get("title") as string | undefined) ?? "",
     position: fields.get("position") as string,
     createdAt: fields.get("createdAt") as number,
+    editedAt: (fields.get("editedAt") as number | undefined) ?? (fields.get("createdAt") as number),
     deletedAt: (fields.get("deletedAt") as number | null | undefined) ?? null,
     links: (fields.get("links") as string[] | undefined) ?? [],
     words: (fields.get("words") as number | undefined) ?? null,
@@ -150,6 +153,7 @@ function sameNode(a: TreeNode, b: TreeNode): boolean {
     a.title === b.title &&
     a.position === b.position &&
     a.createdAt === b.createdAt &&
+    a.editedAt === b.editedAt &&
     a.deletedAt === b.deletedAt &&
     a.words === b.words &&
     sameList(a.links, b.links) &&
@@ -399,7 +403,21 @@ function fieldsOf(doc: Y.Doc, id: string) {
 }
 
 export function renameNode(doc: Y.Doc, id: string, title: string) {
-  fieldsOf(doc, id).set("title", title);
+  doc.transact(() => {
+    fieldsOf(doc, id).set("title", title);
+    touchNode(doc, id);
+  });
+}
+
+// The edited time is kept to the minute: writing it on every keystroke would
+// grow the workspace and send a sync for each one.
+const EDITED_STEP_MS = 60_000;
+
+/** Records that a page was just edited. Writes at most once a minute per page. */
+export function touchNode(doc: Y.Doc, id: string, now = Date.now()) {
+  const fields = fieldsOf(doc, id);
+  const last = (fields.get("editedAt") as number | undefined) ?? (fields.get("createdAt") as number | undefined) ?? 0;
+  if (now - last >= EDITED_STEP_MS) fields.set("editedAt", now);
 }
 
 /** Sets one of a page's small settings. Null removes it, so the page goes back to the default. */

@@ -1,6 +1,7 @@
 import type { Plugin } from "@/plugins/types";
 import { addTagRequests, tagFilter } from "./filter";
 import { TagBar } from "./TagBar";
+import { TagChoices } from "./TagChoices";
 import { TagsSection } from "./TagsSection";
 
 export const tagsPlugin: Plugin = {
@@ -9,6 +10,7 @@ export const tagsPlugin: Plugin = {
   description: "Tags on pages, and filtering the sidebar by them",
   pageHeader: [{ id: "tags.bar", kinds: ["note", "book", "board"], component: TagBar }],
   sidebarSections: [{ id: "tags.list", order: 50, component: TagsSection }],
+  sidebarFilterChoices: [{ id: "tags.choices", component: TagChoices }],
   useSidebarFilter() {
     const tags = tagFilter.use();
     if (!tags.length) return null;

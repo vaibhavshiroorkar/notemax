@@ -5,7 +5,7 @@ import { useSelect } from "@/platform/store";
 import { registry } from "@/plugins/registry";
 import { Icon } from "@/ui/Icon";
 import { dragged, endDrag, placementFor, startDrag, zoneFor, type Placement, type Zone } from "./drag";
-import { collapsed, dropTarget, editingId, markedId, selection, toggleCollapsed } from "./state";
+import { collapsed, dropTarget, editingId, markedId, selection, sidebarView, sortItems, toggleCollapsed } from "./state";
 
 /**
  * Actions the rows share. The sidebar makes it once, so it never changes and
@@ -25,13 +25,14 @@ export interface RowContext {
   menu(id: string, event: MouseEvent): void;
 }
 
-export function Rows({ items, depth, ctx }: { items: TreeItem[]; depth: number; ctx: RowContext }) {
+export function Rows({ items, depth, ctx }: { items: readonly TreeItem[]; depth: number; ctx: RowContext }) {
+  const sort = useSelect(sidebarView, (view) => view.sort);
   if (!items.length) return null;
   // A nested list draws a guide line down from its folder's chevron, so each level is easy to follow.
   const guide = depth > 0 ? ({ "--guide": `${16 + (depth - 1) * 14}px` } as CSSProperties) : undefined;
   return (
     <ul className={guide ? "guided" : undefined} style={guide}>
-      {items.map((item) => (
+      {sortItems(items, sort).map((item) => (
         <Row key={item.id} item={item} depth={depth} ctx={ctx} />
       ))}
     </ul>

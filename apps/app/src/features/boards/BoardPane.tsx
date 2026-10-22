@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from "react";
-import { renameNode } from "@notemax/core";
+import { renameNode, touchNode } from "@notemax/core";
 import { useLocalDoc } from "@/data/useLocalDoc";
 import { useOption } from "@/plugins/options";
 import { PageHeader } from "@/plugins/PageHeader";
@@ -35,7 +35,7 @@ export function BoardPane({ node, app, workspaceDoc, onStatus, onReady }: PagePr
       <div className="board-canvas">
         {local && (
           <Suspense fallback={<p className="board-loading">Opening the board...</p>}>
-            <BoardCanvas key={node.id} doc={local.doc} theme={theme} onReady={onReady} />
+            <BoardCanvas key={node.id} doc={local.doc} theme={theme} onReady={onReady} onEdit={() => touchNode(workspaceDoc, node.id)} />
           </Suspense>
         )}
       </div>

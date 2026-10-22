@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.18.0 (2026-10-22)
+
+- Search page titles from the magnifier by +, or Ctrl+K "Search page titles". Matches inside folders show too.
+- A funnel by + sorts the sidebar by title, newest or last edited, groups it by kind, and filters by tags or stars. The choice stays after a restart.
+- Pages remember when they were last edited.
+- The trash moved to a box at the bottom left, with its own search and Empty trash.
+
 ## 0.17.0 (2026-10-22)
 
 - Pick several pages with Ctrl+click or Shift+click, then drag, star or trash them together. Esc lets go.

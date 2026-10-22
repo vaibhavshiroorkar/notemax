@@ -19,6 +19,7 @@ export {
   canMove,
   moveNode,
   moveNodes,
+  touchNode,
   createNode,
   duplicateNote,
   ensureWelcome,

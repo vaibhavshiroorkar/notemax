@@ -1,5 +1,6 @@
 import type { TreeNode } from "@notemax/core";
 import { clearSelection } from "@/features/sidebar/state";
+import { createStore } from "@/platform/store";
 import type { AppContext, ContextMenuItem, ContextTarget, Plugin } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { StarredSection } from "./StarredSection";
@@ -39,6 +40,22 @@ const menuItem = (on: boolean): ContextMenuItem => ({
   },
 });
 
+/** "Starred only" in the sidebar's filter panel. In memory only, so a restart shows everything. */
+const starredOnly = createStore(false);
+
+function StarredOnlyChoice() {
+  const on = starredOnly.use();
+  return (
+    <fieldset>
+      <legend>Show</legend>
+      <label className="filter-choice">
+        <input type="checkbox" checked={on} onChange={() => starredOnly.set(!on)} />
+        Starred only
+      </label>
+    </fieldset>
+  );
+}
+
 const activeNode = (app: AppContext) => (app.activeId ? app.tree.byId.get(app.activeId) : undefined);
 
 export const starPlugin: Plugin = {
@@ -47,6 +64,12 @@ export const starPlugin: Plugin = {
   description: "Star pages to keep them at the top of the sidebar",
   sidebarSections: [{ id: "star.section", order: -10, component: StarredSection }],
   pageCorner: [{ id: "star.button", component: StarButton }],
+  sidebarFilterChoices: [{ id: "star.only", component: StarredOnlyChoice }],
+  useSidebarFilter() {
+    const on = starredOnly.use();
+    if (!on) return null;
+    return { label: "a star", matches: isStarred, clear: () => starredOnly.set(false) };
+  },
   contextMenu: [menuItem(true), menuItem(false)],
   commands: [
     {

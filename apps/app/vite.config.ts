@@ -61,12 +61,8 @@ function serviceWorker(): Plugin {
   };
 }
 
-const { version } = JSON.parse(readFileSync(fromHere("../../package.json"), "utf8")) as { version: string };
-
 export default defineConfig({
   plugins: [react(), excalidrawFonts(), serviceWorker()],
-  // Shown in Settings, so it is clear which version a device runs.
-  define: { __APP_VERSION__: JSON.stringify(version) },
   // "@/ui/Icon" instead of "../../ui/Icon", so files can move between folders freely.
   resolve: { alias: { "@": fromHere("src") } },
   // Tauri expects a fixed port, so fail instead of silently picking another one.

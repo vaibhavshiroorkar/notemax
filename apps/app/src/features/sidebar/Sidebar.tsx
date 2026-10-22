@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, type DragEvent } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, type DragEvent } from "react";
 import { ROOT, canMove, childrenOf, createNode, moveNodes, renameNode, type Tree } from "@notemax/core";
 import { registry } from "@/plugins/registry";
 import { formatShortcut, shortcutFor, shortcutOverrides } from "@/plugins/shortcuts";
@@ -10,9 +10,24 @@ import { Safe } from "@/ui/Safe";
 import { AddMenu } from "./AddMenu";
 import { dragged, endDrag, useDragging } from "./drag";
 import { FilteredList } from "./FilteredList";
-import { clearSelection, dropTarget, editingId, expand, markedId, plainClick, selectRange, selectedInOrder, selection, toggleSelected } from "./state";
+import {
+  clearSelection,
+  dropTarget,
+  editingId,
+  expand,
+  markedId,
+  plainClick,
+  selectRange,
+  selectedInOrder,
+  selection,
+  sidebarView,
+  titleQuery,
+  toggleSelected,
+  topGroups,
+} from "./state";
 import { Rows, type RowContext } from "./TreeRows";
-import { TrashSection } from "./TrashSection";
+import { FilterMenu } from "./FilterMenu";
+import { TrashBox } from "./TrashBox";
 import "./sidebar.css";
 
 /** The folders above an item, nearest first. A chapter's book counts, so its folders open too. */
@@ -36,6 +51,9 @@ export function Sidebar({ app }: { app: AppContext }) {
   const settingsTitle = settingsKeys ? `Settings (${formatShortcut(settingsKeys)})` : "Settings";
   const footerItems = registry.sidebarFooter();
   const sections = registry.sidebarSections();
+  const query = titleQuery.use();
+  // Read so a new sort or grouping redraws the list.
+  sidebarView.use();
 
   // The row actions read the latest app through this, so they can stay one object for good.
   const appRef = useRef(app);
@@ -139,12 +157,44 @@ export function Sidebar({ app }: { app: AppContext }) {
         <section className="section">
           <header className="section-header" data-drop={headerActive ? "inside" : undefined} onDragOver={headerDrop.onDragOver} onDrop={headerDrop.onDrop}>
             <span>Notes</span>
-            <AddMenu onAdd={(kind) => ctx.add(kind, ROOT)} />
+            <div className="section-actions">
+              <button
+                className="icon-button"
+                aria-label="Search titles"
+                aria-pressed={query !== null}
+                title="Search titles"
+                onClick={() => titleQuery.set(query === null ? "" : null)}
+              >
+                <Icon name="search" />
+              </button>
+              {/* The title search counts as a filter too, but it shows its own box, so it does not light the funnel. */}
+              <FilterMenu app={app} filtered={filters.length > (query?.trim() ? 1 : 0)} />
+              <AddMenu onAdd={(kind) => ctx.add(kind, ROOT)} />
+            </div>
           </header>
+          {query !== null && (
+            <label className="settings-search sidebar-search">
+              <Icon name="search" />
+              <input
+                type="search"
+                placeholder="Search titles"
+                aria-label="Search titles"
+                autoFocus
+                value={query}
+                onChange={(event) => titleQuery.set(event.target.value)}
+                onKeyDown={(event) => event.key === "Escape" && titleQuery.set(null)}
+              />
+            </label>
+          )}
           {filters.length ? (
             <FilteredList tree={tree} filters={filters} activeId={activeId} onSelect={app.open} onMenu={(id, event) => pageMenu(tree.byId.get(id))(event)} />
           ) : tree.top.length ? (
-            <Rows items={tree.top} depth={0} ctx={ctx} />
+            topGroups(tree).map((group) => (
+              <Fragment key={group.label ?? "all"}>
+                {group.label && <p className="group-label">{group.label}</p>}
+                <Rows items={group.items} depth={0} ctx={ctx} />
+              </Fragment>
+            ))
           ) : (
             <p className="empty">No notes yet. Use + to start one.</p>
           )}
@@ -154,7 +204,6 @@ export function Sidebar({ app }: { app: AppContext }) {
           .map(({ id, component: Section }) => (
             <Section key={id} app={app} />
           ))}
-        <TrashSection tree={tree} doc={doc} />
       </div>
       <footer className="sidebar-footer">
         {footerItems.length ? (
@@ -164,15 +213,19 @@ export function Sidebar({ app }: { app: AppContext }) {
                 <Item app={app} />
               </Safe>
             ))}
+            <TrashBox tree={tree} doc={doc} />
             <button className="footer-icon footer-button" aria-label="Settings" onClick={() => app.openSettings()} title={settingsTitle}>
               <Icon name="gear" />
             </button>
           </>
         ) : (
-          <button className="footer-button" onClick={() => app.openSettings()} title={settingsTitle}>
-            <Icon name="gear" />
-            <span>Settings</span>
-          </button>
+          <>
+            <button className="footer-button" onClick={() => app.openSettings()} title={settingsTitle}>
+              <Icon name="gear" />
+              <span>Settings</span>
+            </button>
+            <TrashBox tree={tree} doc={doc} />
+          </>
         )}
       </footer>
     </aside>

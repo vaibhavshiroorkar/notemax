@@ -42,6 +42,8 @@ export interface Plugin {
    * that pass it. It is called on every sidebar render.
    */
   useSidebarFilter?(): SidebarFilter | null;
+  /** Choices in the sidebar's filter panel (the funnel by +), like "Starred only" or the tags. */
+  sidebarFilterChoices?: SidebarFilterChoice[];
   /** Shown at the end of a page, like the notes that link to it. */
   pageFooter?: PageAddon[];
   /** Small things at the top right of a page, like a book's word count. */
@@ -213,6 +215,11 @@ export interface SidebarSection {
   id: string;
   /** Sections are sorted by this, low first. Below 0 they show above the notes, like Starred. */
   order: number;
+  component: ComponentType<{ app: AppContext }>;
+}
+
+export interface SidebarFilterChoice {
+  id: string;
   component: ComponentType<{ app: AppContext }>;
 }
 

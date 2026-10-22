@@ -24,13 +24,23 @@
   border-top: 1px solid var(--border);
 }
 
-/* The square buttons at the right of the footer, like the Settings cog. */
+/* The square buttons at the right of the footer, like the trash and the Settings cog. */
 .sidebar-footer .footer-icon {
+  position: relative;
+  display: inline-flex;
   flex-shrink: 0;
+  align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
   padding: 0;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.sidebar-footer .footer-icon:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--text);
 }
 
 .sidebar-footer .footer-icon:disabled {
@@ -89,21 +99,6 @@
 .icon-spacer {
   width: 24px;
   flex-shrink: 0;
-}
-
-.trash {
-  margin-top: 24px;
-  color: var(--muted);
-}
-
-.trash summary {
-  padding: 4px 8px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.trash .row {
-  padding-left: 12px;
 }
 
 @media (max-width: 700px) {
@@ -187,4 +182,158 @@
 
 .row[aria-selected="true"]:hover {
   background: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.section-actions [aria-pressed="true"] {
+  color: var(--text);
+}
+
+/* A dot on the funnel while the list is sorted, grouped or filtered. */
+.filter-button[data-active] {
+  position: relative;
+  color: var(--accent);
+}
+
+.filter-button[data-active]::after {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: "";
+}
+
+.sidebar-search {
+  margin: 0 4px 6px;
+  text-transform: none;
+}
+
+.group-label {
+  margin: 10px 8px 2px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.filter-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 230px;
+  padding: 10px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: normal;
+  text-transform: none;
+}
+
+.filter-menu fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.filter-menu legend {
+  margin-bottom: 4px;
+  padding: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.filter-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.filter-choice:hover {
+  background: var(--hover);
+}
+
+.filter-tags {
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.filter-reset {
+  align-self: flex-start;
+}
+
+/* The trash, at the bottom left. Its list opens upward over the sidebar, as wide as the bar. */
+.sidebar-footer {
+  position: relative;
+}
+
+.trash-count {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  min-width: 15px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: var(--hover);
+  color: var(--text);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: 15px;
+}
+
+.trash-box {
+  position: absolute;
+  right: 8px;
+  bottom: calc(100% + 6px);
+  left: 8px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  max-height: min(420px, 60vh);
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+
+.trash-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 8px;
+}
+
+.trash-box .link-button.danger {
+  color: var(--danger);
+}
+
+.trash-box ul {
+  overflow-y: auto;
+}
+
+.trash-box .row {
+  padding-left: 4px;
+}
+
+/* The filter panel hangs from the whole heading row, so it never runs off the sidebar's left edge. */
+.section-header {
+  position: relative;
+}
+
+.filter-menu {
+  right: 4px;
+  max-width: calc(100% - 8px);
 }

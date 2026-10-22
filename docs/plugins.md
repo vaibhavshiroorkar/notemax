@@ -76,6 +76,8 @@ Every field is optional.
 | `pageHeader` | Under a page's title. |
 | `pageFooter` | At the end of a page. |
 | `sidebarSections` | The left sidebar, between the pages and the trash. With an `order` below 0, above the pages, like Starred. |
+| `useSidebarFilter` | A React hook. While it returns a filter, the sidebar lists only what passes it. |
+| `sidebarFilterChoices` | Choices in the sidebar's filter panel (the funnel by +), like "Starred only". |
 | `sidebarFooter` | The bar at the bottom of the left sidebar, left of the Settings cog, like the account and sync. |
 | `overlays` | Full-window views, opened with `app.openOverlay(id)`. |
 | `views` | Pages of their own that open in a tab, like the graph. Open one with `app.openView(id)`. |

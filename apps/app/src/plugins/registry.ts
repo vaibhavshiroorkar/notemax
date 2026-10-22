@@ -15,6 +15,7 @@ import type {
   PluginOption,
   SettingsSection,
   SidebarFilter,
+  SidebarFilterChoice,
   SidebarFooterItem,
   SidebarSection,
   SidePanel,
@@ -113,6 +114,7 @@ export const registry = {
   view: (id: string): View | undefined => all((p) => p.views).find((view) => view.id === id),
   statusItems: (): StatusItem[] => all((p) => p.statusItems),
   sidebarFooter: (): SidebarFooterItem[] => all((p) => p.sidebarFooter),
+  sidebarFilterChoices: (): SidebarFilterChoice[] => all((p) => p.sidebarFilterChoices),
   starters: () => all((p) => (p.start ? [p.start.bind(p)] : [])),
   pageCorner: (kind: NodeKind): PageAddon[] => all((p) => p.pageCorner).filter((addon) => addon.kinds?.includes(kind) ?? true),
   /** Every option of the plugins that are on, with its plugin, in plugin order. */
