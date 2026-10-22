@@ -42,7 +42,8 @@ function foldersAbove(tree: Tree, id: string): string[] {
 export function Sidebar({ app }: { app: AppContext }) {
   const { tree, doc, activeId } = app;
   const dragging = useDragging();
-  const headerActive = useSelect(dropTarget, (target) => target?.id === ROOT);
+  const headerActive = useSelect(dropTarget, (target) => target?.id === ROOT && target.zone === "inside");
+  const endActive = useSelect(dropTarget, (target) => target?.id === ROOT && target.zone === "after");
   // The list of hooks never changes while the app runs, so they are called in the same order every time.
   const filters = registry.sidebarFilterHooks().flatMap((useFilter) => useFilter() ?? []);
   const overrides = shortcutOverrides.use();
@@ -132,23 +133,31 @@ export function Sidebar({ app }: { app: AppContext }) {
     requestAnimationFrame(() => document.querySelector('.sidebar .row[aria-current="page"]')?.scrollIntoView({ block: "nearest" }));
   }, [activeId]);
 
-  // Dropping on the section heading moves the item to the end of the top level.
-  const headerDrop = {
+  // Dropping on the section heading, or on empty space below the list, moves
+  // the item to the end of the top level. Without the empty space, nothing
+  // could be dropped after a folder that is open at the bottom.
+  const endDrop = (zone: "inside" | "after") => ({
     onDragOver(event: DragEvent) {
       const moving = dragged.get();
+      // Rows and the heading handle their own drops.
+      if (zone === "after" && (event.target as Element).closest(".row, .section-header")) return;
       if (!moving || canMove(tree, moving.id, ROOT)) return;
       event.preventDefault();
-      if (!headerActive) dropTarget.set({ id: ROOT, zone: "inside" });
+      const current = dropTarget.get();
+      if (current?.id !== ROOT || current.zone !== zone) dropTarget.set({ id: ROOT, zone });
     },
     onDrop(event: DragEvent) {
+      if (zone === "after" && (event.target as Element).closest(".row, .section-header")) return;
       event.preventDefault();
       ctx.drop({ parentId: ROOT, index: Infinity });
     },
-  };
+  });
+  const headerDrop = endDrop("inside");
+  const spaceDrop = endDrop("after");
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-scroll" onContextMenu={contextMenuHandler(() => ({ type: "sidebar" }))}>
+      <div className="sidebar-scroll" onContextMenu={contextMenuHandler(() => ({ type: "sidebar" }))} onDragOver={spaceDrop.onDragOver} onDrop={spaceDrop.onDrop}>
         {sections
           .filter((section) => section.order < 0)
           .map(({ id, component: Section }) => (
@@ -198,6 +207,7 @@ export function Sidebar({ app }: { app: AppContext }) {
           ) : (
             <p className="empty">No notes yet. Use + to start one.</p>
           )}
+          {endActive && <div className="drop-end" />}
         </section>
         {sections
           .filter((section) => section.order >= 0)

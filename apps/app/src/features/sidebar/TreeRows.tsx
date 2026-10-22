@@ -146,7 +146,10 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
             <Icon name={open ? "chevron-down" : "chevron-right"} />
           </button>
         ) : (
-          <span className="icon-spacer" />
+          // The icon sits where a folder has its arrow, so every title starts at the same place.
+          <span className="row-icon" aria-hidden="true">
+            <Icon name={item.kind === "note" ? "note" : registry.iconOf(item.kind)} />
+          </span>
         )}
         {item.kind === "folder" && editing ? (
           <FolderNameInput item={item} ctx={ctx} />
@@ -170,8 +173,7 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
           </button>
         ) : item.kind === "book" ? (
           // A book opens its own page, with the chapters in order. It is renamed there.
-          <button className="row-title icon-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)}>
-            <Icon name="book" />
+          <button className="row-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)}>
             <span>{title}</span>
           </button>
         ) : item.kind === "note" ? (
@@ -179,9 +181,8 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
             {title}
           </button>
         ) : (
-          // Other pages, like boards, show the icon their plugin gave them.
-          <button className="row-title icon-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)} {...prefetchOnHover(item.id)}>
-            <Icon name={registry.iconOf(item.kind)} />
+          // Other pages, like boards. Their icon comes from their plugin.
+          <button className="row-title" onClick={(event) => ctx.pick(item, event) || ctx.select(item.id)} {...prefetchOnHover(item.id)}>
             <span>{title}</span>
           </button>
         )}

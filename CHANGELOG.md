@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.23.0 (2026-10-22)
+
+- Every row in the sidebar shows its icon where a folder shows its arrow, so all titles line up.
+- Drop a page on the empty space below the list to put it last at the top level, even after an open folder.
+- The Notemax logo is black and white, on the web and in the desktop app.
+
 ## 0.22.0 (2026-10-22)
 
 - Bullet lists in notes show their bullets again.
