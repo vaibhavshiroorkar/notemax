@@ -4,7 +4,9 @@ import { getPref } from "@/platform/prefs";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { AccountBar } from "./AccountBar";
 import { AccountDialog } from "./AccountDialog";
+import { useEffect, useRef } from "react";
 import { ConflictDialog, ConflictLine, conflicts } from "./conflicts";
+import { remoteEdit } from "./live";
 import { SyncSection, describe } from "./SyncSection";
 import { startSync, syncNow, syncView } from "./runtime";
 
@@ -20,12 +22,38 @@ function SyncStatus({ app }: { app: AppContext }) {
   );
 }
 
+// Once in a while is enough: a steady stream of toasts while someone types elsewhere would only distract.
+const NOTICE_EVERY_MS = 20_000;
+
+/**
+ * A small notice when another device changes the open page. The page itself
+ * merges the edit in place, with the cursor where it was, so there is nothing
+ * to do but know.
+ */
+function RemoteEditNotice({ app }: { app: AppContext }) {
+  const latest = useRef(app);
+  latest.current = app;
+  useEffect(() => {
+    let last = 0;
+    return remoteEdit.subscribe(() => {
+      const edit = remoteEdit.get();
+      if (!edit || edit.docId !== latest.current.activeId || edit.at - last < NOTICE_EVERY_MS) return;
+      last = edit.at;
+      latest.current.notify("Updated from another device");
+    });
+  }, []);
+  return null;
+}
+
 export const syncPlugin: Plugin = {
   id: "sync",
   name: "Sync",
   description: "Your notes on every device, through your own Google Drive",
   settings: [{ id: "sync", order: 45, title: "Sync", icon: "upload", keywords: ["google drive", "devices", "backup", "passphrase", "phone"], when: () => accountsEnabled, component: SyncSection }],
-  statusItems: [{ id: "sync.status", component: SyncStatus }],
+  statusItems: [
+    { id: "sync.status", component: SyncStatus },
+    { id: "sync.notice", component: RemoteEditNotice },
+  ],
   // A build without Supabase settings has no accounts, so the footer keeps its plain Settings button.
   sidebarFooter: accountsEnabled ? [{ id: "sync.account", component: AccountBar }] : [],
   overlays: [

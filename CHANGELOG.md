@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.33.0 (2026-10-22)
+
+- Live updates: while sync is on, each edit also goes straight to your other open devices, sealed with your passphrase. An open note changes in place within a second, your cursor stays where it was, and a small notice says it was updated from another device.
+- Because edits arrive almost at once, two devices rarely end up editing different versions of a note.
+- Settings, Sync has a Live updates switch and shows whether it is connected. Drive stays the record, so anything missed live still arrives with the next sync.
+
 ## 0.32.0 (2026-10-22)
 
 - Each sidebar row has a ... button that opens its menu, in place of the trash button. Move to trash is in that menu.

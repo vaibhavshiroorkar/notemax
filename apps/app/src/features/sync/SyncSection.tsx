@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { hasDriveAccess } from "./google";
+import { liveOn, liveState, type LiveState } from "./live";
 import { folderState, syncIsOn, syncNow, syncView, turnOffSync, turnOnSync, type SyncView } from "./runtime";
 import "./sync.css";
 
@@ -39,6 +40,28 @@ export function describe(view: SyncView): string {
  * The Sync part of Settings: sign in with Google, pick or enter the
  * passphrase, then see how sync is going.
  */
+const LIVE_WORDS: Record<LiveState, string> = {
+  off: "Off",
+  connecting: "Connecting...",
+  live: "Connected: edits show up on your other open devices within a second",
+  error: "Could not connect. Edits still sync through Drive.",
+};
+
+/** Live updates on or off, and how they are doing. */
+function LiveSwitch() {
+  const on = liveOn.use();
+  const state = liveState.use();
+  return (
+    <label className="settings-row settings-check">
+      <span>
+        Live updates
+        <span className="settings-description">{on ? LIVE_WORDS[state] : "Edits reach your other devices with the next sync, within half a minute."}</span>
+      </span>
+      <input type="checkbox" checked={on} onChange={(event) => liveOn.set(event.target.checked)} />
+    </label>
+  );
+}
+
 export function SyncSection() {
   const view = syncView.use();
   const [on, setOn] = useState(syncIsOn);
@@ -120,6 +143,7 @@ export function SyncSection() {
             Sign in with Google again
           </button>
         )}
+        <LiveSwitch />
         <p className="settings-note">
           Your notes go to a folder called Notemax in your Google Drive, sealed with your passphrase. Google cannot read them, and Notemax sees only that folder.
         </p>

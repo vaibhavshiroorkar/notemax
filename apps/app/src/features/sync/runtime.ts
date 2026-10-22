@@ -13,6 +13,7 @@ import {
   type DocStore,
   type SyncEngine,
   type SyncState,
+  isHistoryDocId,
 } from "@notemax/core";
 import * as Y from "yjs";
 import { pastWelcomeContent, welcomeContent } from "@/features/editor/welcome";
@@ -20,7 +21,9 @@ import { markTemporary } from "@/features/temporary/temporary";
 import { DOC_CHANNEL, getRawStore, isDesktop, onLocalWrite } from "@/platform/platform";
 import { getPref, removePref, setPref } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
+import { accountsEnabled } from "@/features/account/config";
 import { recordConflict } from "./conflicts";
+import { liveOn, liveState, noteRemoteEdit, startLive, type LiveLink } from "./live";
 import { driveRemote, findFolder, folderHasDocs, readKeyCheck, writeKeyCheck } from "./drive";
 import { NeedsSignIn } from "./google";
 
@@ -81,7 +84,10 @@ async function runEngine(signal: AbortSignal) {
     loadState,
     saveState: (state) => setPref(PREFS.state, JSON.stringify(state)),
     // Open pages in every window merge it, the way they merge another window's edits.
-    onRemoteUpdate: (docId, update) => channel.postMessage({ docId, update }),
+    onRemoteUpdate: (docId, update) => {
+      channel.postMessage({ docId, update });
+      noteRemoteEdit(docId);
+    },
     onConflict: (docId, mine, theirs) => void recordConflict(docId, mine, theirs).catch(() => {}),
     onStatus(status) {
       if (status.state === "error") {
@@ -106,9 +112,48 @@ async function runEngine(signal: AbortSignal) {
     soon();
   };
 
+  // Live updates while the setting is on. What comes in is kept like a synced
+  // edit: in the raw store, so it is not sent back, and merged into open pages.
+  const raw = await getRawStore();
+  // In an object, since it is set from callbacks.
+  const link: { live: LiveLink | null } = { live: null };
+  let joining = false;
+  const fromLive = (docId: string, update: Uint8Array) => {
+    raw
+      .append(docId, update)
+      .then(() => {
+        channel.postMessage({ docId, update });
+        noteRemoteEdit(docId);
+      })
+      .catch(() => {});
+  };
+  const followSetting = () => {
+    const want = liveOn.get() && accountsEnabled && !signal.aborted;
+    if (want && !link.live && !joining) {
+      joining = true;
+      startLive(key, deviceId(), fromLive)
+        .then((joined) => {
+          if (liveOn.get() && !signal.aborted) link.live = joined;
+          else joined.stop();
+        })
+        .catch(() => liveState.set("error"))
+        .finally(() => (joining = false));
+    } else if (!want && link.live) {
+      link.live.stop();
+      link.live = null;
+    }
+  };
+  followSetting();
+  const stopFollowing = liveOn.subscribe(followSetting);
+  // Pictures are big and versions only add up; Drive carries those.
+  const goesLive = (docId: string) => !docId.startsWith("asset:") && !isHistoryDocId(docId);
+
   // Every window's saved edits, quick capture included. Edits merged in from
   // other devices go straight to the raw store, so they are never sent back.
-  const stopWrites = onLocalWrite(changed);
+  const stopWrites = onLocalWrite(({ docId, update }) => {
+    changed(docId);
+    if (update && link.live && goesLive(docId)) link.live.send(docId, update);
+  });
   const poll = setInterval(run, POLL_MS);
   const onWake = () => document.visibilityState === "visible" && run();
   window.addEventListener("online", run);
@@ -118,6 +163,8 @@ async function runEngine(signal: AbortSignal) {
 
   await new Promise<void>((resolve) => signal.addEventListener("abort", () => resolve(), { once: true }));
   stopWrites();
+  stopFollowing();
+  link.live?.stop();
   clearInterval(poll);
   clearTimeout(timer);
   window.removeEventListener("online", run);

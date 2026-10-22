@@ -24,19 +24,29 @@ let rawPromise: Promise<DocStore> | undefined;
 /** The store itself. Sync writes edits from other devices here, so they are not sent back out. */
 export const getRawStore = () => (rawPromise ??= openStore());
 
-const writeListeners = new Set<(docId: string) => void>();
+/** One saved edit: the doc, and the update itself (none when the doc was erased). */
+export interface LocalWrite {
+  docId: string;
+  update?: Uint8Array;
+}
+
+const writeListeners = new Set<(write: LocalWrite) => void>();
 // Other windows and tabs say what they saved here, so the one that syncs hears of every edit.
 const WRITES_CHANNEL = "notemax-writes";
 let writes: BroadcastChannel | undefined;
 
 /**
- * Calls `listener` with the doc id of every edit saved in any window of this
- * app on this device. Sync uses it to know what to send.
+ * Calls `listener` with every edit saved in any window of this app on this
+ * device. Sync uses it to know what to send, and live updates send the edit itself.
  */
-export function onLocalWrite(listener: (docId: string) => void): () => void {
+export function onLocalWrite(listener: (write: LocalWrite) => void): () => void {
   if (!writes) {
     writes = new BroadcastChannel(WRITES_CHANNEL);
-    writes.onmessage = ({ data }: MessageEvent<string>) => writeListeners.forEach((l) => l(data));
+    // A window still on an older version posts the doc id alone.
+    writes.onmessage = ({ data }: MessageEvent<LocalWrite | string>) => {
+      const write = typeof data === "string" ? { docId: data } : data;
+      writeListeners.forEach((l) => l(write));
+    };
   }
   writeListeners.add(listener);
   return () => writeListeners.delete(listener);
@@ -44,9 +54,9 @@ export function onLocalWrite(listener: (docId: string) => void): () => void {
 
 function tracked(store: DocStore): DocStore {
   const channel = new BroadcastChannel(WRITES_CHANNEL);
-  const tell = (docId: string) => {
-    writeListeners.forEach((listener) => listener(docId));
-    channel.postMessage(docId);
+  const tell = (write: LocalWrite) => {
+    writeListeners.forEach((listener) => listener(write));
+    channel.postMessage(write);
   };
   return {
     load: (docId) => store.load(docId),
@@ -55,11 +65,11 @@ function tracked(store: DocStore): DocStore {
     compact: (docId, merged, upTo) => store.compact(docId, merged, upTo),
     async append(docId, update) {
       await store.append(docId, update);
-      tell(docId);
+      tell({ docId, update });
     },
     async remove(docId) {
       await store.remove(docId);
-      tell(docId);
+      tell({ docId });
     },
   };
 }
