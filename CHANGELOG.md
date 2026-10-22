@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.34.0 (2026-10-22)
+
+- Workspaces: separate sets of pages, like Work and Personal, each with its own tabs, recent pages and trash. Switch from the top left of the sidebar.
+- Home lists every workspace as a card with its page count. Rename them, give them a color, drag them into order, start a new one, or delete one with its pages. Ctrl+K "Go Home" opens it too.
+- Workspaces sync like everything else: the list and every workspace's pages reach your other devices.
+
 ## 0.33.0 (2026-10-22)
 
 - Live updates: while sync is on, each edit also goes straight to your other open devices, sealed with your passphrase. An open note changes in place within a second, your cursor stays where it was, and a small notice says it was updated from another device.

@@ -1,0 +1,153 @@
+.workspace-switch {
+  position: relative;
+  margin: 0 0 12px;
+}
+
+.workspace-current {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.workspace-current:hover,
+.workspace-current[aria-expanded="true"] {
+  background: var(--hover);
+}
+
+.workspace-current svg {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.workspace-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.workspace-dot[data-none] {
+  border: 1.5px solid var(--muted);
+}
+
+.workspace-menu {
+  left: 0;
+  right: auto;
+  width: 100%;
+  min-width: 220px;
+}
+
+.workspace-menu hr {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.workspace-here {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.home-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.home-page h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.home-intro {
+  margin: 8px 0 24px;
+  color: var(--muted);
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.workspace-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.workspace-card[data-here] {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.workspace-card[data-drop] {
+  box-shadow: inset 3px 0 var(--accent);
+}
+
+.workspace-open {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 16px 8px;
+  text-align: left;
+}
+
+.workspace-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.workspace-card-meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.workspace-card-actions {
+  padding: 0 16px 12px;
+}
+
+.workspace-edit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+
+.workspace-new {
+  border-style: dashed;
+  border-top-width: 1px;
+  justify-content: center;
+}
+
+.home-heading {
+  margin: 32px 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .home-page {
+    padding: 24px 16px 64px;
+  }
+}

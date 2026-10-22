@@ -48,3 +48,17 @@ export { buildGraph, tagDot, type Graph, type GraphNode, type GraphEdge, type Gr
 export { deriveKey, newKey, unlockKey, exportKey, importKey, seal, open as unseal, type KeyCheck } from "./crypt";
 export { createSyncEngine, type SyncEngine, type SyncRemote, type RemoteEntry, type SyncState, type SyncStatus } from "./sync";
 export { historyDocId, isHistoryDocId, listVersions, restoreBody, saveVersion, versionDoc, versionsToKeep, type Version } from "./history";
+export {
+  MAIN_WORKSPACE,
+  WORKSPACES_DOC_ID,
+  addWorkspace,
+  moveWorkspace,
+  readWorkspaces,
+  removeWorkspace,
+  renameWorkspace,
+  scopedId,
+  scopedStore,
+  setWorkspaceColor,
+  splitScoped,
+  type WorkspaceInfo,
+} from "./workspaces";

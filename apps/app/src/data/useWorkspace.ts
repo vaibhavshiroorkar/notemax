@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { WORKSPACE_DOC_ID, ensureWelcome, readTree, type Tree } from "@notemax/core";
+import { MAIN_WORKSPACE, WORKSPACE_DOC_ID, ensureWelcome, readTree, type Tree } from "@notemax/core";
+import { currentWorkspace } from "@/platform/prefs";
 import { useLocalDoc } from "./useLocalDoc";
 
 /** Opens the workspace tree doc and keeps a plain snapshot of it for rendering. */
@@ -9,7 +10,8 @@ export function useWorkspace() {
 
   useEffect(() => {
     if (!local) return;
-    ensureWelcome(local.doc);
+    // Only the first workspace starts with the Welcome note. A new one starts empty.
+    if (currentWorkspace === MAIN_WORKSPACE) ensureWelcome(local.doc);
     // Passing the last tree keeps unchanged items as the same objects, which is
     // what lets the sidebar skip rows a change did not touch.
     const refresh = () => setTree((previous) => readTree(local.doc, previous));

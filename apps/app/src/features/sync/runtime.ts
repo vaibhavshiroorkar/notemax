@@ -14,11 +14,13 @@ import {
   type SyncEngine,
   type SyncState,
   isHistoryDocId,
+  splitScoped,
 } from "@notemax/core";
 import * as Y from "yjs";
 import { pastWelcomeContent, welcomeContent } from "@/features/editor/welcome";
 import { markTemporary } from "@/features/temporary/temporary";
-import { DOC_CHANNEL, getRawStore, isDesktop, onLocalWrite } from "@/platform/platform";
+import { WORKSPACES_CHANNEL, docChannelFor, getRawStore, isDesktop, onLocalWrite } from "@/platform/platform";
+import { currentWorkspace } from "@/platform/prefs";
 import { getPref, removePref, setPref } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
 import { accountsEnabled } from "@/features/account/config";
@@ -75,7 +77,16 @@ const POLL_MS = 30_000;
 async function runEngine(signal: AbortSignal) {
   const key = await importKey(getPref(PREFS.key)!);
   const folder = getPref(PREFS.folder)!;
-  const channel = new BroadcastChannel(DOC_CHANNEL);
+  // Each workspace's open pages listen on their own channel, under their own ids.
+  const channels = new Map<string, BroadcastChannel>();
+  const tellOpenPages = (stored: string, update: Uint8Array) => {
+    const { workspace, docId } = splitScoped(stored);
+    const name = workspace === null ? WORKSPACES_CHANNEL : docChannelFor(workspace);
+    let channel = channels.get(name);
+    if (!channel) channels.set(name, (channel = new BroadcastChannel(name)));
+    channel.postMessage({ docId, update });
+    if (workspace === currentWorkspace) noteRemoteEdit(docId);
+  };
   const current = createSyncEngine({
     store: await getRawStore(),
     remote: driveRemote(folder, deviceId()),
@@ -84,11 +95,12 @@ async function runEngine(signal: AbortSignal) {
     loadState,
     saveState: (state) => setPref(PREFS.state, JSON.stringify(state)),
     // Open pages in every window merge it, the way they merge another window's edits.
-    onRemoteUpdate: (docId, update) => {
-      channel.postMessage({ docId, update });
-      noteRemoteEdit(docId);
+    onRemoteUpdate: tellOpenPages,
+    // Asked in the workspace it belongs to. Elsewhere both edits are kept all the same.
+    onConflict(stored, mine, theirs) {
+      const { workspace, docId } = splitScoped(stored);
+      if (workspace === currentWorkspace) void recordConflict(docId, mine, theirs).catch(() => {});
     },
-    onConflict: (docId, mine, theirs) => void recordConflict(docId, mine, theirs).catch(() => {}),
     onStatus(status) {
       if (status.state === "error") {
         const offline = !navigator.onLine || /Failed to fetch|NetworkError|network/i.test(status.message);
@@ -121,10 +133,7 @@ async function runEngine(signal: AbortSignal) {
   const fromLive = (docId: string, update: Uint8Array) => {
     raw
       .append(docId, update)
-      .then(() => {
-        channel.postMessage({ docId, update });
-        noteRemoteEdit(docId);
-      })
+      .then(() => tellOpenPages(docId, update))
       .catch(() => {});
   };
   const followSetting = () => {
@@ -146,7 +155,10 @@ async function runEngine(signal: AbortSignal) {
   followSetting();
   const stopFollowing = liveOn.subscribe(followSetting);
   // Pictures are big and versions only add up; Drive carries those.
-  const goesLive = (docId: string) => !docId.startsWith("asset:") && !isHistoryDocId(docId);
+  const goesLive = (stored: string) => {
+    const { docId } = splitScoped(stored);
+    return !docId.startsWith("asset:") && !isHistoryDocId(docId);
+  };
 
   // Every window's saved edits, quick capture included. Edits merged in from
   // other devices go straight to the raw store, so they are never sent back.
@@ -170,7 +182,7 @@ async function runEngine(signal: AbortSignal) {
   window.removeEventListener("online", run);
   window.removeEventListener("focus", run);
   document.removeEventListener("visibilitychange", onWake);
-  channel.close();
+  channels.forEach((channel) => channel.close());
   engine = null;
 }
 

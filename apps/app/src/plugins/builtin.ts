@@ -17,6 +17,7 @@ import { sidebarPlugin } from "@/features/sidebar/plugin";
 import { slashPlugin } from "@/features/slash/plugin";
 import { starPlugin } from "@/features/star/plugin";
 import { formatPlugin } from "@/features/format/plugin";
+import { workspacesPlugin } from "@/features/workspaces/plugin";
 import { historyPlugin } from "@/features/history/plugin";
 import { temporaryPlugin } from "@/features/temporary/plugin";
 import { trashPlugin } from "@/features/trash/plugin";
@@ -36,6 +37,7 @@ import { registerPlugin } from "./registry";
   temporaryPlugin,
   historyPlugin,
   formatPlugin,
+  workspacesPlugin,
   trashPlugin,
   undoPlugin,
   booksPlugin,

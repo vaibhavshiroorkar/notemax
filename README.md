@@ -41,6 +41,7 @@
 
 **Organize**
 - Folders, books and notes in one sidebar. Drag to sort, put pages inside pages, or pick several and move them together.
+- Workspaces for separate parts of your life, arranged on a Home page.
 - Tabs, stars, tags, and a graph of how your pages connect.
 - Ctrl+K finds any page or command. The sidebar can search, sort, group and filter.
 
@@ -101,7 +102,6 @@ See [docs/architecture.md](docs/architecture.md) for the layout of the code and 
 - Version history, and plain Markdown files kept next to the database
 - Shared pages and editing together
 - Split view, daily notes and a calendar
-- Several workspaces with a home page
 - Publishing a book as a fast public site
 
 ## Privacy

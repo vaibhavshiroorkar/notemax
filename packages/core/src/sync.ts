@@ -3,6 +3,7 @@ import { open, seal } from "./crypt";
 import { isHistoryDocId } from "./history";
 import type { DocStore } from "./store";
 import { WORKSPACE_DOC_ID } from "./workspace";
+import { splitScoped } from "./workspaces";
 
 // Sync through a folder of files that every device can read, like a folder in
 // the user's Google Drive. Each device writes only its own files: one per doc,
@@ -73,7 +74,11 @@ export interface SyncEngine {
 
 // Only page bodies can clash in a way worth asking about. The tree merges
 // field by field, pictures never change, and versions only add up.
-const isPageBody = (docId: string) => docId !== WORKSPACE_DOC_ID && !docId.startsWith("asset:") && !isHistoryDocId(docId);
+// The list of workspaces belongs to none of them, and is no page either.
+const isPageBody = (stored: string) => {
+  const { workspace, docId } = splitScoped(stored);
+  return workspace !== null && docId !== WORKSPACE_DOC_ID && !docId.startsWith("asset:") && !isHistoryDocId(docId);
+};
 
 /** How many files move at once. Each Drive request takes a second or two however small, and ten at once take about as long as one. */
 const PARALLEL = 10;
