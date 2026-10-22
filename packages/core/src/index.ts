@@ -47,3 +47,4 @@ export { assetDocId, isAssetId, loadAsset, saveAsset, type Asset } from "./asset
 export { buildGraph, tagDot, type Graph, type GraphNode, type GraphEdge, type GraphOptions } from "./graph";
 export { deriveKey, newKey, unlockKey, exportKey, importKey, seal, open as unseal, type KeyCheck } from "./crypt";
 export { createSyncEngine, type SyncEngine, type SyncRemote, type RemoteEntry, type SyncState, type SyncStatus } from "./sync";
+export { historyDocId, isHistoryDocId, listVersions, restoreBody, saveVersion, versionDoc, versionsToKeep, type Version } from "./history";

@@ -1,5 +1,5 @@
 import type * as Y from "yjs";
-import { deleteForever, type TreeNode } from "@notemax/core";
+import { deleteForever, historyDocId, type TreeNode } from "@notemax/core";
 import { forgetDoc } from "@/data/docCache";
 import { getStore } from "@/platform/platform";
 import { savedStore } from "@/platform/store";
@@ -18,7 +18,7 @@ export function eraseForever(doc: Y.Doc, nodes: TreeNode[]) {
   // Any copy still open in memory goes first, so a late save cannot bring text back.
   Promise.all(ids.map(forgetDoc))
     .then(getStore)
-    .then((store) => Promise.all(ids.map((id) => store.remove(id))))
+    .then((store) => Promise.all(ids.flatMap((id) => [store.remove(id), store.remove(historyDocId(id))])))
     .catch((err) => console.warn("[notemax] could not erase note bodies", err));
 }
 

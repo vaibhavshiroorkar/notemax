@@ -3,6 +3,7 @@ import type { Editor as TiptapEditor } from "@tiptap/react";
 import { WELCOME_ID, renameNode } from "@notemax/core";
 import { ChapterNav } from "@/features/books/ChapterNav";
 import { useLocalDoc } from "@/data/useLocalDoc";
+import { useVersions } from "@/features/history/versions";
 import { useOption } from "@/plugins/options";
 import { PageFooter, PageHeader } from "@/plugins/PageHeader";
 import { registry } from "@/plugins/registry";
@@ -60,6 +61,7 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
 
   useEffect(() => onStatus(status), [status, onStatus]);
   useBodyIndex(local?.doc, workspaceDoc, node.id);
+  useVersions(local?.doc, node.id);
 
   if (openError) return <p className="error">Could not open this note: {openError}</p>;
 

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type * as Y from "yjs";
-import { countWords, extractLinks, setLinks, setWords, touchNode } from "@notemax/core";
+import { UNTRACKED, countWords, extractLinks, setLinks, setWords, touchNode } from "@notemax/core";
 
 // How long typing must pause before links and words are recounted. There is
 // no need to scan the body on every keystroke.
@@ -11,11 +11,12 @@ export function useBodyIndex(body: Y.Doc | undefined, workspaceDoc: Y.Doc, noteI
   useEffect(() => {
     if (!body) return;
     const fragment = body.getXmlFragment("content");
+    // Untracked, so Undo outside the note skips this bookkeeping.
     const scan = () =>
       workspaceDoc.transact(() => {
         setLinks(workspaceDoc, noteId, extractLinks(fragment));
         setWords(workspaceDoc, noteId, countWords(fragment));
-      });
+      }, UNTRACKED);
     // Also on open, which repairs the list if it went stale, for example after
     // two devices edited this note at the same time.
     scan();
@@ -27,7 +28,7 @@ export function useBodyIndex(body: Y.Doc | undefined, workspaceDoc: Y.Doc, noteI
         workspaceDoc.transact(() => {
           scan();
           touchNode(workspaceDoc, noteId);
-        });
+        }, UNTRACKED);
       }, SCAN_MS);
     };
     body.on("update", onUpdate);
