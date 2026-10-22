@@ -155,6 +155,123 @@
   overflow-y: auto;
 }
 
+/* Split view: panes in rows and columns, each with its own tabs and page. One pane fills the room alone. */
+.split,
+.pane {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.split-row {
+  flex-direction: row;
+}
+
+.split-column {
+  flex-direction: column;
+}
+
+.split-part {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pane {
+  position: relative;
+  flex-direction: column;
+}
+
+/* Above the panes beside it, whose edges reach under its wider grab area. */
+.split-divider {
+  position: relative;
+  z-index: 3;
+  flex: none;
+  background: var(--border);
+}
+
+.split-divider[data-dir="row"] {
+  width: 1px;
+  margin: 0 -3px;
+  border: solid transparent;
+  border-width: 0 3px;
+  background-clip: padding-box;
+  cursor: col-resize;
+}
+
+.split-divider[data-dir="column"] {
+  height: 1px;
+  margin: -3px 0;
+  border: solid transparent;
+  border-width: 3px 0;
+  background-clip: padding-box;
+  cursor: row-resize;
+}
+
+.split-divider:hover {
+  background-color: var(--accent);
+}
+
+.main-top-space {
+  flex: 1;
+}
+
+.pane-top {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* The pane that Back, Ctrl+W and opening pages act on. */
+.split .pane[data-active] .pane-top {
+  box-shadow: inset 0 2px var(--accent);
+}
+
+.pane-close {
+  flex: none;
+}
+
+.pane-empty {
+  margin: 48px auto;
+  text-align: center;
+}
+
+/* Where a dragged tab would go: half the pane at an edge, or all of it in the middle. */
+.pane-drop {
+  position: absolute;
+  z-index: 20;
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  pointer-events: none;
+}
+
+.pane-drop[data-zone="middle"] {
+  inset: 4px;
+}
+
+.pane-drop[data-zone="left"] {
+  inset: 4px 50% 4px 4px;
+}
+
+.pane-drop[data-zone="right"] {
+  inset: 4px 4px 4px 50%;
+}
+
+.pane-drop[data-zone="top"] {
+  inset: 4px 4px 50% 4px;
+}
+
+.pane-drop[data-zone="bottom"] {
+  inset: 50% 4px 4px 4px;
+}
+
 /* Tabs shrink as more open, and past that the rest go into "+N". */
 .tab-strip {
   display: flex;

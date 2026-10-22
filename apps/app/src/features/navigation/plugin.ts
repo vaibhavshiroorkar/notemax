@@ -1,4 +1,4 @@
-import { closeOtherTabs, closeTab, layout } from "@/app/tabs";
+import { activePane, closeOtherTabs, closePane, closeTab, layout, splitActive, splitTab } from "@/app/tabs";
 import type { Plugin } from "@/plugins/types";
 
 /** Focuses the open page's title with the text selected, ready to type a new one. */
@@ -26,6 +26,10 @@ export const navigationPlugin: Plugin = {
     { id: "navigation.next-tab", title: "Next tab", keywords: ["tab", "switch"], shortcut: "Mod+Tab", run: (app) => app.cycleTab(1) },
     { id: "navigation.previous-tab", title: "Previous tab", keywords: ["tab", "switch"], shortcut: "Mod+Shift+Tab", run: (app) => app.cycleTab(-1) },
     { id: "navigation.rename", title: "Rename the open page", keywords: ["title"], shortcut: "F2", when: (app) => app.activeId !== null, run: focusTitle },
+    // Split view: the open page again beside or below, in a pane of its own.
+    { id: "navigation.split-right", title: "Split right", keywords: ["split", "side by side", "pane", "column"], run: () => splitActive("right") },
+    { id: "navigation.split-down", title: "Split down", keywords: ["split", "pane", "row", "below"], run: () => splitActive("bottom") },
+    { id: "navigation.close-pane", title: "Close this pane", keywords: ["split", "pane"], when: () => layout.get().panes.length > 1, run: () => closePane() },
     {
       id: "navigation.focus",
       title: "Focus mode",
@@ -41,9 +45,11 @@ export const navigationPlugin: Plugin = {
       title: "Close other tabs",
       group: "open",
       targets: ["tab"],
-      disabled: () => layout.get().panes[0].tabs.length < 2,
+      disabled: () => activePane().tabs.length < 2,
       run: (target) => target.type === "tab" && closeOtherTabs(target.tabId),
     },
+    { id: "navigation.tab-split-right", title: "Move to a new pane on the right", group: "layout", targets: ["tab"], run: (target) => target.type === "tab" && splitTab(target.tabId, activePane().id, "right") },
+    { id: "navigation.tab-split-down", title: "Move to a new pane below", group: "layout", targets: ["tab"], run: (target) => target.type === "tab" && splitTab(target.tabId, activePane().id, "bottom") },
     { id: "navigation.tab-reopen", title: "Reopen closed tab", group: "create", keys: "Mod+Shift+T", targets: ["tab"], run: (_target, app) => app.reopenClosedTab() },
     { id: "navigation.tab-new", title: "New tab", group: "create", keys: "Mod+T", targets: ["tab"], run: (_target, app) => app.newTab() },
   ],

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
 import { ROOT, WELCOME_ID, createNode, restoreNode, trashNode, type NodeKind, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
 import { addRecent, recentPages } from "@/data/recent";
 import { useWorkspace } from "@/data/useWorkspace";
@@ -30,10 +30,19 @@ import { RightSidebar } from "./RightSidebar";
 import { pageInAddress, showInAddress, startBrowserNavigation } from "./history";
 import { NewTabPage } from "./NewTabPage";
 import { TabStrip } from "./TabStrip";
+import { SplitDivider } from "./SplitDivider";
 import {
+  activatePane,
   canGoBack,
   canGoForward,
+  closePane,
   closeTab,
+  moveTabToPane,
+  splitOf,
+  splitTab,
+  type Edge,
+  type Pane,
+  type Split,
   currentVisit,
   cycleTab,
   goBack,
@@ -78,6 +87,14 @@ export function App() {
     if (fromAddress && currentVisit()?.page !== fromAddress) openPage(fromAddress);
   });
   const tabs = layout.use();
+  // Split view needs room: a phone shows the active pane alone.
+  const [narrow, setNarrow] = useState(isNarrow);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 700px)");
+    const onChange = () => setNarrow(query.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
   const visit = currentVisit(tabs);
   const selectedId = visit && !isView(visit.page) ? visit.page : null;
   // On a phone the sides cover the page, so they start closed there.
@@ -327,6 +344,71 @@ export function App() {
   const OverlayView = overlay && registry.overlay(overlay.id)?.component;
   const ViewPage = visit && isView(visit.page) ? registry.view(viewId(visit.page))?.component : undefined;
   const panels = registry.sidePanels(app);
+
+  const activePage =
+    visit && isView(visit.page) ? (
+      ViewPage ? (
+        <Safe key={`${visit.page}:${version}`} name={viewId(visit.page)}>
+          <ViewPage app={app} options={visit.options ?? {}} />
+        </Safe>
+      ) : (
+        <div className="plugin-off">
+          <p>The plugin that shows this page is off or gone.</p>
+        </div>
+      )
+    ) : activeNode && View ? (
+      <Safe key={`${activeNode.id}:${version}`} name="This page">
+        <View node={activeNode} app={app} tree={tree} workspaceDoc={doc} hub={hub} onSelect={select} onStatus={pageStatus.set} onReady={onReady} />
+      </Safe>
+    ) : activeNode ? (
+      <PluginOff node={activeNode} app={app} />
+    ) : !visit ? (
+      <NewTabPage app={app} />
+    ) : (
+      <p className="empty">No notes. Use + in the sidebar to create one.</p>
+    );
+
+  // Split view: each pane shows its own tab. The active pane is the one above;
+  // the others show their page the same way, but leave the status bar and Back to it.
+  const split = splitOf(tabs);
+  const multi = tabs.panes.length > 1 && !narrow;
+  const pageOf = (pane: Pane): ReactNode => {
+    if (pane.id === tabs.activePane) return activePage;
+    const tab = pane.tabs.find((t) => t.id === pane.active);
+    const shown = tab?.visits[tab.index];
+    if (!shown) return <p className="empty pane-empty">Click to use this pane.</p>;
+    if (isView(shown.page)) {
+      const Shown = registry.view(viewId(shown.page))?.component;
+      return Shown ? <Shown app={app} options={shown.options ?? {}} /> : null;
+    }
+    const node = tree.items.get(shown.page) ?? (shown.options?.fromTrash ? tree.byId.get(shown.page) : undefined);
+    const Page = node && registry.pageView(node.kind)?.component;
+    if (!node || !Page) return <p className="empty pane-empty">This page is gone.</p>;
+    return (
+      <Safe key={`${pane.id}:${node.id}:${version}`} name="This page">
+        <Page node={node} app={app} tree={tree} workspaceDoc={doc} hub={hub} onSelect={select} onStatus={ignore} onReady={ignore} />
+      </Safe>
+    );
+  };
+  const renderSplit = (part: Split, path: number[]): ReactNode => {
+    if ("pane" in part) {
+      const pane = tabs.panes.find((p) => p.id === part.pane);
+      return pane ? <PaneBox key={pane.id} pane={pane} app={app} active={pane.id === tabs.activePane} showTabs={multi} page={pageOf(pane)} /> : null;
+    }
+    const sizes = part.sizes ?? part.parts.map(() => 1);
+    return (
+      <div className={`split split-${part.dir}`}>
+        {part.parts.map((child, i) => (
+          <Fragment key={"pane" in child ? child.pane : `split-${i}`}>
+            {i > 0 && <SplitDivider path={path} index={i} dir={part.dir} sizes={sizes} />}
+            <div className="split-part" style={{ flexGrow: sizes[i] }}>
+              {renderSplit(child, [...path, i])}
+            </div>
+          </Fragment>
+        ))}
+      </div>
+    );
+  };
   const showRight = sidePanelOpen && !focusMode;
   const sidebarCommand = registry.allCommands().find((command) => command.id === "sidebar.toggle");
   const sidebarKeys = sidebarCommand ? shortcutFor(sidebarCommand, overrides) : "";
@@ -358,7 +440,7 @@ export function App() {
         >
           <Icon name="sidebar" />
         </button>
-        <TabStrip app={app} layout={tabs} />
+        {multi ? <div className="main-top-space" /> : <TabStrip app={app} pane={tabs.panes.find((pane) => pane.id === tabs.activePane)!} />}
         {/* Phones have no Ctrl+K, so search gets a button there. */}
         <button className="icon-button phone-only" aria-label="Search" title="Search" onClick={app.openPalette}>
           <Icon name="search" />
@@ -390,29 +472,7 @@ export function App() {
           {quickOpen && <QuickSettings app={app} onClose={closeQuick} />}
         </div>
         </div>
-        <div className="page-scroll">
-          {visit && isView(visit.page) ? (
-            ViewPage ? (
-              <Safe key={`${visit.page}:${version}`} name={viewId(visit.page)}>
-                <ViewPage app={app} options={visit.options ?? {}} />
-              </Safe>
-            ) : (
-              <div className="plugin-off">
-                <p>The plugin that shows this page is off or gone.</p>
-              </div>
-            )
-          ) : activeNode && View ? (
-            <Safe key={`${activeNode.id}:${version}`} name="This page">
-              <View node={activeNode} app={app} tree={tree} workspaceDoc={doc} hub={hub} onSelect={select} onStatus={pageStatus.set} onReady={onReady} />
-            </Safe>
-          ) : activeNode ? (
-            <PluginOff node={activeNode} app={app} />
-          ) : !visit ? (
-            <NewTabPage app={app} />
-          ) : (
-            <p className="empty">No notes. Use + in the sidebar to create one.</p>
-          )}
-        </div>
+        {narrow ? <div className="page-scroll">{activePage}</div> : renderSplit(split, [])}
       </main>
       <RightSidebar app={app} panels={panels} open={showRight} />
       {/* Phones only (CSS): a tap beside an open side closes it. */}
@@ -485,5 +545,69 @@ function PluginOff({ node, app }: { node: TreeNode; app: AppContext }) {
         Turn on {plugin.name}
       </button>
     </div>
+  );
+}
+
+const ignore = () => {};
+
+const TAB_TYPE = "application/x-notemax-tab";
+
+/** Which edge of a pane the pointer is near, or the middle. */
+function edgeAt(event: DragEvent, box: DOMRect): Edge | "middle" {
+  const x = (event.clientX - box.left) / box.width;
+  const y = (event.clientY - box.top) / box.height;
+  const near = Math.min(x, 1 - x, y, 1 - y);
+  if (near > 0.25) return "middle";
+  return near === x ? "left" : near === 1 - x ? "right" : near === y ? "top" : "bottom";
+}
+
+/**
+ * One pane of the split view: its tabs, its page, and the places a dragged
+ * tab can go. A tab dropped on an edge splits the pane there; in the middle,
+ * it moves into this pane.
+ */
+function PaneBox({ pane, app, active, showTabs, page }: { pane: Pane; app: AppContext; active: boolean; showTabs: boolean; page: ReactNode }) {
+  const [zone, setZone] = useState<Edge | "middle" | null>(null);
+  // Tab strips take their own drops, to reorder.
+  const isTab = (event: DragEvent) => event.dataTransfer.types.includes(TAB_TYPE) && !(event.target as Element).closest(".tab-strip");
+  return (
+    <section
+      className="pane"
+      data-active={active || undefined}
+      aria-label={active ? "Active pane" : "Pane"}
+      onPointerDownCapture={() => activatePane(pane.id)}
+      // Capture, so a note's own drop handling never sees a tab being dragged.
+      onDragOverCapture={(event) => {
+        if (!isTab(event)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const next = edgeAt(event, event.currentTarget.getBoundingClientRect());
+        if (next !== zone) setZone(next);
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setZone(null);
+      }}
+      onDropCapture={(event) => {
+        if (!isTab(event)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const where = edgeAt(event, event.currentTarget.getBoundingClientRect());
+        setZone(null);
+        const tabId = event.dataTransfer.getData(TAB_TYPE);
+        if (where === "middle") moveTabToPane(tabId, pane.id);
+        else splitTab(tabId, pane.id, where);
+      }}
+    >
+      {showTabs && (
+        <div className="pane-top">
+          <TabStrip app={app} pane={pane} />
+          <button className="icon-button pane-close" aria-label="Close this pane" title="Close this pane" onClick={() => closePane(pane.id)}>
+            <Icon name="close" />
+          </button>
+        </div>
+      )}
+      <div className="page-scroll">{page}</div>
+      {zone && <div className="pane-drop" data-zone={zone} aria-hidden="true" />}
+    </section>
   );
 }

@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.40.0 (2026-10-22)
+
+- Split view: drag a tab to any edge of a page to open it in a new pane there, beside or below; the middle moves it into that pane. Ctrl+K "Split right" and "Split down" do it too, and a tab's menu has Move to a new pane.
+- Each pane has its own tabs. A click in a pane makes it the one Back, Ctrl+W and opening pages act on. Drag the line between panes to resize them; a pane closes with its x or its last tab.
+- The same note open in two panes stays in step as you type. The arrangement is kept through a restart. A phone shows one pane.
+
 ## 0.39.0 (2026-10-22)
 
 - Daily notes: Ctrl+Alt+D (or Ctrl+K, Open today's note) opens the note for today, made in a Daily notes folder the first time. Yesterday's and tomorrow's too.

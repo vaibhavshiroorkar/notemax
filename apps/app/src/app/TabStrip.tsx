@@ -5,7 +5,7 @@ import type { AppContext } from "@/plugins/types";
 import { contextMenuHandler } from "@/ui/ContextMenu";
 import { Icon, type IconName } from "@/ui/Icon";
 import { TabOverflow } from "./TabOverflow";
-import { activePane, activateTab, closeTab, isView, moveTab, newTab, openPage, viewId, type Layout, type Tab } from "./tabs";
+import { activatePane, activePane, activateTab, closeTab, isView, moveTab, moveTabToPane, newTab, openPage, viewId, type Pane, type Tab } from "./tabs";
 
 const TAB_TYPE = "application/x-notemax-tab";
 
@@ -41,8 +41,7 @@ function labelOf(app: AppContext, tab: Tab): { title: string; icon: IconName } {
  * The open tabs, above the page. Drag a tab to reorder it, or drop a page from
  * the sidebar here to open it in a new tab. The middle button closes a tab.
  */
-export function TabStrip({ app, layout }: { app: AppContext; layout: Layout }) {
-  const pane = activePane(layout);
+export function TabStrip({ app, pane }: { app: AppContext; pane: Pane }) {
   // Where a dragged tab or page would land, as an index among the shown tabs, to draw a marker.
   const [dropAt, setDropAt] = useState<number | null>(null);
   const strip = useRef<HTMLDivElement>(null);
@@ -85,11 +84,14 @@ export function TabStrip({ app, layout }: { app: AppContext; layout: Layout }) {
 
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
+    activatePane(pane.id);
     const at = paneIndex(indexAt(event));
     setDropAt(null);
     const tabId = event.dataTransfer.getData(TAB_TYPE);
     if (tabId) {
       const from = pane.tabs.findIndex((tab) => tab.id === tabId);
+      // From another pane of the split view: it moves here.
+      if (from < 0) return moveTabToPane(tabId, pane.id, at);
       moveTab(tabId, from < at ? at - 1 : at);
       return;
     }
@@ -103,7 +105,8 @@ export function TabStrip({ app, layout }: { app: AppContext; layout: Layout }) {
   };
 
   return (
-    <div className="tab-strip" ref={strip} role="tablist" aria-label="Open pages" onDragOver={onDragOver} onDragLeave={() => setDropAt(null)} onDrop={onDrop}>
+    // Anything done here is done to this pane, so it becomes the active one first.
+    <div className="tab-strip" ref={strip} role="tablist" aria-label="Open pages" onPointerDownCapture={() => activatePane(pane.id)} onDragOver={onDragOver} onDragLeave={() => setDropAt(null)} onDrop={onDrop}>
       {shown.map((tab, i) => {
         const { title, icon } = labelOf(app, tab);
         const active = tab.id === pane.active;
