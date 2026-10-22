@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { KINDS, ROOT, normalizeTag, searchNodes, type Tree, type TreeNode } from "@notemax/core";
 import { recentPages } from "@/data/recent";
+import { indexVersion, searchText } from "@/features/search/text-index";
 import { registry } from "@/plugins/registry";
 import { formatShortcut, shortcutFor } from "@/plugins/shortcuts";
 import type { AppContext, Command } from "@/plugins/types";
@@ -9,7 +10,11 @@ import { Icon } from "@/ui/Icon";
 import { SuggestionList, type SuggestionListHandle } from "@/ui/suggestion/SuggestionList";
 import "./palette.css";
 
-type PaletteItem = { type: "page"; node: TreeNode; where: string } | { type: "command"; command: Command };
+type PaletteItem =
+  | { type: "page"; node: TreeNode; where: string }
+  /** A page whose text, not its title, has what was typed. */
+  | { type: "text"; node: TreeNode; snippet: string }
+  | { type: "command"; command: Command };
 
 /** The folder or book an item sits in, so two pages with one title can be told apart. */
 function whereOf(tree: Tree, id: string): string {
@@ -68,11 +73,18 @@ function search(app: AppContext, query: string): PaletteItem[] {
   // Before anything is typed, the pages worth offering are the ones opened lately.
   const found = commandsOnly ? [] : q ? searchNodes(app.tree, q, { kinds: PAGE_KINDS }) : recentNodes(app);
   const pages: PaletteItem[] = found.map((node) => ({ type: "page", node, where: whereOf(app.tree, node.id) }));
+  // Words inside notes, after the titles that match. Three letters at least, so a few keystrokes do not list every note.
+  const inText: PaletteItem[] =
+    !commandsOnly && q.length >= 3
+      ? searchText(app.tree, q, 12)
+          .filter((match) => !found.some((node) => node.id === match.id))
+          .map((match) => ({ type: "text", node: app.tree.byId.get(match.id)!, snippet: match.snippet }))
+      : [];
   const commands: PaletteItem[] = registry
     .commands(app)
     .filter((command) => command.id !== "palette.open" && matchesCommand(command, q))
     .map((command) => ({ type: "command", command }));
-  return [...pages, ...commands];
+  return [...pages, ...inText, ...commands];
 }
 
 /** Ctrl+K: jump to any note or book, or run any command a plugin registered. */
@@ -80,11 +92,14 @@ export function Palette({ app, onClose }: { app: AppContext; onClose(): void }) 
   const [query, setQuery] = useState("");
   const list = useRef<SuggestionListHandle>(null);
   // The list resets its selection whenever `items` changes, so only rebuild it when the inputs do.
-  const items = useMemo(() => search(app, query), [query, app.tree, app.activeId]);
+  // The index fills in the background; results update as it does.
+  const indexed = indexVersion.use();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const items = useMemo(() => search(app, query), [query, app.tree, app.activeId, indexed]);
 
   const pick = (item: PaletteItem) => {
     onClose();
-    if (item.type === "page") app.open(item.node.id);
+    if (item.type === "page" || item.type === "text") app.open(item.node.id);
     else item.command.run(app);
   };
 
@@ -108,7 +123,7 @@ export function Palette({ app, onClose }: { app: AppContext; onClose(): void }) 
         label="Results"
         className="palette-list"
         empty="Nothing found"
-        itemKey={(item) => (item.type === "page" ? item.node.id : item.command.id)}
+        itemKey={(item) => (item.type === "command" ? item.command.id : `${item.type}:${item.node.id}`)}
         renderItem={(item) =>
           item.type === "page" ? (
             <>
@@ -117,6 +132,17 @@ export function Palette({ app, onClose }: { app: AppContext; onClose(): void }) 
                 <span className="suggest-title">{item.node.title || "Untitled"}</span>
               </span>
               {item.where && <span className="suggest-detail">{item.where}</span>}
+            </>
+          ) : item.type === "text" ? (
+            <>
+              <span className="palette-item palette-text-item">
+                <Icon name="search" />
+                <span className="palette-text">
+                  <span className="suggest-title">{item.node.title || "Untitled"}</span>
+                  <span className="palette-snippet">{item.snippet}</span>
+                </span>
+              </span>
+              <span className="suggest-detail">in the text</span>
             </>
           ) : (
             <>

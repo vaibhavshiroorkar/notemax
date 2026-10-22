@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.41.0 (2026-10-22)
+
+- Ctrl+K finds words inside notes, not just titles, with the words around each match. Every word you type must be there, in any order.
+- A Mentioned in section in the right sidebar lists pages that name the open page without linking to it, with the words around each mention.
+- The search index builds in the background, updates as notes change here or on other devices, and is kept through a restart.
+
 ## 0.40.0 (2026-10-22)
 
 - Split view: drag a tab to any edge of a page to open it in a new pane there, beside or below; the middle moves it into that pane. Ctrl+K "Split right" and "Split down" do it too, and a tab's menu has Move to a new pane.

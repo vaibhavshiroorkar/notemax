@@ -1,0 +1,52 @@
+.mentions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+.mention {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.mention:hover {
+  background: var(--hover);
+}
+
+.mention-snippet,
+.mentions-empty,
+.palette-snippet {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mention-snippet {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.mentions-empty {
+  margin: 0 8px;
+}
+
+.palette-snippet {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palette-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
