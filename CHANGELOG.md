@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.48.0 (2026-10-23)
+
+- The first start asks how you will use Notemax: on this device only (offline, no account) or on all your devices (online). Until you answer, everything stays on as before.
+- Offline turns off sync, sharing and the account bar, even the parts that are normally always on. Settings, Setup changes it at any time and lists what each choice includes.
+- A window can open on Home with all your workspaces instead of where you left off.
+- Fixed: a middle click on a sidebar row did nothing when the list was long enough to scroll.
+
 ## 0.47.0 (2026-10-22)
 
 - Settings follow you to every device with sync: theme, accent, fonts, text size, page width, paper, shortcuts, plugins, options, download format and the like. A change on one device shows on the others at once with live sync on.

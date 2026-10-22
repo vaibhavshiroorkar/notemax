@@ -1,4 +1,5 @@
 import type { NodeKind } from "@notemax/core";
+import { onlineMode } from "@/platform/mode";
 import { createStore, savedStore } from "@/platform/store";
 import type {
   AppContext,
@@ -68,7 +69,10 @@ export function unregisterPlugin(id: string) {
   changed();
 }
 
+onlineMode.subscribe(changed);
+
 export function isOn(plugin: Plugin) {
+  if (plugin.online && onlineMode.get() === "offline") return false;
   return plugin.required || !switchedOff.get().includes(plugin.id);
 }
 

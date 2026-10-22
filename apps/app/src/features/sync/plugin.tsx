@@ -48,6 +48,7 @@ function RemoteEditNotice({ app }: { app: AppContext }) {
 export const syncPlugin: Plugin = {
   id: "sync",
   name: "Sync",
+  online: true,
   description: "Your notes on every device, through your own Google Drive",
   settings: [{ id: "sync", order: 45, title: "Sync", icon: "upload", keywords: ["google drive", "devices", "backup", "passphrase", "phone"], when: () => accountsEnabled, component: SyncSection }],
   statusItems: [

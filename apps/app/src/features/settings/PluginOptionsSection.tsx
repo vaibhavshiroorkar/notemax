@@ -12,6 +12,7 @@ import {
   uninstall,
   type Installed,
 } from "@/plugins/community";
+import { onlineMode } from "@/platform/mode";
 import { pluginsVersion, registry, setPluginOn, switchedOff } from "@/plugins/registry";
 import { ConfirmDialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
@@ -32,6 +33,7 @@ type Pending = { code: string; source: string; label: string };
 export function PluginOptionsSection() {
   pluginsVersion.use();
   const off = switchedOff.use();
+  const offline = onlineMode.use() === "offline";
   const allowCommunity = communityOn.use();
   const mine = installed.use();
   const errors = loadErrors.use();
@@ -80,7 +82,9 @@ export function PluginOptionsSection() {
             {plugin.name}
             {plugin.description && <span className="settings-description">{plugin.description}</span>}
           </span>
-          {plugin.required ? (
+          {plugin.online && offline ? (
+            <span className="plugin-always">Off while offline</span>
+          ) : plugin.required ? (
             <span className="plugin-always">Always on</span>
           ) : (
             <input type="checkbox" checked={!off.includes(plugin.id)} onChange={(event) => setPluginOn(plugin.id, event.target.checked)} />

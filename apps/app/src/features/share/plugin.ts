@@ -20,6 +20,7 @@ function openFromLink(app: AppContext) {
 
 export const sharePlugin: Plugin = {
   id: "share",
+  online: true,
   name: "Sharing",
   description: "Share a note by link and write in it together, live",
   pageHeader: [{ id: "share.line", kinds: ["note"], component: ShareLine }],

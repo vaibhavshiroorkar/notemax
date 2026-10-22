@@ -40,6 +40,8 @@ function TemporaryOnlyChoice({ app }: { app: AppContext }) {
 
 export const temporaryPlugin: Plugin = {
   id: "temporary",
+  // Pages kept only in this browser matter only to someone who means to sign in.
+  online: true,
   name: "Temporary pages",
   description: "Marks pages made in a browser before signing in, since only that browser has them",
   required: true,

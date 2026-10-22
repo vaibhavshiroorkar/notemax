@@ -137,7 +137,8 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
         onDragEnd={endDrag}
         onContextMenu={dragRowMenu((event) => ctx.menu(item.id, event))}
         // Shift+click picks a range; without this it would also select the text between.
-        onMouseDown={(event) => event.shiftKey && event.preventDefault()}
+        // A middle press in a list that scrolls would start the browser's autoscroll and never click.
+        onMouseDown={(event) => (event.shiftKey || event.button === 1) && event.preventDefault()}
         // A middle click opens the page in a new tab, as in a browser.
         onAuxClick={(event) => event.button === 1 && item.kind !== "folder" && ctx.select(item.id, true)}
         onDragOver={(event) => {

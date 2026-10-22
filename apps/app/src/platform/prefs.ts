@@ -56,6 +56,7 @@ export const SYNCED_PREFS: ReadonlySet<string> = new Set([
   "graphPanelChoices",
   "panelFolded",
   "temporaryNoticeHidden",
+  "startAt",
 ]);
 
 let outbox: ((key: string, value: string | null) => void) | null = null;

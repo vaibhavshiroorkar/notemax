@@ -25,7 +25,7 @@
 
 ## Why Notemax
 
-- **Local first.** Notes are saved on your device within a fraction of a second. No account needed, and everything works offline.
+- **Local first.** Notes are saved on your device within a fraction of a second. No account needed, and everything works offline. The first start asks whether you want online features at all.
 - **Made for long writing.** Notes become chapters, books gather them into parts, and a book downloads as Word, PDF or EPUB.
 - **Fast with thousands of notes.** Startup, typing and switching pages are tested with 5,000 notes.
 - **Yours to keep.** Optional sync goes through your own Google Drive, sealed with a passphrase so Google can't read it. Download everything as plain Markdown at any time.

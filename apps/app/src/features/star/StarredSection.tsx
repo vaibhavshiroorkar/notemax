@@ -40,6 +40,7 @@ export function StarredSection({ app }: { app: AppContext }) {
                 <button
                   className="row-title icon-title"
                   onClick={() => show(item)}
+                  onMouseDown={(event) => event.button === 1 && event.preventDefault()}
                   onAuxClick={(event) => event.button === 1 && item.kind !== "folder" && app.open(item.id, { newTab: true })}
                 >
                   <Icon name={item.kind === "note" ? "note" : registry.iconOf(item.kind)} />

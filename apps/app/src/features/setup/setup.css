@@ -1,0 +1,62 @@
+.setup-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 8px 12px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.setup-card-title {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.setup-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: left;
+  color: var(--muted);
+}
+
+.setup-choice:hover {
+  border-color: var(--accent);
+  background: var(--hover);
+}
+
+.setup-choice strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.setup-card .link-button {
+  align-self: flex-start;
+}
+
+/* What works offline and what needs online, side by side where there is room. */
+.setup-lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+
+.setup-lists ul {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--muted);
+}
+
+.setup-lists [data-off] li {
+  text-decoration: line-through;
+}

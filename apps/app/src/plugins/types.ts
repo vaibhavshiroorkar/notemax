@@ -18,6 +18,8 @@ export interface Plugin {
   description?: string;
   /** Parts the app cannot work without. Settings shows them as always on. */
   required?: boolean;
+  /** Needs the internet or an account, like sync and sharing. Off on a device set up to work offline, even when required. */
+  online?: boolean;
   /** Community plugins: who made it and which version this is. */
   author?: string;
   version?: string;

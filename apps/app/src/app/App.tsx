@@ -11,6 +11,7 @@ import { ShortcutsHelp } from "@/features/shortcuts/ShortcutsHelp";
 import { Sidebar } from "@/features/sidebar/Sidebar";
 import { StatusBar, pageStatus } from "@/features/status/StatusBar";
 import { requestPersistentStorage } from "@/platform/platform";
+import { startAt } from "@/platform/mode";
 import { getPref, setPref } from "@/platform/prefs";
 import { useOption } from "@/plugins/options";
 import { pluginsVersion, registry, setPluginOn } from "@/plugins/registry";
@@ -85,6 +86,7 @@ export function App() {
     loadTabs(getPref("selectedId") ?? WELCOME_ID);
     const fromAddress = pageInAddress();
     if (fromAddress && currentVisit()?.page !== fromAddress) openPage(fromAddress);
+    else if (!fromAddress && startAt.get() === "home" && currentVisit()?.page !== viewPage("home")) openPage(viewPage("home"));
   });
   const tabs = layout.use();
   // Split view needs room: a phone shows the active pane alone.
