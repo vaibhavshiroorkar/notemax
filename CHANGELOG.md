@@ -3,6 +3,14 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.38.0 (2026-10-22)
+
+- Keep plain Markdown files: in Settings, Markdown files, choose a folder, and every note of the workspace is also a .md file there. Folders stay folders, books become folders of numbered chapters, pictures go in attachments/, and boards are .excalidraw files.
+- Both ways: an edit made in another app comes back into the note, after the note as it was is kept as a version. A new .md file becomes a note, a renamed page renames its file, and a file deleted in the folder sends its page to the trash.
+- A file another app wrote stays exactly as written until you edit that note in Notemax, so Obsidian-only syntax is not lost.
+- Home: Open a folder turns a folder of Markdown files, like an Obsidian vault, into a workspace kept in step with it.
+- Needs a browser that can keep folders (Chrome or Edge) or the desktop app.
+
 ## 0.37.0 (2026-10-22)
 
 - A board's own tools no longer fade; they are the tools in hand.

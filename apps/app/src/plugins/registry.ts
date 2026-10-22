@@ -86,6 +86,8 @@ export const registry = {
   /** Every registered plugin, on or off. */
   everyPlugin: (): readonly Plugin[] => plugins,
   isOn: (id: string) => on().some((plugin) => plugin.id === id),
+  /** The node and mark types a note can hold, from every plugin, on or off. */
+  contentExtensions: (ctx: EditorContext) => plugins.flatMap((p) => p.contentExtensions?.({ ...ctx, on: false }) ?? []),
   editorExtensions: (ctx: EditorContext) => [
     ...plugins.flatMap((p) => p.contentExtensions?.({ ...ctx, on: isOn(p) }) ?? []),
     ...all((p) => p.editorExtensions?.(ctx)),

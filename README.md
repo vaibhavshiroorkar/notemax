@@ -100,7 +100,6 @@ See [docs/architecture.md](docs/architecture.md) for the layout of the code and 
 
 ## Roadmap
 
-- Version history, and plain Markdown files kept next to the database
 - Split view, daily notes and a calendar
 - Publishing a book as a fast public site
 

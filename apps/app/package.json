@@ -1,6 +1,6 @@
 {
   "name": "@notemax/app",
-  "version": "0.37.0",
+  "version": "0.38.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -28,6 +28,7 @@
     "@tiptap/suggestion": "3.31.4",
     "@tiptap/y-tiptap": "^3.0.9",
     "d3-force": "3.0.0",
+    "marked": "15.0.12",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "yjs": "^13.6.33"

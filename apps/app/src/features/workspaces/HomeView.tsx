@@ -8,6 +8,7 @@ import type { AppContext } from "@/plugins/types";
 import { ConfirmDialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
 import { askText } from "@/ui/Prompt";
+import { keepFolderFor, pickFolder } from "@/features/markdown-files/mirror";
 import { WORKSPACE_COLORS, createWorkspace, deleteWorkspace, move, nameOf, openList, pageCount, recolor, rename, switchTo, workspaceList } from "./list";
 import { Dot } from "./Switcher";
 
@@ -143,6 +144,15 @@ export function HomeView({ app }: { app: AppContext; options: Record<string, unk
     }
   };
 
+  // A folder of Markdown files, like an Obsidian vault, becomes a workspace that stays in step with it.
+  const openFolder = async () => {
+    const folder = await pickFolder();
+    if (!folder) return;
+    const id = await createWorkspace(folder.name, WORKSPACE_COLORS[(list.length % (WORKSPACE_COLORS.length - 1)) + 1]);
+    await keepFolderFor(id, folder);
+    switchTo(id);
+  };
+
   return (
     <div className="home-page">
       <h1>Home</h1>
@@ -166,6 +176,17 @@ export function HomeView({ app }: { app: AppContext; options: Record<string, unk
             <span className="workspace-card-meta">For work, school, a novel...</span>
           </button>
         </li>
+        {"showDirectoryPicker" in window && (
+          <li className="workspace-card workspace-new">
+            <button className="workspace-open" onClick={() => void openFolder()}>
+              <span className="workspace-card-title">
+                <Icon name="folder" />
+                <strong>Open a folder</strong>
+              </span>
+              <span className="workspace-card-meta">A folder of Markdown files, like an Obsidian vault, kept in step both ways</span>
+            </button>
+          </li>
+        )}
       </ul>
 
       {recent.length > 0 && (

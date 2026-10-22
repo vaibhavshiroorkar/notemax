@@ -19,6 +19,7 @@ import { starPlugin } from "@/features/star/plugin";
 import { formatPlugin } from "@/features/format/plugin";
 import { workspacesPlugin } from "@/features/workspaces/plugin";
 import { sharePlugin } from "@/features/share/plugin";
+import { markdownFilesPlugin } from "@/features/markdown-files/plugin";
 import { historyPlugin } from "@/features/history/plugin";
 import { temporaryPlugin } from "@/features/temporary/plugin";
 import { trashPlugin } from "@/features/trash/plugin";
@@ -40,6 +41,7 @@ import { registerPlugin } from "./registry";
   formatPlugin,
   workspacesPlugin,
   sharePlugin,
+  markdownFilesPlugin,
   trashPlugin,
   undoPlugin,
   booksPlugin,
