@@ -17,8 +17,24 @@
 }
 
 .sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   padding: 6px 8px;
   border-top: 1px solid var(--border);
+}
+
+/* The square buttons at the right of the footer, like the Settings cog. */
+.sidebar-footer .footer-icon {
+  flex-shrink: 0;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.sidebar-footer .footer-icon:disabled {
+  opacity: 0.6;
 }
 
 .add-menu {

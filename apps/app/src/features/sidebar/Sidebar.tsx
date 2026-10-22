@@ -6,6 +6,7 @@ import type { AppContext } from "@/plugins/types";
 import { useSelect } from "@/platform/store";
 import { contextMenuHandler, pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
+import { Safe } from "@/ui/Safe";
 import { AddMenu } from "./AddMenu";
 import { dragged, endDrag, useDragging } from "./drag";
 import { FilteredList } from "./FilteredList";
@@ -32,6 +33,8 @@ export function Sidebar({ app }: { app: AppContext }) {
   const overrides = shortcutOverrides.use();
   const settingsShortcut = registry.allCommands().find((command) => command.id === "settings.open");
   const settingsKeys = settingsShortcut && shortcutFor(settingsShortcut, overrides);
+  const settingsTitle = settingsKeys ? `Settings (${formatShortcut(settingsKeys)})` : "Settings";
+  const footerItems = registry.sidebarFooter();
 
   // The row actions read the latest app through this, so they can stay one object for good.
   const appRef = useRef(app);
@@ -116,10 +119,23 @@ export function Sidebar({ app }: { app: AppContext }) {
         <TrashSection tree={tree} doc={doc} />
       </div>
       <footer className="sidebar-footer">
-        <button className="footer-button" onClick={() => app.openSettings()} title={settingsKeys ? `Settings (${formatShortcut(settingsKeys)})` : "Settings"}>
-          <Icon name="settings" />
-          <span>Settings</span>
-        </button>
+        {footerItems.length ? (
+          <>
+            {footerItems.map(({ id, component: Item }) => (
+              <Safe key={id} name={id}>
+                <Item app={app} />
+              </Safe>
+            ))}
+            <button className="footer-icon footer-button" aria-label="Settings" onClick={() => app.openSettings()} title={settingsTitle}>
+              <Icon name="gear" />
+            </button>
+          </>
+        ) : (
+          <button className="footer-button" onClick={() => app.openSettings()} title={settingsTitle}>
+            <Icon name="gear" />
+            <span>Settings</span>
+          </button>
+        )}
       </footer>
     </aside>
   );

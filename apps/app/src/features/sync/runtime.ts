@@ -25,7 +25,7 @@ export type SyncView =
   /** Another browser tab of this app is the one syncing. */
   | { state: "elsewhere" }
   | { state: "idle"; lastSynced: number | null }
-  | { state: "syncing"; lastSynced: number | null }
+  | { state: "syncing"; lastSynced: number | null; done?: number; total?: number }
   | { state: "offline"; lastSynced: number | null }
   | { state: "error"; lastSynced: number | null; message: string; signIn?: boolean };
 

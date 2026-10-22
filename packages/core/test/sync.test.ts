@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { createSqlStore, createSyncEngine, newKey, openIdbStore, openLocalDoc, unlockKey, type DocStore, type RemoteEntry, type SyncRemote, type SyncState } from "../src";
+import { createSqlStore, createSyncEngine, newKey, openIdbStore, openLocalDoc, unlockKey, type DocStore, type RemoteEntry, type SyncRemote, type SyncState, type SyncStatus } from "../src";
 import { memorySqlDatabase } from "./node-sqlite";
 
 // Few rounds, so the tests run fast. The app uses the real number.
@@ -12,6 +12,23 @@ class FakeDrive {
   files = new Map<string, { data: Uint8Array; seq: number; docId: string; device: string }>();
   seq = 0;
   failReads = 0;
+  /** Each read and write waits this long, like a slow network. */
+  delayMs = 0;
+  /** Called inside each write, before it lands. */
+  duringWrite: ((docId: string) => Promise<void>) | null = null;
+  inFlight = 0;
+  maxInFlight = 0;
+
+  private async slow<T>(work: () => Promise<T> | T): Promise<T> {
+    this.inFlight++;
+    this.maxInFlight = Math.max(this.maxInFlight, this.inFlight);
+    try {
+      if (this.delayMs) await new Promise((r) => setTimeout(r, this.delayMs));
+      return await work();
+    } finally {
+      this.inFlight--;
+    }
+  }
 
   as(device: string): SyncRemote {
     return {
@@ -20,16 +37,19 @@ class FakeDrive {
         const entries: RemoteEntry[] = [...this.files.entries()].filter(([, f]) => f.seq > since).map(([ref, f]) => ({ ref, docId: f.docId, device: f.device }));
         return { entries, cursor: String(this.seq) };
       },
-      read: async (ref) => {
-        if (this.failReads > 0) {
-          this.failReads--;
-          throw new Error("network down");
-        }
-        return this.files.get(ref)!.data;
-      },
-      write: async (docId, data) => {
-        this.files.set(`${docId}@${device}`, { data, seq: ++this.seq, docId, device });
-      },
+      read: (ref) =>
+        this.slow(() => {
+          if (this.failReads > 0) {
+            this.failReads--;
+            throw new Error("network down");
+          }
+          return this.files.get(ref)!.data;
+        }),
+      write: (docId, data) =>
+        this.slow(async () => {
+          await this.duringWrite?.(docId);
+          this.files.set(`${docId}@${device}`, { data, seq: ++this.seq, docId, device });
+        }),
       remove: async (docId) => {
         this.files.delete(`${docId}@${device}`);
       },
@@ -41,6 +61,7 @@ async function device(name: string, drive: FakeDrive, key: CryptoKey, store: Doc
   let state: SyncState = { cursor: null, dirty: [] };
   const received: string[] = [];
   const updates: Uint8Array[] = [];
+  const statuses: SyncStatus[] = [];
   const engine = createSyncEngine({
     store,
     remote: drive.as(name),
@@ -52,6 +73,7 @@ async function device(name: string, drive: FakeDrive, key: CryptoKey, store: Doc
       received.push(docId);
       updates.push(update);
     },
+    onStatus: (status) => statuses.push(status),
   });
   /** Types into a note the way the app does: through a local doc that saves to the store. */
   const type = async (docId: string, text: string) => {
@@ -66,7 +88,7 @@ async function device(name: string, drive: FakeDrive, key: CryptoKey, store: Doc
     await local.close();
     return text;
   };
-  return { engine, type, read, received, updates, store, state: () => state };
+  return { engine, type, read, received, updates, statuses, store, state: () => state };
 }
 
 describe.each([
@@ -174,6 +196,63 @@ describe.each([
     expect(drive.files.has("old-note@desktop")).toBe(true);
     // The other device cannot read it: it was sealed with another passphrase.
     await expect(a.engine.sync()).rejects.toThrow();
+  });
+
+  it("sends and reads several files at once, but not too many", async () => {
+    const { drive, a, b } = await setup();
+    drive.delayMs = 5;
+    for (let i = 0; i < 20; i++) await a.type(`note-${i}`, `Note ${i}`);
+    await a.engine.sync();
+    expect(drive.maxInFlight).toBeGreaterThan(1);
+    expect(drive.maxInFlight).toBeLessThanOrEqual(10);
+    drive.maxInFlight = 0;
+    await b.engine.sync();
+    expect(drive.maxInFlight).toBeGreaterThan(1);
+    expect(drive.maxInFlight).toBeLessThanOrEqual(10);
+    for (let i = 0; i < 20; i++) expect(await b.read(`note-${i}`)).toBe(`Note ${i}`);
+    expect(a.state().dirty).toEqual([]);
+  });
+
+  it("counts the files as they go, so a long first sync shows it is moving", async () => {
+    const { a, b } = await setup();
+    for (let i = 0; i < 12; i++) await a.type(`note-${i}`, `Note ${i}`);
+    await a.engine.sync();
+    await b.engine.sync();
+    for (const side of [a, b]) {
+      const counts = side.statuses.flatMap((s) => (s.state === "syncing" && s.total ? [`${s.done}/${s.total}`] : []));
+      expect(counts[0]).toBe("0/12");
+      expect(counts.at(-1)).toBe("12/12");
+      expect(counts).toHaveLength(13);
+    }
+    expect(a.statuses.at(-1)?.state).toBe("idle");
+  });
+
+  it("keeps an edit made while its note was being sent, and sends it next time", async () => {
+    const { drive, a, b } = await setup();
+    await a.type("note-1", "First.");
+    drive.duringWrite = async () => {
+      drive.duringWrite = null;
+      await a.type("note-1", " Second.");
+    };
+    await a.engine.sync();
+    expect(a.state().dirty).toEqual(["note-1"]);
+    await a.engine.sync();
+    await b.engine.sync();
+    expect(await b.read("note-1")).toBe("First. Second.");
+  });
+
+  it("merges one note's files from two devices into a third", async () => {
+    const { drive, key, a, b } = await setup();
+    const c = await device("tablet", drive, key, await freshStore("c"));
+    drive.delayMs = 3;
+    await a.type("note-1", "From the laptop.");
+    await b.type("note-1", "From the phone.");
+    await a.engine.sync();
+    await b.engine.sync();
+    await c.engine.sync();
+    const text = await c.read("note-1");
+    expect(text).toContain("From the laptop.");
+    expect(text).toContain("From the phone.");
   });
 
   it("removes this device's file when the doc is gone", async () => {

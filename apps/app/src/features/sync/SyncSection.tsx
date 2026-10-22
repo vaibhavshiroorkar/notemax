@@ -24,7 +24,8 @@ export function describe(view: SyncView): string {
     case "elsewhere":
       return "Syncing in another tab of this app";
     case "syncing":
-      return "Syncing...";
+      // Counted only when there are enough files for the wait to be felt.
+      return view.total && view.total > 3 ? `Syncing ${view.done ?? 0} of ${view.total}` : "Syncing...";
     case "idle":
       return `Synced ${ago(view.lastSynced)}`;
     case "offline":

@@ -76,7 +76,11 @@ Every field is optional.
 | `pageHeader` | Under a page's title. |
 | `pageFooter` | At the end of a page. |
 | `sidebarSections` | The left sidebar, between the pages and the trash. |
+| `sidebarFooter` | The bar at the bottom of the left sidebar, left of the Settings cog, like the account and sync. |
 | `overlays` | Full-window views, opened with `app.openOverlay(id)`. |
+| `views` | Pages of their own that open in a tab, like the graph. Open one with `app.openView(id)`. |
+| `statusItems` | The status bar at the bottom, like how sync is going. |
+| `start(app)` | Runs once when the main window has opened the workspace, like starting sync. |
 | `settings` | A category in Settings. |
 | `options` | On or off switches. Without a `section`, they show under Plugins. |
 | `shortcutHints` | Keys listed in the shortcut list (Ctrl+/). |

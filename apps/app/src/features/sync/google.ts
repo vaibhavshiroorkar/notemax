@@ -32,9 +32,17 @@ export class NeedsSignIn extends Error {
   }
 }
 
+// The refresh in flight, so requests running side by side ask Supabase once.
+let refreshing: Promise<string> | null = null;
+
 /** An access token for Drive, fetching a new one when the last is about to run out. */
 export async function driveToken(force = false): Promise<string> {
   if (!force && access && access.expires > Date.now() + 60_000) return access.token;
+  refreshing ??= refreshToken().finally(() => (refreshing = null));
+  return refreshing;
+}
+
+async function refreshToken(): Promise<string> {
   const refresh = getPref(REFRESH_PREF);
   if (!refresh) throw new NeedsSignIn();
   const { supabase } = await import("@/features/account/client");

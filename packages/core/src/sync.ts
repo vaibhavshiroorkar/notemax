@@ -36,7 +36,8 @@ export interface SyncState {
 
 export type SyncStatus =
   | { state: "idle"; lastSynced: number | null }
-  | { state: "syncing"; lastSynced: number | null }
+  /** `done` of `total` files read or sent so far, while there are any. */
+  | { state: "syncing"; lastSynced: number | null; done?: number; total?: number }
   | { state: "error"; lastSynced: number | null; message: string };
 
 export interface SyncEngineOptions {
@@ -62,9 +63,14 @@ export interface SyncEngine {
   status(): SyncStatus;
 }
 
+/** How many files move at once. Each Drive request takes a second or two however small, and ten at once take about as long as one. */
+const PARALLEL = 10;
+
 export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
   const { store, remote, key, device } = options;
   let state = options.loadState();
+  // Docs edited again since their send started. They stay dirty after it.
+  const edited = new Set<string>();
   let status: SyncStatus = { state: "idle", lastSynced: null };
   let running: Promise<void> = Promise.resolve();
 
@@ -72,6 +78,7 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     status = next;
     options.onStatus?.(next);
   };
+  const progress = (done: number, total: number) => setStatus({ state: "syncing", lastSynced: status.lastSynced, done, total });
   const save = (next: SyncState) => {
     state = next;
     options.saveState(next);
@@ -85,32 +92,48 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
 
   async function pull() {
     const { entries, cursor } = await remote.changes(state.cursor);
+    // Docs in parallel, but one doc's files from several devices in turn, so each diff sees the last.
+    const byDoc = new Map<string, RemoteEntry[]>();
     for (const entry of entries) {
-      if (entry.device === device) continue;
-      const incoming = await open(key, await remote.read(entry.ref));
-      const local = await localUpdate(entry.docId);
-      // Only what this device lacks, so the store does not grow by a whole copy on every sync.
-      const fresh = local ? Y.diffUpdate(incoming, Y.encodeStateVectorFromUpdate(local)) : incoming;
-      if (local && isEmptyUpdate(fresh, local)) continue;
-      await store.append(entry.docId, fresh);
-      options.onRemoteUpdate(entry.docId, fresh);
+      if (entry.device !== device) byDoc.set(entry.docId, [...(byDoc.get(entry.docId) ?? []), entry]);
     }
+    const docs = [...byDoc.values()];
+    let done = 0;
+    if (docs.length) progress(0, docs.length);
+    await inParallel(docs, async (files) => {
+      for (const entry of files) {
+        const incoming = await open(key, await remote.read(entry.ref));
+        const local = await localUpdate(entry.docId);
+        // Only what this device lacks, so the store does not grow by a whole copy on every sync.
+        const fresh = local ? Y.diffUpdate(incoming, Y.encodeStateVectorFromUpdate(local)) : incoming;
+        if (local && isEmptyUpdate(fresh, local)) continue;
+        await store.append(entry.docId, fresh);
+        options.onRemoteUpdate(entry.docId, fresh);
+      }
+      progress(++done, docs.length);
+    });
     // Only after every file was merged: a failure part way reads them all again next time,
     // which is harmless because merging the same edits twice changes nothing.
     save({ ...state, cursor });
   }
 
   async function push() {
-    for (const docId of [...state.dirty]) {
+    const dirty = [...state.dirty];
+    let done = 0;
+    if (dirty.length) progress(0, dirty.length);
+    await inParallel(dirty, async (docId) => {
+      edited.delete(docId);
       const update = await localUpdate(docId);
       if (update) await remote.write(docId, await seal(key, update));
       else await remote.remove(docId);
-      save({ ...state, dirty: state.dirty.filter((id) => id !== docId) });
-    }
+      if (!edited.has(docId)) save({ ...state, dirty: state.dirty.filter((id) => id !== docId) });
+      progress(++done, dirty.length);
+    });
   }
 
   return {
     markDirty(docId) {
+      edited.add(docId);
       if (!state.dirty.includes(docId)) save({ ...state, dirty: [...state.dirty, docId] });
     },
     async markAllDirty() {
@@ -134,6 +157,26 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     },
     status: () => status,
   };
+}
+
+/**
+ * Runs `work` on every item, PARALLEL at a time. After a failure it starts no
+ * more, waits for the ones running, and throws the first error.
+ */
+async function inParallel<T>(items: T[], work: (item: T) => Promise<void>) {
+  let next = 0;
+  let failure: { error: unknown } | null = null;
+  const worker = async () => {
+    while (!failure && next < items.length) {
+      try {
+        await work(items[next++]);
+      } catch (error) {
+        failure ??= { error };
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(PARALLEL, items.length) }, worker));
+  if (failure) throw (failure as { error: unknown }).error;
 }
 
 /**

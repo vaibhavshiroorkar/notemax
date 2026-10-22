@@ -1,5 +1,6 @@
 {
   "name": "@notemax/desktop",
+  "version": "0.16.0",
   "private": true,
   "scripts": {
     "tauri": "tauri",

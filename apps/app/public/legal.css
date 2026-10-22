@@ -1,0 +1,44 @@
+/* The privacy and terms pages. Google's consent screen links to them. */
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --text: #1f1f1f;
+  --muted: #6b6b6b;
+  --link: #2563eb;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1b1b;
+    --text: #e6e6e6;
+    --muted: #9a9a9a;
+    --link: #7aa7ff;
+  }
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+h1 {
+  margin: 24px 0 4px;
+}
+h2 {
+  margin-top: 32px;
+  font-size: 1.15rem;
+}
+a {
+  color: var(--link);
+}
+.date,
+.footer {
+  color: var(--muted);
+}
+.footer {
+  margin-top: 48px;
+}

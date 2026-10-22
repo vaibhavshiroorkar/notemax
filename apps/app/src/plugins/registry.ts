@@ -15,6 +15,7 @@ import type {
   PluginOption,
   SettingsSection,
   SidebarFilter,
+  SidebarFooterItem,
   SidebarSection,
   SidePanel,
   SlashItem,
@@ -111,6 +112,7 @@ export const registry = {
   overlay: (id: string): Overlay | undefined => all((p) => p.overlays).find((overlay) => overlay.id === id),
   view: (id: string): View | undefined => all((p) => p.views).find((view) => view.id === id),
   statusItems: (): StatusItem[] => all((p) => p.statusItems),
+  sidebarFooter: (): SidebarFooterItem[] => all((p) => p.sidebarFooter),
   starters: () => all((p) => (p.start ? [p.start.bind(p)] : [])),
   pageCorner: (kind: NodeKind): PageAddon[] => all((p) => p.pageCorner).filter((addon) => addon.kinds?.includes(kind) ?? true),
   /** Every option of the plugins that are on, with its plugin, in plugin order. */

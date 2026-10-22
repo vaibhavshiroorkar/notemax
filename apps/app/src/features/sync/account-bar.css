@@ -1,0 +1,136 @@
+.account-bar {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--text);
+  text-align: left;
+}
+
+.account-bar:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.account-bar-avatar {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--hover);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.account-bar-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+/* A dot on the avatar, like Discord's: green when synced, amber while syncing, red when stopped. */
+.account-bar-avatar[data-sync]::after {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--sidebar-bg, var(--bg));
+  border-radius: 50%;
+  background: var(--muted);
+  content: "";
+}
+
+.account-bar-avatar[data-sync="idle"]::after {
+  background: #2f9e44;
+}
+
+.account-bar-avatar[data-sync="syncing"]::after,
+.account-bar-avatar[data-sync="elsewhere"]::after {
+  background: #f08c00;
+}
+
+.account-bar-avatar[data-sync="error"]::after {
+  background: var(--danger);
+}
+
+.account-bar-avatar[data-sync="off"]::after {
+  display: none;
+}
+
+.account-bar-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.account-bar-text > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-bar-text strong {
+  font-size: 13px;
+}
+
+.account-bar-text span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.account-bar-text span[data-state="error"] {
+  color: var(--danger);
+}
+
+.sync-now[data-busy] svg {
+  animation: sync-spin 1s linear infinite;
+}
+
+@keyframes sync-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sync-now[data-busy] svg {
+    animation: none;
+  }
+}
+
+.account-dialog {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.account-dialog-sync {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.account-dialog-sync h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.account-dialog .link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.account-dialog .link-button:hover {
+  color: var(--text);
+}

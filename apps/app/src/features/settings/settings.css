@@ -96,6 +96,13 @@
   overflow-y: auto;
 }
 
+.settings-version {
+  margin: auto 0 0;
+  padding: 12px 8px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .settings-search {
   display: flex;
   align-items: center;

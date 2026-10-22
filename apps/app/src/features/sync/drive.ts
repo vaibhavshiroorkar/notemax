@@ -106,13 +106,20 @@ export async function folderHasDocs(folder: string, exceptDevice: string): Promi
 export function driveRemote(folder: string, device: string): SyncRemote {
   // This device's files by doc id, so a write replaces the file instead of adding another.
   const mine = new Map<string, string>();
-  let mineLoaded = false;
+  let mineLoading: Promise<void> | null = null;
 
-  async function loadMine() {
-    if (mineLoaded) return;
-    const files = await findFiles(`${quote(folder)} in parents and trashed = false and appProperties has { key='device' and value=${quote(device)} }`);
-    for (const file of files) if (file.appProperties?.doc) mine.set(file.appProperties.doc, file.id);
-    mineLoaded = true;
+  // Shared, so writes running side by side list the files once. A failed list is tried again.
+  function loadMine() {
+    mineLoading ??= findFiles(`${quote(folder)} in parents and trashed = false and appProperties has { key='device' and value=${quote(device)} }`).then(
+      (files) => {
+        for (const file of files) if (file.appProperties?.doc) mine.set(file.appProperties.doc, file.id);
+      },
+      (err) => {
+        mineLoading = null;
+        throw err;
+      },
+    );
+    return mineLoading;
   }
 
   return {

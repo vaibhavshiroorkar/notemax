@@ -120,6 +120,8 @@ export function App() {
   });
 
   useSignInRedirect((error) => {
+    // The account window, or Settings when the Sync plugin that adds it is off.
+    if (registry.overlay("account")) return setOverlay({ id: "account", options: { error } });
     setAccountError(error);
     setSettingsSection("account");
     setSettingsOpen(true);

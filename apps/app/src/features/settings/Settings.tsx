@@ -112,6 +112,7 @@ export function Settings({ onClose, initialSection, ...ctx }: SettingsContext & 
               <span>{section.title}</span>
             </button>
           ))}
+          <p className="settings-version">Notemax {__APP_VERSION__}</p>
         </nav>
         <div className="settings-content" ref={content}>
           {shown.map((section) => (

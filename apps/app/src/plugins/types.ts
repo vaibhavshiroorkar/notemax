@@ -61,8 +61,15 @@ export interface Plugin {
   exporters?: Exporter[];
   /** Small things in the status bar at the bottom, like how sync is going. */
   statusItems?: StatusItem[];
+  /** The bar at the bottom of the left sidebar, beside the Settings cog, like the account and sync. */
+  sidebarFooter?: SidebarFooterItem[];
   /** Runs once when the main window has opened the workspace, like starting sync. */
   start?(app: AppContext): void;
+}
+
+export interface SidebarFooterItem {
+  id: string;
+  component: ComponentType<{ app: AppContext }>;
 }
 
 export interface StatusItem {
