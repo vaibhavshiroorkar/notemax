@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { duplicateNote } from "@notemax/core";
+import { duplicateNote, setProp } from "@notemax/core";
 import { peekDoc } from "@/data/docCache";
 import { getStore } from "@/platform/platform";
 import type { AppContext } from "@/plugins/types";
@@ -14,5 +14,7 @@ export async function duplicate(app: AppContext, id: string) {
   // The body goes first, so the copy never opens empty.
   if (updates.length) await store.append(copyId, Y.mergeUpdates(updates));
   duplicateNote(app.doc, id, copyId);
+  // A copy is a page of its own, not another way into the original's shared room.
+  setProp(app.doc, copyId, "share", null);
   app.open(copyId);
 }

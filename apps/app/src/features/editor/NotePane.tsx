@@ -4,6 +4,7 @@ import { WELCOME_ID, renameNode } from "@notemax/core";
 import { ChapterNav } from "@/features/books/ChapterNav";
 import { useLocalDoc } from "@/data/useLocalDoc";
 import { useVersions } from "@/features/history/versions";
+import { useShare } from "@/features/share/useShare";
 import { activeEditor } from "./active";
 import { useOption } from "@/plugins/options";
 import { PageFooter, PageHeader } from "@/plugins/PageHeader";
@@ -63,6 +64,7 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
   useEffect(() => onStatus(status), [status, onStatus]);
   useBodyIndex(local?.doc, workspaceDoc, node.id);
   useVersions(local?.doc, node.id);
+  useShare(local?.doc, node, workspaceDoc);
   // Panels beside the note, like Format, act on this editor while it is on screen.
   useEffect(() => {
     if (!editor) return;

@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.35.0 (2026-10-22)
+
+- Share a note by link and write in it together. Right-click a note and pick Share..., or press Ctrl+K and type Share this page. Whoever opens the link gets the page in their own Notemax, no account needed.
+- Edits go both ways live while the page is open on both sides, and the title follows a rename. Edits made apart meet up the next time both have it open.
+- The line under a shared page's title says who else is there. Everything is sealed with a key that is only in the link, so the relay in between cannot read it.
+
 ## 0.34.0 (2026-10-22)
 
 - Workspaces: separate sets of pages, like Work and Personal, each with its own tabs, recent pages and trash. Switch from the top left of the sidebar.

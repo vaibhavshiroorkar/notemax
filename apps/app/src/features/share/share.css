@@ -1,0 +1,47 @@
+.share-dialog {
+  width: min(560px, calc(100vw - 32px));
+}
+
+.share-link {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.share-link input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.share-link .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.share-people {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.share-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.share-line svg {
+  width: 14px;
+  height: 14px;
+}
