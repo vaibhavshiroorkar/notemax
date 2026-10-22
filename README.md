@@ -43,7 +43,7 @@
 - Folders, books and notes in one sidebar. Drag to sort, put pages inside pages, or pick several and move them together.
 - Workspaces for separate parts of your life, arranged on a Home page.
 - Share a note by link and write in it together, live and end-to-end encrypted.
-- Tabs, stars, tags, and a graph of how your pages connect.
+- Tabs, stars, tags, daily notes with a calendar, and a graph of how your pages connect.
 - Ctrl+K finds any page or command. The sidebar can search, sort, group and filter.
 
 **Keep it safe**
@@ -100,7 +100,7 @@ See [docs/architecture.md](docs/architecture.md) for the layout of the code and 
 
 ## Roadmap
 
-- Split view, daily notes and a calendar
+- Split view
 - Publishing a book as a fast public site
 
 ## Privacy

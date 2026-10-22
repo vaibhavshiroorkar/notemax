@@ -1,0 +1,100 @@
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 4px;
+  font-size: 13px;
+}
+
+.calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* One arrow icon, turned to point back. */
+.calendar-head .icon-button:first-child svg {
+  transform: rotate(180deg);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendar-weekday {
+  padding: 2px 0;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.calendar-day {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar-day:hover {
+  background: var(--hover);
+}
+
+.calendar-day[data-out] {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.calendar-day[data-today] {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.calendar-day[data-picked] {
+  background: var(--active);
+}
+
+/* A dot under days that have pages. */
+.calendar-day[data-has]::after {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.calendar-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.calendar-pages .row-title {
+  width: 100%;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.calendar-pages .row-title:hover {
+  background: var(--hover);
+}
+
+.date-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-value input {
+  min-width: 0;
+  padding: 2px 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}

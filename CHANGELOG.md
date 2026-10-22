@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.39.0 (2026-10-22)
+
+- Daily notes: Ctrl+Alt+D (or Ctrl+K, Open today's note) opens the note for today, made in a Daily notes folder the first time. Yesterday's and tomorrow's too.
+- A Calendar in the right sidebar: days with notes have a dot, pointing at a day lists its pages, and a click opens that day's note.
+- Any page can have a date, set under This page, and it shows on the calendar.
+
 ## 0.38.0 (2026-10-22)
 
 - Keep plain Markdown files: in Settings, Markdown files, choose a folder, and every note of the workspace is also a .md file there. Folders stay folders, books become folders of numbered chapters, pictures go in attachments/, and boards are .excalidraw files.
