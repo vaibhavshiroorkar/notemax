@@ -12,7 +12,7 @@ function keyParts(keys: string): string[] {
   return shown.includes("+") && shown.length > 1 ? shown.split("+") : [shown];
 }
 
-export function Keys({ keys }: { keys: string }) {
+function Keys({ keys }: { keys: string }) {
   return (
     <span className="keys">
       {keyParts(keys).map((key, i) => (

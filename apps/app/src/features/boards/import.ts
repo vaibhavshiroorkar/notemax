@@ -6,7 +6,7 @@ import { writeElements, writeFiles, type StoredElement, type StoredFile } from "
 const isExcalidrawFile = (file: File) => /\.excalidraw(\.json)?$/i.test(file.name);
 
 /** Turns an .excalidraw file into a board of its own, named after the file, and opens it. */
-export async function importExcalidraw(app: AppContext, file: File) {
+async function importExcalidraw(app: AppContext, file: File) {
   let data: { type?: string; elements?: StoredElement[]; files?: Record<string, StoredFile> };
   try {
     data = JSON.parse(await file.text());

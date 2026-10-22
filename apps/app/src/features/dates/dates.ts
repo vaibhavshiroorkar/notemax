@@ -21,7 +21,7 @@ export const dayOf = (key: string) => {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d);
 };
-export const isDayKey = (value: unknown): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+const isDayKey = (value: unknown): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 
 export const dateOf = (node: TreeNode) => (isDayKey(node.props[DATE]) ? (node.props[DATE] as string) : isDayKey(node.props[DAILY]) ? (node.props[DAILY] as string) : null);
 export const setDate = (app: AppContext, id: string, key: string | null) => setProp(app.doc, id, DATE, key);

@@ -3,8 +3,8 @@ import type { AppContext, Exporter } from "@/plugins/types";
 import { readingOrder, subtopicsOf } from "@/features/books/reading";
 import { registry } from "@/plugins/registry";
 import { dataUrl, extOf, loadBody, loadPictures, resolver } from "./content";
-import { buildDocx, type DocxImage } from "./docx";
-import { buildEpub } from "./epub";
+// The Word and EPUB writers load on the first download in those formats, not at start.
+import type { DocxImage } from "./docx";
 import { printHtml } from "./save";
 import { escapeHtml, htmlDocument, toHtml, toMarkdown, toPlainText, type DocNode } from "./serialize";
 import { zip } from "./zip";
@@ -70,7 +70,7 @@ async function plainText(node: TreeNode, app: AppContext) {
 }
 
 /** Markdown, as a .zip with an attachments folder when the page has pictures. */
-export async function markdown(node: TreeNode, app: AppContext) {
+async function markdown(node: TreeNode, app: AppContext) {
   const { title, parts, made } = await partsOf(node, app);
   const pictures = await loadPictures(
     parts.map((p) => p.body),
@@ -138,6 +138,7 @@ async function word(node: TreeNode, app: AppContext) {
     }
   }
   const r = { ...resolver(app.tree), picture: (id: string) => ready.get(id) ?? null };
+  const { buildDocx } = await import("./docx");
   return buildDocx(title, parts.map((part) => ({ title: part.title, nodes: part.body.content ?? [] })), r);
 }
 
@@ -161,6 +162,7 @@ async function ebook(node: TreeNode, app: AppContext) {
   }
   const r = resolver(app.tree, (id) => paths.get(id) ?? null);
   const chapters = parts.map((part) => ({ title: part.title ?? title, html: toHtml(part.body.content ?? [], r) }));
+  const { buildEpub } = await import("./epub");
   return buildEpub(title, "", chapters, images);
 }
 

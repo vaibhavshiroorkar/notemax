@@ -1,4 +1,3 @@
-import { marked } from "marked";
 import type { Tree } from "@notemax/core";
 import { htmlToBody } from "@/features/editor/schema";
 import { escapeHtml, toMarkdown, type DocNode, type Resolve } from "@/features/export/serialize";
@@ -12,7 +11,7 @@ export interface Front {
 
 const quote = (text: string) => (/^[\w .,'()-]*$/.test(text) && text.trim() === text && text !== "" ? text : JSON.stringify(text));
 
-export function withFront(front: Front, markdown: string): string {
+function withFront(front: Front, markdown: string): string {
   const lines = ["---"];
   if (front.id) lines.push(`id: ${front.id}`);
   if (front.title !== undefined) lines.push(`title: ${quote(front.title)}`);
@@ -75,6 +74,8 @@ export async function fileToBody(markdown: string, tree: Tree, picture: (path: s
     const id = byTitle.get(title.trim().toLowerCase());
     return id ? `<a data-wiki-link data-target="${escapeHtml(id)}">${escapeHtml(shown ?? title.trim())}</a>` : whole;
   });
+  // Loaded on first use: only a workspace kept as a folder of Markdown files reads Markdown.
+  const { marked } = await import("marked");
   const html = await marked.parse(linked, { async: true, gfm: true });
   const doc = new DOMParser().parseFromString(html, "text/html");
 

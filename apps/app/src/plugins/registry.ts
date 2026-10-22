@@ -71,7 +71,7 @@ export function unregisterPlugin(id: string) {
 
 onlineMode.subscribe(changed);
 
-export function isOn(plugin: Plugin) {
+function isOn(plugin: Plugin) {
   if (plugin.online && onlineMode.get() === "offline") return false;
   return plugin.required || !switchedOff.get().includes(plugin.id);
 }

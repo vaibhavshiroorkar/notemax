@@ -1,6 +1,6 @@
 [package]
 name = "notemax"
-version = "0.56.0"
+version = "0.57.0"
 description = "Notemax desktop app"
 authors = ["Notemax"]
 license = ""

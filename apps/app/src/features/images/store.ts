@@ -2,7 +2,7 @@ import { loadAsset, saveAsset } from "@notemax/core";
 import { getStore } from "@/platform/platform";
 
 /** The biggest picture kept. Larger ones are refused with a message, not shrunk without asking. */
-export const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 
 export const isImage = (file: File) => file.type.startsWith("image/");
 

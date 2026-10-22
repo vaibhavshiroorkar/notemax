@@ -15,7 +15,7 @@ const MARKED_OLD = "temporaryMarkedOld";
 export const isTemporary = (node: TreeNode) => typeof node.props[TEMPORARY] === "number";
 
 /** True while a new page would live only in this browser. */
-export const onlyHere = () => !isDesktop && !syncIsOn();
+const onlyHere = () => !isDesktop && !syncIsOn();
 
 export function markTemporary(doc: Y.Doc, ids: string[]) {
   const now = Date.now();

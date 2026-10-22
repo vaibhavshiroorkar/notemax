@@ -6,7 +6,7 @@ import type { EditorView } from "@tiptap/pm/view";
 const WORD = /[\p{L}\p{N}_'’-]/u;
 
 /** The word under a point on the screen, as a document range. */
-export function wordAt(view: EditorView, x: number, y: number): { from: number; to: number } | null {
+function wordAt(view: EditorView, x: number, y: number): { from: number; to: number } | null {
   const hit = view.posAtCoords({ left: x, top: y });
   if (!hit) return null;
   const $pos = view.state.doc.resolve(hit.pos);

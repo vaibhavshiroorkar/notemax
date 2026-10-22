@@ -70,7 +70,7 @@ async function maybeUnsent(store: DocStore): Promise<string[]> {
 }
 
 /** This device's id in file names. Made once and kept. */
-export function deviceId(): string {
+function deviceId(): string {
   let id = getPref(PREFS.device);
   if (!id) {
     id = `${isDesktop ? "desktop" : "web"}-${Math.random().toString(36).slice(2, 10)}`;
@@ -270,7 +270,7 @@ export function startSync() {
   } else void body();
 }
 
-export function stopSync() {
+function stopSync() {
   stopRunning?.();
   stopRunning = null;
   syncView.set({ state: "off" });

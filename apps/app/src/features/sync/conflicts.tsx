@@ -41,7 +41,7 @@ export async function recordConflict(pageId: string, mine: Uint8Array, theirs: U
   conflicts.set([...conflicts.get().filter((c) => c.pageId !== pageId), conflict]);
 }
 
-export const conflictOf = (list: Conflict[], pageId: string) => list.find((c) => c.pageId === pageId);
+const conflictOf = (list: Conflict[], pageId: string) => list.find((c) => c.pageId === pageId);
 const settle = (pageId: string) => conflicts.set(conflicts.get().filter((c) => c.pageId !== pageId));
 
 /** Keeps one side only. The merged note is kept as a version first, so this can be taken back. */

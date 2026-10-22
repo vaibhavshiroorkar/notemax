@@ -46,7 +46,6 @@ export const ROLES: Role[] = [
   },
 ];
 
-export const roleOf = (id: Role["id"]) => ROLES.find((role) => role.id === id)!;
 
 /** The page doing a job, if any. A page in the trash does not count. */
 export function holder(tree: Tree, role: Role["id"]): TreeItem | undefined {

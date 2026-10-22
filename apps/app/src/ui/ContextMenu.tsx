@@ -21,7 +21,7 @@ export function openContextMenu(target: ContextTarget, x: number, y: number) {
   current.set({ target, x, y });
 }
 
-export const closeContextMenu = () => current.set(null);
+const closeContextMenu = () => current.set(null);
 
 /**
  * The handler for a thing's onContextMenu. A right click opens the menu at the

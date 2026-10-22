@@ -8,7 +8,7 @@ import type { Share } from "./share";
 // happens. All of it is sealed with the page's key; the room only relays.
 
 /** Edits that came from the room, so they are not sent back to it. */
-export const FROM_ROOM = Symbol("room");
+const FROM_ROOM = Symbol("room");
 
 // Realtime caps a message well under a megabyte, so big ones go in parts.
 const PART = 60_000;

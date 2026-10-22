@@ -10,9 +10,9 @@ import { VideoView } from "./VideoView";
  * Big enough for a few minutes of phone video. The whole file is held in
  * memory while it is saved and synced, so much larger ones would strain a phone.
  */
-export const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
 
-export const isVideo = (file: File) => file.type.startsWith("video/");
+const isVideo = (file: File) => file.type.startsWith("video/");
 
 /**
  * A video in a note. Like a picture it is kept on this device as an asset and

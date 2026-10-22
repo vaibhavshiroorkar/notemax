@@ -134,7 +134,7 @@ function unwrapGoogleDocs(body: HTMLElement) {
 }
 
 /** Clipboard HTML from Word or Google Docs, made plain. Anything else is returned as it came. */
-export function cleanPastedHtml(html: string): string {
+function cleanPastedHtml(html: string): string {
   const word = fromWord(html);
   const google = fromGoogleDocs(html);
   if (!word && !google) return html;

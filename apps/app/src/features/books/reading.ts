@@ -49,7 +49,7 @@ export function subtopicsOf(chapter: TreeItem, label: string, depth = 1): Subtop
 }
 
 /** True when a chapter shows its subtopics in its own page rather than one page each. */
-export const subtopicsTogether = (chapter: TreeItem) => chapter.props.subtopics === "together";
+const subtopicsTogether = (chapter: TreeItem) => chapter.props.subtopics === "together";
 
 /** A page to read in a book, with its number: a chapter like 6, or a subtopic like 6.1. */
 export interface Stop {

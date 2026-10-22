@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.57.0 (2026-10-23)
+
+- A lighter start: the Word and EPUB writers and the Markdown reader load the first time they are needed, so the app downloads about 50 KB less before it opens.
+- Tidied the code: helpers that nothing outside their file used are no longer exported, and an unused one is gone.
+
 ## 0.56.0 (2026-10-23)
 
 - Sync no longer misses an edit when the app was closed by force right after typing: at start it looks for pages it never sent and pages edited around the last sync, and sends them.

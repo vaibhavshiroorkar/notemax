@@ -23,7 +23,7 @@ export async function deriveKey(passphrase: string, salt: Uint8Array, rounds = R
   );
 }
 
-export const randomBytes = (n: number) => crypto.getRandomValues(new Uint8Array(n));
+const randomBytes = (n: number) => crypto.getRandomValues(new Uint8Array(n));
 
 export async function seal(key: CryptoKey, plain: Uint8Array): Promise<Uint8Array> {
   const iv = randomBytes(IV_BYTES);

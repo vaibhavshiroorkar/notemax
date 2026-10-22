@@ -7,7 +7,7 @@ import { savedStore } from "@/platform/store";
 // that clicks on boards still land where they look.
 
 export const ZOOM = { min: 50, max: 200, step: 10, normal: 100 };
-export const clampZoom = (percent: number) => Math.min(ZOOM.max, Math.max(ZOOM.min, Math.round(percent)));
+const clampZoom = (percent: number) => Math.min(ZOOM.max, Math.max(ZOOM.min, Math.round(percent)));
 
 /** Percent. Only the desktop app uses it. */
 export const zoom = savedStore<number>("zoom", ZOOM.normal, {

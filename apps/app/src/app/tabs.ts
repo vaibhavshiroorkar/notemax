@@ -84,7 +84,7 @@ function decode(raw: string | null, fallbackPage: string | null): Layout {
 }
 
 /** Pane ids in a split, in order. */
-export function panesIn(split: Split): string[] {
+function panesIn(split: Split): string[] {
   return "pane" in split ? [split.pane] : split.parts.flatMap(panesIn);
 }
 
@@ -156,7 +156,7 @@ export function loadTabs(fallbackPage: string | null) {
 }
 
 export const activePane = (value = layout.get()) => value.panes.find((pane) => pane.id === value.activePane)!;
-export const activeTab = (value = layout.get()) => {
+const activeTab = (value = layout.get()) => {
   const pane = activePane(value);
   return pane.tabs.find((tab) => tab.id === pane.active)!;
 };
