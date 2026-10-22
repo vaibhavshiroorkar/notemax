@@ -1,16 +1,16 @@
-import { useEffect, useState, type DragEvent } from "react";
+import { useEffect, useState, type CSSProperties, type DragEvent } from "react";
 import { canMove, createNode, moveNode, type TreeItem } from "@notemax/core";
-import { endDrag, placementFor, startDrag, useDragging, type DropTarget, type Placement } from "@/features/sidebar/drag";
+import { endDrag, placementFor, startDrag, useDragging, type DropTarget, type Placement, type Zone } from "@/features/sidebar/drag";
 import type { AppContext } from "@/plugins/types";
 import { pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
-import { bookOf } from "./book-of";
+import { bookOf, readingOrder } from "./reading";
 import "./books.css";
 
 /**
- * A book's chapters in reading order, as a section of the right sidebar. It
- * shows while the book or one of its chapters is open, so the left sidebar can
- * keep each book to a single row.
+ * A book's chapters in reading order, as a section of the right sidebar, with
+ * its parts and their chapters a step in. It shows while the book, a part or a
+ * chapter is open, so the left sidebar can keep each book to a single row.
  */
 export function BookPanel({ app }: { app: AppContext }) {
   const { tree, doc, activeId, open: onSelect } = app;
@@ -24,12 +24,19 @@ export function BookPanel({ app }: { app: AppContext }) {
     if (!dragging) setDropTarget(null);
   }, [dragging]);
 
-  // Notes from the left sidebar may be dropped here too. Folders and books may not.
-  const accepts = (item: TreeItem | null): item is TreeItem => !!item && !canMove(tree, item.id, book.id);
+  // Pages from the left sidebar may be dropped here too. Folders may not.
+  const accepts = (item: TreeItem | null, parentId = book.id): item is TreeItem => !!item && !canMove(tree, item.id, parentId);
+  // The middle of a part's row puts the item inside that part.
+  const zoneOf = (event: DragEvent, chapter: TreeItem): Zone => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const y = (event.clientY - rect.top) / rect.height;
+    if (chapter.kind !== "book") return y < 0.5 ? "before" : "after";
+    return y < 0.25 ? "before" : y > 0.75 ? "after" : "inside";
+  };
 
   const drop = (event: DragEvent, placement: Placement) => {
     event.preventDefault();
-    if (accepts(dragging)) moveNode(doc, dragging.id, placement.parentId, placement.index);
+    if (accepts(dragging, placement.parentId)) moveNode(doc, dragging.id, placement.parentId, placement.index);
     endDrag();
   };
 
@@ -52,17 +59,16 @@ export function BookPanel({ app }: { app: AppContext }) {
 
       {book.children.length > 0 ? (
         <ol className="book-panel-chapters">
-          {book.children.map((chapter, i) => {
-            const title = chapter.title || "Untitled";
+          {readingOrder(book).map(({ item: chapter, depth, number }) => {
+            const title = chapter.title || (number === null ? "Untitled part" : "Untitled");
             const zone = dropTarget?.id === chapter.id ? dropTarget.zone : undefined;
-            const half = (event: DragEvent) => {
-              const rect = event.currentTarget.getBoundingClientRect();
-              return event.clientY - rect.top < rect.height / 2 ? "before" : "after";
-            };
+            const placement = (event: DragEvent) => dragging && placementFor(tree, dragging, chapter, zoneOf(event, chapter));
             return (
               <li
                 key={chapter.id}
                 className="row"
+                data-part={number === null || undefined}
+                style={{ "--depth": depth } as CSSProperties}
                 draggable
                 data-drop={zone}
                 data-dragging={dragging?.id === chapter.id || undefined}
@@ -75,20 +81,21 @@ export function BookPanel({ app }: { app: AppContext }) {
                 onDragEnd={endDrag}
                 onContextMenu={pageMenu(tree.byId.get(chapter.id))}
                 onDragOver={(event) => {
-                  if (!accepts(dragging) || dragging.id === chapter.id) return;
-                  event.preventDefault();
+                  const where = placement(event);
                   // Otherwise the panel underneath would take over the marker.
                   event.stopPropagation();
-                  setDropTarget({ id: chapter.id, zone: half(event) });
+                  if (!where || !accepts(dragging, where.parentId)) return setDropTarget(null);
+                  event.preventDefault();
+                  setDropTarget({ id: chapter.id, zone: zoneOf(event, chapter) });
                 }}
                 onDrop={(event) => {
                   event.stopPropagation();
-                  const placement = dragging && placementFor(tree, dragging, chapter, half(event));
-                  if (placement) drop(event, placement);
+                  const where = placement(event);
+                  if (where && accepts(dragging, where.parentId)) drop(event, where);
                 }}
               >
                 <button className="row-title chapter-row" onClick={() => onSelect(chapter.id)}>
-                  <span className="chapter-number">{i + 1}</span>
+                  <span className="chapter-number">{number ?? <Icon name="book" />}</span>
                   <span className="chapter-title">{title}</span>
                 </button>
                 <button
@@ -104,7 +111,7 @@ export function BookPanel({ app }: { app: AppContext }) {
           })}
         </ol>
       ) : (
-        <p className="book-panel-empty">No chapters yet. Drag a note here, or add one.</p>
+        <p className="book-panel-empty">No chapters yet. Drag a note or board here, or add one.</p>
       )}
 
       <button className="footer-button" onClick={() => onSelect(createNode(doc, "note", book.id))}>

@@ -104,6 +104,23 @@
   background: var(--accent);
 }
 
+.row-fold[data-icon] svg {
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+}
+
+.row-fold[data-icon] svg:last-child,
+.row:hover .row-fold[data-icon] svg:first-child,
+.row-fold[data-icon]:focus-visible svg:first-child {
+  display: none;
+}
+
+.row:hover .row-fold[data-icon] svg:last-child,
+.row-fold[data-icon]:focus-visible svg:last-child {
+  display: inline;
+}
+
 .row-icon {
   display: inline-flex;
   align-items: center;

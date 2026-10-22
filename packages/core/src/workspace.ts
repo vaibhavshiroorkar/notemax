@@ -15,10 +15,11 @@ export const WORKSPACE_DOC_ID = "workspace";
 const OLD_INBOX = "inbox";
 
 /**
- * A folder sorts things and holds anything but itself. A book is something
- * being written: it holds only notes, its chapters, in reading order. Notes
- * and boards (drawings) are pages: each has a body of its own, kept in its own
- * document under the node's id.
+ * A folder sorts things and has no body. Notes and boards (drawings) are
+ * pages: each has a body of its own, kept in its own document under the
+ * node's id, and can hold sub-pages, as in a wiki. A book is something being
+ * written: it holds its chapters in reading order, which may be notes, boards
+ * or books of their own as parts.
  *
  * A kind read from storage may be one this version no longer has, like the
  * mind maps that were removed. It is read as a page that holds nothing, so old
@@ -31,15 +32,20 @@ export const KINDS: readonly NodeKind[] = ["folder", "book", "note", "board"];
 /** Kinds that hold other items rather than a body of their own. */
 export const isContainer = (kind: NodeKind) => kind === "folder" || kind === "book";
 
-/** Whether a `parent` may hold a `child`. ROOT holds everything. */
+/**
+ * Whether a `parent` may hold a `child`. ROOT holds everything. A book holds
+ * no folders, since it is read from start to end. A kind this version does not
+ * know holds nothing.
+ */
 export function holds(parent: NodeKind, child: NodeKind): boolean {
-  return parent === "folder" || (parent === "book" && child === "note");
+  if (!KINDS.includes(parent)) return false;
+  return parent !== "book" || child !== "folder";
 }
 
 export interface TreeNode {
   id: string;
   kind: NodeKind;
-  /** ROOT, a folder or a book. Notes from before folders may still point at a note. */
+  /** ROOT or the node that holds it. */
   parentId: string;
   title: string;
   /** Fractional index: siblings sort by plain string comparison. */
@@ -176,10 +182,9 @@ export function readTree(doc: Y.Doc, previous?: Tree): Tree {
     byId.set(id, old && sameNode(old, node) ? old : node);
   });
 
-  // A node whose parent may not hold it is shown in the nearest container
-  // above that may, or at the top. That covers a note under a note (allowed
-  // before folders existed) and a folder put in a book while books were read
-  // as folders. Undefined means the chain is broken or loops, handled further down.
+  // A node whose parent may not hold it is shown in the nearest node above
+  // that may, or at the top. That covers a folder put in a book while books
+  // were read as folders, and pages under a kind this version does not know. Undefined means the chain is broken or loops, handled further down.
   const shownIn = (node: TreeNode): string | undefined => {
     const seen = new Set<string>();
     for (let parentId = node.parentId; parentId !== ROOT; ) {
@@ -286,8 +291,7 @@ export function canMove(tree: Tree, id: string, parentId: string): string | null
   if (parentId === ROOT) return null;
   const target = tree.items.get(parentId);
   if (!target) return "the target is not in the tree";
-  if (!isContainer(target.kind)) return "only folders and books can hold notes";
-  if (!holds(target.kind, tree.items.get(id)!.kind)) return "a book holds only notes";
+  if (!holds(target.kind, tree.items.get(id)!.kind)) return target.kind === "book" ? "a book cannot hold a folder" : `a ${target.kind} cannot hold pages`;
   if (isInside(tree, parentId, id)) return "a folder cannot go inside itself";
   return null;
 }
@@ -340,12 +344,12 @@ export function moveNodes(doc: Y.Doc, ids: string[], parentId: string, nextId: s
   });
 }
 
-/** Adds a node at the end of ROOT or of a folder or book that may hold it. */
+/** Adds a node at the end of ROOT or of a node that may hold it. */
 export function createNode(doc: Y.Doc, kind: NodeKind, parentId: string, title = "", id: string = crypto.randomUUID()): string {
   if (!KINDS.includes(kind)) throw new Error(`unknown kind ${kind}`);
   if (parentId !== ROOT) {
     const parent = nodesOf(doc).get(parentId);
-    if (!parent) throw new Error(`no folder or book with id ${parentId}`);
+    if (!parent) throw new Error(`no page or folder with id ${parentId}`);
     if (!holds(kindOf(parent), kind)) throw new Error(`a ${kindOf(parent)} cannot hold a ${kind}`);
   }
 

@@ -63,8 +63,7 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
 
   if (openError) return <p className="error">Could not open this note: {openError}</p>;
 
-  const parent = tree.items.get(tree.items.get(node.id)?.parentId ?? "");
-  const book = parent?.kind === "book" ? parent : undefined;
+  const inBook = tree.items.get(tree.items.get(node.id)?.parentId ?? "")?.kind === "book";
 
   return (
     <article
@@ -83,7 +82,7 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
             {i + 1}
           </span>
         ))}
-      {book && registry.isOn("books") && <ChapterNav book={book} chapterId={node.id} onOpen={(id) => hub.open(id)} />}
+      {inBook && registry.isOn("books") && <ChapterNav tree={tree} chapterId={node.id} onOpen={(id) => hub.open(id)} />}
       <input
         className="note-title"
         value={node.title}

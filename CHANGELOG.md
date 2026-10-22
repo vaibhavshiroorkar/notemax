@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.24.0 (2026-10-22)
+
+- Pages can hold pages. Drop a note, board or book onto the middle of a note to put it inside, and the note keeps its icon with an arrow on hover.
+- A "Pages inside" section in the right sidebar lists a page's sub-pages, with a button to add one.
+- Books hold boards and other books. A book inside a book is a part: chapters number straight through the parts, and the book page and chapter panel show them a step in.
+- Downloading a book puts each part in as a heading and each board in as a picture. Download everything keeps parts and sub-pages as folders.
+
 ## 0.23.0 (2026-10-22)
 
 - Every row in the sidebar shows its icon where a folder shows its arrow, so all titles line up.

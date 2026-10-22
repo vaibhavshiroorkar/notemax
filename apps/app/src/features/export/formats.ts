@@ -1,6 +1,8 @@
 import type { Asset, TreeNode } from "@notemax/core";
 import type { AppContext, Exporter } from "@/plugins/types";
-import { chaptersOf, dataUrl, extOf, loadBody, loadPictures, resolver } from "./content";
+import { readingOrder } from "@/features/books/reading";
+import { registry } from "@/plugins/registry";
+import { dataUrl, extOf, loadBody, loadPictures, resolver } from "./content";
 import { buildDocx, type DocxImage } from "./docx";
 import { buildEpub } from "./epub";
 import { printHtml } from "./save";
@@ -10,16 +12,48 @@ import { zip } from "./zip";
 interface Part {
   title?: string;
   body: DocNode;
+  /** 0 for a chapter right in the book, 1 for one inside a part, and so on. A part itself has an empty body. */
+  level?: number;
 }
 
-/** A page's text in parts: one for a note, one per chapter for a book. */
-async function partsOf(node: TreeNode, app: AppContext): Promise<{ title: string; parts: Part[] }> {
-  const title = node.title || (node.kind === "book" ? "Untitled book" : "Untitled");
-  if (node.kind !== "book") return { title, parts: [{ body: await loadBody(node.id) }] };
-  const parts: Part[] = [];
-  for (const chapter of chaptersOf(app.tree, node.id)) parts.push({ title: app.tree.byId.get(chapter.id)?.title || "Untitled", body: await loadBody(chapter.id) });
-  return { title, parts };
+const EMPTY: DocNode = { type: "doc", content: [] };
+
+/** A board in a book goes into the download as a picture of it. */
+async function boardPicture(id: string, app: AppContext): Promise<Asset | null> {
+  const png = registry.exporters("board").find((format) => format.id === "png");
+  const node = app.tree.byId.get(id);
+  const blob = png && node ? await png.build(node, app).catch(() => null) : null;
+  return blob ? { bytes: new Uint8Array(await blob.arrayBuffer()), type: "image/png", name: `${node!.title || "Board"}.png` } : null;
 }
+
+/**
+ * A page's text in parts: one for a note, one per chapter for a book, with
+ * its parts as headings. `made` holds the pictures drawn for boards.
+ */
+async function partsOf(node: TreeNode, app: AppContext): Promise<{ title: string; parts: Part[]; made: Map<string, Asset> }> {
+  const title = node.title || (node.kind === "book" ? "Untitled book" : "Untitled");
+  const made = new Map<string, Asset>();
+  const book = app.tree.items.get(node.id);
+  if (node.kind !== "book" || !book) return { title, parts: [{ body: await loadBody(node.id) }], made };
+  const parts: Part[] = [];
+  for (const { item, depth, number } of readingOrder(book)) {
+    const part: Part = { title: item.title || (number === null ? "Untitled part" : "Untitled"), body: EMPTY, level: depth };
+    if (item.kind === "note") part.body = await loadBody(item.id);
+    else if (item.kind === "board") {
+      const picture = await boardPicture(item.id, app);
+      if (picture) {
+        const id = `board-${item.id}`;
+        made.set(id, picture);
+        part.body = { type: "doc", content: [{ type: "image", attrs: { asset: id } }] };
+      }
+    }
+    parts.push(part);
+  }
+  return { title, parts, made };
+}
+
+/** Markdown and HTML headings for a part: ## for a chapter of the book, ### inside a part, and so on. */
+const headingLevel = (part: Part) => Math.min(2 + (part.level ?? 0), 6);
 
 const text = (blob: string, type: string) => new Blob([blob], { type: `${type};charset=utf-8` });
 
@@ -32,26 +66,37 @@ async function plainText(node: TreeNode, app: AppContext) {
 
 /** Markdown, as a .zip with an attachments folder when the page has pictures. */
 export async function markdown(node: TreeNode, app: AppContext) {
-  const { title, parts } = await partsOf(node, app);
-  const pictures = await loadPictures(parts.map((p) => p.body));
+  const { title, parts, made } = await partsOf(node, app);
+  const pictures = await loadPictures(
+    parts.map((p) => p.body),
+    made,
+  );
   const path = (id: string) => `attachments/${id.slice(0, 16)}.${extOf(pictures.get(id)!.type)}`;
   const r = resolver(app.tree, (id) => (pictures.has(id) ? path(id) : null));
   const book = node.kind === "book";
   const md =
     `# ${title}\n\n` +
-    parts.map((part) => (part.title ? `${book ? "## " : ""}${part.title}\n\n` : "") + toMarkdown(part.body, r)).join("\n");
+    parts.map((part) => (part.title ? `${book ? `${"#".repeat(headingLevel(part))} ` : ""}${part.title}\n\n` : "") + toMarkdown(part.body, r)).join("\n");
   if (!pictures.size) return { blob: text(md, "text/markdown"), ext: "md" };
   const files = [{ path: `${title.replace(/[\\/:*?"<>|]+/g, " ").trim() || "Untitled"}.md`, data: md }, ...[...pictures].map(([id, asset]) => ({ path: path(id), data: asset.bytes }))];
   return { blob: zip(files), ext: "zip" };
 }
 
 async function htmlPage(node: TreeNode, app: AppContext, forPrint = false) {
-  const { title, parts } = await partsOf(node, app);
-  const pictures = await loadPictures(parts.map((p) => p.body));
+  const { title, parts, made } = await partsOf(node, app);
+  const pictures = await loadPictures(
+    parts.map((p) => p.body),
+    made,
+  );
   const r = resolver(app.tree, (id) => (pictures.has(id) ? dataUrl(pictures.get(id)!) : null));
   const body =
     `<h1>${escapeHtml(title)}</h1>\n` +
-    parts.map((part) => (part.title ? `<section class="chapter"><h2>${escapeHtml(part.title)}</h2>\n${toHtml(part.body.content ?? [], r)}</section>` : toHtml(part.body.content ?? [], r))).join("\n");
+    parts
+      .map((part) => {
+        const h = `h${headingLevel(part)}`;
+        return part.title ? `<section class="chapter"><${h}>${escapeHtml(part.title)}</${h}>\n${toHtml(part.body.content ?? [], r)}</section>` : toHtml(part.body.content ?? [], r);
+      })
+      .join("\n");
   const page = htmlDocument(title, body);
   // On paper: real margins, and no heading left alone at the bottom of a page.
   return forPrint ? page.replace("</style>", "@page{margin:2cm}body{margin:0;max-width:none}h1,h2,h3{break-after:avoid}</style>") : page;
@@ -73,8 +118,11 @@ async function asPng(asset: Asset): Promise<{ bytes: Uint8Array; type: string; w
 }
 
 async function word(node: TreeNode, app: AppContext) {
-  const { title, parts } = await partsOf(node, app);
-  const pictures = await loadPictures(parts.map((p) => p.body));
+  const { title, parts, made } = await partsOf(node, app);
+  const pictures = await loadPictures(
+    parts.map((p) => p.body),
+    made,
+  );
   const ready = new Map<string, DocxImage>();
   for (const [id, asset] of pictures) {
     try {
@@ -89,8 +137,11 @@ async function word(node: TreeNode, app: AppContext) {
 }
 
 async function ebook(node: TreeNode, app: AppContext) {
-  const { title, parts } = await partsOf(node, app);
-  const pictures = await loadPictures(parts.map((p) => p.body));
+  const { title, parts, made } = await partsOf(node, app);
+  const pictures = await loadPictures(
+    parts.map((p) => p.body),
+    made,
+  );
   const images: { path: string; bytes: Uint8Array; type: string }[] = [];
   const paths = new Map<string, string>();
   for (const [id, asset] of pictures) {

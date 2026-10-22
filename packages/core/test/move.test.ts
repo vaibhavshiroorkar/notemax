@@ -72,8 +72,7 @@ describe("moveNode", () => {
     const tree = readTree(doc);
     expect(canMove(tree, folder, folder)).toMatch(/inside itself/);
     expect(canMove(tree, folder, sub)).toMatch(/inside itself/);
-    expect(canMove(tree, b, a)).toMatch(/only folders/);
-    expect(canMove(tree, folder, a)).toMatch(/only folders/);
+    expect(canMove(tree, a, a)).toMatch(/inside itself/);
     expect(() => moveNode(doc, folder, sub, 0)).toThrow();
     // Nothing changed after the refused move.
     expect(readTree(doc).items.get(sub)!.parentId).toBe(folder);
@@ -90,13 +89,13 @@ describe("moveNode", () => {
     expect(titles(tree.top[1].children[0].children)).toEqual(["Idea", "A"]);
   });
 
-  it("keeps folders and books out of books", () => {
+  it("keeps folders out of books, but lets a book hold another as a part", () => {
     const { doc, folder, sub } = setup();
     const book = createNode(doc, "book", ROOT, "Book");
     const other = createNode(doc, "book", ROOT, "Other book");
     const tree = readTree(doc);
-    expect(canMove(tree, sub, book)).toMatch(/only notes/);
-    expect(canMove(tree, other, book)).toMatch(/only notes/);
+    expect(canMove(tree, sub, book)).toMatch(/cannot hold a folder/);
+    expect(canMove(tree, other, book)).toBeNull();
     expect(canMove(tree, book, folder)).toBeNull();
   });
 

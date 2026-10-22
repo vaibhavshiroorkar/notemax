@@ -1,7 +1,7 @@
 import type { Plugin } from "@/plugins/types";
 import { BookPane } from "./BookPane";
 import { BookPanel } from "./BookPanel";
-import { bookOf } from "./book-of";
+import { bookOf } from "./reading";
 import { BookWordCount } from "./WordCount";
 
 export const booksPlugin: Plugin = {

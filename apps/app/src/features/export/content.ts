@@ -1,6 +1,6 @@
 import { yXmlFragmentToProsemirrorJSON } from "@tiptap/y-tiptap";
 import type * as Y from "yjs";
-import { loadAsset, openLocalDoc, type Asset, type Tree, type TreeItem } from "@notemax/core";
+import { loadAsset, openLocalDoc, type Asset, type Tree } from "@notemax/core";
 import { peekDoc } from "@/data/docCache";
 import { getStore } from "@/platform/platform";
 import { assetsIn, type DocNode, type Resolve } from "./serialize";
@@ -24,14 +24,17 @@ export async function withPageDoc<T>(id: string, read: (doc: Y.Doc) => T): Promi
 export const loadBody = (id: string): Promise<DocNode> =>
   withPageDoc(id, (doc) => yXmlFragmentToProsemirrorJSON(doc.getXmlFragment("content")) as DocNode);
 
-/** Loads every picture these bodies use, by asset id. Missing ones are left out. */
-export async function loadPictures(bodies: DocNode[]): Promise<Map<string, Asset>> {
+/**
+ * Loads every picture these bodies use, by asset id. Missing ones are left out.
+ * `made` holds pictures drawn for the download, like a board in a book.
+ */
+export async function loadPictures(bodies: DocNode[], made: ReadonlyMap<string, Asset> = new Map()): Promise<Map<string, Asset>> {
   const ids = new Set<string>();
   for (const body of bodies) assetsIn(body, ids);
   const store = await getStore();
   const out = new Map<string, Asset>();
   for (const id of ids) {
-    const asset = await loadAsset(store, id);
+    const asset = made.get(id) ?? (await loadAsset(store, id));
     if (asset) out.set(id, asset);
   }
   return out;
@@ -51,9 +54,6 @@ export const extOf = (type: string) => ({ "image/jpeg": "jpg", "image/png": "png
 export function resolver(tree: Tree, image: (asset: string) => string | null = () => null): Resolve {
   return { title: (id) => (tree.byId.has(id) ? tree.byId.get(id)!.title || "Untitled" : null), image };
 }
-
-/** A book's chapters, in order. */
-export const chaptersOf = (tree: Tree, bookId: string): TreeItem[] => (tree.items.get(bookId)?.children ?? []).filter((c) => c.kind === "note");
 
 /** A file name from a title, safe on every system. */
 export function fileName(title: string, ext: string): string {

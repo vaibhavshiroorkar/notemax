@@ -3,7 +3,7 @@ import * as Y from "yjs";
 import { KINDS, ROOT, canMove, createNode, readTree } from "../src";
 
 describe("page kinds", () => {
-  it("has boards as pages that hold nothing", () => {
+  it("lets pages hold sub-pages, and books hold anything but folders", () => {
     expect(KINDS).toEqual(["folder", "book", "note", "board"]);
     const doc = new Y.Doc();
     const folder = createNode(doc, "folder", ROOT, "F");
@@ -12,9 +12,12 @@ describe("page kinds", () => {
     const book = createNode(doc, "book", ROOT, "B");
     const tree = readTree(doc);
     expect(tree.items.get(folder)!.children.map((c) => c.kind)).toEqual(["board"]);
-    expect(canMove(tree, note, board)).toBe("only folders and books can hold notes");
-    expect(canMove(tree, board, book)).toBe("a book holds only notes");
-    expect(() => createNode(doc, "note", board)).toThrow();
+    expect(canMove(tree, note, board)).toBeNull();
+    expect(canMove(tree, board, book)).toBeNull();
+    expect(canMove(tree, book, note)).toBeNull();
+    expect(canMove(tree, folder, book)).toBe("a book cannot hold a folder");
+    const sub = createNode(doc, "note", board, "Notes on the sketch");
+    expect(readTree(doc).items.get(board)!.children.map((c) => c.id)).toEqual([sub]);
   });
 
   it("still reads a page of a kind that was removed, like the old mind maps", () => {

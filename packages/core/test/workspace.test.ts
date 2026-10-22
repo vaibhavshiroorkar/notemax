@@ -50,26 +50,29 @@ describe("workspace tree", () => {
     expect(titles(tree.top[1].children[1].children)).toEqual(["Deep"]);
   });
 
-  it("refuses to put anything inside a note", () => {
+  it("puts sub-pages, even folders, inside a note", () => {
     const doc = new Y.Doc();
     const note = createNode(doc, "note", ROOT, "Note");
-    expect(() => createNode(doc, "note", note)).toThrow(/cannot hold/);
-    expect(() => createNode(doc, "folder", note)).toThrow(/cannot hold/);
-    expect(() => createNode(doc, "note", "no-such-folder")).toThrow(/no folder/);
+    createNode(doc, "note", note, "Sub-page");
+    createNode(doc, "folder", note, "Attachments");
+    expect(titles(readTree(doc).top[0].children)).toEqual(["Sub-page", "Attachments"]);
+    expect(() => createNode(doc, "note", "no-such-folder")).toThrow(/no page or folder/);
   });
 
-  it("lets a book hold notes only, and a folder hold books", () => {
+  it("lets a book hold chapters and parts but no folders, and a folder hold books", () => {
     const doc = new Y.Doc();
     const folder = createNode(doc, "folder", ROOT, "Writing");
     const book = createNode(doc, "book", folder, "My book");
     createNode(doc, "note", book, "Chapter 1");
     createNode(doc, "note", book, "Chapter 2");
     expect(() => createNode(doc, "folder", book)).toThrow(/cannot hold/);
-    expect(() => createNode(doc, "book", book)).toThrow(/cannot hold/);
+    const part = createNode(doc, "book", book, "Part two");
+    createNode(doc, "board", part, "Map");
 
     const shelf = readTree(doc).top[0];
     expect(shelf.children[0].kind).toBe("book");
-    expect(titles(shelf.children[0].children)).toEqual(["Chapter 1", "Chapter 2"]);
+    expect(titles(shelf.children[0].children)).toEqual(["Chapter 1", "Chapter 2", "Part two"]);
+    expect(titles(shelf.children[0].children[2].children)).toEqual(["Map"]);
   });
 
   it("trash hides a folder and its contents, restore brings them back", () => {
@@ -162,7 +165,7 @@ describe("workspaces from before folders", () => {
     expect(titles(tree.top[1].children)).toEqual(["chapter"]);
   });
 
-  it("shows a note that was nested in a note inside the nearest book or folder", () => {
+  it("shows a note that was nested in a note under that note, now that notes hold pages", () => {
     const doc = new Y.Doc();
     writeRaw(doc, "book", { kind: "book", parentId: "root" });
     writeRaw(doc, "chapter", { kind: "note", parentId: "book", position: "a0" });
@@ -171,9 +174,10 @@ describe("workspaces from before folders", () => {
     writeRaw(doc, "under-loose", { kind: "note", parentId: "loose", position: "a2" });
 
     const tree = readTree(doc);
-    expect(titles(tree.top)).toEqual(["book", "loose", "under-loose"]);
-    expect(titles(tree.top[0].children)).toEqual(["chapter", "section"]);
-    expect(tree.items.get("chapter")!.children).toEqual([]);
+    expect(titles(tree.top)).toEqual(["book", "loose"]);
+    expect(titles(tree.top[0].children)).toEqual(["chapter"]);
+    expect(titles(tree.items.get("chapter")!.children)).toEqual(["section"]);
+    expect(titles(tree.items.get("loose")!.children)).toEqual(["under-loose"]);
   });
 
   it("hides such a note while the note above it is trashed", () => {

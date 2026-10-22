@@ -1,4 +1,4 @@
-import { ROOT, createNode, isContainer, type TreeNode } from "@notemax/core";
+import { ROOT, createNode, holds, type TreeNode } from "@notemax/core";
 import { isDesktop } from "@/platform/platform";
 import { registry } from "@/plugins/registry";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
@@ -41,7 +41,7 @@ export const PAGE_MENU: ContextMenuItem[] = [
     group: "create",
     icon: "note",
     targets: ["page"],
-    when: (target) => !!nodeOf(target) && isContainer(nodeOf(target)!.kind),
+    when: (target) => !!nodeOf(target) && holds(nodeOf(target)!.kind, "note"),
     run(target, app) {
       const parent = nodeOf(target)!;
       expand(parent.id);

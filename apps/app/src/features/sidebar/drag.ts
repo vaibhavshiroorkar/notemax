@@ -12,12 +12,12 @@ export interface Placement {
 /**
  * Which part of a row the pointer is over decides where the dragged item lands.
  * The middle of a row means inside it. A row that cannot hold the dragged item
- * (a note, or a book while a folder is dragged) only has a top and bottom half.
+ * (a book while a folder is dragged) only has a top and bottom half.
  */
 export function zoneFor(event: DragEvent, target: TreeItem, dragged: TreeItem): Zone {
   const rect = event.currentTarget.getBoundingClientRect();
   const y = (event.clientY - rect.top) / rect.height;
-  if (target.kind === "note" || !holds(target.kind, dragged.kind)) return y < 0.5 ? "before" : "after";
+  if (!holds(target.kind, dragged.kind)) return y < 0.5 ? "before" : "after";
   return y < 0.25 ? "before" : y > 0.75 ? "after" : "inside";
 }
 

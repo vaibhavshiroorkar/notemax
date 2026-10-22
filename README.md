@@ -26,7 +26,7 @@
 ## Why Notemax
 
 - **Local first.** Notes are saved on your device within a fraction of a second. No account needed, and everything works offline.
-- **Made for long writing.** Notes become chapters, chapters become books, and books download as Word, PDF or EPUB.
+- **Made for long writing.** Notes become chapters, books gather them into parts, and a book downloads as Word, PDF or EPUB.
 - **Fast with thousands of notes.** Startup, typing and switching pages are tested with 5,000 notes.
 - **Yours to keep.** Optional sync goes through your own Google Drive, sealed with a passphrase so Google can't read it. Download everything as plain Markdown at any time.
 
@@ -39,7 +39,7 @@
 - Boards for sketching and diagrams, powered by Excalidraw.
 
 **Organize**
-- Folders, books and notes in one sidebar. Drag to sort, or pick several pages and move them together.
+- Folders, books and notes in one sidebar. Drag to sort, put pages inside pages, or pick several and move them together.
 - Tabs, stars, tags, and a graph of how your pages connect.
 - Ctrl+K finds any page or command. The sidebar can search, sort, group and filter.
 
@@ -97,7 +97,7 @@ See [docs/architecture.md](docs/architecture.md) for the layout of the code and 
 
 ## Roadmap
 
-- Books that hold boards and other books, and a better trash
+- A better trash, undo for sidebar changes, and renaming pages right in the sidebar
 - A smoother editor: Word-like formatting, faithful copy and paste from Word
 - Version history, and plain Markdown files kept next to the database
 - Live sync between open devices, then shared pages

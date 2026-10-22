@@ -142,7 +142,14 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
         }}
       >
         {foldable ? (
-          <button className="icon-button" aria-label={open ? `Collapse ${title}` : `Expand ${title}`} onClick={() => toggleCollapsed(item.id)}>
+          <button
+            className="icon-button row-fold"
+            data-icon={item.kind !== "folder" || undefined}
+            aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
+            onClick={() => toggleCollapsed(item.id)}
+          >
+            {/* A page with pages inside keeps its icon, and shows the arrow while pointed at. */}
+            {item.kind !== "folder" && <Icon name={item.kind === "note" ? "note" : registry.iconOf(item.kind)} />}
             <Icon name={open ? "chevron-down" : "chevron-right"} />
           </button>
         ) : (

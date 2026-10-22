@@ -2,7 +2,7 @@ import type { Asset, TreeItem, TreeNode } from "@notemax/core";
 import { savedStore } from "@/platform/store";
 import { registry } from "@/plugins/registry";
 import type { AppContext, Exporter } from "@/plugins/types";
-import { chaptersOf, extOf, fileName, loadBody, loadPictures } from "./content";
+import { extOf, fileName, loadBody, loadPictures } from "./content";
 import { saveFile } from "./save";
 import { toMarkdown } from "./serialize";
 import { zip, type ZipEntry } from "./zip";
@@ -65,26 +65,29 @@ export async function downloadEverything(app: AppContext, from: TreeItem[] = app
       entries.push({ path: unique(path), data: heading ? `# ${heading}\n\n${md}` : md });
     };
 
-    const walk = async (items: TreeItem[], dir: string) => {
-      for (const item of items) {
+    // Boards and kinds from plugins: their Markdown if they have one, else their first format.
+    const otherFile = async (node: TreeNode, path: string) => {
+      const formats = formatsFor(node.kind);
+      const exporter = formats.find((f) => f.id === "md") ?? formats.find((f) => f.id === "excalidraw") ?? formats[0];
+      const blob = exporter && (await exporter.build(node, app));
+      if (blob) entries.push({ path: unique(`${path}.${exporter!.extension}`), data: new Uint8Array(await blob.arrayBuffer()) });
+    };
+
+    // A page with pages inside gets a folder of the same name next to its own file.
+    const walk = async (items: TreeItem[], dir: string, numbered = false) => {
+      for (const [i, item] of items.entries()) {
         const node = app.tree.byId.get(item.id);
         if (!node) continue;
-        const title = safe(node.title);
+        // A book's chapters and parts keep their order through a number in front.
+        const title = (numbered ? `${String(i + 1).padStart(2, "0")} ` : "") + safe(node.title);
         if (node.kind === "folder") await walk(item.children, `${dir}${title}/`);
         else if (node.kind === "book") {
-          const chapters = chaptersOf(app.tree, node.id);
-          for (const [i, chapter] of chapters.entries()) {
-            const name = app.tree.byId.get(chapter.id)?.title || "Untitled";
-            await markdownFile(chapter.id, `${dir}${title}/${String(i + 1).padStart(2, "0")} ${safe(name)}.md`, name);
-          }
-          if (!chapters.length) entries.push({ path: unique(`${dir}${title}/`), data: "" });
-        } else if (node.kind === "note") await markdownFile(node.id, `${dir}${title}.md`);
-        else {
-          // Boards and kinds from plugins: their Markdown if they have one, else their first format.
-          const formats = formatsFor(node.kind);
-          const exporter = formats.find((f) => f.id === "md") ?? formats.find((f) => f.id === "excalidraw") ?? formats[0];
-          const blob = exporter && (await exporter.build(node, app));
-          if (blob) entries.push({ path: unique(`${dir}${title}.${exporter!.extension}`), data: new Uint8Array(await blob.arrayBuffer()) });
+          await walk(item.children, `${dir}${title}/`, true);
+          if (!item.children.length) entries.push({ path: unique(`${dir}${title}/`), data: "" });
+        } else {
+          if (node.kind === "note") await markdownFile(node.id, `${dir}${title}.md`, numbered ? node.title || "Untitled" : undefined);
+          else await otherFile(node, `${dir}${title}`);
+          if (item.children.length) await walk(item.children, `${dir}${title}/`);
         }
       }
     };

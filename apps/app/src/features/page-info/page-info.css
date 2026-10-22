@@ -35,3 +35,21 @@
   color: var(--text);
   font: inherit;
 }
+
+.sub-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 4px;
+  font-size: 13px;
+}
+
+.sub-pages .row-title {
+  width: 100%;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.sub-pages .row-title:hover {
+  background: var(--hover);
+}

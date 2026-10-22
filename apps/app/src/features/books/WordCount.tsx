@@ -1,7 +1,7 @@
 import type { TreeNode } from "@notemax/core";
 import { useOption } from "@/plugins/options";
 import type { AppContext } from "@/plugins/types";
-import { bookOf } from "./book-of";
+import { bookOf, bookWords } from "./reading";
 
 const count = (n: number) => n.toLocaleString();
 
@@ -15,15 +15,18 @@ export function BookWordCount({ node, app }: { node: TreeNode; app: AppContext }
   const book = bookOf(app.tree, node.id);
   if (!on || !book) return null;
 
-  const counted = book.children.every((chapter) => chapter.words !== null);
-  const total = book.children.reduce((sum, chapter) => sum + (chapter.words ?? 0), 0);
-  const totalText = counted ? `${count(total)} ${total === 1 ? "word" : "words"}` : "counting words...";
+  const total = bookWords(book);
+  const totalText = total !== null ? `${count(total)} ${total === 1 ? "word" : "words"}` : "counting words...";
 
-  if (node.kind === "book") return <span className="page-words">{totalText}</span>;
+  if (node.kind === "book") {
+    // A part shows its own words, and the whole book's once they are counted.
+    const own = node.id === book.id ? null : bookWords(app.tree.items.get(node.id)!);
+    return <span className="page-words">{own !== null && total !== null ? `${count(own)} of ${totalText}` : totalText}</span>;
+  }
   const words = node.words ?? 0;
   return (
-    <span className="page-words" title={`This chapter, out of the whole book${counted ? "" : " (still counting)"}`}>
-      {counted ? `${count(words)} of ${totalText}` : `${count(words)} words`}
+    <span className="page-words" title={`This chapter, out of the whole book${total !== null ? "" : " (still counting)"}`}>
+      {total !== null ? `${count(words)} of ${totalText}` : `${count(words)} words`}
     </span>
   );
 }
