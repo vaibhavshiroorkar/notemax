@@ -185,6 +185,14 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
             <span>{title}</span>
           </button>
         )}
+        {registry
+          .rowMarks()
+          .filter((mark) => mark.when(item))
+          .map((mark) => (
+            <span key={mark.id} className="row-mark" role="img" title={mark.label} aria-label={mark.label}>
+              <Icon name={mark.icon} />
+            </span>
+          ))}
         {item.kind === "book" && item.children.length > 0 && (
           <span className="row-count" title={`${item.children.length} ${item.children.length === 1 ? "chapter" : "chapters"}`}>
             {item.children.length}

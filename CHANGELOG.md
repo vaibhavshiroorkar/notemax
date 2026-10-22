@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.21.0 (2026-10-22)
+
+- Pages made in a browser before signing in are marked temporary, with a clock on their row and a line under the title, since only that browser has them.
+- A notice at the top of the sidebar says why and offers sign-in. After sign-in the pages sync and keep the mark until you choose Keep or Keep all.
+- Signing in on a new browser no longer throws away what you wrote in the Welcome note. It is kept as a page of its own.
+- "Temporary only" in the sidebar filter panel, and a rowMarks slot for plugins.
+
 ## 0.20.0 (2026-10-22)
 
 - Settings: switches stay on the right even when their text is long.

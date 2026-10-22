@@ -123,6 +123,18 @@
   font-variant-numeric: tabular-nums;
 }
 
+.row-mark {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 0 4px;
+  color: var(--muted);
+}
+
+.row-mark svg {
+  width: 12px;
+  height: 12px;
+}
+
 /* Shown above the list while a filter, like a tag, is on. */
 .filter-bar {
   display: flex;

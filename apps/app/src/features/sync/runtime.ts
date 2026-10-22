@@ -1,5 +1,7 @@
 import {
+  ROOT,
   WELCOME_ID,
+  createNode,
   WORKSPACE_DOC_ID,
   createSyncEngine,
   exportKey,
@@ -8,9 +10,13 @@ import {
   openLocalDoc,
   readTree,
   unlockKey,
+  type DocStore,
   type SyncEngine,
   type SyncState,
 } from "@notemax/core";
+import * as Y from "yjs";
+import { pastWelcomeContent, welcomeContent } from "@/features/editor/welcome";
+import { markTemporary } from "@/features/temporary/temporary";
 import { DOC_CHANNEL, getRawStore, isDesktop, onLocalWrite } from "@/platform/platform";
 import { getPref, removePref, setPref } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
@@ -159,6 +165,28 @@ async function onlyWelcome(): Promise<boolean> {
   }
 }
 
+const plainText = (html: string) => (new DOMParser().parseFromString(html, "text/html").body.textContent ?? "").replace(/s+/g, "");
+
+/**
+ * The Welcome note when someone wrote in it, so taking the notes from Drive
+ * does not throw that writing away. Null while it says what it came with.
+ */
+async function writtenWelcome(store: DocStore): Promise<{ title: string; updates: Uint8Array[] } | null> {
+  const { updates } = await store.load(WELCOME_ID);
+  if (!updates.length) return null;
+  const body = new Y.Doc();
+  updates.forEach((update) => Y.applyUpdate(body, update));
+  const text = plainText(body.getXmlFragment("content").toString());
+  body.destroy();
+  if (!text || [welcomeContent, ...pastWelcomeContent].some((seed) => plainText(seed) === text)) return null;
+  const local = await openLocalDoc(store, WORKSPACE_DOC_ID);
+  try {
+    return { title: readTree(local.doc).byId.get(WELCOME_ID)?.title || "Welcome", updates };
+  } finally {
+    await local.close();
+  }
+}
+
 /**
  * Turns sync on with a passphrase: the existing one for a folder that has one,
  * or a new one. Returns "reload" when this device took the notes from Drive in
@@ -185,6 +213,7 @@ export async function turnOnSync(passphrase: string): Promise<"started" | "reloa
   // A new device: take the notes from Drive instead of merging in a second Welcome note.
   const adopt = (await folderHasDocs(folder, deviceId())) && (await onlyWelcome());
   const store = await getRawStore();
+  const written = adopt ? await writtenWelcome(store) : null;
   if (adopt) {
     for (const docId of await store.list()) await store.remove(docId);
   }
@@ -200,6 +229,21 @@ export async function turnOnSync(passphrase: string): Promise<"started" | "reloa
   });
   if (!adopt) await first.markAllDirty();
   await first.sync();
+  if (written) {
+    // Kept as a temporary page of its own beside the Welcome note from Drive.
+    const id = crypto.randomUUID();
+    await store.append(id, Y.mergeUpdates(written.updates));
+    const local = await openLocalDoc(store, WORKSPACE_DOC_ID);
+    try {
+      createNode(local.doc, "note", ROOT, `${written.title} (from this browser)`, id);
+      markTemporary(local.doc, [id]);
+    } finally {
+      await local.close();
+    }
+    first.markDirty(WORKSPACE_DOC_ID);
+    first.markDirty(id);
+    await first.sync();
+  }
   setPref(PREFS.on, "1");
   if (adopt) return "reload";
   startSync();

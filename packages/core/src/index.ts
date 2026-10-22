@@ -20,6 +20,7 @@ export {
   moveNode,
   moveNodes,
   touchNode,
+  onNodesAdded,
   createNode,
   duplicateNote,
   ensureWelcome,

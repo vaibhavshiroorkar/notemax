@@ -509,3 +509,18 @@ export function restoreNode(doc: Y.Doc, id: string) {
     fields.set("position", generateKeyBetween(tree.top.at(-1)?.position ?? null, null));
   });
 }
+
+/**
+ * Calls `listener` with the ids of nodes this device adds, like a new page.
+ * Nodes merged in from another window or device are left out, so a listener
+ * can mark what was made here without marking everyone else's pages too.
+ */
+export function onNodesAdded(doc: Y.Doc, listener: (ids: string[]) => void): () => void {
+  const observer = (event: Y.YMapEvent<Y.Map<unknown>>, transaction: Y.Transaction) => {
+    if (!transaction.local) return;
+    const added = [...event.keysChanged].filter((id) => event.changes.keys.get(id)?.action === "add");
+    if (added.length) listener(added);
+  };
+  nodesOf(doc).observe(observer);
+  return () => nodesOf(doc).unobserve(observer);
+}
