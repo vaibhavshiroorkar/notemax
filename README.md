@@ -47,7 +47,7 @@
 **Keep it safe**
 - A status bar that always says whether your work is saved.
 - Version history for every note, undo for page changes, a trash you can search and restore from, and downloads as text, Markdown, HTML, Word, PDF, EPUB, PNG or SVG.
-- Sync between devices through Google Drive, end-to-end encrypted.
+- Sync between devices through Google Drive, end-to-end encrypted. A note edited on two devices keeps both changes, and Notemax asks which to keep.
 
 **Make it yours**
 - Light and dark themes, accent colors, fonts, text size and page width.

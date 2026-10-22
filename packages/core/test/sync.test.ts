@@ -62,6 +62,7 @@ async function device(name: string, drive: FakeDrive, key: CryptoKey, store: Doc
   const received: string[] = [];
   const updates: Uint8Array[] = [];
   const statuses: SyncStatus[] = [];
+  const conflicts: { docId: string; mine: Uint8Array; theirs: Uint8Array }[] = [];
   const engine = createSyncEngine({
     store,
     remote: drive.as(name),
@@ -74,6 +75,7 @@ async function device(name: string, drive: FakeDrive, key: CryptoKey, store: Doc
       updates.push(update);
     },
     onStatus: (status) => statuses.push(status),
+    onConflict: (docId, mine, theirs) => conflicts.push({ docId, mine, theirs }),
   });
   /** Types into a note the way the app does: through a local doc that saves to the store. */
   const type = async (docId: string, text: string) => {
@@ -88,7 +90,7 @@ async function device(name: string, drive: FakeDrive, key: CryptoKey, store: Doc
     await local.close();
     return text;
   };
-  return { engine, type, read, received, updates, statuses, store, state: () => state };
+  return { engine, type, read, received, updates, statuses, conflicts, store, state: () => state };
 }
 
 describe.each([
@@ -129,6 +131,34 @@ describe.each([
     expect(onA).toContain("Laptop line.");
     expect(onA).toContain("Phone line.");
     expect(onA.startsWith("Start. ")).toBe(true);
+  });
+
+  it("asks about a note both devices edited before syncing, with each side as it was", async () => {
+    const { a, b } = await setup();
+    await a.type("note-1", "Start. ");
+    await a.type("note-2", "Only the laptop. ");
+    await a.engine.sync();
+    await b.engine.sync();
+    await a.type("note-1", "Laptop line. ");
+    await a.type("note-2", "Still only the laptop. ");
+    await b.type("note-1", "Phone line. ");
+    await a.engine.sync();
+    // The phone still has its line unsent when the laptop's arrives.
+    await b.engine.sync();
+    await a.engine.sync();
+
+    expect(a.conflicts).toEqual([]);
+    expect(b.conflicts.map((c) => c.docId)).toEqual(["note-1"]);
+    const text = (update: Uint8Array) => {
+      const doc = new Y.Doc();
+      Y.applyUpdate(doc, update);
+      return doc.getText("body").toString();
+    };
+    expect(text(b.conflicts[0].mine)).toBe("Start. Phone line. ");
+    expect(text(b.conflicts[0].theirs)).toBe("Start. Laptop line. ");
+    // Nothing is lost while the question waits.
+    expect(await b.read("note-1")).toContain("Laptop line.");
+    expect(await b.read("note-1")).toContain("Phone line.");
   });
 
   it("never writes another device's file", async () => {

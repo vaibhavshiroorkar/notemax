@@ -1,6 +1,8 @@
 import * as Y from "yjs";
 import { open, seal } from "./crypt";
+import { isHistoryDocId } from "./history";
 import type { DocStore } from "./store";
+import { WORKSPACE_DOC_ID } from "./workspace";
 
 // Sync through a folder of files that every device can read, like a folder in
 // the user's Google Drive. Each device writes only its own files: one per doc,
@@ -50,6 +52,12 @@ export interface SyncEngineOptions {
   saveState(state: SyncState): void;
   /** Called with each update that came in, so pages that are open merge it at once. */
   onRemoteUpdate(docId: string, update: Uint8Array): void;
+  /**
+   * A page this device edited and had not sent yet was edited on another
+   * device too. Both edits are merged and kept; `mine` and `theirs` are each
+   * side as it was, so the person can be asked which to keep.
+   */
+  onConflict?(docId: string, mine: Uint8Array, theirs: Uint8Array): void;
   onStatus?(status: SyncStatus): void;
 }
 
@@ -62,6 +70,10 @@ export interface SyncEngine {
   sync(): Promise<void>;
   status(): SyncStatus;
 }
+
+// Only page bodies can clash in a way worth asking about. The tree merges
+// field by field, pictures never change, and versions only add up.
+const isPageBody = (docId: string) => docId !== WORKSPACE_DOC_ID && !docId.startsWith("asset:") && !isHistoryDocId(docId);
 
 /** How many files move at once. Each Drive request takes a second or two however small, and ten at once take about as long as one. */
 const PARALLEL = 10;
@@ -92,6 +104,8 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
 
   async function pull() {
     const { entries, cursor } = await remote.changes(state.cursor);
+    // One question per page per sync, however many files came in for it.
+    const reported = new Set<string>();
     // Docs in parallel, but one doc's files from several devices in turn, so each diff sees the last.
     const byDoc = new Map<string, RemoteEntry[]>();
     for (const entry of entries) {
@@ -107,6 +121,10 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
         // Only what this device lacks, so the store does not grow by a whole copy on every sync.
         const fresh = local ? Y.diffUpdate(incoming, Y.encodeStateVectorFromUpdate(local)) : incoming;
         if (local && isEmptyUpdate(fresh, local)) continue;
+        if (local && isPageBody(entry.docId) && state.dirty.includes(entry.docId) && !reported.has(entry.docId)) {
+          reported.add(entry.docId);
+          options.onConflict?.(entry.docId, local, incoming);
+        }
         await store.append(entry.docId, fresh);
         options.onRemoteUpdate(entry.docId, fresh);
       }

@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.31.0 (2026-10-22)
+
+- When a note was edited on two devices before they synced, Notemax keeps both changes, says so with a toast and a line under the title, and asks: keep both, keep this device's, or keep the other device's. Review shows both sides next to each other.
+- Each side is kept as a labelled version, and so is the merged note before you pick one side, so every choice can be taken back.
+
 ## 0.30.0 (2026-10-22)
 
 - A Format section in the right sidebar of a note, like Word: paragraph style, font, size with - and +, bold, italic, underline, strikethrough, text color, highlight, alignment, line spacing, lists, indent and Clear formatting. It follows the cursor.

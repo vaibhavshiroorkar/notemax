@@ -17,6 +17,8 @@ export interface Version {
   words: number | null;
   /** The page's whole Yjs state at that time. */
   state: Uint8Array;
+  /** Why it was kept, when not just from editing, like "On another device". */
+  label: string | null;
 }
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -56,18 +58,26 @@ function toVersion(entry: Y.Map<unknown>): Version {
     time: entry.get("time") as number,
     words: (entry.get("words") as number | null | undefined) ?? null,
     state: entry.get("state") as Uint8Array,
+    label: (entry.get("label") as string | undefined) ?? null,
   };
 }
 
-/** Saves a page's state (Y.encodeStateAsUpdate of its doc) as a version, then thins out old ones. */
-export async function saveVersion(store: DocStore, pageId: string, state: Uint8Array, { words = null, time = Date.now() }: { words?: number | null; time?: number } = {}) {
+/** Saves a page's state (Y.encodeStateAsUpdate of its doc) as a version, then thins out old ones. Returns its id. */
+export async function saveVersion(
+  store: DocStore,
+  pageId: string,
+  state: Uint8Array,
+  { words = null, time = Date.now(), label = null }: { words?: number | null; time?: number; label?: string | null } = {},
+): Promise<string> {
+  const id = crypto.randomUUID();
   const local = await openLocalDoc(store, historyDocId(pageId));
   try {
     const versions = versionsOf(local.doc);
     local.doc.transact(() => {
       const entry = new Y.Map<unknown>();
       versions.push([entry]);
-      entry.set("id", crypto.randomUUID());
+      entry.set("id", id);
+      if (label) entry.set("label", label);
       entry.set("time", time);
       entry.set("words", words);
       entry.set("state", state);
@@ -79,6 +89,7 @@ export async function saveVersion(store: DocStore, pageId: string, state: Uint8A
   } finally {
     await local.close();
   }
+  return id;
 }
 
 /** A page's versions, newest first. */

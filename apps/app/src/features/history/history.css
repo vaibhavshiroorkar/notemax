@@ -20,6 +20,12 @@
   background: var(--hover);
 }
 
+.version-label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .version-words,
 .versions-empty {
   color: var(--muted);

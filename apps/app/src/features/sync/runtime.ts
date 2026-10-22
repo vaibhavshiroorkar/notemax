@@ -20,6 +20,7 @@ import { markTemporary } from "@/features/temporary/temporary";
 import { DOC_CHANNEL, getRawStore, isDesktop, onLocalWrite } from "@/platform/platform";
 import { getPref, removePref, setPref } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
+import { recordConflict } from "./conflicts";
 import { driveRemote, findFolder, folderHasDocs, readKeyCheck, writeKeyCheck } from "./drive";
 import { NeedsSignIn } from "./google";
 
@@ -81,6 +82,7 @@ async function runEngine(signal: AbortSignal) {
     saveState: (state) => setPref(PREFS.state, JSON.stringify(state)),
     // Open pages in every window merge it, the way they merge another window's edits.
     onRemoteUpdate: (docId, update) => channel.postMessage({ docId, update }),
+    onConflict: (docId, mine, theirs) => void recordConflict(docId, mine, theirs).catch(() => {}),
     onStatus(status) {
       if (status.state === "error") {
         const offline = !navigator.onLine || /Failed to fetch|NetworkError|network/i.test(status.message);

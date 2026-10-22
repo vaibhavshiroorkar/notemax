@@ -11,14 +11,15 @@ export const versionEvery = savedStore<number>("versionEvery", 10);
 /** Goes up whenever a version is saved, so lists of versions read them again. */
 export const versionsSaved = createStore(0);
 
-/** Saves a page's state as a version, with the words it had then. */
-export async function saveNow(pageId: string, state: Uint8Array) {
+/** Saves a page's state as a version, with the words it had then. Returns its id. */
+export async function saveNow(pageId: string, state: Uint8Array, label: string | null = null): Promise<string> {
   const doc = new Y.Doc();
   Y.applyUpdate(doc, state);
   const words = countWords(doc.getXmlFragment("content"));
   doc.destroy();
-  await saveVersion(await getStore(), pageId, state, { words });
+  const id = await saveVersion(await getStore(), pageId, state, { words, label });
   versionsSaved.set(versionsSaved.get() + 1);
+  return id;
 }
 
 /**

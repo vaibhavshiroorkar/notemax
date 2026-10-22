@@ -4,6 +4,7 @@ import { getPref } from "@/platform/prefs";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { AccountBar } from "./AccountBar";
 import { AccountDialog } from "./AccountDialog";
+import { ConflictDialog, ConflictLine, conflicts } from "./conflicts";
 import { SyncSection, describe } from "./SyncSection";
 import { startSync, syncNow, syncView } from "./runtime";
 
@@ -27,13 +28,27 @@ export const syncPlugin: Plugin = {
   statusItems: [{ id: "sync.status", component: SyncStatus }],
   // A build without Supabase settings has no accounts, so the footer keeps its plain Settings button.
   sidebarFooter: accountsEnabled ? [{ id: "sync.account", component: AccountBar }] : [],
-  overlays: [{ id: "account", component: AccountDialog }],
+  overlays: [
+    { id: "account", component: AccountDialog },
+    { id: "sync.conflict", component: ConflictDialog },
+  ],
+  pageHeader: [{ id: "sync.conflict", kinds: ["note"], component: ConflictLine }],
   commands: [
     { id: "sync.now", title: "Sync now", keywords: ["drive", "upload", "devices"], when: () => syncView.get().state !== "off", run: syncNow },
     { id: "sync.account", title: "Account and sync", keywords: ["sign in", "google", "drive", "devices"], when: () => accountsEnabled, run: (app) => app.openOverlay("account") },
   ],
-  start() {
+  start(app) {
     startAccount();
+    // A new question gets a toast; the line under the note's title stays until it is answered.
+    let known = new Set(conflicts.get().map((c) => c.pageId + c.time));
+    conflicts.subscribe(() => {
+      for (const c of conflicts.get()) {
+        if (known.has(c.pageId + c.time)) continue;
+        const title = app.tree.byId.get(c.pageId)?.title || "Untitled";
+        app.notify(`"${title}" changed on two devices. Both changes are kept.`, { label: "Review", run: () => app.openOverlay("sync.conflict", { pageId: c.pageId }) });
+      }
+      known = new Set(conflicts.get().map((c) => c.pageId + c.time));
+    });
     // Only the main window syncs. Quick capture hands its notes over through the doc channel.
     if (accountsEnabled && getPref("syncOn") === "1") startSync();
   },

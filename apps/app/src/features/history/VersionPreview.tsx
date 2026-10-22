@@ -1,12 +1,9 @@
-import { useEffect, useState } from "react";
-import { yXmlFragmentToProsemirrorJSON } from "@tiptap/y-tiptap";
 import * as Y from "yjs";
-import { listVersions, restoreBody, versionDoc, type Version } from "@notemax/core";
-import { dataUrl, loadPictures, resolver, withPageDoc } from "@/features/export/content";
-import { toHtml, type DocNode } from "@/features/export/serialize";
-import { getStore } from "@/platform/platform";
+import { restoreBody } from "@notemax/core";
+import { withPageDoc } from "@/features/export/content";
 import type { AppContext } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
+import { useVersionHtml } from "./useVersionHtml";
 import { saveNow } from "./versions";
 import { whenOf } from "./VersionsPanel";
 
@@ -14,26 +11,7 @@ import { whenOf } from "./VersionsPanel";
 export function VersionPreview({ app, options, onClose }: { app: AppContext; options: Record<string, unknown>; onClose(): void }) {
   const pageId = options.pageId as string;
   const versionId = options.versionId as string;
-  const [version, setVersion] = useState<Version | null>(null);
-  const [html, setHtml] = useState<string | null>(null);
-
-  useEffect(() => {
-    let live = true;
-    (async () => {
-      const found = (await listVersions(await getStore(), pageId)).find((v) => v.id === versionId) ?? null;
-      if (!found || !live) return setVersion(null);
-      const doc = versionDoc(found);
-      const body = yXmlFragmentToProsemirrorJSON(doc.getXmlFragment("content")) as DocNode;
-      doc.destroy();
-      const pictures = await loadPictures([body]);
-      if (!live) return;
-      setVersion(found);
-      setHtml(toHtml(body.content ?? [], resolver(app.tree, (id) => (pictures.has(id) ? dataUrl(pictures.get(id)!) : null))));
-    })().catch(() => live && setHtml(""));
-    return () => {
-      live = false;
-    };
-  }, [pageId, versionId, app.tree]);
+  const { version, html } = useVersionHtml(pageId, versionId, app.tree);
 
   const restore = async () => {
     if (!version) return;
