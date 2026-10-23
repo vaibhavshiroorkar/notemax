@@ -50,6 +50,7 @@ export function Editor({
   layout = "infinite",
   onPages,
   onReady,
+  editable = true,
 }: {
   doc: Y.Doc;
   noteId: string;
@@ -62,6 +63,8 @@ export function Editor({
   /** How many sheets the note fills, while it is on pages. */
   onPages?: (count: number) => void;
   onReady?: (editor: TiptapEditor) => void;
+  /** False for a page that takes no edits, like one shared with you to read. */
+  editable?: boolean;
 }) {
   const spellcheck = useOption("notes", "spellcheck");
   const paper = paperSize.use();
@@ -106,6 +109,10 @@ export function Editor({
   useEffect(() => {
     if (editor && !editor.isDestroyed) relayoutPages(editor.view);
   }, [editor, layout, paper]);
+
+  useEffect(() => {
+    if (editor && !editor.isDestroyed && editor.isEditable !== editable) editor.setEditable(editable);
+  }, [editor, editable]);
 
   // Set on the live element, so switching it in Settings needs no new editor.
   useEffect(() => {

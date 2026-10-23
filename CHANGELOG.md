@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.67.0 (2026-10-24)
+
+- Sharing a page makes two links: Can edit, to write in it together, and Can view, to read it as it changes. Edits are signed with a key only edit links carry, so every copy refuses changes from a view link, even ones forced in by hand.
+- A page opened from a view link is read-only and says it is shared to read. Pages shared before keep their link, which lets everyone edit; the share window can replace it with a new pair of links.
+
 ## 0.66.0 (2026-10-24)
 
 - Your community username is in the account window and in Settings (Community profile): pick one there, or change it and your name and bio.

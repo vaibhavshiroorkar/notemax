@@ -45,3 +45,23 @@
   width: 14px;
   height: 14px;
 }
+
+/* An edit or view link: what it allows, then the link and its Copy button. */
+.share-link-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.share-link-label {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.share-link-hint {
+  color: var(--muted);
+  font-size: 12px;
+}

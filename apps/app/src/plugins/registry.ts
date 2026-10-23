@@ -1,4 +1,4 @@
-import type { NodeKind, Tree } from "@notemax/core";
+import type { NodeKind, Tree, TreeNode } from "@notemax/core";
 import { onlineMode } from "@/platform/mode";
 import { createStore, savedStore } from "@/platform/store";
 import type {
@@ -101,6 +101,14 @@ export const registry = {
   kinds: (): KindInfo[] => all((p) => p.kinds),
   /** The icon a kind shows in lists. Taken from plugins that are off too, since their pages still show. */
   iconOf: (kind: NodeKind): IconName => plugins.flatMap((p) => p.kinds ?? []).find((info) => info.kind === kind)?.icon ?? "note",
+  /** Why a page takes no edits, if a plugin says it takes none. */
+  lockOf(node: TreeNode): string | undefined {
+    for (const plugin of on()) {
+      const reason = plugin.lockPage?.(node);
+      if (reason) return reason;
+    }
+    return undefined;
+  },
   /** The page that shows this one inside it, if a plugin says so. */
   hostOf(tree: Tree, id: string): string | undefined {
     for (const plugin of on()) {

@@ -1,6 +1,6 @@
 import * as Y from "yjs";
 import { seal, unseal } from "@notemax/core";
-import type { Share } from "./share";
+import { SIGNATURE, canEdit, signKeyOf, verifyKeyOf, type Share } from "./share";
 
 // Everyone with a shared page open meets in a Realtime room. Joining, each
 // says what it has (a state vector) and the others answer with what it lacks,
@@ -17,7 +17,7 @@ const BATCH_MS = 150;
 
 type Message =
   | { t: "hello"; from: string; sv: string; reply?: boolean }
-  | { t: "data"; from: string; id: string; i: number; n: number; part: string };
+  | { t: "data"; from: string; id: string; i: number; n: number; part: string; sig?: string };
 
 const toBase64 = (bytes: Uint8Array) => {
   let binary = "";
@@ -39,15 +39,22 @@ export interface Room {
 export async function joinRoom(share: Share, key: CryptoKey, doc: Y.Doc, name: string, onPeople: (people: Person[]) => void): Promise<Room> {
   const { supabase } = await import("@/features/account/client");
   const me = crypto.randomUUID();
+  // With signing, only edits signed with the page's key are taken in, and a copy
+  // opened from a view link sends none: it only asks for the page.
+  const [verifyKey, signKey] = await Promise.all([verifyKeyOf(share), signKeyOf(share)]);
+  const sends = canEdit(share);
+  const bytesOf = (text: string) => new TextEncoder().encode(text);
   const channel = supabase.channel(`notemax-share-${share.room}`, { config: { broadcast: { self: false }, presence: { key: me } } });
   const parts = new Map<string, string[]>();
 
   const send = (message: Message) => void channel.send({ type: "broadcast", event: "m", payload: message });
   const sendUpdate = async (update: Uint8Array) => {
+    if (!sends) return;
     const data = toBase64(await seal(key, update));
+    const sig = signKey ? toBase64(new Uint8Array(await crypto.subtle.sign(SIGNATURE, signKey, bytesOf(data)))) : undefined;
     const id = crypto.randomUUID();
     const n = Math.ceil(data.length / PART) || 1;
-    for (let i = 0; i < n; i++) send({ t: "data", from: me, id, i, n, part: data.slice(i * PART, (i + 1) * PART) });
+    for (let i = 0; i < n; i++) send({ t: "data", from: me, id, i, n, part: data.slice(i * PART, (i + 1) * PART), ...(sig ? { sig } : {}) });
   };
   const hello = (reply = false) => send({ t: "hello", from: me, sv: toBase64(Y.encodeStateVector(doc)), reply });
 
@@ -64,10 +71,17 @@ export async function joinRoom(share: Share, key: CryptoKey, doc: Y.Doc, name: s
     parts.set(payload.id, got);
     if (got.filter(Boolean).length < payload.n) return;
     parts.delete(payload.id);
-    unseal(key, fromBase64(got.join("")))
+    const data = got.join("");
+    const signed = verifyKey ? payload.sig !== undefined && crypto.subtle.verify(SIGNATURE, verifyKey, fromBase64(payload.sig), bytesOf(data)) : Promise.resolve(true);
+    void Promise.resolve(signed)
+      .then((ok) => {
+        // Not signed by someone with an edit link: a view link, or someone else entirely.
+        if (!ok) throw new Error("unsigned");
+        return unseal(key, fromBase64(data));
+      })
       .then((update) => Y.applyUpdate(doc, update, FROM_ROOM))
       .catch(() => {
-        // Sealed with another key: not this page's room after all.
+        // Sealed with another key, or not signed by an edit link: left out.
       });
   });
   channel.on("presence", { event: "sync" }, () => {

@@ -82,6 +82,8 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
   if (openError) return <p className="error">Could not open this note: {openError}</p>;
 
   const inBook = !!bookOf(tree, node.id);
+  // Like a page shared with you to read: its text shows, but nothing in it changes.
+  const locked = registry.lockOf(node);
 
   return (
     <article
@@ -106,8 +108,10 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
         value={node.title}
         placeholder="Untitled"
         aria-label="Title"
+        readOnly={!!locked}
+        title={locked}
         // A new note starts with an empty title, so put the cursor there.
-        autoFocus={node.title === ""}
+        autoFocus={node.title === "" && !locked}
         onChange={(event) => renameNode(workspaceDoc, node.id, event.target.value)}
         onKeyDown={(event) => {
           if (event.key !== "Enter") return;
@@ -127,6 +131,7 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
           initialContent={starterContent[node.id]}
           placeholder="Start writing..."
           layout={layout}
+          editable={!locked}
           onPages={setPages}
           onReady={(editor) => {
             editorRef.current = editor;

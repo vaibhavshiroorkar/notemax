@@ -1,7 +1,7 @@
 import { ROOT, createNode } from "@notemax/core";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { ShareDialog, ShareLine } from "./ShareDialog";
-import { keepShare, shareFromLink, shareOf } from "./share";
+import { canEdit, keepShare, shareFromLink, shareOf } from "./share";
 import "./share.css";
 
 const openNote = (app: AppContext) => (app.activeId && app.tree.byId.get(app.activeId)?.kind === "note" ? app.activeId : null);
@@ -15,7 +15,7 @@ function openFromLink(app: AppContext) {
   const id = createNode(app.doc, "note", ROOT, title || "Shared page");
   keepShare(app.doc, id, share);
   app.open(id);
-  app.notify("Opened a shared page. Its text arrives from the people who have it open.");
+  app.notify(canEdit(share) ? "Opened a shared page. Its text arrives from the people who have it open." : "Opened a page shared with you to read. Its text arrives from the people who can edit it.");
 }
 
 export const sharePlugin: Plugin = {
@@ -24,6 +24,10 @@ export const sharePlugin: Plugin = {
   name: "Sharing",
   description: "Share a note by link and write in it together, live",
   pageHeader: [{ id: "share.line", kinds: ["note"], component: ShareLine }],
+  lockPage(node) {
+    const share = shareOf(node);
+    return share && !canEdit(share) ? "Shared with you to read. Ask for an edit link to write in it." : undefined;
+  },
   overlays: [{ id: "share", component: ShareDialog }],
   contextMenu: [
     {

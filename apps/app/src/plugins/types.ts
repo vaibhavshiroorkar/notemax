@@ -40,6 +40,8 @@ export interface Plugin {
    * marked with data-reveal set to the page's id.
    */
   hostOf?(tree: Tree, id: string): string | undefined;
+  /** Why a page takes no edits, like a page shared with you to read. The page shows its text but cannot be changed. */
+  lockPage?(node: TreeNode): string | undefined;
   sidePanels?: SidePanel[];
   /** Shown under the title of a note or book page, like its tags. */
   pageHeader?: PageAddon[];
