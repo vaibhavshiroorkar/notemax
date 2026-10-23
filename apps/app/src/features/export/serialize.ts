@@ -53,7 +53,7 @@ function textBlocks(nodes: DocNode[], r: Resolve, indent: string): string[] {
         let n = Number(node.attrs?.start ?? 1);
         const lines: string[] = [];
         for (const item of kids(node)) {
-          const marker = node.type === "bulletList" ? "- " : node.type === "orderedList" ? `${n++}. ` : item.attrs?.checked ? "[x] " : "[ ] ";
+          const marker = node.type === "bulletList" ? "- " : node.type === "orderedList" ? `${n++}${listDot(node)} ` : item.attrs?.checked ? "[x] " : "[ ] ";
           const [first = "", ...rest] = textBlocks(kids(item), r, `${indent}  `);
           lines.push(`${indent}${marker}${first.trimStart()}`, ...rest);
         }
@@ -139,7 +139,7 @@ function mdBlocks(nodes: DocNode[], r: Resolve): string[] {
       case "taskList": {
         let n = Number(node.attrs?.start ?? 1);
         const items = kids(node).map((item) => {
-          const marker = node.type === "bulletList" ? "- " : node.type === "orderedList" ? `${n++}. ` : item.attrs?.checked ? "- [x] " : "- [ ] ";
+          const marker = node.type === "bulletList" ? "- " : node.type === "orderedList" ? `${n++}${listDot(node)} ` : item.attrs?.checked ? "- [x] " : "- [ ] ";
           const body = mdBlocks(kids(item), r).join("\n\n");
           return marker + body.replace(/\n/g, `\n${" ".repeat(marker.length)}`);
         });
@@ -176,6 +176,9 @@ export function toMarkdown(doc: DocNode, r: Resolve): string {
 }
 
 /* HTML */
+
+/** What follows a list number: "." or the ")" a list started with "1) " keeps. Markdown reads both. */
+const listDot = (node: DocNode) => (node.attrs?.marker === ")" ? ")" : ".");
 
 export const escapeHtml = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -217,7 +220,7 @@ export function toHtml(nodes: DocNode[], r: Resolve): string {
         case "bulletList":
           return `<ul>${toHtml(kids(node), r)}</ul>`;
         case "orderedList":
-          return `<ol${Number(node.attrs?.start ?? 1) !== 1 ? ` start="${Number(node.attrs?.start)}"` : ""}>${toHtml(kids(node), r)}</ol>`;
+          return `<ol${Number(node.attrs?.start ?? 1) !== 1 ? ` start="${Number(node.attrs?.start)}"` : ""}${listDot(node) === ")" ? ` data-marker=")"` : ""}>${toHtml(kids(node), r)}</ol>`;
         case "taskList":
           return `<ul class="tasks">${toHtml(kids(node), r)}</ul>`;
         case "listItem":
@@ -247,7 +250,8 @@ export function toHtml(nodes: DocNode[], r: Resolve): string {
 }
 
 /** Plain styles for exported pages, so they read well in any browser or e-reader. */
-export const PAGE_CSS = `body{max-width:42em;margin:2em auto;padding:0 1em;font:17px/1.6 Georgia,serif;color:#222}
+export const PAGE_CSS = `ol[data-marker=")"]>li::marker{content:counter(list-item) ") "}
+body{max-width:42em;margin:2em auto;padding:0 1em;font:17px/1.6 Georgia,serif;color:#222}
 h1,h2,h3{line-height:1.25}img{max-width:100%;height:auto}figure{margin:1em 0}figure.align-center{text-align:center}
 figure.align-right{text-align:right}figure.align-full img{width:100%}blockquote{margin:1em 0;padding-left:1em;border-left:3px solid #ccc;color:#555}
 pre{padding:.75em;background:#f4f4f4;overflow:auto}code{font-family:Consolas,monospace;font-size:.9em}ul.tasks{list-style:none;padding-left:1em}

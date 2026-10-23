@@ -1,4 +1,5 @@
 import { Extension, wrappingInputRule, type CommandProps } from "@tiptap/core";
+import { Plugin, PluginKey, type Transaction } from "@tiptap/pm/state";
 
 /** How many steps a paragraph can be pushed in. */
 const MAX_INDENT = 8;
@@ -136,7 +137,29 @@ export const LineSpacing = Extension.create({
   },
 });
 
-/** "1) " starts a numbered list, as "1. " does. It starts at the number typed. */
+/**
+ * How a numbered list writes its numbers: "1." or, for a list started with
+ * "1) ", "1)". Part of the note's content, so the choice syncs and exports.
+ */
+export const ListMarker = Extension.create({
+  name: "listMarker",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["orderedList"],
+        attributes: {
+          marker: {
+            default: null,
+            parseHTML: (el) => (el.getAttribute("data-marker") === ")" ? ")" : null),
+            renderHTML: (attrs) => (attrs.marker === ")" ? { "data-marker": ")" } : {}),
+          },
+        },
+      },
+    ];
+  },
+});
+
+/** "1) " starts a numbered list that keeps the parenthesis, at the number typed. */
 export const ParenthesisList = Extension.create({
   name: "parenthesisList",
   addInputRules() {
@@ -146,9 +169,71 @@ export const ParenthesisList = Extension.create({
       wrappingInputRule({
         find: /^(\d+)\)\s$/,
         type,
-        getAttributes: (match) => ({ start: Number(match[1]) }),
-        joinPredicate: (match, node) => node.childCount + node.attrs.start === Number(match[1]),
+        getAttributes: (match) => ({ start: Number(match[1]), marker: ")" }),
+        joinPredicate: (match, node) => node.attrs.marker === ")" && node.childCount + node.attrs.start === Number(match[1]),
       }),
     ];
+  },
+});
+
+/** What a typing shortcut changed, as the editor's own input rules record it. */
+interface Undoable {
+  transform: Transaction;
+  from: number;
+  to: number;
+  text: string;
+}
+
+const isUndoable = (value: unknown): value is Undoable => !!value && typeof value === "object" && "transform" in value && "from" in value && "to" in value && "text" in value;
+const lastShortcut = new PluginKey<Undoable | null>("lastShortcut");
+
+/**
+ * Backspace right after a typing shortcut (a list, a heading, bold) gives back
+ * exactly what was typed. The editor can do this itself, but forgets the
+ * shortcut as soon as another plugin follows it up, like the empty line added
+ * after a list at the end of a note. This remembers it through such follow-ups.
+ */
+export const ShortcutUndo = Extension.create({
+  name: "shortcutUndo",
+  // Before every other Backspace, like the one that lifts a list item out.
+  priority: 1000,
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin<Undoable | null>({
+        key: lastShortcut,
+        state: {
+          init: () => null,
+          apply(tr, previous) {
+            // The input rule plugin keeps the change in its meta under a key of its own.
+            if (tr.getMeta("inputRule")) return Object.values((tr as unknown as { meta: Record<string, unknown> }).meta).find(isUndoable) ?? null;
+            if (tr.getMeta("appendedTransaction")) return previous;
+            return tr.docChanged || tr.selectionSet ? null : previous;
+          },
+        },
+      }),
+    ];
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      Backspace: ({ editor }) => {
+        const undoable = lastShortcut.getState(editor.state);
+        if (!undoable) return false;
+        const { state, view } = editor;
+        const tr = state.tr;
+        const steps = undoable.transform.steps;
+        try {
+          for (let i = steps.length - 1; i >= 0; i--) tr.step(steps[i].invert(undoable.transform.docs[i]));
+          if (undoable.text) tr.replaceWith(undoable.from, undoable.to, state.schema.text(undoable.text, tr.doc.resolve(undoable.from).marks()));
+          else tr.delete(undoable.from, undoable.to);
+        } catch {
+          // The note changed in a way the steps no longer fit; let Backspace do its usual job.
+          return false;
+        }
+        view.dispatch(tr);
+        return true;
+      },
+    };
   },
 });

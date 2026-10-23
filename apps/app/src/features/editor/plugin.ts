@@ -7,7 +7,7 @@ import { LAYOUT_MENU, layoutOf, toggleLayout } from "./layout";
 import { LayoutSetting } from "./LayoutSetting";
 import { WordPaste } from "./word-paste";
 import { JoinLists } from "./lists";
-import { Indent, LineSpacing, ParenthesisList } from "./writing";
+import { Indent, LineSpacing, ListMarker, ParenthesisList, ShortcutUndo } from "./writing";
 import { EDITOR_MENU } from "./menu";
 import { NotePane } from "./NotePane";
 
@@ -53,8 +53,8 @@ export const notesPlugin: Plugin = {
     { title: "Paste as plain text", keys: "Mod+Shift+V" },
     { title: "The browser's own menu, with spelling suggestions", keys: "Shift+Right click" },
   ],
-  contentExtensions: () => [TaskList, TaskItem.configure({ nested: true }), Indent, LineSpacing],
-  editorExtensions: () => [ParenthesisList, WordPaste, JoinLists],
+  contentExtensions: () => [TaskList, TaskItem.configure({ nested: true }), Indent, LineSpacing, ListMarker],
+  editorExtensions: () => [ParenthesisList, ShortcutUndo, WordPaste, JoinLists],
   kinds: [{ kind: "note", label: "New note", icon: "note" }],
   pageViews: [{ kind: "note", component: NotePane }],
   pageCorner: [{ id: "notes.copy-all", kinds: ["note"], component: CopyAllButton }],

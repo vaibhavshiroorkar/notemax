@@ -33,6 +33,8 @@ const ATTRIBUTES = new Map<string, (value: string, el: Element) => boolean>([
   ["src", (value) => /^https:\/\//i.test(value.trim())],
   ["alt", () => true],
   ["start", (value) => /^\d{1,6}$/.test(value)],
+  // A list started with "1) " keeps its parenthesis.
+  ["data-marker", (value, el) => el.tagName === "OL" && value === ")"],
   ["class", (value) => /^[\w -]*$/.test(value)],
   ["type", (value, el) => el.tagName === "INPUT" && value === "checkbox"],
   ["checked", (_value, el) => el.tagName === "INPUT"],

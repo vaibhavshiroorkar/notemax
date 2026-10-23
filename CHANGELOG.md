@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.65.0 (2026-10-24)
+
+- A list started with "1) " keeps its parenthesis: it counts 1), 2), 3) in the note, in downloads and in community posts, instead of turning into 1.
+- Backspace right after any typing shortcut (a list, heading, quote, code block, bold and the rest) gives back exactly what was typed. It used to be lost when the shortcut was on the last line.
+
 ## 0.64.0 (2026-10-24)
 
 - A new workspace starts with Welcome, a Journal folder where the calendar puts daily notes, a Drawing board, and My first book with a chapter and a subtopic, each with a few words on how it works. Two new devices that sync end up with one set.

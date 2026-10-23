@@ -411,3 +411,8 @@ kbd {
     display: none;
   }
 }
+
+/* A numbered list started with "1) " keeps the parenthesis it was typed with, in notes and in posts. */
+ol[data-marker=")"] > li::marker {
+  content: counter(list-item) ") ";
+}
