@@ -399,51 +399,31 @@
 }
 
 /* An empty tab. */
-.new-tab {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 64px 24px;
-}
-
-.new-tab-title {
-  margin: 0 0 16px;
-  font-size: 22px;
-}
-
-.new-tab-actions {
+.home-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.new-tab-actions .button {
+.home-actions .button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.new-tab-heading {
-  margin: 32px 0 6px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.new-tab-list {
+.home-list {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.new-tab-list .row-title {
+.home-list .row-title {
   width: 100%;
   padding: 6px 8px;
   border-radius: 6px;
 }
 
-.new-tab-list .row-title:hover {
+.home-list .row-title:hover {
   background: var(--hover);
 }
 
@@ -545,7 +525,7 @@
   }
 
   /* Room is short: the page's own buttons are in its menu and in search. */
-  .page-toolbar > :not(.quick-settings-button, .side-panel-toggle, .quick-settings) {
+  .page-toolbar > :not(.quick-settings-button, .side-panel-toggle, .quick-settings, .copy-all-button) {
     display: none;
   }
 
@@ -558,9 +538,6 @@
     display: none;
   }
 
-  .new-tab {
-    padding: 32px 16px;
-  }
 
   /* The overlays slide in from their edge and back out. */
   .sidebar,

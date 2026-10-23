@@ -4,6 +4,17 @@
 
 create extension if not exists citext;
 
+-- The generic array_to_string is stable because other types depend on settings.
+-- Tags contain only text, so joining them is safe in a generated column.
+create or replace function public.community_tags_text(tags text[])
+returns text
+language sql
+immutable
+strict
+parallel safe
+set search_path = pg_catalog
+as $$ select pg_catalog.array_to_string(tags, ' ') $$;
+
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   username citext not null unique check (username ~ '^[a-z0-9_]{3,24}$'),
@@ -32,7 +43,7 @@ create table public.posts (
   updated_at timestamptz not null default now(),
   search tsvector generated always as (
     setweight(to_tsvector('simple', coalesce(title, '')), 'A')
-    || setweight(to_tsvector('simple', coalesce(summary, '') || ' ' || array_to_string(tags, ' ')), 'B')
+    || setweight(to_tsvector('simple', coalesce(summary, '') || ' ' || public.community_tags_text(tags)), 'B')
     || setweight(to_tsvector('simple', coalesce(text_content, '')), 'C')
   ) stored,
   unique (author, source_id)

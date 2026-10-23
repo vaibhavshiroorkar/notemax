@@ -36,11 +36,12 @@ export function contextMenuHandler(target: () => ContextTarget | null) {
     event.preventDefault();
     event.stopPropagation();
     let { clientX: x, clientY: y } = event;
-    // From the keyboard there is no pointer, so the browser reports 0,0.
-    if (x === 0 && y === 0) {
+    // A button like ... opens its menu below itself, so no item starts under
+    // the finger or pointer. From the keyboard the browser reports 0,0 too.
+    if (event.type === "click" || (x === 0 && y === 0)) {
       const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-      x = rect.left + 16;
-      y = rect.bottom;
+      x = event.type === "click" ? rect.left : rect.left + 16;
+      y = rect.bottom + 2;
     }
     openContextMenu(t, x, y);
   };
@@ -157,6 +158,8 @@ function MenuList({
   label?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // The tap that opened the menu can land on it too, so for a finger the items wait a moment before they listen.
+  const [openedAt] = useState(() => performance.now());
   const [place, setPlace] = useState({ left: x, top: y, ready: false });
   const [sub, setSub] = useState<{ id: string; x: number; y: number; left: number; focus: boolean } | null>(null);
 
@@ -191,6 +194,7 @@ function MenuList({
 
   const activate = (item: ContextMenuItem, el: HTMLElement, fromKeyboard: boolean) => {
     if (item.disabled?.(target, app)) return;
+    if (!fromKeyboard && fromTouch() && performance.now() - openedAt < 350) return;
     if (item.submenu) {
       const rect = el.getBoundingClientRect();
       setSub({ id: item.id, x: rect.right - 2, y: rect.top - 5, left: rect.left + 2, focus: fromKeyboard });
@@ -302,8 +306,10 @@ function MenuButton({
       // Keep the editor's selection: a mousedown here would move focus out first.
       onMouseDown={(event) => event.preventDefault()}
       onClick={(event) => onActivate(event.currentTarget, event.detail === 0)}
+      // A finger has no hover: it opens a submenu by tapping, not by passing over it.
       onPointerEnter={(event) => {
-        if (!disabled && event.pointerType !== "touch") event.currentTarget.focus();
+        if (event.pointerType === "touch") return;
+        if (!disabled) event.currentTarget.focus();
         onHover(event.currentTarget);
       }}
     >

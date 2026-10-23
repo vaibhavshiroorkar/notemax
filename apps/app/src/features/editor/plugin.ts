@@ -1,5 +1,6 @@
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import type { AppContext, Plugin } from "@/plugins/types";
+import { CopyAllButton, copyAll } from "./copyAll";
 import { duplicate } from "./duplicate";
 import { EditorSection } from "./EditorSection";
 import { LAYOUT_MENU, layoutOf, toggleLayout } from "./layout";
@@ -56,9 +57,19 @@ export const notesPlugin: Plugin = {
   editorExtensions: () => [ParenthesisList, WordPaste, JoinLists],
   kinds: [{ kind: "note", label: "New note", icon: "note" }],
   pageViews: [{ kind: "note", component: NotePane }],
+  pageCorner: [{ id: "notes.copy-all", kinds: ["note"], component: CopyAllButton }],
   contextMenu: [
     ...EDITOR_MENU,
     LAYOUT_MENU,
+    {
+      id: "notes.copy-all",
+      title: "Copy all text",
+      group: "edit",
+      icon: "copy",
+      targets: ["page"],
+      when: (target) => target.type === "page" && target.node.kind === "note",
+      run: (target, app) => target.type === "page" && void copyAll(app, target.node.id),
+    },
     {
       id: "notes.duplicate",
       title: "Duplicate",
@@ -87,6 +98,7 @@ export const notesPlugin: Plugin = {
       },
     },
     { id: "notes.new", title: "New note", keywords: ["create", "add"], run: (app) => app.create("note") },
+    { id: "notes.copy-all", title: "Copy all of this note", keywords: ["clipboard", "text", "everything"], when: (app) => openNote(app) !== null, run: (app) => void copyAll(app, openNote(app)!) },
     {
       id: "notes.duplicate",
       title: "Duplicate this note",

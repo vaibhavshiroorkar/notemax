@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { initAppearance } from "@/ui/appearance";
-import { enableLongPress } from "@/ui/longPress";
+import { leaveLongPressToThePhone } from "@/ui/longPress";
 // Shared styles first, so each feature's own stylesheet loads after them.
 import "@/ui/ui.css";
 // Built-in features register before the first render.
@@ -16,7 +16,7 @@ initAppearance();
 startOffline();
 // When storage cannot open, the app says why on screen; settings just wait for the next start.
 startSettingsSync().catch(() => {});
-enableLongPress();
+leaveLongPressToThePhone();
 void listenForQuit();
 
 createRoot(document.getElementById("root")!).render(

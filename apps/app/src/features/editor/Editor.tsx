@@ -9,24 +9,18 @@ import type { LinkHub } from "@/features/links/link-hub";
 import { useOption } from "@/plugins/options";
 import { registry } from "@/plugins/registry";
 import { openContextMenu } from "@/ui/ContextMenu";
-import { fromTouch } from "@/ui/longPress";
 import { PAPER, Pages, paperSize, relayoutPages } from "./pages";
-import { doubleTapSelects } from "./touch";
 
 /**
  * A right click in a note works like in a word processor: on a selection it
  * keeps the selection, elsewhere it first moves the cursor there (or selects
- * the picture or link under the pointer), then opens the menu.
- *
- * A long press on a phone opens the same menu but leaves the page still: the
- * cursor only moves when the note is not being typed in, and the keyboard
- * stays down, since bringing it up shifts the whole page.
+ * the picture or link under the pointer), then opens the menu. A long press
+ * on a phone never gets here: it is the phone's own (ui/longPress.ts).
  */
-function openEditorMenu(editor: TiptapEditor, noteId: string, event: MouseEvent, held: Held | null) {
+function openEditorMenu(editor: TiptapEditor, noteId: string, event: MouseEvent) {
   // Shift+right click keeps the browser's own menu, which has the spelling suggestions.
   if (event.shiftKey) return;
   event.preventDefault();
-  const touch = fromTouch();
   const { view } = editor;
   let { clientX: x, clientY: y } = event;
   if (x === 0 && y === 0) {
@@ -37,24 +31,14 @@ function openEditorMenu(editor: TiptapEditor, noteId: string, event: MouseEvent,
   } else {
     const hit = view.posAtCoords({ left: x, top: y });
     const { from, to } = view.state.selection;
-    const keep = touch && !!held && (held.focused || !held.selection.empty);
-    // Android may have selected the word under the finger before the menu
-    // event came; put back what was there when the finger went down.
-    if (keep && !view.state.selection.eq(held.selection) && view.state.doc.eq(held.selection.$anchor.doc)) view.dispatch(view.state.tr.setSelection(held.selection));
-    if (hit && !keep && !(hit.pos >= from && hit.pos <= to && from !== to)) {
+    if (hit && !(hit.pos >= from && hit.pos <= to && from !== to)) {
       const node = hit.inside >= 0 ? view.state.doc.nodeAt(hit.inside) : null;
       if (node && node.isAtom && !node.isText) editor.chain().setNodeSelection(hit.inside).run();
       else editor.chain().setTextSelection(hit.pos).run();
     }
   }
-  if (!view.hasFocus() && !touch) view.focus();
+  if (!view.hasFocus()) view.focus();
   openContextMenu({ type: "editor", editor, noteId }, x, y);
-}
-
-/** The note's state when a finger last went down on it. */
-interface Held {
-  selection: Selection;
-  focused: boolean;
 }
 
 export function Editor({
@@ -133,17 +117,9 @@ export function Editor({
   useEffect(() => {
     if (!editor) return;
     const dom = editor.view.dom;
-    let held: Held | null = null;
-    const onTouch = () => (held = { selection: editor.state.selection, focused: editor.view.hasFocus() });
-    const onMenu = (event: MouseEvent) => openEditorMenu(editor, noteId, event, held);
-    dom.addEventListener("touchstart", onTouch, { passive: true });
+    const onMenu = (event: MouseEvent) => openEditorMenu(editor, noteId, event);
     dom.addEventListener("contextmenu", onMenu);
-    const stopTaps = doubleTapSelects(editor.view);
-    return () => {
-      dom.removeEventListener("touchstart", onTouch);
-      dom.removeEventListener("contextmenu", onMenu);
-      stopTaps();
-    };
+    return () => dom.removeEventListener("contextmenu", onMenu);
   }, [editor, noteId]);
 
   return <EditorContent editor={editor} className="editor" />;

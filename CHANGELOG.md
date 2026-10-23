@@ -3,6 +3,15 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.61.0 (2026-10-23)
+
+- Bookmarks: starred pages sit in a Bookmarks section below your notes, and show a filled star there and in the notes list.
+- Home and Community each open as a page of their own from the two buttons at the top left. With every tab closed, Home shows in the middle.
+- Copy all: a button at the top right of a note (on phones too), in its menu and in Ctrl+K, copies the whole note with its formatting.
+- Phones: a long press in a note selects text the phone's own way again; the app's long-press menu is gone. The ... menu no longer picks an item with the tap that opened it.
+- A little less space between paragraphs.
+- Community setup fixed: the tags search column now builds on Postgres.
+
 ## 0.60.0 (2026-10-23)
 
 - Three-dot menus beside chapters, parts and subtopics on book pages, in Whole book and in the chapter sidebar.

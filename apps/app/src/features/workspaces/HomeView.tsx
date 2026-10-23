@@ -14,7 +14,7 @@ import { Dot } from "./Switcher";
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-function Card({ workspace, app, count, onDragTo, onDone }: { workspace: WorkspaceInfo; app: AppContext; count: number | null; onDragTo(id: string): void; onDone(): void }) {
+function Card({ workspace, app, count, onDragTo, onBack }: { workspace: WorkspaceInfo; app: AppContext; count: number | null; onDragTo(id: string): void; onBack(): void }) {
   const here = workspace.id === currentWorkspace;
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -44,7 +44,7 @@ function Card({ workspace, app, count, onDragTo, onDone }: { workspace: Workspac
         onDragTo(event.dataTransfer.getData("application/x-notemax-workspace"));
       }}
     >
-      <button className="workspace-open" aria-label={here ? `${name}, open now` : `Open ${name}`} onClick={() => (here ? onDone() : switchTo(workspace.id))}>
+      <button className="workspace-open" aria-label={here ? `${name}, open now` : `Open ${name}`} onClick={() => (here ? onBack() : switchTo(workspace.id))}>
         <span className="workspace-card-title">
           <Dot color={workspace.color} />
           <strong>{name}</strong>
@@ -112,10 +112,11 @@ function Card({ workspace, app, count, onDragTo, onDone }: { workspace: Workspac
 }
 
 /**
- * Home: every workspace as a card to open, rename, color, delete or drag into
- * order, and what was open last here. `onDone` puts Home away, back to the pages.
+ * Home: ways to start, every workspace as a card to open, rename, color,
+ * delete or drag into order, and what was open last here. It is a page of its
+ * own, and what a tab shows when it has nothing open.
  */
-export function HomeView({ app, onDone }: { app: AppContext; options: Record<string, unknown>; onDone(): void }) {
+export function HomeView({ app }: { app: AppContext; options: Record<string, unknown> }) {
   const list = workspaceList.use();
   const [counts, setCounts] = useState<Record<string, number>>({});
   useEffect(() => void openList(), []);
@@ -138,6 +139,8 @@ export function HomeView({ app, onDone }: { app: AppContext; options: Record<str
     .filter((item) => item && item.kind !== "folder")
     .slice(0, 6);
   const here = list.find((w) => w.id === currentWorkspace);
+  // The open workspace's card goes back to its last page.
+  const back = () => recent[0] && app.open(recent[0].id);
 
   const startNew = async () => {
     const name = await askText({ title: "New workspace", label: "Name", placeholder: "Like Work, School or Novel", confirm: "Create" });
@@ -159,6 +162,16 @@ export function HomeView({ app, onDone }: { app: AppContext; options: Record<str
   return (
     <div className="home-page">
       <h1>Home</h1>
+      <div className="home-actions">
+        <button className="button" onClick={() => app.create("note")}>
+          <Icon name="note" />
+          New note
+        </button>
+        <button className="button" onClick={app.openPalette}>
+          <Icon name="search" />
+          Find a page
+        </button>
+      </div>
       <p className="home-intro">Each workspace keeps its own pages, tabs and trash. Drag the cards to arrange them.</p>
       <ul className="workspace-grid" aria-label="Workspaces">
         {list.map((workspace) => (
@@ -167,7 +180,7 @@ export function HomeView({ app, onDone }: { app: AppContext; options: Record<str
             workspace={workspace}
             app={app}
             count={workspace.id === currentWorkspace ? app.tree.visible.size : (counts[workspace.id] ?? null)}
-            onDone={onDone}
+            onBack={back}
             onDragTo={(dragged) => dragged && dragged !== workspace.id && void move(dragged, list.findIndex((w) => w.id === workspace.id))}
           />
         ))}
@@ -196,13 +209,10 @@ export function HomeView({ app, onDone }: { app: AppContext; options: Record<str
       {recent.length > 0 && (
         <>
           <h2 className="home-heading">Recent in {here ? nameOf(here) : "this workspace"}</h2>
-          <ul className="new-tab-list">
+          <ul className="home-list">
             {recent.map((item) => (
               <li key={item!.id}>
-                <button className="row-title icon-title" onClick={() => {
-                    app.open(item!.id);
-                    onDone();
-                  }}>
+                <button className="row-title icon-title" onClick={() => app.open(item!.id)}>
                   <Icon name={item!.kind === "note" ? "note" : registry.iconOf(item!.kind)} />
                   <span>{item!.title || "Untitled"}</span>
                 </button>

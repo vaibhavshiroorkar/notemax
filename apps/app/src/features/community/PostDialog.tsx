@@ -38,7 +38,7 @@ export function PostDialog({ app, options, onClose }: { app: AppContext; options
   if (!node) return null;
   const openCommunity = (username: string) => {
     onClose();
-    app.openOverlay("community", { username });
+    app.openView("community", { username });
   };
   const run = async (work: () => Promise<void>) => {
     setBusy(true);
@@ -85,7 +85,7 @@ export function PostDialog({ app, options, onClose }: { app: AppContext; options
             const post = await publish(await snapshotOf(node, app, summary, words));
             setPref(RIGHTS, "1");
             setState({ ...state, post });
-            app.notify(state.post ? "Updated your post" : "Posted to the community", { label: "See it", run: () => app.openOverlay("community", { username: state.profile!.username }) });
+            app.notify(state.post ? "Updated your post" : "Posted to the community", { label: "See it", run: () => app.openView("community", { username: state.profile!.username }) });
           });
         }}
       >

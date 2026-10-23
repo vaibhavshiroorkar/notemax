@@ -14,8 +14,8 @@ function foldersAbove(tree: Tree, id: string): string[] {
   return out;
 }
 
-/** Starred pages at the top of the left sidebar. Hidden while nothing is starred. */
-export function StarredSection({ app }: { app: AppContext }) {
+/** Starred pages, below the notes in the left sidebar, each with its star to take it out. Hidden while nothing is starred. */
+export function BookmarksSection({ app }: { app: AppContext }) {
   const items = useMemo(() => starredItems(app.tree), [app.tree]);
   if (!items.length) return null;
 
@@ -27,9 +27,9 @@ export function StarredSection({ app }: { app: AppContext }) {
   };
 
   return (
-    <section className="section starred">
+    <section className="section starred" aria-label="Bookmarks">
       <header className="section-header">
-        <span>Starred</span>
+        <span>Bookmarks</span>
       </header>
       <ul>
         {items.map((item) => {
@@ -46,8 +46,8 @@ export function StarredSection({ app }: { app: AppContext }) {
                   <Icon name={item.kind === "note" ? "note" : registry.iconOf(item.kind)} />
                   <span>{title}</span>
                 </button>
-                <button className="icon-button row-action" aria-label={`Unstar ${title}`} title="Unstar" onClick={() => setStarred(app.doc, [item.id], false)}>
-                  <Icon name="close" />
+                <button className="icon-button star-button" data-on aria-label={`Unstar ${title}`} title="Unstar" onClick={() => setStarred(app.doc, [item.id], false)}>
+                  <Icon name="star" />
                 </button>
               </div>
             </li>

@@ -1,23 +1,13 @@
-/* The community over the whole window, like Home. */
-.dialog.community-screen {
-  width: 100vw;
-  max-width: none;
-  height: 100dvh;
-  max-height: none;
-  margin: 0;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.community-screen .dialog-body {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 0;
+/* The community page: a bar that stays at the top, and a column to read in. */
+.community-screen {
+  min-height: 100%;
 }
 
 .community-top {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--bg);
   display: flex;
   flex: none;
   align-items: center;
@@ -55,12 +45,10 @@
 }
 
 .community-page {
-  flex: 1;
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
   padding: 20px 16px 80px;
-  overflow-y: auto;
 }
 
 .community-tabs {

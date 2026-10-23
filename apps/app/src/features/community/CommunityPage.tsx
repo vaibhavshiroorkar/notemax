@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { toHtml } from "@/features/export/serialize";
 import type { AppContext } from "@/plugins/types";
-import { Dialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
 import { safeHtml } from "@/ui/safeHtml";
 import { feed, follow, myId, myProfile, profilePage, readPost, searchPeople, searchPosts, type Post, type Profile, type ProfilePage } from "./api";
@@ -235,14 +234,19 @@ function PostView({ id, go }: { id: string; go(place: Place): void }) {
   );
 }
 
+const placeFrom = (options: Record<string, unknown>): Place =>
+  typeof options.username === "string" ? { view: "profile", username: options.username } : options.place === "me" ? { view: "me" } : { view: "feed", following: false };
+
 /**
- * The community over the whole window: everyone's posts or the people
+ * The community, as a page of its own: everyone's posts or the people
  * followed, search across posts and people, profiles, and posts to read.
  * Reading needs no account; posting and following do.
  */
-export function CommunityScreen({ app, options, onClose }: { app: AppContext; options: Record<string, unknown>; onClose(): void }) {
-  const first: Place = typeof options.username === "string" ? { view: "profile", username: options.username } : options.place === "me" ? { view: "me" } : { view: "feed", following: false };
-  const [trail, setTrail] = useState<Place[]>([first]);
+export function CommunityPage({ app, options }: { app: AppContext; options: Record<string, unknown> }) {
+  const [trail, setTrail] = useState<Place[]>(() => [placeFrom(options)]);
+  // Opened again somewhere new, like a profile from a post, starts from there.
+  const asked = JSON.stringify(options);
+  useEffect(() => setTrail([placeFrom(JSON.parse(asked) as Record<string, unknown>)]), [asked]);
   const place = trail.at(-1)!;
   const go = useCallback((next: Place) => setTrail((old) => [...old, next]), []);
   const back = () => setTrail((old) => (old.length > 1 ? old.slice(0, -1) : old));
@@ -255,7 +259,7 @@ export function CommunityScreen({ app, options, onClose }: { app: AppContext; op
   }, [place]);
 
   return (
-    <Dialog label="Community" onClose={onClose} className="community-screen">
+    <div className="community-screen">
       <header className="community-top">
         <button className="icon-button" aria-label="Back" title="Back" disabled={trail.length < 2} onClick={back}>
           <Icon name="arrow-left" />
@@ -280,19 +284,10 @@ export function CommunityScreen({ app, options, onClose }: { app: AppContext; op
             <span className="community-me">{mine ? "My profile" : "Pick a username"}</span>
           </button>
         ) : (
-          <button
-            className="button"
-            onClick={() => {
-              onClose();
-              app.openOverlay("account");
-            }}
-          >
+          <button className="button" onClick={() => app.openOverlay("account")}>
             Sign in to post
           </button>
         )}
-        <button className="icon-button" aria-label="Close community" title="Close (Esc)" onClick={onClose}>
-          <Icon name="close" />
-        </button>
       </header>
       <main className="community-page">
         {place.view === "feed" && <FeedView following={place.following} go={go} signedIn={!!me} />}
@@ -308,6 +303,6 @@ export function CommunityScreen({ app, options, onClose }: { app: AppContext; op
           />
         )}
       </main>
-    </Dialog>
+    </div>
   );
 }

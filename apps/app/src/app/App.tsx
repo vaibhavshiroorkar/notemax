@@ -30,7 +30,6 @@ import { useEdgeSwipe } from "./useEdgeSwipe";
 import { useHidingBars } from "./useHidingBars";
 import { RightSidebar } from "./RightSidebar";
 import { pageInAddress, showInAddress, startBrowserNavigation } from "./history";
-import { NewTabPage } from "./NewTabPage";
 import { TabStrip } from "./TabStrip";
 import { SplitDivider } from "./SplitDivider";
 import {
@@ -87,6 +86,7 @@ export function App() {
     loadTabs(getPref("selectedId") ?? WELCOME_ID);
     const fromAddress = pageInAddress();
     if (fromAddress && currentVisit()?.page !== fromAddress) openPage(fromAddress);
+    else if (!fromAddress && startAt.get() === "home" && currentVisit()?.page !== viewPage("home")) openPage(viewPage("home"));
   });
   const tabs = layout.use();
   // Split view needs room: a phone shows the active pane alone.
@@ -109,10 +109,7 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
-  // A window set to start at Home opens with Home over the pages, unless the address names a page.
-  const [overlay, setOverlay] = useState<{ id: string; options: Record<string, unknown> } | null>(() =>
-    startAt.get() === "home" && !pageInAddress() ? { id: "home", options: {} } : null,
-  );
+  const [overlay, setOverlay] = useState<{ id: string; options: Record<string, unknown> } | null>(null);
   const closeQuick = useCallback(() => setQuickOpen(false), []);
   const [accountError, setAccountError] = useState<string>();
   const overrides = shortcutOverrides.use();
@@ -354,6 +351,7 @@ export function App() {
   const View = activeNode && registry.pageView(activeNode.kind)?.component;
   const OverlayView = overlay && registry.overlay(overlay.id)?.component;
   const ViewPage = visit && isView(visit.page) ? registry.view(viewId(visit.page))?.component : undefined;
+  const HomePage = registry.view("home")?.component;
   const panels = registry.sidePanels(app);
 
   const activePage =
@@ -373,8 +371,11 @@ export function App() {
       </Safe>
     ) : activeNode ? (
       <PluginOff node={activeNode} app={app} />
-    ) : !visit ? (
-      <NewTabPage app={app} />
+    ) : !visit && HomePage ? (
+      // A tab with nothing open, like the last one after closing the others, shows Home.
+      <Safe key={`home:${version}`} name="Home">
+        <HomePage app={app} options={{}} />
+      </Safe>
     ) : (
       <p className="empty">No notes. Use + in the sidebar to create one.</p>
     );

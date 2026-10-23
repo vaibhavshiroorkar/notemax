@@ -204,7 +204,7 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
           .rowMarks()
           .filter((mark) => mark.when(item))
           .map((mark) => (
-            <span key={mark.id} className="row-mark" role="img" title={mark.label} aria-label={mark.label}>
+            <span key={mark.id} className="row-mark" data-mark={mark.id} role="img" title={mark.label} aria-label={mark.label}>
               <Icon name={mark.icon} />
             </span>
           ))}

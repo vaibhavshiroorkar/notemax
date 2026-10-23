@@ -27,7 +27,8 @@ function fitting(room: number, count: number): number {
 /** What a tab shows: its title and icon. */
 function labelOf(app: AppContext, tab: Tab): { title: string; icon: IconName } {
   const visit = tab.visits[tab.index];
-  if (!visit) return { title: "New tab", icon: "plus" };
+  // An empty tab shows Home.
+  if (!visit) return { title: "Home", icon: "home" };
   if (isView(visit.page)) {
     const view = registry.view(viewId(visit.page));
     return { title: view?.title ?? "Missing view", icon: view?.icon ?? "page" };

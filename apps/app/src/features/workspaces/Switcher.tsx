@@ -38,7 +38,7 @@ export function Switcher({ app }: { app: AppContext }) {
 
   return (
     <div className="workspace-switch" ref={wrapper}>
-      <button className="icon-button workspace-home" aria-label="Home" title="Home: all workspaces" onClick={() => app.openOverlay("home")}>
+      <button className="icon-button workspace-home" aria-label="Home" title="Home: all workspaces" onClick={() => app.openView("home")}>
         <Icon name="home" />
       </button>
       {registry.switcherButtons().map((button) => (
