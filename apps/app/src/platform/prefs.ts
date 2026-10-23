@@ -51,6 +51,7 @@ export const SYNCED_PREFS: ReadonlySet<string> = new Set([
   "shortcuts",
   "downloadFormat",
   "trashKeepDays",
+  "homeLayout",
   "versionEvery",
   "graphChoices",
   "graphPanelChoices",

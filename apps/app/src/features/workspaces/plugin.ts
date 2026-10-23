@@ -1,7 +1,7 @@
 import { isInside, trashNode, type TreeNode } from "@notemax/core";
 import { currentWorkspace } from "@/platform/prefs";
 import type { AppContext, ContextMenuItem, ContextTarget, Plugin } from "@/plugins/types";
-import { HomeView } from "./HomeView";
+import { HomeView, QuickStart, RecentSection, WorkspacesSection } from "./HomeView";
 import { nameOf, switchTo, workspaceList } from "./list";
 import { Switcher } from "./Switcher";
 import { copyToWorkspace } from "./transfer";
@@ -55,6 +55,11 @@ export const workspacesPlugin: Plugin = {
   // Above everything else in the left sidebar.
   sidebarSections: [{ id: "workspaces.switch", order: -30, component: Switcher }],
   views: [{ id: "home", title: "Home", icon: "home", component: HomeView }],
+  homeSections: [
+    { id: "home.quick", title: "Quick start", order: 10, component: QuickStart },
+    { id: "home.recent", title: "Recent pages", order: 20, component: RecentSection },
+    { id: "home.workspaces", title: "Workspaces", order: 60, wide: true, component: WorkspacesSection },
+  ],
   contextMenu: [sendItem(false), sendItem(true)],
   commands: [{ id: "workspaces.home", title: "Go Home: all workspaces", keywords: ["workspace", "switch", "home", "profile"], shortcut: "Mod+Alt+H", run: (app) => app.openView("home") }],
 };

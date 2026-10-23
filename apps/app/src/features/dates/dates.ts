@@ -69,6 +69,13 @@ export async function openDay(app: AppContext, key: string, where?: { newTab?: b
   app.open(id, where);
 }
 
+/** Daily notes, the newest day first. */
+export function dailyNotes(tree: Tree): { key: string; item: TreeItem }[] {
+  const out: { key: string; item: TreeItem }[] = [];
+  for (const item of tree.items.values()) if (isDayKey(item.props[DAILY])) out.push({ key: item.props[DAILY] as string, item });
+  return out.sort((a, b) => (a.key < b.key ? 1 : a.key > b.key ? -1 : 0));
+}
+
 export const shiftDay = (key: string, days: number) => {
   const date = dayOf(key);
   date.setDate(date.getDate() + days);

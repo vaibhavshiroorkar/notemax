@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.68.0 (2026-10-24)
+
+- Home is a page of cards: Quick start, Recent pages with when each was edited, Bookmarks, Books with their chapters and words, Journal with today's note and the last few days, and Workspaces.
+- Customize on Home turns cards off and on, moves them up and down, and picks one column or two. The arrangement follows you to your other devices. A phone always shows one column.
+- Plugins can add Home cards of their own.
+
 ## 0.67.0 (2026-10-24)
 
 - Sharing a page makes two links: Can edit, to write in it together, and Can view, to read it as it changes. Edits are signed with a key only edit links carry, so every copy refuses changes from a view link, even ones forced in by hand.

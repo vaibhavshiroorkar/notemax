@@ -1,6 +1,7 @@
 import type { Plugin } from "@/plugins/types";
 import { CalendarPanel } from "./CalendarPanel";
 import { DateSetting } from "./DateSetting";
+import { JournalHome } from "./JournalHome";
 import { openDay, shiftDay, todayKey } from "./dates";
 import "./dates.css";
 
@@ -9,6 +10,7 @@ export const datesPlugin: Plugin = {
   name: "Daily notes and calendar",
   description: "A note for each day, a calendar in the right sidebar, and a date on any page",
   sidePanels: [{ id: "dates.calendar", title: "Calendar", order: 80, component: CalendarPanel }],
+  homeSections: [{ id: "dates.home", title: "Journal", order: 50, component: JournalHome }],
   pageSettings: [{ id: "dates.date", component: DateSetting }],
   commands: [
     { id: "dates.today", title: "Open today's note", keywords: ["daily", "journal", "diary", "today"], shortcut: "Mod+Alt+D", run: (app) => void openDay(app, todayKey()) },

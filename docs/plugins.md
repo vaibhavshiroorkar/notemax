@@ -80,6 +80,7 @@ Every field is optional.
 | `lockPage(node)` | Not a place: a reason a page takes no edits, like a page shared with you to read. The page shows its text read-only, with the reason on its title. |
 | `sidebarSections` | The left sidebar, between the pages and the trash. With an `order` below 0, above the pages, like Starred. |
 | `switcherButtons` | A small button at the top left beside Home, with `label`, `icon`, `when()` and `run(app)`, for a place as big as the window, like the community. |
+| `homeSections` | A card on the Home page, with `title`, `order`, `wide` and a `component` that gets `app`. People turn cards on and off and order them with Customize. |
 | `useSidebarFilter` | A React hook. While it returns a filter, the sidebar lists only what passes it. |
 | `rowMarks` | A small icon at the end of a page's row in the left sidebar, with `icon`, `label` and `when(node)`, like the clock on temporary pages. |
 | `sidebarFilterChoices` | Choices in the sidebar's filter panel (the funnel by +), like "Starred only". |

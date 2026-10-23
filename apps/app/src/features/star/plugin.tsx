@@ -3,6 +3,7 @@ import { clearSelection } from "@/features/sidebar/state";
 import { createStore } from "@/platform/store";
 import type { AppContext, ContextMenuItem, ContextTarget, Plugin } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
+import { BookmarksHome } from "./BookmarksHome";
 import { BookmarksSection } from "./BookmarksSection";
 import { isStarred, setStarred } from "./star";
 import "./star.css";
@@ -64,6 +65,7 @@ export const starPlugin: Plugin = {
   description: "Star pages to keep them in Bookmarks, below your notes",
   // Below the notes.
   sidebarSections: [{ id: "star.section", order: 10, component: BookmarksSection }],
+  homeSections: [{ id: "star.home", title: "Bookmarks", order: 30, component: BookmarksHome }],
   rowMarks: [{ id: "star.mark", icon: "star", label: "Bookmarked", when: isStarred }],
   pageCorner: [{ id: "star.button", component: StarButton }],
   sidebarFilterChoices: [{ id: "star.only", component: StarredOnlyChoice }],

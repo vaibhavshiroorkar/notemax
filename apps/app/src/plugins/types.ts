@@ -47,6 +47,8 @@ export interface Plugin {
   pageHeader?: PageAddon[];
   /** Extra sections in the left sidebar: between the notes and the trash, or above the notes with an order below 0. */
   sidebarSections?: SidebarSection[];
+  /** Cards on the Home page, like recent pages or bookmarks. People turn them on and off and order them there. */
+  homeSections?: HomeSection[];
   /** Small buttons at the top left, beside Home, for places as big as the window, like the community. */
   switcherButtons?: SwitcherButton[];
   /**
@@ -83,6 +85,17 @@ export interface Plugin {
   sidebarFooter?: SidebarFooterItem[];
   /** Runs once when the main window has opened the workspace, like starting sync. */
   start?(app: AppContext): void;
+}
+
+/** A card on the Home page. It may draw nothing while it has nothing to show. */
+export interface HomeSection {
+  id: string;
+  title: string;
+  /** Where it goes until someone orders the cards themselves. Low first. */
+  order: number;
+  /** Shown only in the wide layout's full width, like the workspace cards. */
+  wide?: boolean;
+  component: ComponentType<{ app: AppContext }>;
 }
 
 export interface SidebarFooterItem {

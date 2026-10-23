@@ -159,3 +159,130 @@
 .workspace-home {
   flex-shrink: 0;
 }
+
+/* Home: cards in one column or two, each with its heading. */
+.home-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.home-date {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.home-page[data-columns="2"] .home-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.home-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.home-page[data-columns="2"] .home-card[data-wide] {
+  grid-column: 1 / -1;
+}
+
+.home-card .home-heading {
+  margin: 0 0 10px;
+}
+
+.home-card .home-intro {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.home-card .home-actions {
+  margin: 0;
+}
+
+.home-card-action {
+  margin-bottom: 8px;
+}
+
+.home-list-note {
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.home-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.home-customize {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+}
+
+.home-customize-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.home-customize-head strong {
+  margin-right: auto;
+}
+
+.home-customize-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-customize-list li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+}
+
+.home-customize-list label {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-customize-list li[data-off] span {
+  color: var(--muted);
+}
+
+/* A phone has room for one column, whatever was chosen. */
+@media (max-width: 700px) {
+  .home-page[data-columns="2"] .home-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.home-top .button,
+.home-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
