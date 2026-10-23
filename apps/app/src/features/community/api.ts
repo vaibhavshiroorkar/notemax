@@ -198,3 +198,10 @@ export async function unpublish(sourceId: string) {
   const { error } = await (await client()).from("posts").delete().eq("author", me).eq("source_id", sourceId);
   if (error) fail(error);
 }
+
+/** The newest people to join, for the "Writers" list beside the feed. */
+export async function newestPeople(limit = 6): Promise<Profile[]> {
+  const { data, error } = await (await client()).from("profiles").select("*").order("created_at", { ascending: false }).limit(limit);
+  if (error) fail(error);
+  return (data ?? []) as Profile[];
+}

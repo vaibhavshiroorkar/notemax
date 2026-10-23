@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.62.0 (2026-10-23)
+
+- The Community page opens on a welcome and the latest posts instead of a search box. The newest post is featured, and each card shows its reading time and whether it is a book.
+- A side column shows you (or a way to sign in or pick a username), how to post, popular tags and writers to follow. On narrow screens it follows the feed.
+- Search is a button at the top that opens a box when you need it.
+
 ## 0.61.0 (2026-10-23)
 
 - Bookmarks: starred pages sit in a Bookmarks section below your notes, and show a filled star there and in the notes list.

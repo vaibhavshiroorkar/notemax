@@ -3,7 +3,7 @@ import { toHtml } from "@/features/export/serialize";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { safeHtml } from "@/ui/safeHtml";
-import { feed, follow, myId, myProfile, profilePage, readPost, searchPeople, searchPosts, type Post, type Profile, type ProfilePage } from "./api";
+import { feed, follow, myId, myProfile, newestPeople, profilePage, readPost, searchPeople, searchPosts, type Post, type Profile, type ProfilePage } from "./api";
 import { ProfileForm } from "./ProfileForm";
 
 /** Where the community screen is: a place and what it needs to show it. */
@@ -11,6 +11,8 @@ export type Place = { view: "feed"; following: boolean } | { view: "search"; wor
 
 const when = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
+/** Minutes to read, at 230 words a minute, like the status bar. */
+const readTime = (words: number) => `${Math.max(1, Math.round(words / 230))} min read`;
 const nameOf = (profile?: Profile) => profile?.display_name || profile?.username || "Someone";
 // Readers have none of the author's pages or pictures; the snapshot already holds what shows.
 const NOTHING = { title: () => null, image: () => null };
@@ -58,23 +60,27 @@ function Byline({ profile, go, children }: { profile?: Profile; go(place: Place)
   );
 }
 
-function PostList({ posts, go, empty }: { posts: Post[]; go(place: Place): void; empty: ReactNode }) {
-  if (!posts.length) return <p className="community-empty">{empty}</p>;
+function PostList({ posts, go, empty, featureFirst = false }: { posts: Post[]; go(place: Place): void; empty: ReactNode; featureFirst?: boolean }) {
+  if (!posts.length) return <>{empty}</>;
   return (
     <ul className="community-posts">
-      {posts.map((post) => (
-        <li key={post.id} className="community-card">
+      {posts.map((post, i) => (
+        <li key={post.id} className="community-card" data-featured={(featureFirst && i === 0) || undefined}>
           <Byline profile={post.profile} go={go}>
             <span className="community-meta">{when(post.published_at)}</span>
           </Byline>
           <button className="community-card-open" onClick={() => go({ view: "post", id: post.id })}>
-            <strong className="community-card-title">
-              {post.kind === "book" && <Icon name="book" />}
-              {post.title}
-            </strong>
+            {featureFirst && i === 0 && <span className="community-kicker">Newest</span>}
+            <strong className="community-card-title">{post.title}</strong>
             {post.summary && <span className="community-summary">{post.summary}</span>}
             <span className="community-meta">
-              {plural(post.words, "word")}
+              {post.kind === "book" && (
+                <span className="community-badge">
+                  <Icon name="book" />
+                  Book
+                </span>
+              )}
+              {readTime(post.words)}
               {post.tags.map((tag) => (
                 <span key={tag} className="community-tag">
                   #{tag}
@@ -94,26 +100,122 @@ function Status({ error, loading, children }: { error?: string; loading: boolean
   return <>{children}</>;
 }
 
-function FeedView({ following, go, signedIn }: { following: boolean; go(place: Place): void; signedIn: boolean }) {
-  const { data, error, loading } = useLoad(() => feed(following), [following]);
+/** Where you are in the community, and the way to start: sign in, pick a username, or your profile. */
+function YouCard({ app, me, mine, go }: { app: AppContext; me: string | null; mine: Profile | null; go(place: Place): void }) {
+  if (!me)
+    return (
+      <section className="community-box">
+        <h2>Join in</h2>
+        <p>Reading needs no account. Sign in to post your own notes and books and to follow writers.</p>
+        <button className="button button-primary" onClick={() => app.openOverlay("account")}>
+          Sign in to post
+        </button>
+      </section>
+    );
+  if (!mine)
+    return (
+      <section className="community-box">
+        <h2>Pick a username</h2>
+        <p>It shows on your posts and is how people find you.</p>
+        <button className="button button-primary" onClick={() => go({ view: "me" })}>
+          Pick a username
+        </button>
+      </section>
+    );
   return (
-    <>
-      <div className="community-tabs" role="tablist" aria-label="Feed">
-        <button role="tab" aria-selected={!following} onClick={() => go({ view: "feed", following: false })}>
-          Everyone
-        </button>
-        <button role="tab" aria-selected={following} disabled={!signedIn} title={signedIn ? undefined : "Sign in to follow people"} onClick={() => go({ view: "feed", following: true })}>
-          Following
-        </button>
+    <section className="community-box community-you">
+      <button className="community-person" onClick={() => go({ view: "profile", username: mine.username })}>
+        <Avatar profile={mine} size={40} />
+        <span className="community-you-text">
+          <strong>{nameOf(mine)}</strong>
+          <span className="community-handle">@{mine.username}</span>
+        </span>
+      </button>
+      <p className="community-meta">To post, open a note or book's menu (... or right click) and pick Post to community.</p>
+    </section>
+  );
+}
+
+/** The most used tags in what is shown, most used first. */
+function topTags(posts: Post[], limit = 12): string[] {
+  const counts = new Map<string, number>();
+  for (const post of posts) for (const tag of post.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  return [...counts].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([tag]) => tag);
+}
+
+function FeedView({ following, go, app, me, mine }: { following: boolean; go(place: Place): void; app: AppContext; me: string | null; mine: Profile | null }) {
+  const { data, error, loading } = useLoad(() => feed(following), [following]);
+  const writers = useLoad(() => newestPeople(), []);
+  const posts = data ?? [];
+  const tags = topTags(posts);
+  return (
+    <div className="community-home">
+      <section className="community-hero">
+        <h1>Community</h1>
+        <p>Notes and books people chose to share. Read, follow the writers you like, and post your own.</p>
+      </section>
+      <div className="community-columns">
+        <div className="community-main">
+          <div className="community-tabs" role="tablist" aria-label="Feed">
+            <button role="tab" aria-selected={!following} onClick={() => go({ view: "feed", following: false })}>
+              Latest
+            </button>
+            <button role="tab" aria-selected={following} disabled={!me} title={me ? undefined : "Sign in to follow people"} onClick={() => go({ view: "feed", following: true })}>
+              Following
+            </button>
+          </div>
+          <Status error={error} loading={loading && !data}>
+            <PostList
+              posts={posts}
+              go={go}
+              featureFirst={!following}
+              empty={
+                following ? (
+                  <p className="community-empty">Nobody you follow has posted yet. Writers to follow are on the side, or search for someone.</p>
+                ) : (
+                  <section className="community-first">
+                    <Icon name="people" />
+                    <h2>Nothing here yet</h2>
+                    <p>Open a note or book, then its menu (... or right click), and pick Post to community to be the first.</p>
+                  </section>
+                )
+              }
+            />
+          </Status>
+        </div>
+        <aside className="community-aside" aria-label="About the community">
+          <YouCard app={app} me={me} mine={mine} go={go} />
+          {tags.length > 0 && (
+            <section className="community-box">
+              <h2>Popular tags</h2>
+              <div className="community-chips">
+                {tags.map((tag) => (
+                  <button key={tag} className="community-tag community-chip" onClick={() => go({ view: "search", words: tag })}>
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+          {!!writers.data?.length && (
+            <section className="community-box">
+              <h2>Writers</h2>
+              <ul className="community-people">
+                {writers.data.map((person) => (
+                  <li key={person.id}>
+                    <button className="community-person" onClick={() => go({ view: "profile", username: person.username })}>
+                      <Avatar profile={person} />
+                      <span>{nameOf(person)}</span>
+                      <span className="community-handle">@{person.username}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
       </div>
-      <Status error={error} loading={loading && !data}>
-        <PostList
-          posts={data ?? []}
-          go={go}
-          empty={following ? "Nobody you follow has posted yet. Find people with the search above." : "Nothing here yet. Post a note or book from its menu (Post to community) to be the first."}
-        />
-      </Status>
-    </>
+    </div>
   );
 }
 
@@ -142,7 +244,7 @@ function SearchView({ words, go }: { words: string; go(place: Place): void }) {
       </Status>
       <h2 className="community-heading">Posts</h2>
       <Status error={posts.error} loading={posts.loading && !posts.data}>
-        <PostList posts={posts.data ?? []} go={go} empty={`No posts match "${words}".`} />
+        <PostList posts={posts.data ?? []} go={go} empty={<p className="community-empty">No posts match "{words}".</p>} />
       </Status>
     </>
   );
@@ -192,7 +294,7 @@ function ProfileView({ username, go, me }: { username: string; go(place: Place):
         )}
       </header>
       {problem && <p className="community-error">{problem}</p>}
-      <PostList posts={posts} go={go} empty={profile.id === me ? "You have not posted yet." : "No posts yet."} />
+      <PostList posts={posts} go={go} empty={<p className="community-empty">{profile.id === me ? "You have not posted yet." : "No posts yet."}</p>} />
     </>
   );
 }
@@ -251,6 +353,7 @@ export function CommunityPage({ app, options }: { app: AppContext; options: Reco
   const go = useCallback((next: Place) => setTrail((old) => [...old, next]), []);
   const back = () => setTrail((old) => (old.length > 1 ? old.slice(0, -1) : old));
   const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
   const [me, setMe] = useState<string | null>(null);
   const [mine, setMine] = useState<Profile | null>(null);
   useEffect(() => {
@@ -265,19 +368,36 @@ export function CommunityPage({ app, options }: { app: AppContext; options: Reco
           <Icon name="arrow-left" />
         </button>
         <button className="community-title" onClick={() => go({ view: "feed", following: false })}>
+          <Icon name="people" />
           Community
         </button>
-        <form
-          className="community-search"
-          role="search"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (query.trim()) go({ view: "search", words: query.trim() });
-          }}
-        >
-          <Icon name="search" />
-          <input type="search" placeholder="Search posts and people" aria-label="Search the community" value={query} onChange={(event) => setQuery(event.target.value)} />
-        </form>
+        <span className="community-top-space" />
+        {searching ? (
+          <form
+            className="community-search"
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (query.trim()) go({ view: "search", words: query.trim() });
+            }}
+          >
+            <Icon name="search" />
+            <input
+              type="search"
+              placeholder="Search posts and people"
+              aria-label="Search the community"
+              autoFocus
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => event.key === "Escape" && (setSearching(false), setQuery(""))}
+              onBlur={() => !query.trim() && setSearching(false)}
+            />
+          </form>
+        ) : (
+          <button className="icon-button" aria-label="Search the community" title="Search" onClick={() => setSearching(true)}>
+            <Icon name="search" />
+          </button>
+        )}
         {me ? (
           <button className="community-person" onClick={() => go(mine ? { view: "profile", username: mine.username } : { view: "me" })}>
             <Avatar profile={mine ?? undefined} />
@@ -290,7 +410,7 @@ export function CommunityPage({ app, options }: { app: AppContext; options: Reco
         )}
       </header>
       <main className="community-page">
-        {place.view === "feed" && <FeedView following={place.following} go={go} signedIn={!!me} />}
+        {place.view === "feed" && <FeedView following={place.following} go={go} app={app} me={me} mine={mine} />}
         {place.view === "search" && <SearchView key={place.words} words={place.words} go={go} />}
         {place.view === "profile" && <ProfileView key={place.username} username={place.username} go={go} me={me} />}
         {place.view === "post" && <PostView key={place.id} id={place.id} go={go} />}
