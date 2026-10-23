@@ -2,6 +2,7 @@ import { accountsEnabled } from "@/features/account/config";
 import type { Plugin } from "@/plugins/types";
 import { CommunityPage } from "./CommunityPage";
 import { PostDialog } from "./PostDialog";
+import { ProfileCard } from "./ProfileCard";
 import "./community.css";
 
 export const communityPlugin: Plugin = {
@@ -10,6 +11,7 @@ export const communityPlugin: Plugin = {
   description: "Post notes and books for everyone to read, follow people, and search what they post",
   // Needs the Notemax server, so it is off on a device set up to work offline.
   online: true,
+  settings: [{ id: "community.profile", order: 42, group: "Account and sync", title: "Community profile", icon: "people", keywords: ["username", "name", "bio", "handle"], when: () => accountsEnabled, component: ProfileCard }],
   switcherButtons: [{ id: "community.open", label: "Community", icon: "people", when: () => accountsEnabled, run: (app) => app.openView("community") }],
   views: [{ id: "community", title: "Community", icon: "people", component: CommunityPage }],
   overlays: [{ id: "community.post", component: PostDialog }],

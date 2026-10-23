@@ -17,6 +17,7 @@ import {
 } from "@notemax/core";
 import { WORKSPACES_CHANNEL, getRawStore, getSharedStore } from "@/platform/platform";
 import { currentWorkspace, setPref } from "@/platform/prefs";
+import { saveTabsNow } from "@/app/tabs";
 import { createStore } from "@/platform/store";
 
 /** Every workspace, kept current as the list changes here or on another device. */
@@ -51,6 +52,8 @@ const change = async (edit: (doc: LocalDoc["doc"]) => void) => {
 /** Shows another workspace. The window starts over in it, with that workspace's own tabs. */
 export function switchTo(id: string) {
   if (id === currentWorkspace) return;
+  // While the prefs still point at this workspace, so its tabs are kept under its name.
+  saveTabsNow();
   setPref("workspace", id);
   // Without the page in the address: it belongs to the workspace being left.
   location.assign(location.pathname);

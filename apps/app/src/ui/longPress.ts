@@ -16,4 +16,10 @@ export function leaveLongPressToThePhone() {
   window.addEventListener("touchstart", () => (lastTouch = performance.now()), { capture: true, passive: true });
   // Before any handler of the app sees it, and without preventDefault, so the phone still does its part.
   window.addEventListener("contextmenu", (event) => fromTouch() && event.stopImmediatePropagation(), true);
+  // A finger held on chosen text in a note would drag it, with a drop line that
+  // jumps as the finger moves, instead of moving the phone's selection handles.
+  // Text moves by cut and paste there. Sidebar rows still drag: they are outside notes.
+  window.addEventListener("dragstart", (event) => {
+    if (fromTouch() && event.target instanceof Node && (event.target instanceof Element ? event.target : event.target.parentElement)?.closest(".ProseMirror")) event.preventDefault();
+  }, true);
 }

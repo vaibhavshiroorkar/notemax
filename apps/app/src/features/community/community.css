@@ -467,3 +467,18 @@
     display: none;
   }
 }
+
+/* Your username in the account window and Settings, with a way to change it. */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.profile-card-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}

@@ -4,6 +4,8 @@ import { accountView, watchAccount } from "@/features/account/session";
 import type { AppContext } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
+import { ProfileCard } from "@/features/community/ProfileCard";
+import { registry } from "@/plugins/registry";
 import { SyncSection } from "./SyncSection";
 
 /**
@@ -25,6 +27,12 @@ export function AccountDialog({ app, options, onClose }: { app: AppContext; opti
         </button>
       </header>
       <AccountSection accountError={typeof options.error === "string" ? options.error : undefined} compact />
+      {account.state === "in" && registry.isOn("community") && (
+        <section className="account-dialog-sync">
+          <h3>Community profile</h3>
+          <ProfileCard />
+        </section>
+      )}
       {account.state === "in" && (
         <section className="account-dialog-sync">
           <h3>Sync</h3>

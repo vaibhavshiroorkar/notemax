@@ -145,10 +145,21 @@ function tidy(value: Layout): Layout {
 export const layout = createStore<Layout>(fresh(null));
 
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
+let unsaved = false;
 layout.subscribe(() => {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => setPref("tabs", JSON.stringify(layout.get())), 300);
+  unsaved = true;
+  saveTimer = setTimeout(saveTabsNow, 300);
 });
+
+/** Saves the tabs at once, for when the window is about to start over, like switching workspaces, or close. */
+export function saveTabsNow() {
+  clearTimeout(saveTimer);
+  if (!unsaved) return;
+  unsaved = false;
+  setPref("tabs", JSON.stringify(layout.get()));
+}
+addEventListener("pagehide", saveTabsNow);
 
 /** Loads the saved tabs. `fallbackPage` opens when there are none, like on first start. */
 export function loadTabs(fallbackPage: string | null) {

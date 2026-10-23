@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.66.0 (2026-10-24)
+
+- Your community username is in the account window and in Settings (Community profile): pick one there, or change it and your name and bio.
+- On a phone, holding a finger on text in a note selects it with the phone's own handles instead of starting a drag with a jumping drop line. Text moves by cut and paste there; a mouse still drags.
+- Each workspace's tabs are saved the moment you switch away or close the window, so they all come back when you return.
+
 ## 0.65.0 (2026-10-24)
 
 - A list started with "1) " keeps its parenthesis: it counts 1), 2), 3) in the note, in downloads and in community posts, instead of turning into 1.
