@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { renameNode, type Tree } from "@notemax/core";
 import type * as Y from "yjs";
 import { inlineSubtopics } from "./reading";
+import { BookItemMenu } from "./BookItemMenu";
 
 /**
  * A chapter set to show its subtopics in its own page: each one follows the
@@ -31,6 +32,7 @@ export function InlineSubtopics({
           <header className="inline-subtopic-title">
             <span className="chapter-number">{label}</span>
             <input value={item.title} placeholder="Untitled" aria-label={`Title of ${label}`} onChange={(event) => renameNode(workspaceDoc, item.id, event.target.value)} />
+            <BookItemMenu node={item} />
           </header>
           {item.kind === "note" ? (
             renderNote(item.id)

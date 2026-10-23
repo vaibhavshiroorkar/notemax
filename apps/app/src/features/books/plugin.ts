@@ -1,3 +1,4 @@
+import { ROOT, moveNode } from "@notemax/core";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { BookPane } from "./BookPane";
 import { BookPanel } from "./BookPanel";
@@ -27,6 +28,27 @@ export const booksPlugin: Plugin = {
   pageFooter: [{ id: "books.steps", kinds: ["note"], component: ChapterFooter }],
   pageSettings: [{ id: "books.subtopics", kinds: ["note"], component: SubtopicSetting }],
   settings: [{ id: "books", order: 30, group: "Writing", title: "Books", icon: "book", keywords: ["chapters", "writing"] }],
+  contextMenu: [
+    {
+      id: "books.move-out",
+      title: "Move out of book",
+      group: "edit",
+      icon: "arrow-left",
+      targets: ["page"],
+      when(target, app) {
+        if (target.type !== "page") return false;
+        const book = bookOf(app.tree, target.node.id);
+        return !!book && book.id !== target.node.id;
+      },
+      run(target, app) {
+        if (target.type !== "page") return;
+        const book = bookOf(app.tree, target.node.id);
+        if (!book || book.id === target.node.id) return;
+        moveNode(app.doc, target.node.id, ROOT, Infinity);
+        app.notify("Moved out of book to Notes");
+      },
+    },
+  ],
   options: [
     {
       id: "wordCount",

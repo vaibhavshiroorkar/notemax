@@ -4,6 +4,7 @@ import { endDrag, placementFor, startDrag, useDragging, type DropTarget, type Pl
 import type { AppContext } from "@/plugins/types";
 import { dragRowMenu, pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
+import { BookItemMenu } from "./BookItemMenu";
 import { bookOf, chapterOf, readingOrder, subtopicsOf } from "./reading";
 import "./books.css";
 
@@ -106,9 +107,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                       <Icon name="plus" />
                     </button>
                   )}
-                  <button className="icon-button row-action" aria-label={`More for ${title}`} aria-haspopup="menu" title="More" onClick={pageMenu(tree.byId.get(chapter.id))}>
-                    <Icon name="more" />
-                  </button>
+                  <BookItemMenu node={chapter} className="row-action" />
                 </li>
                 {openChapter?.id === chapter.id &&
                   number !== null &&
@@ -124,6 +123,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                         <span className="chapter-number">{sub.label}</span>
                         <span className="chapter-title">{sub.item.title || "Untitled"}</span>
                       </button>
+                      <BookItemMenu node={sub.item} className="row-action" />
                     </li>
                   ))}
               </Fragment>

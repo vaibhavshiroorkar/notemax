@@ -5,6 +5,8 @@ import { PageHeader } from "@/plugins/PageHeader";
 import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { Segmented } from "@/ui/Segmented";
+import { pageMenu } from "@/ui/ContextMenu";
+import { BookItemMenu } from "./BookItemMenu";
 import { WholeBook } from "./WholeBook";
 import { allStops, bookWords, chaptersIn, readingOrder, subtopicsOf } from "./reading";
 import { useWordBackfill } from "./useWordBackfill";
@@ -70,7 +72,7 @@ export function BookPane(props: PageProps) {
       ) : entries.length > 0 ? (
         <ol className="chapter-list" aria-label="Chapters">
           {entries.map(({ item, depth, number }) => [
-            <li key={item.id} style={{ "--depth": depth } as CSSProperties}>
+            <li key={item.id} style={{ "--depth": depth } as CSSProperties} onContextMenu={pageMenu(item)}>
               <button className="chapter" data-part={number === null || undefined} onClick={() => onSelect(item.id)}>
                 <span className="chapter-number">{number ?? <Icon name="book" />}</span>
                 <span className="chapter-title">{item.title || (number === null ? "Untitled part" : "Untitled")}</span>
@@ -78,14 +80,16 @@ export function BookPane(props: PageProps) {
                   {item.kind === "board" ? "Board" : item.kind === "note" && item.words !== null ? plural(item.words, "word") : ""}
                 </span>
               </button>
+              <BookItemMenu node={item} />
             </li>,
             ...(number === null ? [] : subtopicsOf(item, String(number))).map((sub) => (
-              <li key={sub.item.id} style={{ "--depth": depth + sub.depth } as CSSProperties}>
+              <li key={sub.item.id} style={{ "--depth": depth + sub.depth } as CSSProperties} onContextMenu={pageMenu(sub.item)}>
                 <button className="chapter" onClick={() => onSelect(sub.item.id)}>
                   <span className="chapter-number">{sub.label}</span>
                   <span className="chapter-title">{sub.item.title || "Untitled"}</span>
                   <span className="chapter-words">{sub.item.kind === "note" && sub.item.words !== null ? plural(sub.item.words, "word") : ""}</span>
                 </button>
+                <BookItemMenu node={sub.item} />
               </li>
             )),
           ])}

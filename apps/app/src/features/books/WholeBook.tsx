@@ -4,6 +4,7 @@ import { InlineNote } from "@/features/editor/InlineNote";
 import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { LazyMount } from "@/ui/LazyMount";
+import { BookItemMenu } from "./BookItemMenu";
 import { readingOrder, subtopicsOf } from "./reading";
 
 /** One piece of the book: its number, a title to edit in place, and its text. */
@@ -18,6 +19,7 @@ function Piece({ item, label, depth, part, props }: { item: TreeItem; label: str
         <button className="icon-button" aria-label={`Open ${item.title || untitled} on its own page`} title="Open on its own page" onClick={() => onSelect(item.id)}>
           <Icon name="arrow-right" />
         </button>
+        <BookItemMenu node={item} />
       </header>
       {item.kind === "note" || item.kind === "book" ? (
         <LazyMount>

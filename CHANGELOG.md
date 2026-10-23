@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.60.0 (2026-10-23)
+
+- Three-dot menus beside chapters, parts and subtopics on book pages, in Whole book and in the chapter sidebar.
+- Move out of book returns a page to Notes with its text and children intact. Existing page actions are available from the same menu.
+
 ## 0.59.0 (2026-10-23)
 
 - Community: a people button beside Home opens it over the whole window. Read everyone's posts, or only the people you follow, and search posts and people.
