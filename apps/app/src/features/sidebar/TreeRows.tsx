@@ -203,11 +203,14 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
         {registry
           .rowMarks()
           .filter((mark) => mark.when(item))
-          .map((mark) => (
-            <span key={mark.id} className="row-mark" data-mark={mark.id} role="img" title={mark.label} aria-label={mark.label}>
-              <Icon name={mark.icon} />
-            </span>
-          ))}
+          .map((mark) => {
+            const label = typeof mark.label === "string" ? mark.label : mark.label(item);
+            return (
+              <span key={mark.id} className="row-mark" data-mark={mark.id} role="img" title={label} aria-label={label}>
+                <Icon name={mark.icon} />
+              </span>
+            );
+          })}
         {item.kind === "book" && item.children.length > 0 && (
           <span className="row-count" title={`${item.children.length} ${item.children.length === 1 ? "chapter" : "chapters"}`}>
             {item.children.length}

@@ -1,6 +1,6 @@
 import type { Plugin } from "@/plugins/types";
 import { SIDEBAR, SIDE_PANEL, sidePanelWidth, sidebarWidth } from "@/ui/layout";
-import { PAGE_MENU } from "./menu";
+import { PAGE_MENU, SORT_CHOICES } from "./menu";
 import { titleQuery } from "./state";
 
 /** True when every word of the query is somewhere in the title, in any case. */
@@ -17,6 +17,15 @@ export const sidebarPlugin: Plugin = {
   name: "Sidebar",
   required: true,
   kinds: [{ kind: "folder", label: "New folder", icon: "folder" }],
+  // A folder sorted by title or date says so on its row, so its order is no surprise.
+  rowMarks: [
+    {
+      id: "sidebar.sorted",
+      icon: "sort",
+      label: (node) => `Sorted: ${SORT_CHOICES.find((choice) => choice.value === node.props.sort)?.title ?? "by hand"}. Change it from Sort by in its menu.`,
+      when: (node) => node.kind !== "book" && SORT_CHOICES.some((choice) => choice.value !== null && choice.value === node.props.sort),
+    },
+  ],
   contextMenu: PAGE_MENU,
   useSidebarFilter() {
     const query = titleQuery.use()?.trim();

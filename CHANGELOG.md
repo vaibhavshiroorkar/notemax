@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.69.0 (2026-10-24)
+
+- Sort by sits right on a folder's menu: title A to Z or Z to A, newest or oldest first, or the order you drag. A sorted folder shows a small mark on its row that says how. New folders keep the order you drag; the starter Journal sorts A to Z.
+- The community rules migration can run again safely: each part replaces what an earlier run made.
+
 ## 0.68.0 (2026-10-24)
 
 - Home is a page of cards: Quick start, Recent pages with when each was edited, Bookmarks, Books with their chapters and words, Journal with today's note and the last few days, and Workspaces.

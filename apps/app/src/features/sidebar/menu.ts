@@ -26,7 +26,7 @@ const copy = (app: AppContext, text: string, what: string) =>
   );
 
 /** What a right click on a page in a list, or empty space in the sidebar, offers. */
-const SORT_CHOICES: { value: SortOrder | null; title: string }[] = [
+export const SORT_CHOICES: { value: SortOrder | null; title: string }[] = [
   { value: null, title: "The order you drag" },
   { value: "title", title: "Title, A to Z" },
   { value: "title-desc", title: "Title, Z to A" },
@@ -34,13 +34,12 @@ const SORT_CHOICES: { value: SortOrder | null; title: string }[] = [
   { value: "oldest", title: "Oldest first" },
 ];
 
-/** How a folder or page orders what is in it. Books keep their reading order. The current choice shows greyed out. */
+/** How a folder or page orders what is in it, on its menu where it is easy to find. Books keep their reading order. The current choice shows greyed out. */
 const SORT_MENU: ContextMenuItem = {
   id: "page.sort",
-  inside: "options",
-  title: "Sort inside by",
+  title: "Sort by",
   group: "layout",
-  icon: "filter",
+  icon: "sort",
   targets: ["page"],
   when: (target, app) => {
     const node = nodeOf(target);

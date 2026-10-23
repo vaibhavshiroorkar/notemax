@@ -270,8 +270,8 @@ export interface SwitcherButton {
 export interface RowMark {
   id: string;
   icon: IconName;
-  /** The tooltip and the words a screen reader says. */
-  label: string;
+  /** The tooltip and the words a screen reader says, the same for every row or made for each. */
+  label: string | ((node: TreeNode) => string);
   when(node: TreeNode): boolean;
 }
 
