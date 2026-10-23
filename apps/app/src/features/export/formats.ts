@@ -1,6 +1,6 @@
 import type { Asset, TreeItem, TreeNode } from "@notemax/core";
 import type { AppContext, Exporter } from "@/plugins/types";
-import { readingOrder, subtopicsOf } from "@/features/books/reading";
+import { chapterStops, subtopicsOf } from "@/features/books/reading";
 import { registry } from "@/plugins/registry";
 import { dataUrl, extOf, isWritten, loadBody, loadPictures, resolver } from "./content";
 // The Word and EPUB writers load on the first download in those formats, not at start.
@@ -27,12 +27,8 @@ async function boardPicture(id: string, app: AppContext): Promise<Asset | null> 
 }
 
 /**
- * A page's text in parts: one for a note, one per chapter for a book, with
- * its parts as headings. `made` holds the pictures drawn for boards.
- */
-/**
  * A page as titled parts in reading order: a note is one part; a book is its
- * description, then its parts, chapters and subtopics. Boards become pictures,
+ * description, then its chapters and subtopics. Boards become pictures,
  * unless `boards` is false, as for a community post, which cannot carry them.
  */
 export async function partsOf(node: TreeNode, app: AppContext, { boards = true } = {}): Promise<{ title: string; parts: Part[]; made: Map<string, Asset> }> {
@@ -46,8 +42,7 @@ export async function partsOf(node: TreeNode, app: AppContext, { boards = true }
   if (isWritten(intro)) parts.push({ body: intro });
   const partOf = async (item: TreeItem, title: string, level: number) => {
     const part: Part = { title, body: EMPTY, level };
-    // A part (a book inside the book) has a description of its own, like the book.
-    if (item.kind === "note" || item.kind === "book") part.body = await loadBody(item.id);
+    if (item.kind === "note") part.body = await loadBody(item.id);
     else if (item.kind === "board" && boards) {
       const picture = await boardPicture(item.id, app);
       if (picture) {
@@ -58,15 +53,15 @@ export async function partsOf(node: TreeNode, app: AppContext, { boards = true }
     }
     return part;
   };
-  for (const { item, depth, number } of readingOrder(book)) {
-    parts.push(await partOf(item, item.title || (number === null ? "Untitled part" : "Untitled"), depth));
+  for (const { item, label } of chapterStops(book)) {
+    parts.push(await partOf(item, item.title || "Untitled", 0));
     // Subtopics follow their chapter, a heading level further in.
-    if (number !== null) for (const sub of subtopicsOf(item, String(number))) parts.push(await partOf(sub.item, sub.item.title || "Untitled", depth + sub.depth));
+    for (const sub of subtopicsOf(item, label)) parts.push(await partOf(sub.item, sub.item.title || "Untitled", sub.depth));
   }
   return { title, parts, made };
 }
 
-/** Markdown and HTML headings for a part: ## for a chapter of the book, ### inside a part, and so on. */
+/** Markdown and HTML headings for a part: ## for a chapter, ### for its subtopics, and so on. */
 const headingLevel = (part: Part) => Math.min(2 + (part.level ?? 0), 6);
 
 const text = (blob: string, type: string) => new Blob([blob], { type: `${type};charset=utf-8` });

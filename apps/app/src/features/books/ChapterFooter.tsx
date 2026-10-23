@@ -1,17 +1,17 @@
 import type { TreeNode } from "@notemax/core";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
-import { bookOf, readingStops, type Stop } from "./reading";
+import { bookOf, chapterStops, type Stop } from "./reading";
 
 const name = (stop: Stop) => stop.item.title || "Untitled";
 
-/** At the end of a chapter or subtopic: on to the next one, or back to the one before, each with an arrow pointing its way. */
+/** At the end of a chapter: on to the next one, or back to the one before, each with an arrow pointing its way. */
 export function ChapterFooter({ node, app }: { node: TreeNode; app: AppContext }) {
   const book = bookOf(app.tree, node.id);
   if (!book || book.id === node.id) return null;
-  const stops = readingStops(book);
+  const stops = chapterStops(book);
   const here = stops.findIndex((stop) => stop.item.id === node.id);
-  // A subtopic shown inside its chapter's page is read from there.
+  // A subtopic is read in its chapter's page, which has these steps at its end.
   if (here < 0) return null;
   const previous = stops[here - 1];
   const next = stops[here + 1];

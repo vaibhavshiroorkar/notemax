@@ -1,49 +1,29 @@
 import type { Tree } from "@notemax/core";
 import { Icon } from "@/ui/Icon";
-import { bookOf, chapterOf, chaptersIn, labelOf, readingStops } from "./reading";
+import { bookOf, chapterStops } from "./reading";
 
 /**
- * Shown above a chapter or subtopic: its book, its part if it has one, where it
- * sits in the book, and arrows to the chapter before and after. On a phone it
- * comes back with the top bar when scrolling up, so the way back is near.
+ * Shown above a chapter: its book, where it sits in the book, and arrows to
+ * the chapter before and after. On a phone it comes back with the top bar when
+ * scrolling up, so the way back is near.
  */
 export function ChapterNav({ tree, chapterId: id, onOpen }: { tree: Tree; chapterId: string; onOpen(id: string): void }) {
   const book = bookOf(tree, id);
-  const chapter = chapterOf(tree, id);
-  if (!book || !chapter) return null;
-  const chapters = chaptersIn(book);
-  const number = chapters.findIndex((c) => c.id === chapter.id) + 1;
-  const parent = tree.items.get(chapter.parentId);
-  const part = parent && parent.id !== book.id ? parent : undefined;
-  const stops = readingStops(book);
+  if (!book) return null;
+  const stops = chapterStops(book);
   const here = stops.findIndex((stop) => stop.item.id === id);
-  const previous = here > 0 ? stops[here - 1] : undefined;
-  const next = here >= 0 ? stops[here + 1] : undefined;
+  if (here < 0) return null;
+  const previous = stops[here - 1];
+  const next = stops[here + 1];
   return (
     <nav className="note-book" aria-label="Book">
       <button className="note-book-link" onClick={() => onOpen(book.id)}>
         <Icon name="book" />
         <span>{book.title || "Untitled book"}</span>
       </button>
-      {part && (
-        <button className="note-book-link" onClick={() => onOpen(part.id)}>
-          <span>{part.title || "Untitled part"}</span>
-        </button>
-      )}
-      {chapter.id === id ? (
-        <span>
-          Chapter {number} of {chapters.length}
-        </span>
-      ) : (
-        <>
-          <button className="note-book-link" onClick={() => onOpen(chapter.id)}>
-            <span>
-              {number}. {chapter.title || "Untitled"}
-            </span>
-          </button>
-          <span>{labelOf(tree, id)}</span>
-        </>
-      )}
+      <span>
+        Chapter {here + 1} of {stops.length}
+      </span>
       <span className="note-book-steps">
         <button
           className="icon-button"

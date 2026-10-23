@@ -1,13 +1,14 @@
 import type { CSSProperties, ReactNode } from "react";
-import { renameNode, type Tree } from "@notemax/core";
+import { createNode, renameNode, type Tree } from "@notemax/core";
 import type * as Y from "yjs";
-import { inlineSubtopics } from "./reading";
+import { Icon } from "@/ui/Icon";
+import { subtopicsIn } from "./reading";
 import { BookItemMenu } from "./BookItemMenu";
 
 /**
- * A chapter set to show its subtopics in its own page: each one follows the
- * chapter's text with its number and title, and its text can be edited right
- * there. Each stays a page of its own underneath, so switching back loses nothing.
+ * A chapter's subtopics, in the chapter's own page after its text: each with
+ * its number, a title and its text to edit right there, and a ... menu to
+ * move or delete it. The sidebar jumps to each one by its data-reveal.
  */
 export function InlineSubtopics({
   tree,
@@ -23,12 +24,11 @@ export function InlineSubtopics({
   renderNote(id: string): ReactNode;
   onOpen(id: string): void;
 }) {
-  const subtopics = inlineSubtopics(tree, chapterId);
-  if (!subtopics.length) return null;
+  const subtopics = subtopicsIn(tree, chapterId);
   return (
     <div className="inline-subtopics">
       {subtopics.map(({ item, label, depth }) => (
-        <section key={item.id} className="inline-subtopic" style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || "Untitled"}`}>
+        <section key={item.id} className="inline-subtopic" data-reveal={item.id} style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || "Untitled"}`}>
           <header className="inline-subtopic-title">
             <span className="chapter-number">{label}</span>
             <input value={item.title} placeholder="Untitled" aria-label={`Title of ${label}`} onChange={(event) => renameNode(workspaceDoc, item.id, event.target.value)} />
@@ -43,6 +43,10 @@ export function InlineSubtopics({
           )}
         </section>
       ))}
+      <button className="button add-subtopic" onClick={() => onOpen(createNode(workspaceDoc, "note", chapterId))}>
+        <Icon name="plus" />
+        <span>Add subtopic</span>
+      </button>
     </div>
   );
 }

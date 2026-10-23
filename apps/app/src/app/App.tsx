@@ -29,6 +29,7 @@ import { usePresence } from "@/ui/usePresence";
 import { useEdgeSwipe } from "./useEdgeSwipe";
 import { useHidingBars } from "./useHidingBars";
 import { RightSidebar } from "./RightSidebar";
+import { revealing, useReveal } from "./reveal";
 import { pageInAddress, showInAddress, startBrowserNavigation } from "./history";
 import { TabStrip } from "./TabStrip";
 import { SplitDivider } from "./SplitDivider";
@@ -190,9 +191,14 @@ export function App() {
     setSidePanelOpen(false);
   }, []);
 
+  // Read when opening, so select stays the same function for the link hub.
+  const treeNow = useRef(workspace.tree);
+  treeNow.current = workspace.tree;
   const select = useCallback(
     (id: string, where?: { newTab?: boolean; fromTrash?: boolean }) => {
-      openPage(id, { newTab: where?.newTab, options: where?.fromTrash ? { fromTrash: true } : undefined });
+      const host = !where?.fromTrash && treeNow.current ? registry.hostOf(treeNow.current, id) : undefined;
+      if (host) revealing.set(id);
+      openPage(host ?? id, { newTab: where?.newTab, options: where?.fromTrash ? { fromTrash: true } : undefined });
       clearOverlays();
     },
     [clearOverlays],
@@ -256,9 +262,13 @@ export function App() {
   // A new tab and a view, like the graph, have no page of the tree open.
   // A page opened from the trash stays open to be looked at. One trashed while open moves on.
   const lookingInTrash = (tree: Tree, id: string) => visit?.options?.fromTrash === true && tree.byId.has(id) && tree.byId.get(id)!.kind !== "folder";
+  // A tab saved on a subtopic, from before subtopics lived in their chapter's page.
+  const hostId = workspace.tree && selectedId ? registry.hostOf(workspace.tree, selectedId) : undefined;
   const activeId =
     workspace.tree && selectedId
-      ? isPage(workspace.tree, selectedId) || lookingInTrash(workspace.tree, selectedId)
+      ? hostId
+        ? hostId
+        : isPage(workspace.tree, selectedId) || lookingInTrash(workspace.tree, selectedId)
         ? selectedId
         : // The selected page was trashed or is gone: show the last page that is still around.
           // Read without watching: the list changes on every page opened, and only matters here when the tree changes.
@@ -267,8 +277,12 @@ export function App() {
   useEffect(() => {
     if (activeId) addRecent(activeId);
     // The tab shows what is really open, so its title and Back make sense.
-    if (activeId && selectedId && activeId !== selectedId) replacePage(activeId);
-  }, [activeId, selectedId]);
+    if (activeId && selectedId && activeId !== selectedId) {
+      if (hostId === activeId) revealing.set(selectedId);
+      replacePage(activeId);
+    }
+  }, [activeId, selectedId, hostId]);
+  useReveal();
 
   const showLeft = sidebarOpen && !focusMode;
   // A side opened by a swipe brings the hidden phone bar back, with its buttons.
@@ -393,7 +407,7 @@ export function App() {
       const Shown = registry.view(viewId(shown.page))?.component;
       return Shown ? <Shown app={app} options={shown.options ?? {}} /> : null;
     }
-    const node = tree.items.get(shown.page) ?? (shown.options?.fromTrash ? tree.byId.get(shown.page) : undefined);
+    const node = tree.items.get(registry.hostOf(tree, shown.page) ?? shown.page) ?? (shown.options?.fromTrash ? tree.byId.get(shown.page) : undefined);
     const Page = node && registry.pageView(node.kind)?.component;
     if (!node || !Page) return <p className="empty pane-empty">This page is gone.</p>;
     return (

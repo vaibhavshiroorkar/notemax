@@ -59,20 +59,21 @@ describe("workspace tree", () => {
     expect(() => createNode(doc, "note", "no-such-folder")).toThrow(/no page or folder/);
   });
 
-  it("lets a book hold chapters and parts but no folders, and a folder hold books", () => {
+  it("lets a book hold notes and boards but no books or folders", () => {
     const doc = new Y.Doc();
     const folder = createNode(doc, "folder", ROOT, "Writing");
     const book = createNode(doc, "book", folder, "My book");
     createNode(doc, "note", book, "Chapter 1");
     createNode(doc, "note", book, "Chapter 2");
     expect(() => createNode(doc, "folder", book)).toThrow(/cannot hold/);
-    const part = createNode(doc, "book", book, "Part two");
-    createNode(doc, "board", part, "Map");
+    expect(() => createNode(doc, "book", book)).toThrow(/cannot hold/);
+    createNode(doc, "board", book, "Map");
+    const other = createNode(doc, "book", folder, "Other book");
+    expect(() => moveNode(doc, other, book, 0)).toThrow(/cannot hold/);
 
     const shelf = readTree(doc).top[0];
     expect(shelf.children[0].kind).toBe("book");
-    expect(titles(shelf.children[0].children)).toEqual(["Chapter 1", "Chapter 2", "Part two"]);
-    expect(titles(shelf.children[0].children[2].children)).toEqual(["Map"]);
+    expect(titles(shelf.children[0].children)).toEqual(["Chapter 1", "Chapter 2", "Map"]);
   });
 
   it("trash hides a folder and its contents, restore brings them back", () => {
@@ -153,6 +154,32 @@ describe("workspace tree", () => {
 });
 
 describe("workspaces from before folders", () => {
+  it("shows an old nested book beside its parent without rewriting or losing its contents", () => {
+    const doc = new Y.Doc();
+    writeRaw(doc, "shelf", { kind: "folder", parentId: ROOT });
+    writeRaw(doc, "book", { kind: "book", parentId: "shelf" });
+    writeRaw(doc, "part", { kind: "book", parentId: "book", position: "a1" });
+    writeRaw(doc, "chapter", { kind: "note", parentId: "part" });
+
+    const tree = readTree(doc);
+    expect(titles(tree.items.get("shelf")!.children)).toEqual(["book", "part"]);
+    expect(titles(tree.items.get("part")!.children)).toEqual(["chapter"]);
+    expect(tree.byId.get("part")!.parentId).toBe("book");
+    expect(tree.items.get("part")!.parentId).toBe("shelf");
+  });
+
+  it("also lifts an old book out of a chapter", () => {
+    const doc = new Y.Doc();
+    writeRaw(doc, "book", { kind: "book", parentId: ROOT });
+    writeRaw(doc, "chapter", { kind: "note", parentId: "book" });
+    writeRaw(doc, "nested", { kind: "book", parentId: "chapter", position: "a1" });
+    writeRaw(doc, "text", { kind: "note", parentId: "nested" });
+    const tree = readTree(doc);
+    expect(titles(tree.top)).toEqual(["book", "nested"]);
+    expect(titles(tree.items.get("nested")!.children)).toEqual(["text"]);
+    expect(tree.items.get("chapter")!.children).toEqual([]);
+  });
+
   it("shows Inbox notes at the top level and keeps books", () => {
     const doc = new Y.Doc();
     writeRaw(doc, "idea", { kind: "note", parentId: "inbox", position: "a0" });

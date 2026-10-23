@@ -3,7 +3,7 @@ import type { Editor as TiptapEditor } from "@tiptap/react";
 import { WELCOME_ID, renameNode } from "@notemax/core";
 import { ChapterNav } from "@/features/books/ChapterNav";
 import { InlineSubtopics } from "@/features/books/InlineSubtopics";
-import { bookOf, inlineSubtopics } from "@/features/books/reading";
+import { bookOf, chapterOf, subtopicsIn } from "@/features/books/reading";
 import { useLocalDoc } from "@/data/useLocalDoc";
 import { useVersions } from "@/features/history/versions";
 import { useShare } from "@/features/share/useShare";
@@ -54,9 +54,9 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
   const roomForSheets = useRoomForSheets();
   // The note's own choice wins over the setting. A window too narrow for a sheet shows one long page.
   const chosen = node.props.layout === "pages" || node.props.layout === "infinite" ? node.props.layout : pagesByDefault ? "pages" : "infinite";
-  // A chapter showing its subtopics in its page is one long page: sheets would cut through them.
-  const together = registry.isOn("books") && inlineSubtopics(tree, node.id).length > 0;
-  const layout = roomForSheets && !together ? chosen : "infinite";
+  // A chapter holds its subtopics after its text. With some, it is one long page: sheets would cut through them.
+  const chapter = registry.isOn("books") && chapterOf(tree, node.id)?.id === node.id;
+  const layout = roomForSheets && !(chapter && subtopicsIn(tree, node.id).length > 0) ? chosen : "infinite";
   const paper = PAPER[paperSize.use()];
   const [pages, setPages] = useState(1);
   const editorRef = useRef<TiptapEditor | null>(null);
@@ -143,7 +143,7 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
           }}
         />
       )}
-      {local && together && (
+      {local && chapter && (
         <InlineSubtopics
           tree={tree}
           chapterId={node.id}

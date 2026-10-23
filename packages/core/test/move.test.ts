@@ -89,14 +89,41 @@ describe("moveNode", () => {
     expect(titles(tree.top[1].children[0].children)).toEqual(["Idea", "A"]);
   });
 
-  it("keeps folders out of books, but lets a book hold another as a part", () => {
+  it("keeps folders and books out of books", () => {
     const { doc, folder, sub } = setup();
     const book = createNode(doc, "book", ROOT, "Book");
     const other = createNode(doc, "book", ROOT, "Other book");
     const tree = readTree(doc);
     expect(canMove(tree, sub, book)).toMatch(/cannot hold a folder/);
-    expect(canMove(tree, other, book)).toBeNull();
+    expect(canMove(tree, other, book)).toMatch(/cannot hold a book/);
     expect(canMove(tree, book, folder)).toBeNull();
+  });
+
+  it("keeps books out of chapters, including books inside a moved note", () => {
+    const doc = new Y.Doc();
+    const book = createNode(doc, "book", ROOT, "Book");
+    const chapter = createNode(doc, "note", book, "Chapter");
+    const note = createNode(doc, "note", ROOT, "Note");
+    const nested = createNode(doc, "book", note, "Other book");
+    const tree = readTree(doc);
+    expect(() => createNode(doc, "book", chapter)).toThrow(/cannot hold a book/);
+    expect(canMove(tree, nested, chapter)).toMatch(/cannot hold a book/);
+    expect(canMove(tree, note, book)).toMatch(/cannot hold a book/);
+    expect(canMove(tree, note, chapter)).toMatch(/cannot hold a book/);
+  });
+
+  it("keeps folders out of chapters, and shows an old one beside its book", () => {
+    const doc = new Y.Doc();
+    const book = createNode(doc, "book", ROOT, "Book");
+    const chapter = createNode(doc, "note", book, "Chapter");
+    const folder = createNode(doc, "folder", ROOT, "Folder");
+    expect(() => createNode(doc, "folder", chapter)).toThrow(/cannot hold a folder/);
+    expect(canMove(readTree(doc), folder, chapter)).toMatch(/cannot hold a folder/);
+    // Written before the rule, straight into the data.
+    doc.getMap<Y.Map<unknown>>("nodes").get(folder)!.set("parentId", chapter);
+    const tree = readTree(doc);
+    expect(titles(tree.top)).toEqual(["Book", "Folder"]);
+    expect(tree.items.get(chapter)!.children).toEqual([]);
   });
 
   it("refuses moving into a trashed folder", () => {

@@ -61,15 +61,7 @@
   padding-left: calc(var(--depth, 0) * 24px);
 }
 
-.chapter[data-part] .chapter-title {
-  font-weight: 600;
-}
 
-.chapter[data-part] .chapter-number svg {
-  width: 14px;
-  height: 14px;
-  vertical-align: -2px;
-}
 
 .chapter:hover {
   background: var(--hover);
@@ -158,14 +150,7 @@
   padding-left: calc(var(--depth, 0) * 16px);
 }
 
-.book-panel-chapters .row[data-part] .chapter-title {
-  font-weight: 600;
-}
 
-.book-panel-chapters .row[data-part] .chapter-number svg {
-  width: 12px;
-  height: 12px;
-}
 
 .chapter-row {
   display: flex;
@@ -324,9 +309,6 @@
   font-weight: 700;
 }
 
-.whole-piece[data-part] .whole-title input {
-  font-size: 26px;
-}
 
 .whole-title > svg {
   color: var(--muted);
@@ -362,6 +344,24 @@
 
 .inline-subtopic {
   padding-left: calc((var(--depth, 1) - 1) * 24px);
+  /* Clear of the sticky book bar when the sidebar jumps here. */
+  scroll-margin-top: 64px;
+  border-radius: 8px;
+}
+
+/* Lights up a moment after a jump from the sidebar, so the eye finds it. */
+.inline-subtopic[data-flash] {
+  animation: subtopic-flash 1.2s ease-out;
+}
+
+@keyframes subtopic-flash {
+  from {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+}
+
+.add-subtopic {
+  align-self: flex-start;
 }
 
 .inline-subtopic-title {

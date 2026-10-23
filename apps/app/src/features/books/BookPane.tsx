@@ -8,7 +8,7 @@ import { Segmented } from "@/ui/Segmented";
 import { pageMenu } from "@/ui/ContextMenu";
 import { BookItemMenu } from "./BookItemMenu";
 import { WholeBook } from "./WholeBook";
-import { allStops, bookWords, chaptersIn, readingOrder, subtopicsOf } from "./reading";
+import { allStops, bookWords, chapterStops, subtopicsOf } from "./reading";
 import { useWordBackfill } from "./useWordBackfill";
 import "./books.css";
 
@@ -25,8 +25,7 @@ export function BookPane(props: PageProps) {
   // A page setting, so the choice syncs with the book and each book keeps its own.
   const view: BookView = node.props.bookView === "whole" ? "whole" : "chapters";
   const book = tree.items.get(node.id);
-  const entries = book ? readingOrder(book) : [];
-  const chapters = book ? chaptersIn(book) : [];
+  const chapters = book ? chapterStops(book) : [];
   useWordBackfill(
     (book ? allStops(book) : []).flatMap(({ item }) => (item.kind === "note" ? [item] : [])),
     workspaceDoc,
@@ -39,7 +38,6 @@ export function BookPane(props: PageProps) {
   }, [onStatus, onReady]);
 
   const total = book ? bookWords(book) : 0;
-  const parts = entries.length - chapters.length;
 
   return (
     <article className="note book">
@@ -54,11 +52,10 @@ export function BookPane(props: PageProps) {
       <PageHeader node={node} app={app} />
       <div className="book-bar">
         <p className="book-summary">
-          {parts > 0 && `${plural(parts, "part")}, `}
           {plural(chapters.length, "chapter")}
           {chapters.length > 0 && `, ${total !== null ? plural(total, "word") : "counting words..."}`}
         </p>
-        {entries.length > 0 && (
+        {chapters.length > 0 && (
           <Segmented<BookView> label="Show the book as" value={view} options={VIEWS} onChange={(next) => setProp(workspaceDoc, node.id, "bookView", next === "whole" ? "whole" : null)} />
         )}
       </div>
@@ -67,23 +64,23 @@ export function BookPane(props: PageProps) {
         <InlineNote id={node.id} hub={hub} workspaceDoc={workspaceDoc} placeholder="Write a description of the book..." />
       </div>
 
-      {book && view === "whole" && entries.length > 0 ? (
+      {book && view === "whole" && chapters.length > 0 ? (
         <WholeBook book={book} props={props} />
-      ) : entries.length > 0 ? (
+      ) : chapters.length > 0 ? (
         <ol className="chapter-list" aria-label="Chapters">
-          {entries.map(({ item, depth, number }) => [
-            <li key={item.id} style={{ "--depth": depth } as CSSProperties} onContextMenu={pageMenu(item)}>
-              <button className="chapter" data-part={number === null || undefined} onClick={() => onSelect(item.id)}>
-                <span className="chapter-number">{number ?? <Icon name="book" />}</span>
-                <span className="chapter-title">{item.title || (number === null ? "Untitled part" : "Untitled")}</span>
+          {chapters.map(({ item, label }) => [
+            <li key={item.id} onContextMenu={pageMenu(item)}>
+              <button className="chapter" onClick={() => onSelect(item.id)}>
+                <span className="chapter-number">{label}</span>
+                <span className="chapter-title">{item.title || "Untitled"}</span>
                 <span className="chapter-words">
                   {item.kind === "board" ? "Board" : item.kind === "note" && item.words !== null ? plural(item.words, "word") : ""}
                 </span>
               </button>
               <BookItemMenu node={item} />
             </li>,
-            ...(number === null ? [] : subtopicsOf(item, String(number))).map((sub) => (
-              <li key={sub.item.id} style={{ "--depth": depth + sub.depth } as CSSProperties} onContextMenu={pageMenu(sub.item)}>
+            ...subtopicsOf(item, label).map((sub) => (
+              <li key={sub.item.id} style={{ "--depth": sub.depth } as CSSProperties} onContextMenu={pageMenu(sub.item)}>
                 <button className="chapter" onClick={() => onSelect(sub.item.id)}>
                   <span className="chapter-number">{sub.label}</span>
                   <span className="chapter-title">{sub.item.title || "Untitled"}</span>
@@ -95,17 +92,13 @@ export function BookPane(props: PageProps) {
           ])}
         </ol>
       ) : (
-        <p className="book-empty">No chapters yet. Drag notes, boards or books onto the book in the sidebar, or add a new one.</p>
+        <p className="book-empty">No chapters yet. Drag notes or boards onto the book in the sidebar, or add a new one.</p>
       )}
 
       <div className="book-actions">
         <button className="button add-chapter" onClick={() => onSelect(createNode(workspaceDoc, "note", node.id))}>
           <Icon name="plus" />
           <span>Add chapter</span>
-        </button>
-        <button className="button add-chapter" onClick={() => onSelect(createNode(workspaceDoc, "book", node.id))}>
-          <Icon name="book" />
-          <span>Add part</span>
         </button>
       </div>
     </article>

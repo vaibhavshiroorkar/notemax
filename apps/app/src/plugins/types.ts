@@ -34,6 +34,12 @@ export interface Plugin {
   commands?: Command[];
   kinds?: KindInfo[];
   pageViews?: PageView[];
+  /**
+   * For a page that is read inside another page, like a subtopic in its
+   * chapter: the page to open instead. The app then scrolls to the part
+   * marked with data-reveal set to the page's id.
+   */
+  hostOf?(tree: Tree, id: string): string | undefined;
   sidePanels?: SidePanel[];
   /** Shown under the title of a note or book page, like its tags. */
   pageHeader?: PageAddon[];

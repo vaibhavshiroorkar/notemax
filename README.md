@@ -26,7 +26,7 @@
 ## Why Notemax
 
 - **Local first.** Notes are saved on your device within a fraction of a second. No account needed, and everything works offline. The first start asks whether you want online features at all.
-- **Made for long writing.** Notes become chapters, books gather them into parts, and a book downloads as Word, PDF or EPUB.
+- **Made for long writing.** Notes become chapters with numbered subtopics inside them, and a book downloads as Word, PDF or EPUB.
 - **Fast with thousands of notes.** Startup, typing and switching pages are tested with 5,000 notes.
 - **Yours to keep.** Optional sync goes through your own Google Drive, sealed with a passphrase so Google can't read it. Download everything as plain Markdown at any time.
 
@@ -42,7 +42,7 @@
 - Code pages: Python or JavaScript that runs right in the app, with its output below.
 
 **Organize**
-- Books with a description, chapters, parts and numbered subtopics, with Next and Previous at the end of each. Read or write the whole book on one page.
+- Books with a description and chapters, each holding its numbered subtopics in its own page, with Next and Previous at the end of each. Read or write the whole book on one page.
 - Folders, books and notes in one sidebar. Drag to sort, put pages inside pages, or pick several and move them together.
 - Workspaces for separate parts of your life, arranged on a Home page. Copy or move pages between them.
 - Share a note by link and write in it together, live and end-to-end encrypted.

@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.63.0 (2026-10-24)
+
+- Subtopics live inside their chapter: 7.1, 7.2 and 7.3 show in chapter 7's page, each with its number, title and text. The right sidebar lists every chapter's subtopics, and clicking one, or a link to it, opens the chapter and scrolls there.
+- Each subtopic has its own ... menu, with Move to trash, Move out of book and a new Make it a chapter. Every chapter ends with Add subtopic.
+- Books no longer hold parts, and nothing inside a book can be a book or a folder. Old parts show beside their book with everything in them.
+- Dropping a page on the middle of a chapter in the right sidebar makes it a subtopic.
+
 ## 0.62.0 (2026-10-23)
 
 - The Community page opens on a welcome and the latest posts instead of a search box. The newest post is featured, and each card shows its reading time and whether it is a book.

@@ -1,4 +1,4 @@
-import type { NodeKind } from "@notemax/core";
+import type { NodeKind, Tree } from "@notemax/core";
 import { onlineMode } from "@/platform/mode";
 import { createStore, savedStore } from "@/platform/store";
 import type {
@@ -101,6 +101,14 @@ export const registry = {
   kinds: (): KindInfo[] => all((p) => p.kinds),
   /** The icon a kind shows in lists. Taken from plugins that are off too, since their pages still show. */
   iconOf: (kind: NodeKind): IconName => plugins.flatMap((p) => p.kinds ?? []).find((info) => info.kind === kind)?.icon ?? "note",
+  /** The page that shows this one inside it, if a plugin says so. */
+  hostOf(tree: Tree, id: string): string | undefined {
+    for (const plugin of on()) {
+      const host = plugin.hostOf?.(tree, id);
+      if (host) return host;
+    }
+    return undefined;
+  },
   pageView: (kind: NodeKind): PageView | undefined => all((p) => p.pageViews).find((view) => view.kind === kind),
   /** The switched-off plugin that would open this kind, so the page can offer to switch it on. */
   pluginFor: (kind: NodeKind): Plugin | undefined => plugins.find((p) => p.pageViews?.some((view) => view.kind === kind)),

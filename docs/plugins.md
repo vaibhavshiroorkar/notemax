@@ -76,6 +76,7 @@ Every field is optional.
 | `pageHeader` | Under a page's title. |
 | `pageSettings` | A row in the right sidebar's "This page" section, like a note's layout. |
 | `pageFooter` | At the end of a page. |
+| `hostOf(tree, id)` | Not a place: for a page read inside another page, like a subtopic in its chapter, the id of the page to open instead. The app scrolls to the element marked `data-reveal` with the page id. |
 | `sidebarSections` | The left sidebar, between the pages and the trash. With an `order` below 0, above the pages, like Starred. |
 | `switcherButtons` | A small button at the top left beside Home, with `label`, `icon`, `when()` and `run(app)`, for a place as big as the window, like the community. |
 | `useSidebarFilter` | A React hook. While it returns a filter, the sidebar lists only what passes it. |

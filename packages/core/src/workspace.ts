@@ -18,8 +18,9 @@ const OLD_INBOX = "inbox";
  * A folder sorts things and has no body. Notes, boards (drawings) and code
  * pages are pages: each has a body of its own, kept in its own document under the
  * node's id, and can hold sub-pages, as in a wiki. A book is something being
- * written: it holds its chapters in reading order, which may be notes, boards
- * or books of their own as parts.
+ * written: it holds its chapters in reading order, which may be notes or boards.
+ * A chapter holds its subtopics. Nothing inside a book is a book or a folder,
+ * so a book reads as one list of chapters with no parts.
  *
  * A kind read from storage may be one this version no longer has, like the
  * mind maps that were removed. It is read as a page that holds nothing, so old
@@ -34,12 +35,13 @@ export const isContainer = (kind: NodeKind) => kind === "folder" || kind === "bo
 
 /**
  * Whether a `parent` may hold a `child`. ROOT holds everything. A book holds
- * no folders, since it is read from start to end. A kind this version does not
- * know holds nothing.
+ * no folders, since it is read from start to end, and no books. A kind this
+ * version does not know holds nothing. A book or folder deeper inside a book,
+ * in a chapter, is refused by canMove and createNode, which see the whole chain.
  */
 export function holds(parent: NodeKind, child: NodeKind): boolean {
   if (!KINDS.includes(parent)) return false;
-  return parent !== "book" || child !== "folder";
+  return parent !== "book" || (child !== "folder" && child !== "book");
 }
 
 export interface TreeNode {
@@ -193,6 +195,18 @@ export function readTree(doc: Y.Doc, previous?: Tree): Tree {
   // that may, or at the top. That covers a folder put in a book while books
   // were read as folders, and pages under a kind this version does not know. Undefined means the chain is broken or loops, handled further down.
   const shownIn = (node: TreeNode): string | undefined => {
+    if (node.kind === "book" || node.kind === "folder") {
+      // Books once held books as parts, and a chapter could hold a folder.
+      // Such a book or folder now shows beside the outermost book above it,
+      // with what is in it, and nothing is rewritten.
+      let outer: TreeNode | undefined;
+      const seen = new Set<string>();
+      for (let cur = byId.get(node.parentId); cur && !seen.has(cur.id); cur = byId.get(cur.parentId)) {
+        seen.add(cur.id);
+        if (cur.kind === "book") outer = cur;
+      }
+      if (outer) return shownIn(outer);
+    }
     const seen = new Set<string>();
     for (let parentId = node.parentId; parentId !== ROOT; ) {
       const parent = byId.get(parentId);
@@ -292,13 +306,30 @@ export function isInside(tree: Tree, id: string, ancestorId: string): boolean {
   return false;
 }
 
+/** True when `id` is a book or sits somewhere inside one, like a chapter or a subtopic. */
+function withinBook(tree: Tree, id: string): boolean {
+  const seen = new Set<string>();
+  for (let cur = tree.items.get(id); cur && !seen.has(cur.id); cur = tree.items.get(cur.parentId)) {
+    if (cur.kind === "book") return true;
+    seen.add(cur.id);
+  }
+  return false;
+}
+
+/** The first book or folder in `item` or under it: neither may go anywhere inside a book. */
+const sortsInside = (item: TreeItem): TreeItem | undefined =>
+  item.kind === "book" || item.kind === "folder" ? item : item.children.map(sortsInside).find(Boolean);
+
 /** Whether `id` may be moved under `parentId`. Returns the reason when it may not. */
 export function canMove(tree: Tree, id: string, parentId: string): string | null {
   if (!tree.items.has(id)) return "this note is not in the tree";
   if (parentId === ROOT) return null;
   const target = tree.items.get(parentId);
   if (!target) return "the target is not in the tree";
-  if (!holds(target.kind, tree.items.get(id)!.kind)) return target.kind === "book" ? "a book cannot hold a folder" : `a ${target.kind} cannot hold pages`;
+  const item = tree.items.get(id)!;
+  if (!holds(target.kind, item.kind)) return target.kind === "book" ? `a book cannot hold a ${item.kind}` : `a ${target.kind} cannot hold pages`;
+  const sorter = withinBook(tree, parentId) ? sortsInside(item) : undefined;
+  if (sorter) return `a book cannot hold a ${sorter.kind}`;
   if (isInside(tree, parentId, id)) return "a folder cannot go inside itself";
   return null;
 }
@@ -358,6 +389,13 @@ export function createNode(doc: Y.Doc, kind: NodeKind, parentId: string, title =
     const parent = nodesOf(doc).get(parentId);
     if (!parent) throw new Error(`no page or folder with id ${parentId}`);
     if (!holds(kindOf(parent), kind)) throw new Error(`a ${kindOf(parent)} cannot hold a ${kind}`);
+    if (kind === "book" || kind === "folder") {
+      const seen = new Set<Y.Map<unknown>>();
+      for (let cur: Y.Map<unknown> | undefined = parent; cur && !seen.has(cur); cur = nodesOf(doc).get(parentOf(cur))) {
+        if (kindOf(cur) === "book") throw new Error(`a book cannot hold a ${kind}`);
+        seen.add(cur);
+      }
+    }
   }
 
   let last: string | null = null;

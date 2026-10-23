@@ -5,20 +5,19 @@ import type { AppContext } from "@/plugins/types";
 import { dragRowMenu, pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { BookItemMenu } from "./BookItemMenu";
-import { bookOf, chapterOf, readingOrder, subtopicsOf } from "./reading";
+import { bookOf, chapterStops, subtopicsOf } from "./reading";
 import "./books.css";
 
 /**
- * A book's chapters in reading order, as a section of the right sidebar, with
- * its parts and their chapters a step in. It shows while the book, a part or a
- * chapter is open, so the left sidebar can keep each book to a single row.
+ * A book's chapters in reading order, as a section of the right sidebar, each
+ * with its subtopics under it. A subtopic is read in its chapter's
+ * page, so clicking one scrolls there. It shows while the book or a chapter is
+ * open, so the left sidebar can keep each book to a single row.
  */
 export function BookPanel({ app }: { app: AppContext }) {
   const { tree, doc, activeId, open: onSelect } = app;
   // Only shown while bookOf finds a book, so this is always set.
   const book = bookOf(tree, activeId)!;
-  // The open chapter lists its subtopics under it.
-  const openChapter = activeId ? chapterOf(tree, activeId) : undefined;
   const dragging = useDragging();
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const bookTitle = book.title || "Untitled book";
@@ -29,11 +28,10 @@ export function BookPanel({ app }: { app: AppContext }) {
 
   // Pages from the left sidebar may be dropped here too. Folders may not.
   const accepts = (item: TreeItem | null, parentId = book.id): item is TreeItem => !!item && !canMove(tree, item.id, parentId);
-  // The middle of a part's row puts the item inside that part.
-  const zoneOf = (event: DragEvent, chapter: TreeItem): Zone => {
+  // The middle of a chapter's row makes the item one of its subtopics.
+  const zoneOf = (event: DragEvent): Zone => {
     const rect = event.currentTarget.getBoundingClientRect();
     const y = (event.clientY - rect.top) / rect.height;
-    if (chapter.kind !== "book") return y < 0.5 ? "before" : "after";
     return y < 0.25 ? "before" : y > 0.75 ? "after" : "inside";
   };
 
@@ -62,16 +60,14 @@ export function BookPanel({ app }: { app: AppContext }) {
 
       {book.children.length > 0 ? (
         <ol className="book-panel-chapters">
-          {readingOrder(book).map(({ item: chapter, depth, number }) => {
-            const title = chapter.title || (number === null ? "Untitled part" : "Untitled");
+          {chapterStops(book).map(({ item: chapter, label }) => {
+            const title = chapter.title || "Untitled";
             const zone = dropTarget?.id === chapter.id ? dropTarget.zone : undefined;
-            const placement = (event: DragEvent) => dragging && placementFor(tree, dragging, chapter, zoneOf(event, chapter));
+            const placement = (event: DragEvent) => dragging && placementFor(tree, dragging, chapter, zoneOf(event));
             return (
               <Fragment key={chapter.id}>
                 <li
                   className="row"
-                  data-part={number === null || undefined}
-                  style={{ "--depth": depth } as CSSProperties}
                   draggable
                   data-drop={zone}
                   data-dragging={dragging?.id === chapter.id || undefined}
@@ -89,7 +85,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                     event.stopPropagation();
                     if (!where || !accepts(dragging, where.parentId)) return setDropTarget(null);
                     event.preventDefault();
-                    setDropTarget({ id: chapter.id, zone: zoneOf(event, chapter) });
+                    setDropTarget({ id: chapter.id, zone: zoneOf(event) });
                   }}
                   onDrop={(event) => {
                     event.stopPropagation();
@@ -98,25 +94,20 @@ export function BookPanel({ app }: { app: AppContext }) {
                   }}
                 >
                   <button className="row-title chapter-row" onClick={() => onSelect(chapter.id)}>
-                    <span className="chapter-number">{number ?? <Icon name="book" />}</span>
+                    <span className="chapter-number">{label}</span>
                     <span className="chapter-title">{title}</span>
                   </button>
                   {/* The page menu, with Move to trash in it. On a phone it is the way to the menu, since a long press drags. */}
-                  {number !== null && (
-                    <button className="icon-button row-action" aria-label={`Add subtopic to ${title}`} title="Add subtopic" onClick={() => onSelect(createNode(doc, "note", chapter.id))}>
-                      <Icon name="plus" />
-                    </button>
-                  )}
+                  <button className="icon-button row-action" aria-label={`Add subtopic to ${title}`} title="Add subtopic" onClick={() => onSelect(createNode(doc, "note", chapter.id))}>
+                    <Icon name="plus" />
+                  </button>
                   <BookItemMenu node={chapter} className="row-action" />
                 </li>
-                {openChapter?.id === chapter.id &&
-                  number !== null &&
-                  subtopicsOf(chapter, String(number)).map((sub) => (
+                {subtopicsOf(chapter, label).map((sub) => (
                     <li
                       key={sub.item.id}
                       className="row subtopic"
-                      style={{ "--depth": depth + sub.depth } as CSSProperties}
-                      aria-current={sub.item.id === activeId ? "page" : undefined}
+                      style={{ "--depth": sub.depth } as CSSProperties}
                       onContextMenu={pageMenu(tree.byId.get(sub.item.id))}
                     >
                       <button className="row-title chapter-row" onClick={() => onSelect(sub.item.id)}>
