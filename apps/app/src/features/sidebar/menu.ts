@@ -1,4 +1,4 @@
-import { ROOT, createNode, holds, type TreeNode } from "@notemax/core";
+import { ROOT, createNode, holds, setProp, type SortOrder, type TreeNode } from "@notemax/core";
 import { isDesktop } from "@/platform/platform";
 import { registry } from "@/plugins/registry";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
@@ -26,7 +26,40 @@ const copy = (app: AppContext, text: string, what: string) =>
   );
 
 /** What a right click on a page in a list, or empty space in the sidebar, offers. */
+const SORT_CHOICES: { value: SortOrder | null; title: string }[] = [
+  { value: null, title: "The order you drag" },
+  { value: "title", title: "Title, A to Z" },
+  { value: "title-desc", title: "Title, Z to A" },
+  { value: "newest", title: "Newest first" },
+  { value: "oldest", title: "Oldest first" },
+];
+
+/** How a folder or page orders what is in it. Books keep their reading order. The current choice shows greyed out. */
+const SORT_MENU: ContextMenuItem = {
+  id: "page.sort",
+  inside: "options",
+  title: "Sort inside by",
+  group: "layout",
+  icon: "filter",
+  targets: ["page"],
+  when: (target, app) => {
+    const node = nodeOf(target);
+    if (!node || node.kind === "book") return false;
+    return node.kind === "folder" || (app.tree.items.get(node.id)?.children.length ?? 0) > 0;
+  },
+  submenu: (target) =>
+    SORT_CHOICES.map(({ value, title }) => ({
+      id: `page.sort.${value ?? "manual"}`,
+      title,
+      group: "layout",
+      targets: ["page"],
+      disabled: () => (nodeOf(target)?.props.sort ?? null) === value,
+      run: (_target, app) => setProp(app.doc, nodeOf(target)!.id, "sort", value),
+    })),
+};
+
 export const PAGE_MENU: ContextMenuItem[] = [
+  SORT_MENU,
   {
     id: "page.open",
     title: "Open",
@@ -77,6 +110,7 @@ export const PAGE_MENU: ContextMenuItem[] = [
   },
   {
     id: "page.copy-title",
+    inside: "copy",
     title: "Copy title",
     group: "edit",
     icon: "copy",
@@ -86,6 +120,7 @@ export const PAGE_MENU: ContextMenuItem[] = [
   {
     // A link that opens the page in this browser. The desktop app has no address to share.
     id: "page.copy-link",
+    inside: "copy",
     title: "Copy link",
     group: "edit",
     icon: "link",

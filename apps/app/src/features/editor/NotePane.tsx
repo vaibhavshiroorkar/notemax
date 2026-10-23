@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Editor as TiptapEditor } from "@tiptap/react";
-import { WELCOME_ID, renameNode } from "@notemax/core";
+import { renameNode } from "@notemax/core";
 import { ChapterNav } from "@/features/books/ChapterNav";
 import { InlineSubtopics } from "@/features/books/InlineSubtopics";
 import { bookOf, chapterOf, subtopicsIn } from "@/features/books/reading";
@@ -18,7 +18,7 @@ import { KeyboardBar } from "./KeyboardBar";
 import { PAGE_GAP, PAGE_MARGIN, PAPER, paperSize } from "./pages";
 import { useBodyIndex } from "./useBodyIndex";
 import { useRememberPosition } from "./usePosition";
-import { welcomeContent } from "./welcome";
+import { starterContent } from "./welcome";
 import "./editor.css";
 
 // Tiptap's focus() waits for the next animation frame, so keys typed right after
@@ -124,7 +124,7 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
           doc={local.doc}
           noteId={node.id}
           hub={hub}
-          initialContent={node.id === WELCOME_ID ? welcomeContent : undefined}
+          initialContent={starterContent[node.id]}
           placeholder="Start writing..."
           layout={layout}
           onPages={setPages}

@@ -23,6 +23,7 @@ export const tagsPlugin: Plugin = {
   contextMenu: [
     {
       id: "tags.add",
+      inside: "options",
       title: "Add a tag",
       group: "tags",
       targets: ["page"],

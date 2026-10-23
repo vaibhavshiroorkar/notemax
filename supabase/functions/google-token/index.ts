@@ -26,17 +26,25 @@ Deno.serve(async (req) => {
   }
   if (typeof refreshToken !== "string" || !refreshToken) return reply({ error: "missing refresh_token" }, 400);
 
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: Deno.env.get("GOOGLE_CLIENT_ID") ?? "",
-      client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET") ?? "",
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }),
-  });
-  const data = await res.json();
+  // Google down or answering with a page instead of JSON still gets a reply with the CORS headers,
+  // so the app can say refreshing failed instead of seeing a blocked request.
+  let res: Response;
+  let data: { access_token?: string; expires_in?: number; error?: string; error_description?: string };
+  try {
+    res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: Deno.env.get("GOOGLE_CLIENT_ID") ?? "",
+        client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET") ?? "",
+        refresh_token: refreshToken,
+        grant_type: "refresh_token",
+      }),
+    });
+    data = await res.json();
+  } catch {
+    return reply({ error: "refresh failed" }, 502);
+  }
   if (!res.ok) return reply({ error: data.error === "invalid_grant" ? "invalid_grant" : (data.error_description ?? data.error ?? "refresh failed") }, 400);
   return reply({ access_token: data.access_token, expires_in: data.expires_in });
 });

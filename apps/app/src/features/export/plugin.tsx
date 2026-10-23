@@ -90,6 +90,7 @@ export const downloadsPlugin: Plugin = {
     { id: "downloads.formats", title: "Formats", group: "formats", targets: ["download"], items: formatItems },
     {
       id: "downloads.as",
+      inside: "share",
       title: "Download as",
       group: "share",
       icon: "download",

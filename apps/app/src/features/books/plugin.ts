@@ -1,4 +1,4 @@
-import { ROOT, moveNode } from "@notemax/core";
+import { ROOT, childrenOf, moveNode } from "@notemax/core";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { BookPane } from "./BookPane";
 import { BookPanel } from "./BookPanel";
@@ -61,8 +61,10 @@ export const booksPlugin: Plugin = {
         if (target.type !== "page") return;
         const book = bookOf(app.tree, target.node.id);
         if (!book || book.id === target.node.id) return;
-        moveNode(app.doc, target.node.id, ROOT, Infinity);
-        app.notify("Moved out of book to Notes");
+        // Beside the book, so a book in a folder keeps the page in that folder.
+        const siblings = childrenOf(app.tree, book.parentId);
+        moveNode(app.doc, target.node.id, book.parentId, siblings.indexOf(book) + 1);
+        app.notify(book.parentId === ROOT ? "Moved out of book to Notes" : "Moved out of book, next to it");
       },
     },
   ],

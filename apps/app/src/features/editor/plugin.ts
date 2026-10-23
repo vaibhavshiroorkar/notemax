@@ -63,6 +63,7 @@ export const notesPlugin: Plugin = {
     LAYOUT_MENU,
     {
       id: "notes.copy-all",
+      inside: "copy",
       title: "Copy all text",
       group: "edit",
       icon: "copy",

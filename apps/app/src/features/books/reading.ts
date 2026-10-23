@@ -1,7 +1,7 @@
 import type { Tree, TreeItem } from "@notemax/core";
 
 /** A book's chapters in reading order. The tree keeps folders and books out of a book. */
-export const chaptersIn = (book: TreeItem): readonly TreeItem[] => book.children;
+const chaptersIn = (book: TreeItem): readonly TreeItem[] => book.children;
 
 /** A page inside a chapter, numbered after it: 6.1, and 6.1.1 one level further in. */
 export interface Subtopic {
@@ -64,7 +64,7 @@ export function hostChapter(tree: Tree, id: string): string | undefined {
 }
 
 /** A chapter's or subtopic's number, like "6" or "6.2". */
-export function labelOf(tree: Tree, id: string): string | undefined {
+function labelOf(tree: Tree, id: string): string | undefined {
   const book = bookOf(tree, id);
   return book ? allStops(book).find((stop) => stop.item.id === id)?.label : undefined;
 }

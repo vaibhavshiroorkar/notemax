@@ -16,6 +16,7 @@ export const communityPlugin: Plugin = {
   contextMenu: [
     {
       id: "community.post",
+      inside: "share",
       title: "Post to community...",
       group: "share",
       targets: ["page"],

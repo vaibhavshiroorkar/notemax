@@ -2,8 +2,11 @@ import type { CSSProperties, ReactNode } from "react";
 import { createNode, renameNode, type Tree } from "@notemax/core";
 import type * as Y from "yjs";
 import { Icon } from "@/ui/Icon";
+import { LazyMount } from "@/ui/LazyMount";
 import { subtopicsIn } from "./reading";
 import { BookItemMenu } from "./BookItemMenu";
+
+const LOAD_AT_ONCE = 8;
 
 /**
  * A chapter's subtopics, in the chapter's own page after its text: each with
@@ -25,6 +28,8 @@ export function InlineSubtopics({
   onOpen(id: string): void;
 }) {
   const subtopics = subtopicsIn(tree, chapterId);
+  // A few open at once. Past that each editor loads as it comes near, so a long chapter opens fast.
+  const lazy = subtopics.length > LOAD_AT_ONCE;
   return (
     <div className="inline-subtopics">
       {subtopics.map(({ item, label, depth }) => (
@@ -35,7 +40,7 @@ export function InlineSubtopics({
             <BookItemMenu node={item} />
           </header>
           {item.kind === "note" ? (
-            renderNote(item.id)
+            lazy ? <LazyMount height={80}>{renderNote(item.id)}</LazyMount> : renderNote(item.id)
           ) : (
             <button className="link-button" onClick={() => onOpen(item.id)}>
               Open this {item.kind === "board" ? "board" : "page"}

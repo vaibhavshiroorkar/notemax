@@ -33,7 +33,9 @@ export function PostDialog({ app, options, onClose }: { app: AppContext; options
         }
       })
       .catch((failure: unknown) => setError(failure instanceof Error ? failure.message : String(failure)));
-  }, [node]);
+    // By id: the tree makes a new node on every change, and a reload would overwrite what is being typed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [node?.id]);
 
   if (!node) return null;
   const openCommunity = (username: string) => {

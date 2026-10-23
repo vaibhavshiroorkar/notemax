@@ -55,7 +55,6 @@ export const SYNCED_PREFS: ReadonlySet<string> = new Set([
   "graphChoices",
   "graphPanelChoices",
   "panelLayout",
-  "panelOpen",
   "temporaryNoticeHidden",
   "startAt",
   "dailyTitle",

@@ -126,6 +126,27 @@ describe("moveNode", () => {
     expect(tree.items.get(chapter)!.children).toEqual([]);
   });
 
+  it("shows a loop through a book at the top instead of failing", () => {
+    const doc = new Y.Doc();
+    const book = createNode(doc, "book", ROOT, "Book");
+    const note = createNode(doc, "note", ROOT, "Note");
+    // Two devices moved them into each other at the same time.
+    const nodes = doc.getMap<Y.Map<unknown>>("nodes");
+    nodes.get(book)!.set("parentId", note);
+    nodes.get(note)!.set("parentId", book);
+    const tree = readTree(doc);
+    expect(tree.visible.has(book) && tree.visible.has(note)).toBe(true);
+  });
+
+  it("lets an old folder shown beside its book take new folders", () => {
+    const doc = new Y.Doc();
+    const book = createNode(doc, "book", ROOT, "Book");
+    const chapter = createNode(doc, "note", book, "Chapter");
+    const folder = createNode(doc, "folder", ROOT, "Old folder");
+    doc.getMap<Y.Map<unknown>>("nodes").get(folder)!.set("parentId", chapter);
+    expect(() => createNode(doc, "folder", folder, "Inside")).not.toThrow();
+  });
+
   it("refuses moving into a trashed folder", () => {
     const { doc, a, other } = setup();
     trashNode(doc, other);

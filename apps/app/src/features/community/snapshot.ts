@@ -33,9 +33,10 @@ export async function snapshotOf(node: TreeNode, app: AppContext, summary: strin
   return {
     source_id: node.id,
     kind: node.kind === "book" ? "book" : "note",
-    title: node.title || (node.kind === "book" ? "Untitled book" : "Untitled"),
-    summary: summary.trim(),
-    tags,
+    // Cut to the limits the database checks, so a long title posts instead of failing.
+    title: (node.title || (node.kind === "book" ? "Untitled book" : "Untitled")).slice(0, 200),
+    summary: summary.trim().slice(0, 500),
+    tags: tags.slice(0, 10),
     parts: ready,
     words: countWords(text),
     text_content: text,

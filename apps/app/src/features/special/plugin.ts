@@ -6,6 +6,7 @@ import { SpecialSection } from "./SpecialSection";
 
 const useAs: ContextMenuItem = {
   id: "special.use-as",
+  inside: "options",
   title: "Use as",
   group: "layout",
   icon: "target",

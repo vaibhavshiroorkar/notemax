@@ -571,96 +571,117 @@
   }
 }
 
-/* Sections of the right sidebar, in slots. Each folds by its title; a slot with several shows tabs. */
+/* The right sidebar's sections, each in a box. A box with several shows tabs across its top. */
 .side-panel-sections {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  padding: 8px 0 16px;
+  gap: 8px;
+  padding: 8px;
 }
 
-.panel-section {
-  border-radius: 6px;
+.panel-box {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  overflow: hidden;
 }
 
-.panel-slot + .panel-slot {
-  margin-top: 2px;
+.panel-box[data-drop] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
-.panel-section[data-drop] {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.panel-section-title {
+.panel-box-head {
   display: flex;
   align-items: center;
   gap: 4px;
-  width: 100%;
-  padding: 6px 12px;
+  min-height: 32px;
+  padding: 0 4px 0 10px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--hover) 60%, transparent);
+}
+
+.panel-box-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   color: var(--muted);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
-  text-align: left;
+  white-space: nowrap;
+  cursor: grab;
 }
 
-.panel-section-title:hover {
-  color: var(--text);
+.panel-box-close {
+  flex-shrink: 0;
+  opacity: 0.5;
 }
 
-.panel-section-title svg,
-.panel-fold svg {
+.panel-box:hover .panel-box-close,
+.panel-box-close:focus-visible {
+  opacity: 1;
+}
+
+.panel-box-close svg {
   width: 12px;
   height: 12px;
-  transition: transform 0.15s;
 }
 
-.panel-section[data-folded] .panel-section-title svg,
-.panel-section[data-folded] .panel-fold svg {
-  transform: rotate(-90deg);
+/* Tall sections, like the graph, scroll inside their box, so the boxes below stay in reach. */
+.panel-box-body {
+  max-height: min(60vh, 560px);
+  overflow-y: auto;
+  padding: 4px 0;
 }
 
 .panel-tabs {
   display: flex;
+  flex: 1;
+  min-width: 0;
   align-items: center;
   gap: 2px;
-  padding: 0 8px 0 4px;
+  margin-left: -6px;
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-.panel-fold {
-  display: inline-flex;
+.panel-tab {
   flex-shrink: 0;
-  padding: 6px 4px 6px 8px;
-  color: var(--muted);
-}
-
-.panel-tabs .panel-tab {
-  width: auto;
-  flex-shrink: 0;
-  padding: 6px 8px;
+  padding: 5px 8px;
   border-radius: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.panel-tab[aria-selected="true"] {
-  background: var(--hover);
+.panel-tab:hover {
   color: var(--text);
 }
 
-/* Where a dragged section can go to get a slot of its own. */
+.panel-tab[aria-selected="true"] {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+/* Where a dragged section can go to get a box of its own. */
 .panel-gap {
-  height: 10px;
-  margin: 0 12px;
+  height: 6px;
+  margin: -4px 0;
   border-radius: 4px;
 }
 
 .panel-gap[data-over] {
-  height: 24px;
+  height: 28px;
+  margin: 0;
   background: color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
@@ -671,37 +692,65 @@
   border-top: 1px solid var(--border);
 }
 
-.panels-menu {
+.panels-tray {
   bottom: calc(100% + 4px);
   top: auto;
   left: 8px;
   right: 8px;
   max-height: 60vh;
   overflow-y: auto;
+  padding: 10px;
 }
 
-.panels-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+/* While a section is dragged from the tray, the boxes behind it take the drop. */
+.panels-tray[data-moving] {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
-.panels-menu-item input {
-  margin: 0;
-  accent-color: var(--accent);
-}
-
-.panels-menu-note {
-  margin-left: auto;
+.panels-tray-hint {
+  margin: 0 0 8px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
-.panels-menu hr {
-  margin: 4px 0;
-  border: none;
-  border-top: 1px solid var(--border);
+.panels-tray-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.panels-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: grab;
+}
+
+.panels-chip[aria-pressed="true"] {
+  border-style: solid;
+  background: var(--hover);
+  color: var(--text);
+}
+
+.panels-chip svg {
+  width: 11px;
+  height: 11px;
+}
+
+.panels-chip-note {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.panels-tray-reset {
+  margin-top: 10px;
+  font-size: 12px;
 }
 
 .panel-empty {
@@ -727,12 +776,15 @@
   text-align: center;
 }
 
-/* Section titles are what a finger opens and drags. */
+/* Box headers are what a finger taps and drags. */
 @media (pointer: coarse) {
-  .panel-section-title,
-  .panel-fold {
-    padding-top: 10px;
-    padding-bottom: 10px;
+  .panel-box-head {
+    min-height: 40px;
+  }
+
+  .panel-tab {
+    padding-top: 9px;
+    padding-bottom: 9px;
   }
 
   .side-panel-bottom .footer-button {

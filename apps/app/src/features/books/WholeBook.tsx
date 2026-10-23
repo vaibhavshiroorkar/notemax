@@ -11,12 +11,14 @@ import { chapterStops, subtopicsOf } from "./reading";
 function Piece({ item, label, depth, props }: { item: TreeItem; label: string; depth: number; props: PageProps }) {
   const { workspaceDoc, hub, onSelect } = props;
   const untitled = "Untitled";
+  // A subtopic is read in its chapter's page, so its arrow goes there.
+  const where = depth > 0 ? "in its chapter" : "on its own page";
   return (
     <section className="whole-piece" style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || untitled}`}>
       <header className="whole-title">
         <span className="chapter-number">{label}</span>
         <input value={item.title} placeholder={untitled} aria-label={`Title of ${label}`} onChange={(event) => renameNode(workspaceDoc, item.id, event.target.value)} />
-        <button className="icon-button" aria-label={`Open ${item.title || untitled} on its own page`} title="Open on its own page" onClick={() => onSelect(item.id)}>
+        <button className="icon-button" aria-label={`Open ${item.title || untitled} ${where}`} title={`Open ${where}`} onClick={() => onSelect(item.id)}>
           <Icon name="arrow-right" />
         </button>
         <BookItemMenu node={item} />

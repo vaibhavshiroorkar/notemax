@@ -48,8 +48,6 @@ const SIGNED_IN_PAGE: &str = "<!doctype html><meta charset=utf-8><title>Notemax<
 <body style=\"font:16px system-ui;text-align:center;padding-top:20vh\">\
 <p>You can close this tab and go back to Notemax.</p>";
 
-/// Opens the sign-in page in the browser and waits for its redirect.
-/// A listener left over from an abandoned attempt is reused, not doubled.
 /// How long Quit waits for the main window to save and send before quitting anyway.
 const QUIT_WAIT: std::time::Duration = std::time::Duration::from_secs(8);
 
@@ -72,6 +70,8 @@ fn quit_now(app: AppHandle) {
     app.exit(0);
 }
 
+/// Opens the sign-in page in the browser and waits for its redirect.
+/// A listener left over from an abandoned attempt is reused, not doubled.
 #[tauri::command]
 fn open_sign_in(app: AppHandle, url: String) -> Result<(), String> {
     if !url.starts_with("https://") {
@@ -101,13 +101,28 @@ fn wait_for_redirect(app: &AppHandle, listener: TcpListener) {
         // Without a timeout that one connection would block the real redirect.
         let _ = stream.set_read_timeout(Some(std::time::Duration::from_secs(5)));
         let mut request_line = String::new();
-        if BufReader::new(&stream).read_line(&mut request_line).is_err() {
-            continue;
+        // The redirect is the browser opening a page. A web page can also send
+        // requests here, but those say so in their headers, and must not end
+        // the wait before the real redirect comes.
+        let mut navigation = true;
+        {
+            let mut reader = BufReader::new(&stream);
+            if reader.read_line(&mut request_line).is_err() {
+                continue;
+            }
+            let mut header = String::new();
+            while reader.read_line(&mut header).is_ok_and(|n| n > 2) {
+                let lower = header.to_ascii_lowercase();
+                if lower.starts_with("origin:") || (lower.starts_with("sec-fetch-mode:") && !lower.contains("navigate")) {
+                    navigation = false;
+                }
+                header.clear();
+            }
         }
         // For example "GET /?code=abc HTTP/1.1".
         let target = request_line.split_whitespace().nth(1).unwrap_or("");
         let query = target.split_once('?').map_or("", |(_, query)| query);
-        let done = query.split('&').any(|pair| pair.starts_with("code=") || pair.starts_with("error="));
+        let done = navigation && query.split('&').any(|pair| pair.starts_with("code=") || pair.starts_with("error="));
         let (status, body) = if done { ("200 OK", SIGNED_IN_PAGE) } else { ("404 Not Found", "") };
         let _ = write!(
             stream,

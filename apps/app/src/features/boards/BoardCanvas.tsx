@@ -1,3 +1,4 @@
+import "./excalidrawAssets";
 import { useEffect, useMemo, useRef } from "react";
 import { CaptureUpdateAction, Excalidraw, Footer, MainMenu, getSceneVersion, reconcileElements } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
@@ -6,9 +7,6 @@ import { BoardTools } from "./BoardTools";
 import { LOCAL, elementsOf, filesOf, missingFiles, readElements, writeElements, writeFiles, type StoredElement, type StoredFile } from "./board-sync";
 
 // This file is loaded only when a board opens, because Excalidraw is large.
-
-// Fonts come from this app, never from Excalidraw's CDN (see vite.config.ts).
-(window as unknown as { EXCALIDRAW_ASSET_PATH: string }).EXCALIDRAW_ASSET_PATH = "/excalidraw/";
 
 type Api = Parameters<NonNullable<Parameters<typeof Excalidraw>[0]["excalidrawAPI"]>>[0];
 type Elements = Parameters<typeof reconcileElements>[0];

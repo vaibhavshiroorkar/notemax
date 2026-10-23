@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { ROOT, WELCOME_ID, addTag, copyNodesTo, createNode, ensureWelcome, readTree, setLinks, setProp, trashNode } from "../src";
+import { ROOT, WELCOME_ID, addTag, copyNodesTo, createNode, readTree, setLinks, setProp, trashNode } from "../src";
 
 describe("copying pages to another workspace", () => {
   it("copies a page and everything inside it to the end of the other top level", () => {
@@ -31,12 +31,12 @@ describe("copying pages to another workspace", () => {
 
   it("gives a new id to a page whose id the other workspace already uses, and points links at it", () => {
     const from = new Y.Doc();
-    ensureWelcome(from);
+    createNode(from, "note", ROOT, "Welcome", WELCOME_ID);
     const other = createNode(from, "note", WELCOME_ID, "Inside welcome");
     setLinks(from, other, [WELCOME_ID]);
 
     const to = new Y.Doc();
-    ensureWelcome(to);
+    createNode(to, "note", ROOT, "Welcome", WELCOME_ID);
     const ids = copyNodesTo(from, WELCOME_ID, to);
 
     const fresh = ids.get(WELCOME_ID)!;

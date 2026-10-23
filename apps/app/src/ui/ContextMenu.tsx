@@ -5,6 +5,7 @@ import { createStore } from "@/platform/store";
 import { registry } from "@/plugins/registry";
 import { formatShortcut } from "@/plugins/shortcuts";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
+import type { IconName } from "./Icon";
 import { Icon } from "./Icon";
 import { fromTouch, touchOnly } from "./longPress";
 import "./context-menu.css";
@@ -68,6 +69,29 @@ export const dragRowMenu = (handler: (event: ReactMouseEvent) => void) => (event
 // Groups the built-in plugins use, top to bottom, so a menu reads the same
 // whichever plugin added what. Other groups follow in the order they appear.
 const GROUPS = ["open", "clipboard", "create", "edit", "duplicate", "format", "block", "insert", "link", "image", "tags", "layout", "share", "select", "danger"];
+
+/** The shared flyouts items can sit in, with where each shows in the menu. */
+const FLYOUTS = new Map<string, { title: string; icon: IconName; group: string }>([
+  ["copy", { title: "Copy", icon: "copy", group: "edit" }],
+  ["options", { title: "Page options", icon: "settings", group: "share" }],
+  ["share", { title: "Share and download", icon: "upload", group: "share" }],
+]);
+
+/** Items that name a flyout gathered into it, where the first of them was. One alone stays as it is. */
+function folded(items: ContextMenuItem[]): ContextMenuItem[] {
+  const members = new Map<string, ContextMenuItem[]>();
+  for (const item of items) if (item.inside && FLYOUTS.has(item.inside)) members.set(item.inside, [...(members.get(item.inside) ?? []), item]);
+  const placed = new Set<string>();
+  return items.flatMap((item) => {
+    const name = item.inside;
+    const inside = name ? members.get(name) : undefined;
+    if (!name || !inside || inside.length < 2) return [item];
+    if (placed.has(name)) return [];
+    placed.add(name);
+    const flyout = FLYOUTS.get(name)!;
+    return [{ id: `flyout.${name}`, title: flyout.title, icon: flyout.icon, group: flyout.group, targets: item.targets, submenu: () => inside }];
+  });
+}
 
 /** Plugins' items in their groups, with a line between groups. */
 function grouped(items: ContextMenuItem[]): (ContextMenuItem | "line")[] {
@@ -134,7 +158,7 @@ export function ContextMenuHost({ app }: { app: AppContext }) {
   // outside a modal dialog ignores the pointer. As a popover it also sits above
   // everything and is never clipped.
   const host = [...document.querySelectorAll("dialog[open]")].at(-1) ?? document.body;
-  return createPortal(<MenuList key={`${open.x},${open.y}`} items={grouped(items)} target={open.target} app={app} x={open.x} y={open.y} onClose={closeContextMenu} />, host);
+  return createPortal(<MenuList key={`${open.x},${open.y}`} items={grouped(folded(items))} target={open.target} app={app} x={open.x} y={open.y} onClose={closeContextMenu} />, host);
 }
 
 function MenuList({
@@ -145,6 +169,7 @@ function MenuList({
   y,
   onClose,
   onBack,
+  parent,
   label = "Menu",
 }: {
   items: (ContextMenuItem | "line")[];
@@ -155,13 +180,15 @@ function MenuList({
   onClose(): void;
   /** Set on a submenu: ArrowLeft goes back to the parent. */
   onBack?(): void;
+  /** Set on a submenu: the parent menu's box, to open beside it on whichever side has room. */
+  parent?: DOMRect;
   label?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   // The tap that opened the menu can land on it too, so for a finger the items wait a moment before they listen.
   const [openedAt] = useState(() => performance.now());
-  const [place, setPlace] = useState({ left: x, top: y, ready: false });
-  const [sub, setSub] = useState<{ id: string; x: number; y: number; left: number; focus: boolean } | null>(null);
+  const [place, setPlace] = useState({ left: x, top: y, ready: false, over: false });
+  const [sub, setSub] = useState<{ id: string; x: number; y: number; parent: DOMRect; focus: boolean } | null>(null);
 
   // Keep the whole menu on screen: flip left or up when it would spill over.
   useLayoutEffect(() => {
@@ -171,9 +198,13 @@ function MenuList({
     const margin = 6;
     let left = x;
     let top = y;
-    if (left + width > innerWidth - margin) left = onBack ? Math.max(margin, sub?.left ?? x) - width : innerWidth - width - margin;
+    if (parent) {
+      // Beside the parent: to the right, else to the left, else (a phone) over it, with Back at the top.
+      if (left + width > innerWidth - margin) left = parent.left - width + 1 >= margin ? parent.left - width + 1 : parent.left;
+      if (left === parent.left) top = parent.top;
+    } else if (left + width > innerWidth - margin) left = innerWidth - width - margin;
     if (top + height > innerHeight - margin) top = Math.max(margin, innerHeight - height - margin);
-    setPlace({ left: Math.max(margin, left), top, ready: true });
+    setPlace({ left: Math.max(margin, left), top, ready: true, over: !!parent && left === parent.left });
     // Only on first draw: moving later would jump under the pointer.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -197,7 +228,9 @@ function MenuList({
     if (!fromKeyboard && fromTouch() && performance.now() - openedAt < 350) return;
     if (item.submenu) {
       const rect = el.getBoundingClientRect();
-      setSub({ id: item.id, x: rect.right - 2, y: rect.top - 5, left: rect.left + 2, focus: fromKeyboard });
+      // From the menu's edge, not the row's, which sits inside the menu's padding.
+      const menu = ref.current!.getBoundingClientRect();
+      setSub({ id: item.id, x: menu.right - 1, y: rect.top - 5, parent: menu, focus: fromKeyboard });
       return;
     }
     onClose();
@@ -240,6 +273,12 @@ function MenuList({
         onKeyDown={onKeyDown}
         onContextMenu={(event) => event.preventDefault()}
       >
+        {place.over && onBack && (
+          <button className="context-menu-item context-menu-back" role="menuitem" onClick={onBack}>
+            <Icon name="chevron-left" />
+            <span className="context-menu-title">{label ?? "Back"}</span>
+          </button>
+        )}
         {items.map((item, i) =>
           item === "line" ? (
             <div key={`line-${i}`} className="context-menu-line" role="separator" />
@@ -267,6 +306,7 @@ function MenuList({
           app={app}
           x={sub.x}
           y={sub.y}
+          parent={sub.parent}
           label={open.title}
           onClose={onClose}
           onBack={() => {

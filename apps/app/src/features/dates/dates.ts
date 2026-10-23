@@ -46,6 +46,8 @@ function dailyPlace(app: AppContext): string {
   if (chosen) return chosen.id;
   const id = createNode(app.doc, "folder", ROOT, "Daily notes");
   setRole(app.doc, app.tree, "dailyFolder", id);
+  // By title, so the days read in date order whatever order they were made in.
+  setProp(app.doc, id, "sort", "title");
   return id;
 }
 

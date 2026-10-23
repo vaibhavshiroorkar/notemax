@@ -1,6 +1,6 @@
 import {
   ROOT,
-  WELCOME_ID,
+  STARTER_IDS,
   createNode,
   WORKSPACE_DOC_ID,
   createSyncEngine,
@@ -20,7 +20,7 @@ import {
   WORKSPACES_DOC_ID,
 } from "@notemax/core";
 import * as Y from "yjs";
-import { pastWelcomeContent, welcomeContent } from "@/features/editor/welcome";
+import { starterSeeds } from "@/features/editor/welcome";
 import { markTemporary } from "@/features/temporary/temporary";
 import { WORKSPACES_CHANNEL, docChannelFor, eraseDiskStore, getRawStore, isDesktop, keepOnDisk, memoryOnly, onLocalWrite, setMemoryFill } from "@/platform/platform";
 import { currentWorkspace } from "@/platform/prefs";
@@ -315,12 +315,12 @@ export async function folderState(): Promise<{ folder: string | null; hasPassphr
   return { folder, hasPassphrase: folder ? (await readKeyCheck(folder)) !== null : false };
 }
 
-/** True when this device has only the untouched Welcome note, so nothing would be lost by replacing it. */
-async function onlyWelcome(): Promise<boolean> {
+/** True when this device has only the pages a new workspace starts with, so replacing them loses nothing but what writtenStarter keeps. */
+async function onlyStarter(): Promise<boolean> {
   const local = await openLocalDoc(await getRawStore(), WORKSPACE_DOC_ID);
   try {
     const tree = readTree(local.doc);
-    return tree.byId.size <= 1 && (tree.byId.size === 0 || tree.byId.has(WELCOME_ID)) && tree.trash.length === 0;
+    return [...tree.byId.keys()].every((id) => STARTER_IDS.has(id)) && tree.trash.length === 0;
   } finally {
     await local.close();
   }
@@ -328,24 +328,37 @@ async function onlyWelcome(): Promise<boolean> {
 
 const plainText = (html: string) => (new DOMParser().parseFromString(html, "text/html").body.textContent ?? "").replace(/\s+/g, "");
 
+interface Written {
+  title: string;
+  kind: "note" | "board";
+  updates: Uint8Array[];
+}
+
 /**
- * The Welcome note when someone wrote in it, so taking the notes from Drive
- * does not throw that writing away. Null while it says what it came with.
+ * The starter pages someone wrote or drew in, so taking the notes from Drive
+ * does not throw that away. A page that still says what it came with is left out.
  */
-async function writtenWelcome(store: DocStore): Promise<{ title: string; updates: Uint8Array[] } | null> {
-  const { updates } = await store.load(WELCOME_ID);
-  if (!updates.length) return null;
-  const body = new Y.Doc();
-  updates.forEach((update) => Y.applyUpdate(body, update));
-  const text = plainText(body.getXmlFragment("content").toString());
-  body.destroy();
-  if (!text || [welcomeContent, ...pastWelcomeContent].some((seed) => plainText(seed) === text)) return null;
+async function writtenStarter(store: DocStore): Promise<Written[]> {
   const local = await openLocalDoc(store, WORKSPACE_DOC_ID);
-  try {
-    return { title: readTree(local.doc).byId.get(WELCOME_ID)?.title || "Welcome", updates };
-  } finally {
-    await local.close();
+  const tree = readTree(local.doc);
+  await local.close();
+  const out: Written[] = [];
+  for (const id of STARTER_IDS) {
+    const node = tree.byId.get(id);
+    if (!node || node.kind === "folder") continue;
+    const { updates } = await store.load(id);
+    if (!updates.length) continue;
+    const body = new Y.Doc();
+    updates.forEach((update) => Y.applyUpdate(body, update));
+    // Boards keep their drawing in an "elements" map; everything else is text.
+    const written =
+      node.kind === "board"
+        ? body.getMap("elements").size > 0
+        : ((text) => !!text && !starterSeeds(id).some((seed) => plainText(seed) === text))(plainText(body.getXmlFragment("content").toString()));
+    body.destroy();
+    if (written) out.push({ title: node.title || "Untitled", kind: node.kind === "board" ? "board" : "note", updates });
   }
+  return out;
 }
 
 /**
@@ -371,10 +384,10 @@ export async function turnOnSync(passphrase: string): Promise<"started" | "reloa
   setPref(PREFS.folder, folder);
   setPref(PREFS.state, JSON.stringify({ cursor: null, dirty: [] } satisfies SyncState));
 
-  // A new device: take the notes from Drive instead of merging in a second Welcome note.
-  const adopt = (await folderHasDocs(folder, deviceId())) && (await onlyWelcome());
+  // A new device: take the notes from Drive instead of merging in a second set of starter pages.
+  const adopt = (await folderHasDocs(folder, deviceId())) && (await onlyStarter());
   const store = await getRawStore();
-  const written = adopt ? await writtenWelcome(store) : null;
+  const written = adopt ? await writtenStarter(store) : [];
   if (adopt) {
     for (const docId of await store.list()) await store.remove(docId);
   }
@@ -390,19 +403,21 @@ export async function turnOnSync(passphrase: string): Promise<"started" | "reloa
   });
   if (!adopt) await first.markAllDirty();
   await first.sync();
-  if (written) {
-    // Kept as a temporary page of its own beside the Welcome note from Drive.
-    const id = crypto.randomUUID();
-    await store.append(id, Y.mergeUpdates(written.updates));
+  if (written.length) {
+    // Each kept as a temporary page of its own beside the notes from Drive.
     const local = await openLocalDoc(store, WORKSPACE_DOC_ID);
     try {
-      createNode(local.doc, "note", ROOT, `${written.title} (from this browser)`, id);
-      markTemporary(local.doc, [id]);
+      for (const page of written) {
+        const id = crypto.randomUUID();
+        await store.append(id, Y.mergeUpdates(page.updates));
+        createNode(local.doc, page.kind, ROOT, `${page.title} (from this browser)`, id);
+        markTemporary(local.doc, [id]);
+        first.markDirty(id);
+      }
     } finally {
       await local.close();
     }
     first.markDirty(WORKSPACE_DOC_ID);
-    first.markDirty(id);
     await first.sync();
   }
   setPref(PREFS.on, "1");

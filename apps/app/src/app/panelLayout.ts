@@ -1,11 +1,11 @@
 import { savedStore } from "@/platform/store";
 
 /**
- * Where the right sidebar's sections sit. Slots stack from top to bottom. A
- * slot with one section shows its title; with two or more it shows tabs, and
- * `active` is the tab in front. Sections in `off` are hidden until turned on
- * from the bar at the bottom. A section the layout has never seen, like one a
- * new plugin adds, gets a slot of its own at the end, folded.
+ * Where the right sidebar's sections sit. Slots are boxes stacked from top to
+ * bottom. A box with one section shows its title; with two or more it shows
+ * tabs, and `active` is the tab in front. Sections in `off` wait in the tray
+ * at the bottom. A section the layout has never seen, like one a new plugin
+ * adds, gets a box of its own at the end.
  */
 export interface Slot {
   panels: string[];
@@ -17,8 +17,11 @@ export interface PanelLayout {
   off: string[];
 }
 
-/** Off at first, so the sidebar starts small. They are one click away in the bottom bar. */
-const OFF_AT_FIRST = ["format.panel", "history.versions", "search.mentions", "graph.panel", "page-info.inside"];
+/**
+ * Off at first, so the sidebar starts empty but for a book's chapters, which a
+ * book needs to move between them. The rest are one click away in the tray.
+ */
+const OFF_AT_FIRST = ["format.panel", "history.versions", "search.mentions", "graph.panel", "page-info.panel", "page-info.inside", "links.backlinks", "dates.calendar"];
 
 const EMPTY: PanelLayout = { slots: [], off: OFF_AT_FIRST };
 
@@ -37,9 +40,6 @@ export const panelLayout = savedStore<PanelLayout>("panelLayout", EMPTY, {
   },
   encode: (value) => JSON.stringify(value),
 });
-
-/** Sections opened by their title, by id. Everything starts folded. */
-export const panelOpen = savedStore<Record<string, boolean>>("panelOpen", {});
 
 /** The layout with every known section placed: new ones get their own slot at the end. */
 export function placed(layout: PanelLayout, known: string[]): PanelLayout {

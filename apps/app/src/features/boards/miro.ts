@@ -1,3 +1,4 @@
+import "./excalidrawAssets";
 import { CaptureUpdateAction, convertToExcalidrawElements } from "@excalidraw/excalidraw";
 
 // Sticky notes, frames, templates and dot votes for boards, made out of

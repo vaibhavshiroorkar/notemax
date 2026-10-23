@@ -43,7 +43,16 @@ const client = async () => (await import("@/features/account/client")).supabase;
 /** Plain words for messages from the database, which speak Postgres. */
 function fail(error: { code?: string; message: string }): never {
   if (error.code === "23505") throw new Error("That username is taken. Try another.");
-  if (error.code === "23514") throw new Error("Usernames are 3 to 24 small letters, digits or _.");
+  // A check failed. Postgres names the constraint in the message, like "profiles_username_check".
+  if (error.code === "23514") {
+    const field = /"(\w+?)_(\w+?)_check"/.exec(error.message)?.[2];
+    if (field === "username") throw new Error("Usernames are 3 to 24 small letters, digits or _.");
+    if (field === "avatar_url") throw new Error("The picture must be a link that starts with https://.");
+    if (field === "tags") throw new Error("A post can have up to 10 tags.");
+    if (field === "parts") throw new Error("This is too big to post.");
+    throw new Error(field ? `The ${field.replace(/_/g, " ")} is too long or not allowed.` : "Something in it is too long or not allowed.");
+  }
+  if (error.code === "23503") throw new Error("Pick a username first.");
   if (error.code === "42P01" || error.code === "PGRST205") throw new Error("The community is not set up on the server yet.");
   throw new Error(error.message);
 }
@@ -108,13 +117,13 @@ export async function searchPosts(words: string): Promise<Post[]> {
 
 /** People whose username or name has the words in it. */
 export async function searchPeople(words: string): Promise<Profile[]> {
-  // Characters with a meaning in PostgREST filters are left out of the search.
-  const safe = words.replace(/[,()*%\\.:]/g, " ").trim();
+  // Quoted for PostgREST, so dots and commas in a name are fine; quotes, backslashes and wildcards are left out.
+  const safe = words.replace(/["\\*%]/g, " ").trim();
   if (!safe) return [];
   const { data, error } = await (await client())
     .from("profiles")
     .select("*")
-    .or(`username.ilike.*${safe}*,display_name.ilike.*${safe}*`)
+    .or(`username.ilike."*${safe}*",display_name.ilike."*${safe}*"`)
     .limit(20);
   if (error) fail(error);
   return (data ?? []) as Profile[];

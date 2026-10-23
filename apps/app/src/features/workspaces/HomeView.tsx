@@ -140,7 +140,12 @@ export function HomeView({ app }: { app: AppContext; options: Record<string, unk
     .slice(0, 6);
   const here = list.find((w) => w.id === currentWorkspace);
   // The open workspace's card goes back to its last page.
-  const back = () => recent[0] && app.open(recent[0].id);
+  // With nothing opened yet, as in a new workspace, the first page at the top. With no pages, a new note.
+  const back = () => {
+    const page = recent[0]?.id ?? app.tree.top.find((item) => item.kind !== "folder")?.id;
+    if (page) app.open(page);
+    else app.create("note");
+  };
 
   const startNew = async () => {
     const name = await askText({ title: "New workspace", label: "Name", placeholder: "Like Work, School or Novel", confirm: "Create" });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { ROOT, WELCOME_ID, addTag, createNode, duplicateNote, ensureWelcome, moveNode, readTree, renameNode, restoreNode, setWords, trashNode } from "../src";
+import { ROOT, STARTER, WELCOME_ID, addTag, createNode, duplicateNote, ensureStarter, moveNode, readTree, renameNode, restoreNode, setProp, setWords, trashNode } from "../src";
 
 const titles = (items: { title: string }[]) => items.map((i) => i.title);
 
@@ -18,21 +18,56 @@ function writeRaw(doc: Y.Doc, id: string, fields: Record<string, unknown>) {
 }
 
 describe("workspace tree", () => {
-  it("creates the welcome note once on a new workspace", () => {
+  it("starts a new workspace once with Welcome, Journal, a board and a small book", () => {
     const doc = new Y.Doc();
-    ensureWelcome(doc);
-    ensureWelcome(doc);
+    ensureStarter(doc);
+    ensureStarter(doc);
     const tree = readTree(doc);
-    expect(tree.top.map((n) => n.id)).toEqual([WELCOME_ID]);
-    expect(tree.top[0].title).toBe("Welcome");
+    expect(titles(tree.top)).toEqual(["Welcome", "Journal", "Drawing board", "My first book"]);
+    expect(tree.top.map((n) => n.kind)).toEqual(["note", "folder", "board", "book"]);
+    expect(tree.items.get(STARTER.journal)!.props.dailyFolder).toBe(true);
+    const book = tree.items.get(STARTER.book)!;
+    expect(titles(book.children)).toEqual(["Getting started"]);
+    expect(titles(book.children[0].children)).toEqual(["A subtopic"]);
   });
 
-  it("does not recreate the welcome note after it is trashed", () => {
+  it("makes one starter set when two new devices sync", () => {
+    const a = new Y.Doc();
+    const b = new Y.Doc();
+    ensureStarter(a);
+    ensureStarter(b);
+    sync(a, b);
+    expect(titles(readTree(a).top)).toEqual(["Welcome", "Journal", "Drawing board", "My first book"]);
+    expect(readTree(a).byId.size).toBe(6);
+  });
+
+  it("does not bring the starter pages back after they are trashed", () => {
     const doc = new Y.Doc();
-    ensureWelcome(doc);
-    trashNode(doc, WELCOME_ID);
-    ensureWelcome(doc);
+    ensureStarter(doc);
+    for (const id of Object.values(STARTER)) trashNode(doc, id);
+    ensureStarter(doc);
     expect(readTree(doc).top).toEqual([]);
+  });
+
+  it("sorts a folder's pages the way the folder says, and books never", () => {
+    const doc = new Y.Doc();
+    const folder = createNode(doc, "folder", ROOT, "Journal");
+    for (const title of ["2026-10-10", "2026-09-30", "2026-10-02"]) createNode(doc, "note", folder, title);
+    const order = () => titles(readTree(doc).items.get(folder)!.children);
+    expect(order()).toEqual(["2026-10-10", "2026-09-30", "2026-10-02"]);
+    setProp(doc, folder, "sort", "title");
+    expect(order()).toEqual(["2026-09-30", "2026-10-02", "2026-10-10"]);
+    setProp(doc, folder, "sort", "title-desc");
+    expect(order()).toEqual(["2026-10-10", "2026-10-02", "2026-09-30"]);
+    const numbered = createNode(doc, "folder", ROOT, "Days");
+    for (const title of ["Day 10", "Day 2", "day 1"]) createNode(doc, "note", numbered, title);
+    setProp(doc, numbered, "sort", "title");
+    expect(titles(readTree(doc).items.get(numbered)!.children)).toEqual(["day 1", "Day 2", "Day 10"]);
+    const book = createNode(doc, "book", ROOT, "Book");
+    createNode(doc, "note", book, "B");
+    createNode(doc, "note", book, "A");
+    setProp(doc, book, "sort", "title");
+    expect(titles(readTree(doc).items.get(book)!.children)).toEqual(["B", "A"]);
   });
 
   it("keeps notes and folders in one top-level list, in creation order", () => {

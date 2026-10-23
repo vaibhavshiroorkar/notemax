@@ -61,8 +61,44 @@ function serviceWorker(): Plugin {
   };
 }
 
+// A Content Security Policy for the built app, on the web and in the desktop
+// window. Pages show text from other people, like community posts, so if a bug
+// ever let some of it become a script tag or an onclick, the browser refuses to
+// run it: scripts come only from the app itself. The exceptions each have a user:
+// code pages run JavaScript with new Function in a worker that shares this
+// policy (unsafe-eval), Python loads from jsdelivr as WebAssembly, and
+// community plugins load as blob modules. Pages may fetch any https address,
+// since plugins and web pictures can live anywhere. The dev server leaves it
+// out: its hot reload needs inline scripts.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net blob:",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' data: blob:",
+  // Excalidraw still asks esm.sh for its fonts in the built app, though the
+  // fonts are served from /excalidraw/ and its asset path is set before it
+  // loads. Until that is found, boards keep their fonts from there.
+  "font-src 'self' data: https://esm.sh",
+  // ipc: is how the desktop window talks to the app around it. Local addresses are for a plugin's dev server.
+  "connect-src 'self' https: wss://*.supabase.co data: blob: ipc: http://ipc.localhost http://localhost:* http://127.0.0.1:*",
+  "worker-src 'self' blob:",
+  "frame-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
+function securityPolicy(): Plugin {
+  return {
+    name: "notemax-security-policy",
+    apply: "build",
+    transformIndexHtml: () => [{ tag: "meta", attrs: { "http-equiv": "Content-Security-Policy", content: CSP }, injectTo: "head-prepend" }],
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), excalidrawFonts(), serviceWorker()],
+  plugins: [react(), excalidrawFonts(), serviceWorker(), securityPolicy()],
   // "@/ui/Icon" instead of "../../ui/Icon", so files can move between folders freely.
   resolve: { alias: { "@": fromHere("src") } },
   // Tauri expects a fixed port, so fail instead of silently picking another one.

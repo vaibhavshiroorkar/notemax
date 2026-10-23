@@ -1,3 +1,5 @@
+// Before anything else, so no board code can load ahead of it.
+import "@/features/boards/excalidrawAssets";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { initAppearance } from "@/ui/appearance";

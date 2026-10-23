@@ -78,3 +78,11 @@
   margin: 4px 6px;
   background: var(--border);
 }
+
+/* On a phone a flyout takes its menu's place; this row goes back to the menu. */
+.context-menu-back {
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  margin-bottom: 4px;
+}

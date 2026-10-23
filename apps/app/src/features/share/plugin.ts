@@ -28,6 +28,7 @@ export const sharePlugin: Plugin = {
   contextMenu: [
     {
       id: "share.open",
+      inside: "share",
       title: "Share...",
       group: "share",
       icon: "link",

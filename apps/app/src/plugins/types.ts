@@ -352,6 +352,12 @@ export interface ContextMenuItem {
   disabled?(target: ContextTarget, app: AppContext): boolean;
   /** A small menu that opens to the side, like the download formats. */
   submenu?(target: ContextTarget, app: AppContext): ContextMenuItem[];
+  /**
+   * A shared flyout to sit in, so a long menu stays short: "copy", "options"
+   * (a page's settings, like tags and layout) or "share" (sharing and
+   * downloads). A flyout that would hold one item shows the item itself.
+   */
+  inside?: "copy" | "options" | "share";
   /** Stands for a list made when the menu opens, shown in its place, like one item per download format. */
   items?(target: ContextTarget, app: AppContext): ContextMenuItem[];
   run?(target: ContextTarget, app: AppContext): void;

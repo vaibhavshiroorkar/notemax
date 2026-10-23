@@ -4,18 +4,21 @@ import type { AppContext, SidePanel } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { Safe } from "@/ui/Safe";
 import { usePresence } from "@/ui/usePresence";
-import { joinSlot, newSlot, panelLayout, panelOpen, placed, setActive, setOn, type PanelLayout } from "./panelLayout";
+import { joinSlot, newSlot, panelLayout, placed, setActive, setOn, type PanelLayout } from "./panelLayout";
 
 const PANEL_TYPE = "application/x-notemax-panel";
-/** The section being dragged, so the gaps between slots can show where it may go. */
+/** The section being dragged, so the gaps between boxes can show where it may go. */
 const dragging = createStore<string | null>(null);
 
 const isPanelDrag = (event: DragEvent) => event.dataTransfer.types.includes(PANEL_TYPE);
 
-/** Writes the layout with every known section placed, so indexes from the drawn slots match the saved ones. */
+/** Writes the layout with every known section placed, so indexes from the drawn boxes match the saved ones. */
 function update(all: SidePanel[], change: (layout: PanelLayout) => PanelLayout) {
   panelLayout.set(change(placed(panelLayout.get(), all.map((p) => p.id))));
 }
+
+/** A section dropped somewhere is on, wherever it came from: a box or the tray. */
+const dropInto = (all: SidePanel[], id: string, place: (layout: PanelLayout) => PanelLayout) => update(all, (layout) => setOn(place(layout), id, true));
 
 function dragProps(id: string) {
   return {
@@ -29,7 +32,7 @@ function dragProps(id: string) {
   };
 }
 
-/** A drop place between slots: a section dropped here gets a slot of its own. */
+/** A drop place between boxes: a section dropped here gets a box of its own. */
 function Gap({ all, index }: { all: SidePanel[]; index: number }) {
   const [over, setOver] = useState(false);
   return (
@@ -46,26 +49,24 @@ function Gap({ all, index }: { all: SidePanel[]; index: number }) {
         event.preventDefault();
         setOver(false);
         const id = event.dataTransfer.getData(PANEL_TYPE);
-        if (id) update(all, (layout) => newSlot(layout, id, index));
+        if (id) dropInto(all, id, (layout) => newSlot(layout, id, index));
         dragging.set(null);
       }}
     />
   );
 }
 
-/** One slot: a single section under its title, or several as tabs. */
-function SlotView({ app, all, index, shown, active }: { app: AppContext; all: SidePanel[]; index: number; shown: SidePanel[]; active: SidePanel }) {
-  const open = !!panelOpen.use()[active.id];
+/** One box: a section under its title, or several as tabs across the top. Dropping a section on it adds a tab. */
+function Box({ app, all, index, shown, active }: { app: AppContext; all: SidePanel[]; index: number; shown: SidePanel[]; active: SidePanel }) {
   const [over, setOver] = useState(false);
-  const toggle = () => panelOpen.set({ ...panelOpen.get(), [active.id]: !open });
   const tabs = shown.length > 1;
   return (
     <section
-      className="panel-section"
+      className="panel-box"
       data-panel={active.id}
       data-tabs={tabs || undefined}
-      data-folded={!open || undefined}
       data-drop={over || undefined}
+      aria-label={active.title}
       onDragOver={(event) => {
         if (!isPanelDrag(event)) return;
         event.preventDefault();
@@ -76,52 +77,51 @@ function SlotView({ app, all, index, shown, active }: { app: AppContext; all: Si
         event.preventDefault();
         setOver(false);
         const id = event.dataTransfer.getData(PANEL_TYPE);
-        if (id) update(all, (layout) => joinSlot(layout, id, index));
+        if (id) dropInto(all, id, (layout) => joinSlot(layout, id, index));
         dragging.set(null);
       }}
     >
-      {tabs ? (
-        <div className="panel-tabs" role="tablist" aria-label="Sections">
-          <button className="panel-fold" aria-label={open ? "Fold" : "Unfold"} aria-expanded={open} onClick={toggle}>
-            <Icon name="chevron-down" />
-          </button>
-          {shown.map((panel) => (
-            <button
-              key={panel.id}
-              className="panel-section-title panel-tab"
-              role="tab"
-              aria-selected={panel.id === active.id}
-              {...dragProps(panel.id)}
-              onClick={() => {
-                if (panel.id === active.id) return toggle();
-                update(all, (layout) => setActive(layout, index, panel.id));
-                panelOpen.set({ ...panelOpen.get(), [panel.id]: true });
-              }}
-            >
-              {panel.title}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <button className="panel-section-title" aria-expanded={open} title="Drag onto another section to make tabs" onClick={toggle} {...dragProps(active.id)}>
-          <Icon name="chevron-down" />
-          <span>{active.title}</span>
+      <header className="panel-box-head">
+        {tabs ? (
+          <div className="panel-tabs" role="tablist" aria-label="Sections in this box">
+            {shown.map((panel) => (
+              <button
+                key={panel.id}
+                className="panel-tab"
+                role="tab"
+                aria-selected={panel.id === active.id}
+                title="Drag out to give it a box of its own"
+                {...dragProps(panel.id)}
+                onClick={() => update(all, (layout) => setActive(layout, index, panel.id))}
+              >
+                {panel.title}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <span className="panel-box-title" title="Drag onto another box to make tabs" {...dragProps(active.id)}>
+            {active.title}
+          </span>
+        )}
+        <button className="icon-button panel-box-close" aria-label={`Hide ${active.title}`} title="Hide. Add it back from Sections below." onClick={() => update(all, (layout) => setOn(layout, active.id, false))}>
+          <Icon name="close" />
         </button>
-      )}
-      {open && (
+      </header>
+      <div className="panel-box-body" role={tabs ? "tabpanel" : undefined}>
         <Safe name={active.title}>
           <active.component app={app} />
         </Safe>
-      )}
+      </div>
     </section>
   );
 }
 
-/** The bar at the bottom: which sections are on, and starting the layout over. */
-function PanelsMenu({ all, here }: { all: SidePanel[]; here: Set<string> }) {
+/** The tray at the bottom: every section, to add with a click or drag into place, and starting over. */
+function Tray({ all, here }: { all: SidePanel[]; here: Set<string> }) {
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   const layout = panelLayout.use();
+  const moving = dragging.use();
   useEffect(() => {
     if (!open) return;
     const onPointer = (event: PointerEvent) => !wrapper.current?.contains(event.target as Node) && setOpen(false);
@@ -135,31 +135,38 @@ function PanelsMenu({ all, here }: { all: SidePanel[]; here: Set<string> }) {
   }, [open]);
   return (
     <div className="side-panel-bottom" ref={wrapper}>
-      <button className="footer-button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+      <button className="footer-button" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(!open)}>
         <Icon name="side-panel" />
         <span>Sections</span>
       </button>
+      {/* Out of the way while a section is dragged from it, so the boxes above can take the drop. */}
       {open && (
-        <div className="menu panels-menu" role="menu" aria-label="Sections">
-          {[...all]
-            .sort((a, b) => a.order - b.order)
-            .map((panel) => (
-              <label key={panel.id} className="menu-item panels-menu-item" role="menuitemcheckbox" aria-checked={!layout.off.includes(panel.id)}>
-                <input type="checkbox" checked={!layout.off.includes(panel.id)} onChange={(event) => update(all, (l) => setOn(l, panel.id, event.target.checked))} />
-                <span>{panel.title}</span>
-                {!here.has(panel.id) && <span className="panels-menu-note">not on this page</span>}
-              </label>
-            ))}
-          <hr />
-          <button
-            className="menu-item"
-            role="menuitem"
-            onClick={() => {
-              panelLayout.set({ slots: [], off: panelLayout.get().off });
-              panelOpen.set({});
-            }}
-          >
-            Fold all and undo moves
+        <div className="menu panels-tray" role="dialog" aria-label="Sections" data-moving={moving || undefined}>
+          <p className="panels-tray-hint">Click to add or hide. Drag one onto a box to make tabs, or between boxes for a box of its own.</p>
+          <div className="panels-tray-chips">
+            {[...all]
+              .sort((a, b) => a.order - b.order)
+              .map((panel) => {
+                const on = !layout.off.includes(panel.id);
+                return (
+                  <button
+                    key={panel.id}
+                    className="panels-chip"
+                    aria-pressed={on}
+                    title={here.has(panel.id) ? undefined : "Shows on other pages"}
+                    {...dragProps(panel.id)}
+                    // Added at the bottom, where it is easy to see it arrive.
+                    onClick={() => (on ? update(all, (l) => setOn(l, panel.id, false)) : dropInto(all, panel.id, (l) => newSlot(l, panel.id, Infinity)))}
+                  >
+                    <Icon name={on ? "close" : "plus"} />
+                    <span>{panel.title}</span>
+                    {!here.has(panel.id) && <span className="panels-chip-note">elsewhere</span>}
+                  </button>
+                );
+              })}
+          </div>
+          <button className="link-button panels-tray-reset" onClick={() => panelLayout.set({ slots: [], off: layout.off })}>
+            Put every box back in its own place
           </button>
         </div>
       )}
@@ -170,8 +177,8 @@ function PanelsMenu({ all, here }: { all: SidePanel[]; here: Set<string> }) {
 /**
  * The right sidebar. It is there on every page, and plugins fill it with
  * sections: a book's chapters while a book is open, the calendar, and so on.
- * Sections start folded, and the ones turned off wait in the bar at the bottom.
- * Each sits in a slot; dragging one onto another makes tabs in that slot.
+ * Each section on shows as a box, open; the rest wait in the tray at the
+ * bottom. Dragging a section onto a box makes tabs in that box.
  * It stays on the page a moment after closing, so it can slide out.
  */
 export function RightSidebar({ app, panels, all, open }: { app: AppContext; panels: SidePanel[]; all: SidePanel[]; open: boolean }) {
@@ -196,13 +203,13 @@ export function RightSidebar({ app, panels, all, open }: { app: AppContext; pane
         {slots.map((slot) => (
           <div key={slot.shown.map((p) => p.id).join()} className="panel-slot">
             {moving && <Gap all={all} index={slot.index} />}
-            <SlotView app={app} all={all} index={slot.index} shown={slot.shown} active={slot.active} />
+            <Box app={app} all={all} index={slot.index} shown={slot.shown} active={slot.active} />
           </div>
         ))}
         {moving && <Gap all={all} index={layout.slots.length} />}
-        {slots.length === 0 && <p className="panel-empty">No sections here. Turn some on below.</p>}
+        {slots.length === 0 && <p className="panel-empty">Nothing here yet. Add a calendar, links, the graph and more from Sections below.</p>}
       </div>
-      <PanelsMenu all={all} here={here} />
+      <Tray all={all} here={here} />
     </aside>
   );
 }

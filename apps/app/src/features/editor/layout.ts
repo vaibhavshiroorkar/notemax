@@ -33,6 +33,7 @@ const choice = (id: string, title: string, value: "pages" | "infinite" | null): 
 
 export const LAYOUT_MENU: ContextMenuItem = {
   id: "notes.layout",
+  inside: "options",
   title: "Layout",
   group: "layout",
   icon: "page",

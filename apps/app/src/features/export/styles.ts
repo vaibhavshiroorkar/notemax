@@ -30,10 +30,11 @@ export const firstFont = (family: string) => family.split(",")[0].trim().replace
 /** A paragraph's alignment, spacing and indent, as an HTML style attribute (with a leading space), or "". */
 export function blockStyleHtml(node: DocNode): string {
   const parts: string[] = [];
+  // Checked, not escaped: a post from someone else can hold any text here.
   const align = str(node.attrs?.textAlign);
-  if (align && align !== "left") parts.push(`text-align:${align}`);
-  const spacing = str(node.attrs?.lineSpacing);
-  if (spacing) parts.push(`line-height:${spacing}`);
+  if (align === "center" || align === "right" || align === "justify") parts.push(`text-align:${align}`);
+  const spacing = parseFloat(str(node.attrs?.lineSpacing));
+  if (spacing > 0 && spacing < 10) parts.push(`line-height:${spacing}`);
   const indent = Number(node.attrs?.indent) || 0;
   if (indent) parts.push(`margin-left:${indent * 1.5}em`);
   return parts.length ? ` style="${parts.join(";")}"` : "";

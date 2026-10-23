@@ -5,6 +5,7 @@ import { Icon } from "@/ui/Icon";
 import { safeHtml } from "@/ui/safeHtml";
 import { feed, follow, myId, myProfile, newestPeople, profilePage, readPost, searchPeople, searchPosts, type Post, type Profile, type ProfilePage } from "./api";
 import { ProfileForm } from "./ProfileForm";
+import { accountView } from "@/features/account/session";
 
 /** Where the community screen is: a place and what it needs to show it. */
 export type Place = { view: "feed"; following: boolean } | { view: "search"; words: string } | { view: "profile"; username: string } | { view: "post"; id: string } | { view: "me" };
@@ -250,7 +251,7 @@ function SearchView({ words, go }: { words: string; go(place: Place): void }) {
   );
 }
 
-function ProfileView({ username, go, me }: { username: string; go(place: Place): void; me: string | null }) {
+function ProfileView({ username, go, me, hasProfile }: { username: string; go(place: Place): void; me: string | null; hasProfile: boolean }) {
   const { data, error, loading, reload } = useLoad<ProfilePage | null>(() => profilePage(username), [username]);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string>();
@@ -286,17 +287,41 @@ function ProfileView({ username, go, me }: { username: string; go(place: Place):
             Edit profile
           </button>
         ) : (
-          followed !== null && (
+          followed !== null &&
+          // Following is done as a profile, so someone without one picks a username first.
+          (hasProfile ? (
             <button className={followed ? "button" : "button button-primary"} disabled={busy} onClick={() => void toggle()}>
               {followed ? "Following" : "Follow"}
             </button>
-          )
+          ) : (
+            <button className="button button-primary" onClick={() => go({ view: "me" })}>
+              Pick a username to follow
+            </button>
+          ))
         )}
       </header>
       {problem && <p className="community-error">{problem}</p>}
       <PostList posts={posts} go={go} empty={<p className="community-empty">{profile.id === me ? "You have not posted yet." : "No posts yet."}</p>} />
     </>
   );
+}
+
+/** A post's parts as far as they can be shown. Anyone can write a post straight to the database, so its shape is checked, not trusted. */
+function partsToShow(parts: unknown): { title?: string; level: number; body: { content?: [] } }[] {
+  if (!Array.isArray(parts)) return [];
+  return parts.flatMap((part: unknown) => {
+    if (!part || typeof part !== "object") return [];
+    const { title, level, body } = part as { title?: unknown; level?: unknown; body?: unknown };
+    if (!body || typeof body !== "object") return [];
+    const content = (body as { content?: unknown }).content;
+    return [
+      {
+        title: typeof title === "string" ? title : undefined,
+        level: typeof level === "number" && Number.isFinite(level) ? Math.max(0, Math.floor(level)) : 0,
+        body: { content: (Array.isArray(content) ? content : []) as [] },
+      },
+    ];
+  });
 }
 
 function PostView({ id, go }: { id: string; go(place: Place): void }) {
@@ -322,8 +347,8 @@ function PostView({ id, go }: { id: string; go(place: Place): void }) {
           ))}
         </p>
       )}
-      {post.parts.map((part, i) => {
-        const level = Math.min(2 + (part.level ?? 0), 6);
+      {partsToShow(post.parts).map((part, i) => {
+        const level = Math.min(2 + part.level, 6);
         const Heading = `h${level}` as "h2";
         return (
           <section key={i} className="community-part">
@@ -356,10 +381,16 @@ export function CommunityPage({ app, options }: { app: AppContext; options: Reco
   const [searching, setSearching] = useState(false);
   const [me, setMe] = useState<string | null>(null);
   const [mine, setMine] = useState<Profile | null>(null);
+  // Once, and again when someone signs in or out. Saving the profile sets it directly.
+  const account = accountView.use().state;
   useEffect(() => {
-    void myId().then(setMe, () => setMe(null));
-    void myProfile().then(setMine, () => setMine(null));
-  }, [place]);
+    let live = true;
+    void myId().then((id) => live && setMe(id), () => live && setMe(null));
+    void myProfile().then((profile) => live && setMine(profile), () => live && setMine(null));
+    return () => {
+      live = false;
+    };
+  }, [account]);
 
   return (
     <div className="community-screen">
@@ -410,9 +441,9 @@ export function CommunityPage({ app, options }: { app: AppContext; options: Reco
         )}
       </header>
       <main className="community-page">
-        {place.view === "feed" && <FeedView following={place.following} go={go} app={app} me={me} mine={mine} />}
+        {place.view === "feed" && <FeedView key={String(place.following)} following={place.following} go={go} app={app} me={me} mine={mine} />}
         {place.view === "search" && <SearchView key={place.words} words={place.words} go={go} />}
-        {place.view === "profile" && <ProfileView key={place.username} username={place.username} go={go} me={me} />}
+        {place.view === "profile" && <ProfileView key={place.username} username={place.username} go={go} me={me} hasProfile={!!mine} />}
         {place.view === "post" && <PostView key={place.id} id={place.id} go={go} />}
         {place.view === "me" && (
           <ProfileForm

@@ -11,7 +11,7 @@ const scene = (id: string) =>
 
 /** Pictures need Excalidraw itself to draw them. It loads only when asked. */
 async function picture(id: string, type: "png" | "svg"): Promise<Blob> {
-  const [{ exportToBlob, exportToSvg }, { elements, files }] = await Promise.all([import("@excalidraw/excalidraw"), scene(id)]);
+  const [{ exportToBlob, exportToSvg }, { elements, files }] = await Promise.all([import("./excalidrawAssets").then(() => import("@excalidraw/excalidraw")), scene(id)]);
   const appState = { exportBackground: true, viewBackgroundColor: "#ffffff", exportWithDarkMode: false };
   const args = { elements: elements as never, appState, files: files as never };
   if (type === "png") return exportToBlob({ ...args, mimeType: "image/png" });

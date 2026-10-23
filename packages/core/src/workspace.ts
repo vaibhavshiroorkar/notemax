@@ -153,6 +153,34 @@ function byPosition(a: TreeNode, b: TreeNode) {
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
+/**
+ * How a page or folder may order what is in it, set as its "sort" prop. With
+ * none, the order is the one people dragged. Books always keep theirs: it is
+ * the reading order.
+ */
+export const SORTS = ["title", "title-desc", "newest", "oldest"] as const;
+export type SortOrder = (typeof SORTS)[number];
+
+// Numbers inside titles count as numbers, so "Day 2" comes before "Day 10" and dates sort as dates.
+const titles = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
+/** The order a node gives its children, or byPosition when it sets none. */
+export function sorterFor(parent: TreeNode | undefined): (a: TreeNode, b: TreeNode) => number {
+  if (!parent || parent.kind === "book") return byPosition;
+  switch (parent.props.sort) {
+    case "title":
+      return (a, b) => titles.compare(a.title, b.title) || byPosition(a, b);
+    case "title-desc":
+      return (a, b) => titles.compare(b.title, a.title) || byPosition(a, b);
+    case "newest":
+      return (a, b) => b.createdAt - a.createdAt || byPosition(a, b);
+    case "oldest":
+      return (a, b) => a.createdAt - b.createdAt || byPosition(a, b);
+    default:
+      return byPosition;
+  }
+}
+
 const sameList = <T>(a: readonly T[], b: readonly T[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
 function sameProps(a: Readonly<Record<string, PropValue>>, b: Readonly<Record<string, PropValue>>) {
@@ -194,28 +222,34 @@ export function readTree(doc: Y.Doc, previous?: Tree): Tree {
   // A node whose parent may not hold it is shown in the nearest node above
   // that may, or at the top. That covers a folder put in a book while books
   // were read as folders, and pages under a kind this version does not know. Undefined means the chain is broken or loops, handled further down.
+  const nearestHolder = (kind: NodeKind, from: string): string | undefined => {
+    const seen = new Set<string>();
+    for (let parentId = from; parentId !== ROOT; ) {
+      const parent = byId.get(parentId);
+      if (!parent || seen.has(parentId)) return undefined;
+      if (holds(parent.kind, kind)) return parentId;
+      seen.add(parentId);
+      parentId = parent.parentId;
+    }
+    return ROOT;
+  };
   const shownIn = (node: TreeNode): string | undefined => {
     if (node.kind === "book" || node.kind === "folder") {
       // Books once held books as parts, and a chapter could hold a folder.
       // Such a book or folder now shows beside the outermost book above it,
       // with what is in it, and nothing is rewritten.
       let outer: TreeNode | undefined;
-      const seen = new Set<string>();
-      for (let cur = byId.get(node.parentId); cur && !seen.has(cur.id); cur = byId.get(cur.parentId)) {
+      const seen = new Set([node.id]);
+      for (let cur = byId.get(node.parentId); cur; cur = byId.get(cur.parentId)) {
+        // A loop, as two devices moving at once can make: placed further down.
+        if (seen.has(cur.id)) return undefined;
         seen.add(cur.id);
         if (cur.kind === "book") outer = cur;
       }
-      if (outer) return shownIn(outer);
+      // The outermost book has no book above it, so this walk ends without coming back here.
+      if (outer) return nearestHolder(outer.kind, outer.parentId);
     }
-    const seen = new Set<string>();
-    for (let parentId = node.parentId; parentId !== ROOT; ) {
-      const parent = byId.get(parentId);
-      if (!parent || seen.has(parentId)) return undefined;
-      if (holds(parent.kind, node.kind)) return parentId;
-      seen.add(parentId);
-      parentId = parent.parentId;
-    }
-    return ROOT;
+    return nearestHolder(node.kind, node.parentId);
   };
   // Uses the stored chain, so a note stays hidden while any note or folder above it is trashed.
   const hiddenByTrash = (node: TreeNode) => {
@@ -254,7 +288,7 @@ export function readTree(doc: Y.Doc, previous?: Tree): Tree {
     (childrenOf.get(parentId) ?? [])
       // `visible` doubles as a cycle guard: a node is placed at most once.
       .filter((node) => !visible.has(node.id) && !hiddenByTrash(node))
-      .sort(byPosition)
+      .sort(sorterFor(byId.get(parentId)))
       .map((node) => place(node, parentId));
 
   const built = build(ROOT);
@@ -389,13 +423,8 @@ export function createNode(doc: Y.Doc, kind: NodeKind, parentId: string, title =
     const parent = nodesOf(doc).get(parentId);
     if (!parent) throw new Error(`no page or folder with id ${parentId}`);
     if (!holds(kindOf(parent), kind)) throw new Error(`a ${kindOf(parent)} cannot hold a ${kind}`);
-    if (kind === "book" || kind === "folder") {
-      const seen = new Set<Y.Map<unknown>>();
-      for (let cur: Y.Map<unknown> | undefined = parent; cur && !seen.has(cur); cur = nodesOf(doc).get(parentOf(cur))) {
-        if (kindOf(cur) === "book") throw new Error(`a book cannot hold a ${kind}`);
-        seen.add(cur);
-      }
-    }
+    // Judged by where pages show, like canMove, so an old folder shown beside its book still takes new folders.
+    if ((kind === "book" || kind === "folder") && withinBook(readTree(doc), parentId)) throw new Error(`a book cannot hold a ${kind}`);
   }
 
   let last: string | null = null;
@@ -479,9 +508,41 @@ export function copyNodesTo(from: Y.Doc, id: string, to: Y.Doc): Map<string, str
   return map;
 }
 
-/** Creates the welcome note on a brand-new workspace. Does nothing otherwise. */
-export function ensureWelcome(doc: Y.Doc) {
-  if (nodesOf(doc).size === 0) createNode(doc, "note", ROOT, "Welcome", WELCOME_ID);
+/**
+ * The pages a new workspace starts with. The ids are fixed, so two new
+ * devices that later sync together end up with one set, not two.
+ */
+export const STARTER = {
+  welcome: WELCOME_ID,
+  journal: "journal",
+  board: "welcome-board",
+  book: "welcome-book",
+  chapter: "welcome-chapter",
+  subtopic: "welcome-subtopic",
+} as const;
+
+export const STARTER_IDS: ReadonlySet<string> = new Set(Object.values(STARTER));
+
+/**
+ * Fills a brand-new workspace with a Welcome note, a Journal folder for the
+ * calendar's daily notes, a drawing board and a small book to show how
+ * chapters and subtopics work. Does nothing to a workspace that has anything.
+ * With welcomeOnly, just the Welcome note, as workspaces started before.
+ */
+export function ensureStarter(doc: Y.Doc, { welcomeOnly = false } = {}) {
+  if (nodesOf(doc).size !== 0) return;
+  doc.transact(() => {
+    createNode(doc, "note", ROOT, "Welcome", STARTER.welcome);
+    if (welcomeOnly) return;
+    createNode(doc, "folder", ROOT, "Journal", STARTER.journal);
+    // The role prop the app reads for where daily notes go. Sorted by title, so dated notes read in date order.
+    setProp(doc, STARTER.journal, "dailyFolder", true);
+    setProp(doc, STARTER.journal, "sort", "title");
+    createNode(doc, "board", ROOT, "Drawing board", STARTER.board);
+    createNode(doc, "book", ROOT, "My first book", STARTER.book);
+    createNode(doc, "note", STARTER.book, "Getting started", STARTER.chapter);
+    createNode(doc, "note", STARTER.chapter, "A subtopic", STARTER.subtopic);
+  });
 }
 
 function fieldsOf(doc: Y.Doc, id: string) {

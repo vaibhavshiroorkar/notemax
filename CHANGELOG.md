@@ -3,6 +3,16 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.64.0 (2026-10-24)
+
+- A new workspace starts with Welcome, a Journal folder where the calendar puts daily notes, a Drawing board, and My first book with a chapter and a subtopic, each with a few words on how it works. Two new devices that sync end up with one set.
+- Folders can sort what is in them: by title either way, newest or oldest first, or the order you drag. The Journal sorts by title, so dated notes read in date order.
+- Page menus are shorter: Copy, Page options, and Share and download open as flyouts. A flyout opens beside its menu, flips left near the edge of the screen, and on a phone takes the menu's place with a Back row.
+- The right sidebar is a column of boxes. Each section shows open in its box; drop one on another to make tabs there. The Sections tray at the bottom adds and hides them, and new sidebars start with only what a page needs.
+- Fixes from a review: a loop in the page tree that includes a book no longer stops the workspace opening, community posts are cleaned more strictly, the community gives plain errors and asks for a username before following, and the desktop sign-in ignores requests web pages send.
+- The built app has a Content Security Policy, so text from other people cannot run as a script.
+- Dependency advisories in the board library's packages are fixed by pinning newer versions.
+
 ## 0.63.0 (2026-10-24)
 
 - Subtopics live inside their chapter: 7.1, 7.2 and 7.3 show in chapter 7's page, each with its number, title and text. The right sidebar lists every chapter's subtopics, and clicking one, or a link to it, opens the chapter and scrolls there.
