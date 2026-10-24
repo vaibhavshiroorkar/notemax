@@ -48,31 +48,34 @@ export function TrashBox({ tree, doc, onOpenAll }: { tree: Tree; doc: Y.Doc; onO
         onClick={() => setOpen(!open)}
       >
         <Icon name="trash" />
+        {/* Beside the icon, not on it, so a long number never covers it. */}
         {count > 0 && <span className="trash-count">{count > 99 ? "99+" : count}</span>}
       </button>
       {open && (
         <div className="trash-box" role="dialog" aria-label="Trash">
           <header className="trash-box-header">
             <strong>Trash</strong>
+            {count > 0 && (
+              <button className="link-button danger" title="Delete everything in the trash forever" onClick={() => setToDelete(tree.trash)}>
+                Empty
+              </button>
+            )}
             <button
-              className="link-button"
+              className="icon-button"
+              aria-label="Open the trash as a page"
+              title="Open as a page"
               onClick={() => {
                 setOpen(false);
                 onOpenAll();
               }}
             >
-              Open as a page
+              <Icon name="expand" />
             </button>
-            {count > 0 && (
-              <button className="link-button danger" onClick={() => setToDelete(tree.trash)}>
-                Empty trash
-              </button>
-            )}
           </header>
           {count > 0 && (
             <label className="settings-search trash-search">
               <Icon name="search" />
-              <input type="search" placeholder="Search the trash" aria-label="Search the trash" autoFocus value={query} onChange={(event) => setQuery(event.target.value)} />
+              <input type="search" placeholder="Search" aria-label="Search the trash" autoFocus value={query} onChange={(event) => setQuery(event.target.value)} />
             </label>
           )}
           {shown.length ? (
@@ -93,7 +96,7 @@ export function TrashBox({ tree, doc, onOpenAll }: { tree: Tree; doc: Y.Doc; onO
               })}
             </ul>
           ) : (
-            <p className="empty">{count ? "Nothing in the trash matches." : "The trash is empty."}</p>
+            <p className="empty">{count ? "No matches." : "Empty."}</p>
           )}
           {toDelete && (
             <DeleteDialog

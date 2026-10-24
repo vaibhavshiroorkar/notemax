@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MAIN_WORKSPACE, WORKSPACE_DOC_ID, ensureStarter, readTree, type Tree } from "@notemax/core";
+import { MAIN_WORKSPACE, WORKSPACE_DOC_ID, ensureStarter, watchTree, type Tree } from "@notemax/core";
 import { currentWorkspace } from "@/platform/prefs";
 import { useLocalDoc } from "./useLocalDoc";
 
@@ -26,12 +26,9 @@ export function useWorkspace() {
     if (!local) return;
     // Only the first workspace gets the starter pages. A new one starts empty.
     if (currentWorkspace === MAIN_WORKSPACE) ensureStarter(local.doc, { welcomeOnly: bareForChecks() });
-    // Passing the last tree keeps unchanged items as the same objects, which is
-    // what lets the sidebar skip rows a change did not touch.
-    const refresh = () => setTree((previous) => readTree(local.doc, previous));
-    refresh();
-    local.doc.on("update", refresh);
-    return () => local.doc.off("update", refresh);
+    // Unchanged items stay the same objects, which is what lets the sidebar
+    // skip rows a change did not touch.
+    return watchTree(local.doc, setTree);
   }, [local]);
 
   return { doc: local?.doc, tree: local ? tree : undefined, status, openError };

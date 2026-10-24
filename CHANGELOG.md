@@ -3,6 +3,14 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.70.0 (2026-10-24)
+
+- A sync conflict can be settled from the line under the title in one click: keep what you see, keep this device's side, or keep the other's. Review still shows both sides first.
+- The Others flyout of the + menu shows in full beside the menu. The sidebar used to cut it off and scroll sideways.
+- Right-click menus gather what a page can do into flyouts: Open (in a new tab), New inside (every kind the page can hold), Share, and Download with the formats right inside. Empty sidebar space has a New flyout with every kind.
+- The trash count sits beside the bin instead of on it, and the trash box says less: Empty, an open-as-page button and a shorter search.
+- Typing in a big workspace is faster: the sidebar tree now rereads only the pages a change touched. With 5,000 pages, typing in a title went from about 38 ms a key to 16.
+
 ## 0.69.0 (2026-10-24)
 
 - Sort by sits right on a folder's menu: title A to Z or Z to A, newest or oldest first, or the order you drag. A sorted folder shows a small mark on its row that says how. New folders keep the order you drag; the starter Journal sorts A to Z.

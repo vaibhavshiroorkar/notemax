@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { ROOT, STARTER, WELCOME_ID, addTag, createNode, duplicateNote, ensureStarter, moveNode, readTree, renameNode, restoreNode, setProp, setWords, trashNode } from "../src";
+import { ROOT, STARTER, WELCOME_ID, addTag, createNode, duplicateNote, ensureStarter, moveNode, readTree, renameNode, restoreNode, setProp, setWords, trashNode, watchTree } from "../src";
 
 const titles = (items: { title: string }[]) => items.map((i) => i.title);
 
@@ -279,6 +279,27 @@ describe("reading the tree again", () => {
     const b1 = createNode(doc, "note", b, "b1");
     return { doc, a, b, a1, a2, b1, tree: readTree(doc) };
   }
+
+  it("follows changes when watched, reading only what changed", () => {
+    const { doc, a, a1, a2, b1 } = setup();
+    const trees: ReturnType<typeof readTree>[] = [];
+    const stop = watchTree(doc, (tree) => trees.push(tree));
+    renameNode(doc, a1, "a1 renamed");
+    const c = createNode(doc, "note", ROOT, "c");
+    trashNode(doc, b1);
+    moveNode(doc, a2, ROOT, 0);
+    const full = readTree(doc);
+    stop();
+    renameNode(doc, a2, "not seen");
+    const [first, renamed, added, trashed, moved] = trees;
+    expect(trees).toHaveLength(5);
+    expect(renamed.byId.get(a1)!.title).toBe("a1 renamed");
+    expect(renamed.byId.get(a2)).toBe(first.byId.get(a2));
+    expect(added.byId.get(c)!.title).toBe("c");
+    expect(trashed.trash.map((n) => n.id)).toEqual([b1]);
+    expect(titles(moved.items.get(a)!.children)).toEqual(["a1 renamed"]);
+    expect(JSON.stringify(moved.top)).toBe(JSON.stringify(full.top));
+  });
 
   it("returns the same objects when nothing changed", () => {
     const { doc, tree } = setup();

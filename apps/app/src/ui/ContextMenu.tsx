@@ -72,9 +72,13 @@ const GROUPS = ["open", "clipboard", "create", "edit", "duplicate", "format", "b
 
 /** The shared flyouts items can sit in, with where each shows in the menu. */
 const FLYOUTS = new Map<string, { title: string; icon: IconName; group: string }>([
+  ["open", { title: "Open", icon: "arrow-right", group: "open" }],
+  ["new", { title: "New", icon: "plus", group: "create" }],
+  ["new-inside", { title: "New inside", icon: "plus", group: "create" }],
   ["copy", { title: "Copy", icon: "copy", group: "edit" }],
   ["options", { title: "Page options", icon: "settings", group: "share" }],
-  ["share", { title: "Share and download", icon: "upload", group: "share" }],
+  ["share", { title: "Share", icon: "upload", group: "share" }],
+  ["download", { title: "Download", icon: "download", group: "share" }],
 ]);
 
 /** Items that name a flyout gathered into it, where the first of them was. One alone stays as it is. */

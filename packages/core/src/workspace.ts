@@ -210,12 +210,17 @@ function sameNode(a: TreeNode, b: TreeNode): boolean {
  * child list that did not change is the same object as before. React can then
  * skip redrawing the parts of the sidebar that a change did not touch: typing
  * in one note changes that note's item, its parents and nothing else.
+ *
+ * `changed` names the nodes touched since `previous` was read. With it, the
+ * others are taken from `previous` without reading their fields again, which
+ * was most of the time a keystroke took in a big workspace.
  */
-export function readTree(doc: Y.Doc, previous?: Tree): Tree {
+export function readTree(doc: Y.Doc, previous?: Tree, changed?: ReadonlySet<string>): Tree {
   const byId = new Map<string, TreeNode>();
   nodesOf(doc).forEach((fields, id) => {
-    const node = toNode(id, fields);
     const old = previous?.byId.get(id);
+    if (old && changed && !changed.has(id)) return byId.set(id, old);
+    const node = toNode(id, fields);
     byId.set(id, old && sameNode(old, node) ? old : node);
   });
 
@@ -322,6 +327,28 @@ export function readTree(doc: Y.Doc, previous?: Tree): Tree {
     .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
 
   return { top, trash, byId, items, visible, backlinks, tags };
+}
+
+/**
+ * Calls back with the tree now and after every change to it, reading again
+ * only the nodes each change touched. Returns a function that stops watching.
+ */
+export function watchTree(doc: Y.Doc, onTree: (tree: Tree) => void): () => void {
+  const nodes = nodesOf(doc);
+  let tree = readTree(doc);
+  onTree(tree);
+  const onChange = (events: Y.YEvent<Y.AbstractType<unknown>>[]) => {
+    const changed = new Set<string>();
+    for (const event of events) {
+      // Nodes added or deleted, or fields changed inside one node.
+      if (event.target === nodes) for (const id of (event as Y.YMapEvent<unknown>).keysChanged) changed.add(id);
+      else changed.add(event.path[0] as string);
+    }
+    tree = readTree(doc, tree, changed);
+    onTree(tree);
+  };
+  nodes.observeDeep(onChange);
+  return () => nodes.unobserveDeep(onChange);
 }
 
 /** The placed children of ROOT or of a visible folder or book. */

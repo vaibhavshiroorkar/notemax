@@ -19,6 +19,9 @@ function renamePage(app: AppContext, id: string) {
   );
 }
 
+/** In a New flyout, "New note" reads "Note". */
+const kindTitle = (label: string) => label.replace(/^New (\w)/, (_, first: string) => first.toUpperCase());
+
 const copy = (app: AppContext, text: string, what: string) =>
   navigator.clipboard.writeText(text).then(
     () => app.notify(`Copied ${what}`),
@@ -61,6 +64,7 @@ export const PAGE_MENU: ContextMenuItem[] = [
   SORT_MENU,
   {
     id: "page.open",
+    inside: "open",
     title: "Open",
     group: "open",
     targets: ["page"],
@@ -68,29 +72,41 @@ export const PAGE_MENU: ContextMenuItem[] = [
     run: (target, app) => app.open(nodeOf(target)!.id),
   },
   {
-    id: "page.new-note",
-    title: "New note inside",
-    group: "create",
-    icon: "note",
+    id: "page.open-tab",
+    inside: "open",
+    title: "Open in a new tab",
+    group: "open",
     targets: ["page"],
-    when: (target) => !!nodeOf(target) && holds(nodeOf(target)!.kind, "note"),
-    run(target, app) {
-      const parent = nodeOf(target)!;
-      expand(parent.id);
-      app.open(createNode(app.doc, "note", parent.id));
-    },
+    when: isPage,
+    run: (target, app) => app.open(nodeOf(target)!.id, { newTab: true }),
   },
   {
-    id: "page.new-folder",
-    title: "New folder inside",
+    // Every kind the page can hold. Folders only go in folders: a folder inside a note has nothing to sort.
+    id: "page.new",
+    title: "New inside",
     group: "create",
-    icon: "folder",
     targets: ["page"],
-    when: (target) => nodeOf(target)?.kind === "folder",
-    run(target, app) {
-      const parent = nodeOf(target)!;
-      expand(parent.id);
-      editingId.set(createNode(app.doc, "folder", parent.id));
+    items(target) {
+      const parent = nodeOf(target);
+      if (!parent) return [];
+      return registry
+        .kinds()
+        .filter(({ kind }) => holds(parent.kind, kind) && (kind !== "folder" || parent.kind === "folder"))
+        .map(({ kind, label, icon }) => ({
+          id: `page.new.${kind}`,
+          inside: "new-inside" as const,
+          title: kindTitle(label),
+          icon,
+          group: "create",
+          targets: ["page" as const],
+          run(_target: ContextTarget, app: AppContext) {
+            expand(parent.id);
+            const id = createNode(app.doc, kind, parent.id);
+            // A folder has no page; it is named in its row instead.
+            if (kind === "folder") editingId.set(id);
+            else app.open(id);
+          },
+        }));
     },
   },
   {
@@ -168,7 +184,8 @@ export const PAGE_MENU: ContextMenuItem[] = [
     items: () =>
       registry.kinds().map(({ kind, label, icon }) => ({
         id: `sidebar.new.${kind}`,
-        title: label,
+        inside: "new" as const,
+        title: kindTitle(label),
         icon,
         group: "create",
         targets: ["sidebar"],

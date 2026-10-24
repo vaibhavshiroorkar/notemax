@@ -22,6 +22,13 @@ function formatItems(target: ContextTarget, app: AppContext): ContextMenuItem[] 
   }));
 }
 
+/** The same formats on a page's menu, gathered in its Download flyout. A page with one format says what it is. */
+function pageFormatItems(target: ContextTarget, app: AppContext): ContextMenuItem[] {
+  const items = formatItems(target, app);
+  const lone = items.length === 1;
+  return items.map((item) => ({ ...item, inside: "download" as const, icon: "download" as const, group: lone ? "share" : item.group, title: lone ? `Download as ${formatsFor(nodeOf(target)!.kind)[0].label}` : item.title }));
+}
+
 function DownloadsSection() {
   const format = defaultFormat.use();
   // Formats any built-in page kind offers, without repeats, for the default picker.
@@ -90,16 +97,15 @@ export const downloadsPlugin: Plugin = {
     { id: "downloads.formats", title: "Formats", group: "formats", targets: ["download"], items: formatItems },
     {
       id: "downloads.as",
-      inside: "share",
       title: "Download as",
       group: "share",
-      icon: "download",
       targets: ["page"],
       when: (target) => !!nodeOf(target) && formatsFor(nodeOf(target)!.kind).length > 0,
-      submenu: formatItems,
+      items: pageFormatItems,
     },
     {
       id: "downloads.folder",
+      inside: "download",
       title: "Download folder as Markdown (.zip)",
       group: "share",
       icon: "download",

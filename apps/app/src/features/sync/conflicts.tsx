@@ -1,8 +1,9 @@
 import * as Y from "yjs";
-import { restoreBody, type TreeNode } from "@notemax/core";
+import { listVersions, restoreBody, type TreeNode } from "@notemax/core";
 import { withPageDoc } from "@/features/export/content";
 import { useVersionHtml } from "@/features/history/useVersionHtml";
 import { saveNow } from "@/features/history/versions";
+import { getStore } from "@/platform/platform";
 import { savedStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
@@ -42,16 +43,27 @@ export async function recordConflict(pageId: string, mine: Uint8Array, theirs: U
 }
 
 const conflictOf = (list: Conflict[], pageId: string) => list.find((c) => c.pageId === pageId);
+
+type Choice = "both" | "mine" | "theirs";
 const settle = (pageId: string) => conflicts.set(conflicts.get().filter((c) => c.pageId !== pageId));
 
 /** Keeps one side only. The merged note is kept as a version first, so this can be taken back. */
-async function keepOne(pageId: string, versionId: string, label: string, versionOf: (id: string) => ReturnType<typeof useVersionHtml>["version"]) {
-  const version = versionOf(versionId);
+async function keepOne(pageId: string, versionId: string, label: string) {
+  const version = (await listVersions(await getStore(), pageId)).find((v) => v.id === versionId);
   if (!version) return;
   const merged = await withPageDoc(pageId, (doc) => Y.encodeStateAsUpdate(doc));
   await saveNow(pageId, merged, `Both devices, merged (before keeping ${label})`);
   await withPageDoc(pageId, (doc) => restoreBody(doc, version));
   settle(pageId);
+}
+
+/** Answers the question one way, and says so. */
+async function settleAs(conflict: Conflict, which: Choice, app: AppContext) {
+  const title = app.tree.byId.get(conflict.pageId)?.title || "Untitled";
+  const side = which === "mine" ? "this device's" : "the other device's";
+  if (which === "both") settle(conflict.pageId);
+  else await keepOne(conflict.pageId, which === "mine" ? conflict.mine : conflict.theirs, side);
+  app.notify(which === "both" ? `Kept both changes to "${title}"` : `Kept ${side} "${title}"`);
 }
 
 /** Both sides next to each other, and the three choices. */
@@ -61,13 +73,9 @@ export function ConflictDialog({ app, options, onClose }: { app: AppContext; opt
   const mine = useVersionHtml(pageId, conflict?.mine ?? "", app.tree);
   const theirs = useVersionHtml(pageId, conflict?.theirs ?? "", app.tree);
   const title = app.tree.byId.get(pageId)?.title || "Untitled";
-  const versionOf = (id: string) => (id === mine.version?.id ? mine.version : id === theirs.version?.id ? theirs.version : null);
 
-  const choose = async (which: "both" | "mine" | "theirs") => {
-    if (!conflict) return onClose();
-    if (which === "both") settle(pageId);
-    else await keepOne(pageId, which === "mine" ? conflict.mine : conflict.theirs, which === "mine" ? "this device's" : "the other device's", versionOf);
-    app.notify(which === "both" ? `Kept both changes to "${title}"` : `Kept ${which === "mine" ? "this device's" : "the other device's"} "${title}"`);
+  const choose = async (which: Choice) => {
+    if (conflict) await settleAs(conflict, which, app);
     onClose();
   };
 
@@ -102,20 +110,32 @@ export function ConflictDialog({ app, options, onClose }: { app: AppContext; opt
   );
 }
 
-/** Under the title of a note waiting for an answer. */
+/**
+ * Under the title of a note waiting for an answer. Every choice is here, so
+ * someone happy with what they see settles it in one click; Review shows both
+ * sides first.
+ */
 export function ConflictLine({ node, app }: { node: TreeNode; app: AppContext }) {
   const conflict = conflictOf(conflicts.use(), node.id);
   if (!conflict) return null;
   return (
     <p className="conflict-line">
       <Icon name="sync" />
-      <span>Changed on two devices before they synced. Both changes are kept here.</span>
-      <button className="link-button" onClick={() => app.openOverlay("sync.conflict", { pageId: node.id })}>
-        Review
-      </button>
-      <button className="link-button" onClick={() => settle(node.id)}>
-        Keep both
-      </button>
+      <span>Changed on two devices before they synced. Both changes are merged here.</span>
+      <span className="conflict-choices">
+        <button className="link-button" title="Keep the note as it is now, with both changes" onClick={() => void settleAs(conflict, "both", app)}>
+          Keep what you see
+        </button>
+        <button className="link-button" title="Go back to this device's side only" onClick={() => void settleAs(conflict, "mine", app)}>
+          Keep this device's
+        </button>
+        <button className="link-button" title="Go back to the other device's side only" onClick={() => void settleAs(conflict, "theirs", app)}>
+          Keep the other's
+        </button>
+        <button className="link-button" onClick={() => app.openOverlay("sync.conflict", { pageId: node.id })}>
+          Review
+        </button>
+      </span>
     </p>
   );
 }

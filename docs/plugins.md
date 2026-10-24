@@ -108,7 +108,7 @@ Each item names the `targets` it shows on:
 - `download`: the download button at the top right of a page.
 - `tab`: a tab above the page.
 
-Items with the same `group` sit together, with a line between groups. Built-in groups keep a fixed order (open, clipboard, create, edit, duplicate, format, block, insert, link, image, tags, layout, share, select, danger). New groups go after them. `when` hides an item, `disabled` greys it out, `submenu` opens a small menu to the side, and `danger` draws it in red. `inside` puts an item in one of the shared flyouts, `"copy"`, `"options"` or `"share"`, so a long menu stays short. A flyout with only one item shows that item itself.
+Items with the same `group` sit together, with a line between groups. Built-in groups keep a fixed order (open, clipboard, create, edit, duplicate, format, block, insert, link, image, tags, layout, share, select, danger). New groups go after them. `when` hides an item, `disabled` greys it out, `submenu` opens a small menu to the side, and `danger` draws it in red. `inside` puts an item in one of the shared flyouts, `"open"`, `"new"`, `"new-inside"`, `"copy"`, `"options"`, `"share"` or `"download"`, so a long menu stays short. A flyout with only one item shows that item itself.
 
 ```js
 contextMenu: [

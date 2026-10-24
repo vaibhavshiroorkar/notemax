@@ -15,6 +15,7 @@ export {
   isContainer,
   holds,
   readTree,
+  watchTree,
   childrenOf,
   isInside,
   canMove,
