@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.71.0 (2026-10-24)
+
+- Two versions of a note show what differs, in color: red for what went, yellow for a line worded differently with the changed words marked inside it, and green for what came. A legend counts each.
+- Reviewing a sync conflict opens on the differences between this device and the other one. Side by side is a click away.
+- A version in history has "Changes since", which shows what was erased, changed and written after it.
+
 ## 0.70.0 (2026-10-24)
 
 - A sync conflict can be settled from the line under the title in one click: keep what you see, keep this device's side, or keep the other's. Review still shows both sides first.

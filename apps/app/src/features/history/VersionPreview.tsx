@@ -1,8 +1,13 @@
+import { useEffect, useState } from "react";
 import * as Y from "yjs";
+import { yXmlFragmentToProsemirrorJSON } from "@tiptap/y-tiptap";
 import { restoreBody } from "@notemax/core";
 import { withPageDoc } from "@/features/export/content";
+import type { DocNode } from "@/features/export/serialize";
 import type { AppContext } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
+import { Segmented } from "@/ui/Segmented";
+import { ChangesView } from "./ChangesView";
 import { useVersionHtml } from "./useVersionHtml";
 import { saveNow } from "./versions";
 import { whenOf } from "./VersionsPanel";
@@ -11,7 +16,14 @@ import { whenOf } from "./VersionsPanel";
 export function VersionPreview({ app, options, onClose }: { app: AppContext; options: Record<string, unknown>; onClose(): void }) {
   const pageId = options.pageId as string;
   const versionId = options.versionId as string;
-  const { version, html } = useVersionHtml(pageId, versionId, app.tree);
+  const { version, html, body } = useVersionHtml(pageId, versionId, app.tree);
+  const [view, setView] = useState<"version" | "changes">("version");
+  // The page as it is now, read when the changes are first asked for.
+  const [now, setNow] = useState<DocNode | null>(null);
+  useEffect(() => {
+    if (view !== "changes" || now) return;
+    void withPageDoc(pageId, (doc) => yXmlFragmentToProsemirrorJSON(doc.getXmlFragment("content")) as DocNode).then(setNow);
+  }, [view, now, pageId]);
 
   const restore = async () => {
     if (!version) return;
@@ -40,8 +52,21 @@ export function VersionPreview({ app, options, onClose }: { app: AppContext; opt
           </button>
         </div>
       </header>
-      {/* The serializer escapes every text and attribute, as for a downloaded web page. */}
-      <div className="editor version-preview-body" dangerouslySetInnerHTML={{ __html: html ?? "" }} />
+      <Segmented<"version" | "changes">
+        label="Show"
+        value={view}
+        options={[
+          { value: "version", label: "This version" },
+          { value: "changes", label: "Changes since" },
+        ]}
+        onChange={setView}
+      />
+      {view === "changes" ? (
+        <ChangesView old={body} now={now} tree={app.tree} legend={{ gone: "erased since", changed: "changed since", added: "new since" }} className="version-preview-body" />
+      ) : (
+        // The serializer escapes every text and attribute, as for a downloaded web page.
+        <div className="editor version-preview-body" dangerouslySetInnerHTML={{ __html: html ?? "" }} />
+      )}
     </Dialog>
   );
 }

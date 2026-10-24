@@ -1,6 +1,8 @@
+import { useState } from "react";
 import * as Y from "yjs";
 import { listVersions, restoreBody, type TreeNode } from "@notemax/core";
 import { withPageDoc } from "@/features/export/content";
+import { ChangesView } from "@/features/history/ChangesView";
 import { useVersionHtml } from "@/features/history/useVersionHtml";
 import { saveNow } from "@/features/history/versions";
 import { getStore } from "@/platform/platform";
@@ -8,6 +10,7 @@ import { savedStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
+import { Segmented } from "@/ui/Segmented";
 
 /**
  * A note changed on two devices before they synced. Both changes are already
@@ -73,6 +76,7 @@ export function ConflictDialog({ app, options, onClose }: { app: AppContext; opt
   const mine = useVersionHtml(pageId, conflict?.mine ?? "", app.tree);
   const theirs = useVersionHtml(pageId, conflict?.theirs ?? "", app.tree);
   const title = app.tree.byId.get(pageId)?.title || "Untitled";
+  const [view, setView] = useState<"changes" | "sides">("changes");
 
   const choose = async (which: Choice) => {
     if (conflict) await settleAs(conflict, which, app);
@@ -85,16 +89,32 @@ export function ConflictDialog({ app, options, onClose }: { app: AppContext; opt
       <p className="dialog-message">
         It was edited here and on another device before they synced. Both changes are in the note now, so nothing is lost. Keep both, or keep one side as it was.
       </p>
-      <div className="conflict-sides">
-        <section>
-          <h3>{MINE}</h3>
-          <div className="editor conflict-body" dangerouslySetInnerHTML={{ __html: mine.html ?? "" }} />
-        </section>
-        <section>
-          <h3>{THEIRS}</h3>
-          <div className="editor conflict-body" dangerouslySetInnerHTML={{ __html: theirs.html ?? "" }} />
-        </section>
-      </div>
+      <Segmented<"changes" | "sides">
+        label="Show"
+        value={view}
+        options={[
+          { value: "changes", label: "Differences" },
+          { value: "sides", label: "Side by side" },
+        ]}
+        onChange={setView}
+      />
+      {view === "changes" ? (
+        // This device's side is the one compared from: red is only here, green only on the other device.
+        <div className="conflict-changes">
+          <ChangesView old={mine.body} now={theirs.body} tree={app.tree} legend={{ gone: "only on this device", changed: "worded differently", added: "only on the other device" }} className="conflict-body" />
+        </div>
+      ) : (
+        <div className="conflict-sides">
+          <section>
+            <h3>{MINE}</h3>
+            <div className="editor conflict-body" dangerouslySetInnerHTML={{ __html: mine.html ?? "" }} />
+          </section>
+          <section>
+            <h3>{THEIRS}</h3>
+            <div className="editor conflict-body" dangerouslySetInnerHTML={{ __html: theirs.html ?? "" }} />
+          </section>
+        </div>
+      )}
       <div className="dialog-actions">
         <button className="button" disabled={!mine.version} onClick={() => void choose("mine")}>
           Keep this device's

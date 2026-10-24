@@ -1,0 +1,111 @@
+/* Two versions compared: red went, yellow was reworded, green came. Mixed
+   into the page color, so both themes keep the text readable. */
+.diff-body,
+.diff-legend {
+  --diff-red: #e5484d;
+  --diff-yellow: #f5b70a;
+  --diff-green: #30a46c;
+}
+
+.diff-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 10px 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.diff-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.diff-key::before {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  content: "";
+}
+
+.diff-key[data-diff="gone"]::before {
+  background: var(--diff-red);
+}
+
+.diff-key[data-diff="changed"]::before {
+  background: var(--diff-yellow);
+}
+
+.diff-key[data-diff="new"]::before {
+  background: var(--diff-green);
+}
+
+.diff-block {
+  margin: 2px 0;
+  padding: 0 8px;
+  border-left: 3px solid transparent;
+  border-radius: 3px;
+}
+
+.diff-block > :first-child {
+  margin-top: 0.25em;
+}
+
+.diff-block > :last-child {
+  margin-bottom: 0.25em;
+}
+
+.diff-block[data-diff="gone"] {
+  border-left-color: var(--diff-red);
+  background: color-mix(in srgb, var(--diff-red) 16%, transparent);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--diff-red) 70%, var(--text));
+}
+
+.diff-block[data-diff="changed"] {
+  border-left-color: var(--diff-yellow);
+  background: color-mix(in srgb, var(--diff-yellow) 14%, transparent);
+}
+
+.diff-block[data-diff="new"] {
+  border-left-color: var(--diff-green);
+  background: color-mix(in srgb, var(--diff-green) 16%, transparent);
+}
+
+.diff-body del {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--diff-red) 30%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--diff-red) 70%, var(--text));
+}
+
+.diff-body ins {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--diff-green) 32%, transparent);
+  text-decoration: none;
+}
+
+/* List lines lose their list around them, so the marker is drawn here. */
+.diff-block[data-list] {
+  position: relative;
+  margin-left: calc(var(--diff-depth, 0) * 20px);
+  padding-left: 26px;
+}
+
+.diff-block[data-list]::before {
+  position: absolute;
+  top: 0.3em;
+  left: 10px;
+  color: var(--muted);
+  content: "\2022";
+}
+
+.diff-block[data-list="task"]::before {
+  content: "\2610";
+}
+
+/* The Show switch above a comparison. */
+.conflict-dialog .segmented,
+.version-preview .segmented {
+  margin-top: 12px;
+}

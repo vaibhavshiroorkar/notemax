@@ -6,13 +6,15 @@ import { toHtml, type DocNode } from "@/features/export/serialize";
 import { getStore } from "@/platform/platform";
 
 /**
- * One saved version of a page and its body as HTML, to show read-only. The
- * serializer escapes every text and attribute, as for a downloaded web page.
- * Both are null while loading, and stay null when the version is gone.
+ * One saved version of a page, its body as stored and as HTML, to show
+ * read-only. The serializer escapes every text and attribute, as for a
+ * downloaded web page. All are null while loading, and stay null when the
+ * version is gone.
  */
 export function useVersionHtml(pageId: string, versionId: string, tree: Tree) {
   const [version, setVersion] = useState<Version | null>(null);
   const [html, setHtml] = useState<string | null>(null);
+  const [body, setBody] = useState<DocNode | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -25,6 +27,7 @@ export function useVersionHtml(pageId: string, versionId: string, tree: Tree) {
       const pictures = await loadPictures([body]);
       if (!live) return;
       setVersion(found);
+      setBody(body);
       setHtml(toHtml(body.content ?? [], resolver(tree, (id) => (pictures.has(id) ? dataUrl(pictures.get(id)!) : null))));
     })().catch(() => live && setHtml(""));
     return () => {
@@ -32,5 +35,5 @@ export function useVersionHtml(pageId: string, versionId: string, tree: Tree) {
     };
   }, [pageId, versionId, tree]);
 
-  return { version, html };
+  return { version, html, body };
 }
