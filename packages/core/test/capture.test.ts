@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it, vi } from "vitest";
 import * as Y from "yjs";
-import { ROOT, WORKSPACE_DOC_ID, captureNote, createSqlStore, openLocalDoc, readTree, splitCapture } from "../src";
+import { INBOX_ID, ROOT, WORKSPACE_DOC_ID, captureNote, createSqlStore, openLocalDoc, readTree, splitCapture, tasksIn } from "../src";
 import { memorySqlDatabase } from "./node-sqlite";
 
 let channelCount = 0;
@@ -77,5 +77,23 @@ describe("captureNote", () => {
     const id = await captureNote(store, "Captured while the app was open", { broadcast });
     await vi.waitFor(() => expect(readTree(main.doc).byId.get(id!)?.title).toBe("Captured while the app was open"));
     await main.close();
+  });
+
+  it("adds lines that start with [ ] to the Inbox note as to-dos, with their dates read", async () => {
+    const store = createSqlStore(memorySqlDatabase());
+    const now = new Date(2026, 9, 24, 10, 0);
+    expect(await captureNote(store, "[ ] buy milk tomorrow 5pm\n[ ] call the bank !!", { now })).toBe(INBOX_ID);
+    expect(await captureNote(store, "- [ ] water plants every monday", { now })).toBe(INBOX_ID);
+    const tree = readTree((await openLocalDoc(store, WORKSPACE_DOC_ID)).doc);
+    expect(tree.top.map((n) => n.title)).toEqual(["Inbox"]);
+    const inbox = await openLocalDoc(store, INBOX_ID);
+    const tasks = tasksIn(inbox.doc.getXmlFragment("content"));
+    expect(tasks.map(({ text, due, time, priority, repeat }) => ({ text, due, time, priority, repeat }))).toEqual([
+      { text: "buy milk", due: "2026-10-25", time: "17:00", priority: 0, repeat: null },
+      { text: "call the bank", due: null, time: null, priority: 2, repeat: null },
+      { text: "water plants", due: "2026-10-26", time: null, priority: 0, repeat: "week" },
+    ]);
+    expect(new Set(tasks.map((t) => t.id)).size).toBe(3);
+    await inbox.close();
   });
 });

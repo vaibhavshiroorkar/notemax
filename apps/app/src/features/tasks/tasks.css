@@ -1,0 +1,180 @@
+/* A to-do's date in a note: a small chip at the end of its line. */
+.ProseMirror .task-when,
+.task-row .task-when {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+  vertical-align: 1px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ProseMirror .task-when {
+  cursor: pointer;
+}
+
+.ProseMirror .task-when:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.task-when[data-overdue] {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.task-priority {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.task-priority[data-level="3"] {
+  color: var(--danger);
+}
+
+/* The words being read as a date while the line is typed. */
+.ProseMirror .task-when-typing {
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+
+/* A ticked to-do's chip goes quiet with its text. */
+.ProseMirror li[data-checked="true"] .task-when {
+  opacity: 0.6;
+}
+
+.task-popover {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 260px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+  font-size: 13px;
+}
+
+.task-popover-row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.task-popover-row input,
+.task-popover-row select {
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.task-popover-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Lists of to-dos away from their notes: the Tasks page, Home, the calendar. */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 4px;
+  border-radius: 4px;
+}
+
+.task-row:hover {
+  background: var(--hover);
+}
+
+.task-row input[type="checkbox"] {
+  flex: none;
+  position: relative;
+  top: 2px;
+  margin: 0;
+}
+
+.task-row .task-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.task-row[data-done] .task-text {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.task-row .task-when {
+  margin-left: 0;
+}
+
+.task-note {
+  max-width: 40%;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tasks-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  font-size: 28px;
+}
+
+.tasks-empty {
+  color: var(--muted);
+}
+
+.task-group {
+  margin-bottom: 24px;
+}
+
+.task-group h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.task-group[data-tone="overdue"] h2 {
+  color: var(--danger);
+}
+
+.task-count {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.task-done-toggle {
+  margin-bottom: 4px;
+}

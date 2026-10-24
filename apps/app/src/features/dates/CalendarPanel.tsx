@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { dueOn, entries, useTaskVersion } from "@/features/tasks/list";
+import { TaskRow } from "@/features/tasks/TaskRow";
 import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { pageMenu } from "@/ui/ContextMenu";
@@ -27,6 +29,11 @@ export function CalendarPanel({ app }: { app: AppContext }) {
     return { year: d.getFullYear(), month: d.getMonth() };
   });
   const byDay = useMemo(() => pagesByDay(app.tree), [app.tree]);
+  // To-dos due each day, while the Tasks plugin is on.
+  const taskVersion = useTaskVersion();
+  const tasksOn = registry.isOn("tasks");
+  const undone = useMemo(() => (tasksOn ? entries(app.tree).filter((entry) => !entry.task.done && entry.task.due) : []), [app.tree, taskVersion, tasksOn]);
+  const dueDays = useMemo(() => new Set(undone.map((entry) => entry.task.due!)), [undone]);
   const [picked, setPicked] = useState<string>(openKey ?? todayKey());
   // Opening a dated page picks its day.
   useEffect(() => {
@@ -37,6 +44,7 @@ export function CalendarPanel({ app }: { app: AppContext }) {
   const title = new Date(month.year, month.month, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const step = (by: number) => setMonth(({ year, month: m }) => ({ year: m + by < 0 ? year - 1 : m + by > 11 ? year + 1 : year, month: (m + by + 12) % 12 }));
   const entry = dailyNote(app.tree, picked);
+  const pickedTasks = dueOn(undone, picked);
   const onPicked = (byDay.get(picked) ?? []).filter((item) => item.id !== entry?.id);
   const pickedName = dayOf(picked).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
 
@@ -69,6 +77,7 @@ export function CalendarPanel({ app }: { app: AppContext }) {
               data-today={key === today || undefined}
               data-picked={key === picked || undefined}
               data-has={pages ? pages.length : undefined}
+              data-tasks={dueDays.has(key) || undefined}
               aria-label={`${date.toLocaleDateString(undefined, { dateStyle: "long" })}${pages ? `, ${pages.length} ${pages.length === 1 ? "page" : "pages"}` : ""}`}
               onClick={() => setPicked(key)}
               onDoubleClick={() => void openDay(app, key)}
@@ -112,6 +121,13 @@ export function CalendarPanel({ app }: { app: AppContext }) {
                   <span>{item.title || "Untitled"}</span>
                 </button>
               </li>
+            ))}
+          </ul>
+        )}
+        {pickedTasks.length > 0 && (
+          <ul className="task-list calendar-tasks" aria-label="Due this day">
+            {pickedTasks.map((task) => (
+              <TaskRow key={`${task.noteId}:${task.task.id ?? task.index}`} app={app} entry={task} />
             ))}
           </ul>
         )}

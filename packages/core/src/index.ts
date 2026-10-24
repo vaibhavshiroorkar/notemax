@@ -3,7 +3,7 @@ export { openIdbStore } from "./idb-store";
 export { createSqlStore, type SqlDatabase } from "./sql-store";
 export { createMemoryStore } from "./memory-store";
 export { openLocalDoc, type LocalDoc, type LocalDocOptions, type SaveStatus } from "./local-doc";
-export { captureNote, splitCapture } from "./capture";
+export { captureNote, splitCapture, INBOX_ID } from "./capture";
 export { WIKI_LINK, extractLinks, searchNodes } from "./links";
 export { countWords, plainText } from "./words";
 export { MAX_TAG_LENGTH, normalizeTag, hasTags } from "./tags";
@@ -72,3 +72,5 @@ export {
   splitScoped,
   type WorkspaceInfo,
 } from "./workspaces";
+export { parseWhen, nextDue, type When, type Repeat } from "./when";
+export { tasksIn, finishTask, type Task } from "./tasks";

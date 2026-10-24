@@ -86,6 +86,7 @@ export async function fileToBody(markdown: string, tree: Tree, picture: (path: s
     item.setAttribute("data-checked", String(box.checked));
     item.parentElement?.setAttribute("data-type", "taskList");
     box.remove();
+    readTaskTags(item);
   }
   for (const img of Array.from(doc.querySelectorAll("img"))) {
     const src = img.getAttribute("src") ?? "";
@@ -95,4 +96,26 @@ export async function fileToBody(markdown: string, tree: Tree, picture: (path: s
     else img.remove();
   }
   return htmlToBody(doc.body.innerHTML) as DocNode;
+}
+
+const TAGS = /\s*(?:@due\((\d{4}-\d{2}-\d{2})(?:\s+(\d{2}:\d{2}))?\)|@repeat\((day|week|month|year)\)|(?<=\s|^)(!{1,3})(?=\s*$))/g;
+
+/** Takes the tags the export writes after a to-do's text, like "@due(2026-10-25 17:00)", back onto the item. */
+function readTaskTags(item: Element) {
+  const walker = item.ownerDocument.createTreeWalker(item, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    // The item's own line only, not the lists inside it.
+    if (node.parentElement?.closest("li") !== item) continue;
+    const text = node.textContent ?? "";
+    let found = false;
+    const rest = text.replace(TAGS, (_all, due, time, repeat, bangs) => {
+      found = true;
+      if (due) item.setAttribute("data-due", due);
+      if (time) item.setAttribute("data-time", time);
+      if (repeat) item.setAttribute("data-repeat", repeat);
+      if (bangs) item.setAttribute("data-priority", String(bangs.length));
+      return "";
+    });
+    if (found) node.textContent = rest.replace(/\s+$/, "");
+  }
 }

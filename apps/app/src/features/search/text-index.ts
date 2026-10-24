@@ -1,11 +1,12 @@
 import * as Y from "yjs";
-import { WORKSPACE_DOC_ID, plainText, readTree, splitScoped, type Tree } from "@notemax/core";
+import { WORKSPACE_DOC_ID, plainText, readTree, splitScoped, tasksIn, type Task, type Tree } from "@notemax/core";
 import { remoteEdit } from "@/features/sync/live";
 import { memoryOnly, onLocalWrite, storeFor } from "@/platform/platform";
 import { createStore } from "@/platform/store";
 
 // Every note's text, for searching inside notes and for finding pages that
-// mention a title without linking to it. Kept in IndexedDB with the time the
+// mention a title without linking to it, and every note's to-dos, for the
+// Tasks view. Kept in IndexedDB with the time the
 // note was last edited, so a restart reads only notes that changed since.
 // It covers the workspace in the sidebar, and starts over when that changes.
 
@@ -13,9 +14,12 @@ const DB = "notemax-search";
 interface Saved {
   text: string;
   edited: number;
+  /** Missing in what older versions saved, which makes the note read again. */
+  tasks?: Task[];
 }
 
 const texts = new Map<string, string>();
+const taskLists = new Map<string, Task[]>();
 /** Goes up as the index fills or changes, so searches shown on screen run again. */
 export const indexVersion = createStore(0);
 const bump = () => indexVersion.set(indexVersion.get() + 1);
@@ -61,24 +65,31 @@ async function save(workspace: string, id: string, saved: Saved | null) {
   else tx.objectStore("texts").delete(key(workspace, id));
 }
 
-/** A note's text, read from storage. Nothing is written to the note. */
-async function readText(workspace: string, id: string): Promise<string> {
+/** A note's text and to-dos, read from storage. Nothing is written to the note. */
+async function readNote(workspace: string, id: string): Promise<{ text: string; tasks: Task[] }> {
   const { updates } = await (await storeFor(workspace)).load(id);
   const body = new Y.Doc();
   try {
     if (updates.length) Y.applyUpdate(body, Y.mergeUpdates(updates));
-    return plainText(body.getXmlFragment("content"));
+    const content = body.getXmlFragment("content");
+    return { text: plainText(content), tasks: tasksIn(content) };
   } finally {
     body.destroy();
   }
 }
 
+function keep(id: string, tasks: Task[]) {
+  if (tasks.length) taskLists.set(id, tasks);
+  else taskLists.delete(id);
+}
+
 async function refresh(workspace: string, id: string, edited: number) {
-  const text = await readText(workspace, id);
+  const { text, tasks } = await readNote(workspace, id);
   // Switched away while reading: this text belongs to the other workspace.
   if (indexed?.workspace !== workspace) return;
   texts.set(id, text);
-  await save(workspace, id, { text, edited });
+  keep(id, tasks);
+  await save(workspace, id, { text, edited, tasks });
 }
 
 /** What the index covers now. */
@@ -122,6 +133,7 @@ function listen() {
 export async function startIndex(doc: Y.Doc, workspace: string) {
   indexed = { doc, workspace };
   texts.clear();
+  taskLists.clear();
   pending.forEach((timer) => clearTimeout(timer));
   pending.clear();
   listen();
@@ -134,7 +146,8 @@ export async function startIndex(doc: Y.Doc, workspace: string) {
   for (const note of notes) {
     const known = saved.get(note.id);
     if (known) texts.set(note.id, known.text);
-    if (!known || known.edited < note.editedAt) stale.push({ id: note.id, edited: note.editedAt });
+    if (known?.tasks) keep(note.id, known.tasks);
+    if (!known || !known.tasks || known.edited < note.editedAt) stale.push({ id: note.id, edited: note.editedAt });
   }
   // Gone from the workspace since: out of the index too.
   for (const id of saved.keys()) if (!tree.byId.has(id)) void save(workspace, id, null);
@@ -146,6 +159,15 @@ export async function startIndex(doc: Y.Doc, workspace: string) {
     bump();
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
+}
+
+/** The to-dos of every note in the shown workspace, by note id. Notes with none are left out. */
+export const allTasks = (): ReadonlyMap<string, Task[]> => taskLists;
+
+/** Reads a note again now, as after an edit, so a list that just ticked a task shows it at once. */
+export function readAgain(id: string) {
+  const now = indexed;
+  if (now) void refresh(now.workspace, id, Date.now()).then(bump);
 }
 
 /** The words around a match, on one line. */

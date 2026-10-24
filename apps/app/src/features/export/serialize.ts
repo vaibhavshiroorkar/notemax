@@ -43,6 +43,21 @@ function inlineText(node: DocNode, r: Resolve): string {
     .join("");
 }
 
+/**
+ * A to-do's date, repeat and priority as tags after its text, like
+ * "@due(2026-10-25 17:00) @repeat(week) !!", so they survive a trip through
+ * Markdown and are read back by the Markdown folder.
+ */
+export function taskTags(attrs: DocNode["attrs"]): string {
+  const due = str(attrs?.due);
+  const time = str(attrs?.time);
+  const repeat = str(attrs?.repeat);
+  const priority = Number(attrs?.priority) || 0;
+  return [due ? `@due(${due}${time ? ` ${time}` : ""})` : "", repeat ? `@repeat(${repeat})` : "", priority ? "!".repeat(Math.min(3, priority)) : ""].filter(Boolean).map((tag) => ` ${tag}`).join("");
+}
+
+const withTags = (line: string, tags: string) => (tags ? `${line.replace(/\s+$/, "")}${tags}` : line);
+
 function textBlocks(nodes: DocNode[], r: Resolve, indent: string): string[] {
   const out: string[] = [];
   for (const node of nodes) {
@@ -55,7 +70,7 @@ function textBlocks(nodes: DocNode[], r: Resolve, indent: string): string[] {
         for (const item of kids(node)) {
           const marker = node.type === "bulletList" ? "- " : node.type === "orderedList" ? `${n++}${listDot(node)} ` : item.attrs?.checked ? "[x] " : "[ ] ";
           const [first = "", ...rest] = textBlocks(kids(item), r, `${indent}  `);
-          lines.push(`${indent}${marker}${first.trimStart()}`, ...rest);
+          lines.push(`${indent}${marker}${node.type === "taskList" ? withTags(first.trimStart(), taskTags(item.attrs)) : first.trimStart()}`, ...rest);
         }
         out.push(lines.join("\n"));
         break;
@@ -140,7 +155,8 @@ function mdBlocks(nodes: DocNode[], r: Resolve): string[] {
         let n = Number(node.attrs?.start ?? 1);
         const items = kids(node).map((item) => {
           const marker = node.type === "bulletList" ? "- " : node.type === "orderedList" ? `${n++}${listDot(node)} ` : item.attrs?.checked ? "- [x] " : "- [ ] ";
-          const body = mdBlocks(kids(item), r).join("\n\n");
+          const [first = "", ...rest] = mdBlocks(kids(item), r).join("\n\n").split("\n");
+          const body = [node.type === "taskList" ? withTags(first, taskTags(item.attrs)) : first, ...rest].join("\n");
           return marker + body.replace(/\n/g, `\n${" ".repeat(marker.length)}`);
         });
         out.push(items.join("\n"));

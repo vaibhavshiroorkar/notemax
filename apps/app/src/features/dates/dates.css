@@ -133,3 +133,12 @@
 .calendar-add {
   color: var(--muted);
 }
+
+/* Days with to-dos due get a ring. */
+.calendar-day[data-tasks] {
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.calendar-tasks {
+  align-self: stretch;
+}

@@ -76,7 +76,7 @@ export function Capture() {
         ref={box}
         className="capture-box"
         aria-label="Quick note"
-        placeholder="Type a note. The first line is its title."
+        placeholder="Type a note. The first line is its title. Start a line with [ ] to add a to-do to your Inbox."
         value={text}
         autoFocus
         onChange={(event) => edit(event.target.value)}

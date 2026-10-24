@@ -23,6 +23,7 @@ import { sharePlugin } from "@/features/share/plugin";
 import { communityPlugin } from "@/features/community/plugin";
 import { markdownFilesPlugin } from "@/features/markdown-files/plugin";
 import { datesPlugin } from "@/features/dates/plugin";
+import { tasksPlugin } from "@/features/tasks/plugin";
 import { specialPlugin } from "@/features/special/plugin";
 import { searchPlugin } from "@/features/search/plugin";
 import { voicePlugin } from "@/features/voice/plugin";
@@ -53,6 +54,7 @@ import { registerPlugin } from "./registry";
   communityPlugin,
   markdownFilesPlugin,
   datesPlugin,
+  tasksPlugin,
   specialPlugin,
   searchPlugin,
   trashPlugin,

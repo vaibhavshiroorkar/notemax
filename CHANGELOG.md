@@ -3,6 +3,15 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.77.0 (2026-10-24)
+
+- To-dos can have a day, a time, a repeat and a priority. Type them in plain words, like "call mum tomorrow 5pm", "water plants every monday" or "fix the leak !!". The words are marked while you type, and leaving the line turns them into a small chip. Click the chip to change the day, time, repeat or priority.
+- A new Tasks page (Ctrl+Alt+T, or "Open tasks") lists every to-do in the workspace: Overdue, Today, Upcoming, No date, and Done folded away. Ticking one there ticks it in its note.
+- Ticking a repeating to-do moves it to its next day instead, in the note or on the Tasks page.
+- Home has a Today card with what is overdue and due today. The calendar marks days with to-dos due and lists them under the picked day.
+- Quick capture: lines that start with [ ] go to an Inbox note as to-dos, with their dates read.
+- Markdown keeps a to-do's date as tags, like "@due(2026-10-25 17:00) @repeat(week) !!", and a Markdown folder reads them back.
+
 ## 0.76.0 (2026-10-24)
 
 - Right-click Open lists the kinds of page: Note, Folder, Book, Board, Code page. Each makes that page and opens it. On a page's row it goes right after that page; on empty space, at the end.
