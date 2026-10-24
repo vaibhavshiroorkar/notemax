@@ -17,6 +17,11 @@
   transform: rotate(180deg);
 }
 
+.calendar-head strong {
+  margin-right: auto;
+  margin-left: 4px;
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -141,4 +146,192 @@
 
 .calendar-tasks {
   align-self: stretch;
+}
+
+/* The calendar as a page: a month of squares, each with what its day holds. */
+.calendar-view {
+  max-width: 1100px;
+}
+
+.calendar-view-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.calendar-view-head h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.calendar-view-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.calendar-month {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.calendar-month-weekday {
+  padding: 6px 8px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.calendar-month-day {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 104px;
+  padding: 4px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.calendar-month-day[data-out] {
+  background: var(--hover);
+}
+
+.calendar-month-day[data-out] .calendar-month-date {
+  color: var(--muted);
+}
+
+.calendar-month-date {
+  align-self: flex-start;
+  min-width: 26px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.calendar-month-date:hover {
+  background: var(--active);
+}
+
+.calendar-month-day[data-today] .calendar-month-date {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+.calendar-month-day ul {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendar-month-thing {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  padding: 1px 6px;
+  border-left: 2px solid var(--border);
+  border-radius: 2px;
+  font-size: 12px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-month-thing:hover {
+  background: var(--hover);
+}
+
+.calendar-month-thing[data-kind="entry"] {
+  border-left-color: var(--accent);
+}
+
+.calendar-month-thing[data-kind="task"] {
+  border-left-color: var(--code-number);
+}
+
+.calendar-month-more {
+  padding: 0 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* Phones: the month is too narrow for words, so days show only their date and a count. */
+@media (max-width: 700px) {
+  .calendar-month-day {
+    min-height: 56px;
+  }
+
+  .calendar-month-thing {
+    font-size: 0;
+    height: 4px;
+    padding: 0;
+    border-left-width: 0;
+    background: var(--border);
+  }
+
+  .calendar-month-thing[data-kind="entry"] {
+    background: var(--accent);
+  }
+
+  .calendar-month-thing[data-kind="task"] {
+    background: var(--code-number);
+  }
+
+  .calendar-month-more {
+    display: none;
+  }
+}
+
+/* Home's week: seven days in a row, today marked, each with how much it holds. */
+.week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.week-strip button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 6px 0;
+  border-radius: 6px;
+}
+
+.week-strip button:hover {
+  background: var(--hover);
+}
+
+.week-strip-day {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.week-strip-date {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.week-strip li[data-today] .week-strip-date {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.week-strip-count {
+  min-height: 16px;
+  color: var(--muted);
+  font-size: 11px;
 }

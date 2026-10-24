@@ -58,6 +58,9 @@ export function CalendarPanel({ app }: { app: AppContext }) {
         <button className="icon-button" aria-label="Next month" onClick={() => step(1)}>
           <Icon name="chevron-right" />
         </button>
+        <button className="icon-button" aria-label="Open the calendar as a page" title="Open as a page" onClick={() => app.openView("calendar")}>
+          <Icon name="expand" />
+        </button>
       </header>
       <div className="calendar-grid" role="grid" aria-label={title}>
         {WEEKDAYS.map((day) => (

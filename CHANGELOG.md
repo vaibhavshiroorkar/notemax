@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.83.0 (2026-10-24)
+
+- Home is calmer: each card is a section with a plain title and a line above it, instead of a boxed card with a capitalised label.
+- Card titles open their full view as a page: Today opens Tasks, Recent pages and Bookmarks open full lists (with where each page sits and when it changed), and Journal opens the Journal.
+- A new This week card shows the seven days with how much each holds. Its title opens the calendar as a page: a whole month, each day with its journal entry, dated pages and to-dos. The sidebar calendar has a button to open it too, and so does "Open the calendar".
+- The Bookmarks page takes a page out with its star.
+
 ## 0.82.0 (2026-10-24)
 
 - Browser pages: a web page inside a page, from + Others or Open. Type an address, or words to search Bing. Back, Forward and Reload, and a button to open the site in a new window.

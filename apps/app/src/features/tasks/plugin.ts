@@ -17,7 +17,7 @@ export const tasksPlugin: Plugin = {
   contentExtensions: () => [TaskAttrs],
   editorExtensions: () => [TaskDates],
   views: [{ id: "tasks", title: "Tasks", icon: "list-check", component: TasksView }],
-  homeSections: [{ id: "tasks.today", title: "Today", order: 15, component: TodayHome }],
+  homeSections: [{ id: "tasks.today", title: "Today", order: 15, open: (app) => app.openView("tasks"), component: TodayHome }],
   floating: [{ id: "tasks.reminders", component: RemindersHost }],
   settings: [{ id: "reminders", order: 35, group: "Writing", title: "Reminders", icon: "clock", keywords: ["notifications", "alarm", "tasks", "to-do"], component: RemindersSection }],
   commands: [{ id: "tasks.open", title: "Open tasks", keywords: ["todo", "to-do", "due", "today", "upcoming", "overdue"], shortcut: "Mod+Alt+T", run: (app) => app.openView("tasks") }],

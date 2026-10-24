@@ -14,6 +14,7 @@ import { WORKSPACE_COLORS, createWorkspace, deleteWorkspace, move, nameOf, openL
 import { HomeList, editedAgo } from "./HomeList";
 import { arranged, homeLayout, moveCard, type HomeLayout } from "./homeLayout";
 import { Dot } from "./Switcher";
+import { PageListView } from "./PageListView";
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
@@ -223,6 +224,15 @@ export function QuickStart({ app }: { app: AppContext }) {
 }
 
 /** The pages opened last in this workspace, with when each was edited. */
+/** Every page opened lately, as a page of its own. */
+export function RecentView({ app }: { app: AppContext; options: Record<string, unknown> }) {
+  const items = recentPages
+    .use()
+    .map((id) => app.tree.items.get(id))
+    .filter((item): item is NonNullable<typeof item> => !!item && item.kind !== "folder");
+  return <PageListView app={app} title="Recent pages" icon="clock" items={items} empty="Pages you open show up here." />;
+}
+
 export function RecentSection({ app }: { app: AppContext }) {
   const items = recentPages
     .use()
@@ -315,7 +325,16 @@ export function HomeView({ app }: { app: AppContext; options: Record<string, unk
       <div className="home-grid">
         {shown.map((section) => (
           <section key={section.id} className="home-card" data-wide={section.wide || undefined} data-section={section.id} aria-label={section.title}>
-            <h2 className="home-heading">{section.title}</h2>
+            <h2 className="home-heading">
+              {section.open ? (
+                <button className="home-heading-link" title={`Open ${section.title} as a page`} onClick={() => section.open!(app)}>
+                  {section.title}
+                  <Icon name="chevron-right" />
+                </button>
+              ) : (
+                section.title
+              )}
+            </h2>
             <Safe name={section.title}>
               <section.component app={app} />
             </Safe>

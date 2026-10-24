@@ -177,7 +177,7 @@
 .home-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 28px 40px;
   align-items: start;
 }
 
@@ -185,12 +185,11 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Cards are sections, not boxes: a rule above each, and room around. */
 .home-card {
   min-width: 0;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .home-page[data-columns="2"] .home-card[data-wide] {
@@ -199,6 +198,42 @@
 
 .home-card .home-heading {
   margin: 0 0 10px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* A title that opens the card's full view. */
+.home-heading-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: -4px;
+  padding: 0 4px;
+  border-radius: 4px;
+  font: inherit;
+}
+
+.home-heading-link svg {
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+
+.home-heading-link:hover {
+  color: var(--accent);
+}
+
+.home-heading-link:hover svg {
+  color: var(--accent);
+  transform: translateX(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-heading-link svg {
+    transition: none;
+  }
 }
 
 .home-card .home-intro {
@@ -285,4 +320,76 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+/* A Home card opened as a page: its pages, with where each sits and when it changed. */
+.page-list-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  font-size: 28px;
+}
+
+.page-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-list li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-list-open {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 6px;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.page-list-open:hover {
+  background: var(--hover);
+}
+
+.page-list-open svg {
+  flex: none;
+  position: relative;
+  top: 2px;
+  color: var(--muted);
+}
+
+.page-list-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-list-where {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-list-when {
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.page-list-action svg {
+  color: var(--accent);
+  fill: var(--accent);
 }

@@ -107,6 +107,8 @@ export interface HomeSection {
   order: number;
   /** Shown only in the wide layout's full width, like the workspace cards. */
   wide?: boolean;
+  /** Opens the card's full view, like every task for Today. The card's title becomes a link to it. */
+  open?(app: AppContext): void;
   component: ComponentType<{ app: AppContext }>;
 }
 

@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import type { AppContext } from "@/plugins/types";
-import { Icon } from "@/ui/Icon";
 import { entries, grouped, useTaskVersion } from "./list";
 import { TaskRow } from "./TaskRow";
 
@@ -22,10 +21,12 @@ export function TodayHome({ app }: { app: AppContext }) {
       ) : (
         <p className="home-empty">Nothing due today.</p>
       )}
-      <button className="button home-card-action" onClick={() => app.openView("tasks")}>
-        <Icon name="list-check" />
-        {due.length > SHOWN ? `All tasks (${due.length - SHOWN} more today)` : "All tasks"}
-      </button>
+      {/* The card's title opens every task; this says when some did not fit. */}
+      {due.length > SHOWN && (
+        <button className="link-button" onClick={() => app.openView("tasks")}>
+          {due.length - SHOWN} more due
+        </button>
+      )}
     </>
   );
 }
