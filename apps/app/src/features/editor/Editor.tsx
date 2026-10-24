@@ -76,7 +76,7 @@ export function Editor({
     {
       extensions: [
         // Yjs keeps its own undo history, so the built-in one must be off.
-        StarterKit.configure({ undoRedo: false }),
+        StarterKit.configure({ undoRedo: false, codeBlock: false }),
         Collaboration.configure({ document: doc, field: "content" }),
         Placeholder.configure({ placeholder }),
         // Links, the / menu, to-do lists and anything else come from plugins.

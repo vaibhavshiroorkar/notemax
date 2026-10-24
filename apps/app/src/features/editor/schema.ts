@@ -9,7 +9,7 @@ import { registry } from "@/plugins/registry";
 // Only node views use the hub, and nothing is drawn here.
 const NO_HUB = undefined as unknown as LinkHub;
 
-const bodyExtensions = (): AnyExtension[] => [StarterKit.configure({ undoRedo: false }), ...registry.contentExtensions({ noteId: "", hub: NO_HUB })];
+const bodyExtensions = (): AnyExtension[] => [StarterKit.configure({ undoRedo: false, codeBlock: false }), ...registry.contentExtensions({ noteId: "", hub: NO_HUB })];
 
 export const bodySchema = () => getSchema(bodyExtensions());
 

@@ -103,6 +103,10 @@ export default defineConfig({
   resolve: { alias: { "@": fromHere("src") } },
   // Tauri expects a fixed port, so fail instead of silently picking another one.
   server: { port: 5173, strictPort: true },
+  // SQLite finds its .wasm file next to its own script, which pre-bundling would move.
+  optimizeDeps: { exclude: ["@sqlite.org/sqlite-wasm"] },
+  // SQL pages run in a module worker that imports SQLite.
+  worker: { format: "es" },
   build: {
     rolldownOptions: {
       // The capture window gets its own small page, so it never waits for the editor to load.

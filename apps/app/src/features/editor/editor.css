@@ -63,6 +63,91 @@
   background: none;
 }
 
+/* A code block: a bar with its language and a copy button, over the code. */
+.editor .code-block {
+  position: relative;
+  margin: 0.75em 0;
+  border-radius: 6px;
+  background: var(--code-bg);
+}
+
+.editor .code-block pre {
+  margin: 0;
+  background: none;
+}
+
+.code-block-bar {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.editor .code-block:hover .code-block-bar,
+.editor .code-block:focus-within .code-block-bar {
+  opacity: 1;
+}
+
+.code-block-bar select {
+  padding: 1px 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--muted);
+  font: 12px system-ui, sans-serif;
+}
+
+/* Touch screens have no hover, so the bar stays. */
+@media (hover: none) {
+  .code-block-bar {
+    opacity: 1;
+  }
+}
+
+/* Highlighted words, in the theme's code colors. */
+.editor .hljs-keyword,
+.editor .hljs-built_in,
+.editor .hljs-meta,
+.editor .hljs-selector-tag {
+  color: var(--code-keyword);
+}
+
+.editor .hljs-string,
+.editor .hljs-regexp,
+.editor .hljs-attr,
+.editor .hljs-template-tag {
+  color: var(--code-string);
+}
+
+.editor .hljs-number,
+.editor .hljs-literal,
+.editor .hljs-symbol {
+  color: var(--code-number);
+}
+
+.editor .hljs-title,
+.editor .hljs-title.function_,
+.editor .hljs-section {
+  color: var(--code-function);
+}
+
+.editor .hljs-type,
+.editor .hljs-title.class_,
+.editor .hljs-name,
+.editor .hljs-tag {
+  color: var(--code-type);
+}
+
+.editor .hljs-comment,
+.editor .hljs-quote {
+  color: var(--muted);
+  font-style: italic;
+}
+
 .editor blockquote {
   margin-left: 0;
   padding-left: 14px;

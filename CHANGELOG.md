@@ -3,6 +3,15 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.80.0 (2026-10-24)
+
+- Code pages use a real code editor (CodeMirror): line numbers, colors, auto-indent, matching and closing brackets, folding, search, and Tab to indent. It syncs and merges like a note.
+- New languages: TypeScript, SQL, C++ and Java, beside Python and JavaScript. TypeScript and SQL run too. C++ and Java are colored for now.
+- SQL runs on SQLite in the page. Each page keeps its tables for as long as the app is open; "Run from empty" starts over. Results show as tables.
+- An Input box feeds input() in Python and input() or prompt() in JavaScript, a line at a time.
+- Downloads of a code page in every language: .py, .js, .ts, .sql, .cpp, .java.
+- Code blocks in notes are colored by their language, with a language picker and a copy button.
+
 ## 0.79.0 (2026-10-24)
 
 - Lock a page from its menu (Page options, Lock page). A locked page asks for the lock password before it shows. One password opens every locked page, on all your devices.

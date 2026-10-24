@@ -1,5 +1,6 @@
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import type { AppContext, Plugin } from "@/plugins/types";
+import { CodeBlock } from "./codeBlock";
 import { CopyAllButton, copyAll } from "./copyAll";
 import { duplicate } from "./duplicate";
 import { EditorSection } from "./EditorSection";
@@ -73,7 +74,7 @@ export const notesPlugin: Plugin = {
     { title: "Paste as plain text", keys: "Mod+Shift+V" },
     { title: "The browser's own menu, with spelling suggestions", keys: "Shift+Right click" },
   ],
-  contentExtensions: () => [TaskList, TaskItem.configure({ nested: true }), Indent, LineSpacing, ListMarker],
+  contentExtensions: () => [TaskList, TaskItem.configure({ nested: true }), CodeBlock, Indent, LineSpacing, ListMarker],
   editorExtensions: () => [ParenthesisList, ShortcutUndo, WordPaste, JoinLists],
   kinds: [{ kind: "note", label: "New note", icon: "note" }],
   pageViews: [{ kind: "note", component: NotePane }],
