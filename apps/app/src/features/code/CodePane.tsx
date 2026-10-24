@@ -5,7 +5,7 @@ import { PageHeader } from "@/plugins/PageHeader";
 import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { LANGUAGES, languageOf, type Language } from "./languages";
-import { run, runs, type Line, type Run } from "./run";
+import { readsInput, run, type Line, type Run } from "./run";
 import "./code.css";
 
 // CodeMirror and its languages load with the first code page, not with the app.
@@ -15,7 +15,14 @@ function Output({ lines }: { lines: Line[] }) {
   return (
     <div className="code-output" aria-label="Output" aria-live="polite">
       {lines.map((line, i) =>
-        line.kind === "table" ? (
+        line.kind === "progress" ? (
+          <div key={i} className="code-progress">
+            <span className="code-info">
+              {line.label}: {Math.round(line.done / 1048576)} of {Math.round(line.total / 1048576)} MB, kept for next time
+            </span>
+            <progress value={line.done} max={line.total || 1} />
+          </div>
+        ) : line.kind === "table" ? (
           <div key={i} className="code-table-wrap">
             <table className="code-table">
               <thead>
@@ -82,11 +89,13 @@ export function CodePane({ node, app, workspaceDoc, onStatus, onReady }: PagePro
     if (running || !local) return;
     setLines([]);
     const begun = performance.now();
-    const current = run(language, local.doc.getText("code").toString(), (line) => setLines((all) => [...all, line]), { stdin, page: `${app.workspace}:${node.id}`, reset });
+    // A newer download bar takes the place of the last, so the output shows one.
+    const add = (line: Line) => setLines((all) => (line.kind === "progress" && all.at(-1)?.kind === "progress" ? [...all.slice(0, -1), line] : [...all, line]));
+    const current = run(language, local.doc.getText("code").toString(), add, { stdin, page: `${app.workspace}:${node.id}`, reset });
     setRunning(current);
     void current.done.then(() => {
       setRunning(null);
-      if (runs(language)) setLines((all) => [...all, { kind: "info", text: `Done in ${Math.round(performance.now() - begun)} ms.` }]);
+      setLines((all) => [...all, { kind: "info", text: `Done in ${Math.round(performance.now() - begun)} ms.` }]);
     });
   };
 
@@ -120,7 +129,7 @@ export function CodePane({ node, app, workspaceDoc, onStatus, onReady }: PagePro
             Stop
           </button>
         ) : (
-          <button className="button button-primary" title="Run (Ctrl+Enter)" disabled={!runs(language)} onClick={() => start()}>
+          <button className="button button-primary" title="Run (Ctrl+Enter)" onClick={() => start()}>
             <Icon name="bolt" />
             Run
           </button>
@@ -130,7 +139,7 @@ export function CodePane({ node, app, workspaceDoc, onStatus, onReady }: PagePro
             Run from empty
           </button>
         )}
-        {language !== "sql" && runs(language) && (
+        {readsInput(language) && (
           <button className="link-button" aria-expanded={showInput} onClick={() => setShowInput(!showInput)}>
             Input
           </button>
@@ -148,13 +157,13 @@ export function CodePane({ node, app, workspaceDoc, onStatus, onReady }: PagePro
       ) : (
         <div className="code-editor code-loading" />
       )}
-      {showInput && language !== "sql" && (
+      {showInput && readsInput(language) && (
         <label className="code-stdin">
           <span>Input, read a line at a time by input()</span>
           <textarea value={stdin} spellCheck={false} rows={3} aria-label="Input" onChange={(event) => setStdin(event.target.value)} />
         </label>
       )}
-      {!runs(language) && <p className="code-info">C++ and Java are highlighted. Running them in the browser comes next.</p>}
+      {language === "java" && <p className="code-info">Java runs a class with a main method. It has no Input box here.</p>}
       {lines.length > 0 && <Output lines={lines} />}
     </div>
   );

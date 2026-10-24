@@ -1,15 +1,16 @@
 {
   "name": "@notemax/app",
-  "version": "0.80.0",
+  "version": "0.81.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "dev": "node ../../scripts/fetch-runtimes.mjs && vite",
+    "build": "node ../../scripts/fetch-runtimes.mjs && tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@bjorn3/browser_wasi_shim": "^0.4.2",
     "@codemirror/autocomplete": "^6.20.4",
     "@codemirror/commands": "^6.11.1",
     "@codemirror/lang-cpp": "^6.0.3",

@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.81.0 (2026-10-24)
+
+- C++ runs in code pages. Clang, built for WebAssembly by YoWASP, comes from jsdelivr the first time (about 23 MB, with a download bar) and the browser keeps it. Input feeds std::cin. A mistake shows Clang's message with its line.
+- Java runs too, on TeaVM's build of javac for WebAssembly (about 7 MB the first time). The app serves those files itself, under /runtimes/teavm/, with their licences in NOTICE.txt. A mistake names its line.
+- scripts/fetch-runtimes.mjs downloads the Java files before dev and build, checked against fixed hashes, and keeps them out of git.
+
 ## 0.80.0 (2026-10-24)
 
 - Code pages use a real code editor (CodeMirror): line numbers, colors, auto-indent, matching and closing brackets, folding, search, and Tab to indent. It syncs and merges like a note.

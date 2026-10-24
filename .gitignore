@@ -21,3 +21,6 @@ coverage/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Downloaded by scripts/fetch-runtimes.mjs before dev and build
+apps/app/public/runtimes/
