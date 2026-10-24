@@ -7,6 +7,7 @@ import { Icon } from "@/ui/Icon";
 import { Segmented } from "@/ui/Segmented";
 import { pageMenu } from "@/ui/ContextMenu";
 import { BookItemMenu } from "./BookItemMenu";
+import { ChapterPreview } from "./ChapterPreview";
 import { WholeBook } from "./WholeBook";
 import { allStops, bookWords, chapterStops, subtopicsOf } from "./reading";
 import { useWordBackfill } from "./useWordBackfill";
@@ -14,16 +15,19 @@ import "./books.css";
 
 const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
 
-type BookView = "chapters" | "whole";
+// How much of each chapter the book's page shows: titles only (the first
+// choice), the first lines of each, or every chapter written out.
+type BookView = "titles" | "previews" | "whole";
 const VIEWS: { value: BookView; label: string }[] = [
-  { value: "chapters", label: "Chapters" },
-  { value: "whole", label: "Whole book" },
+  { value: "titles", label: "Titles" },
+  { value: "previews", label: "Previews" },
+  { value: "whole", label: "Full text" },
 ];
 
 export function BookPane(props: PageProps) {
   const { node, app, tree, workspaceDoc, hub, onSelect, onStatus, onReady } = props;
   // A page setting, so the choice syncs with the book and each book keeps its own.
-  const view: BookView = node.props.bookView === "whole" ? "whole" : "chapters";
+  const view: BookView = node.props.bookView === "whole" ? "whole" : node.props.bookView === "previews" ? "previews" : "titles";
   const book = tree.items.get(node.id);
   const chapters = book ? chapterStops(book) : [];
   useWordBackfill(
@@ -56,7 +60,7 @@ export function BookPane(props: PageProps) {
           {chapters.length > 0 && `, ${total !== null ? plural(total, "word") : "counting words..."}`}
         </p>
         {chapters.length > 0 && (
-          <Segmented<BookView> label="Show the book as" value={view} options={VIEWS} onChange={(next) => setProp(workspaceDoc, node.id, "bookView", next === "whole" ? "whole" : null)} />
+          <Segmented<BookView> label="Show the book as" value={view} options={VIEWS} onChange={(next) => setProp(workspaceDoc, node.id, "bookView", next === "titles" ? null : next)} />
         )}
       </div>
 
@@ -67,7 +71,7 @@ export function BookPane(props: PageProps) {
       {book && view === "whole" && chapters.length > 0 ? (
         <WholeBook book={book} props={props} />
       ) : chapters.length > 0 ? (
-        <ol className="chapter-list" aria-label="Chapters">
+        <ol className="chapter-list" data-view={view} aria-label="Chapters">
           {chapters.map(({ item, label }) => [
             <li key={item.id} onContextMenu={pageMenu(item)}>
               <button className="chapter" onClick={() => onSelect(item.id)}>
@@ -78,6 +82,7 @@ export function BookPane(props: PageProps) {
                 </span>
               </button>
               <BookItemMenu node={item} />
+              {view === "previews" && item.kind === "note" && <ChapterPreview item={item} workspace={app.workspace} />}
             </li>,
             ...subtopicsOf(item, label).map((sub) => (
               <li key={sub.item.id} style={{ "--depth": sub.depth } as CSSProperties} onContextMenu={pageMenu(sub.item)}>

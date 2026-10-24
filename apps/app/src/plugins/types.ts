@@ -387,7 +387,7 @@ export interface ContextMenuItem {
    * "options" (a page's settings, like tags and layout), "share" or
    * "download". A flyout that would hold one item shows the item itself.
    */
-  inside?: "open" | "new" | "new-inside" | "copy" | "options" | "share" | "download";
+  inside?: "open" | "open-in" | "new" | "new-inside" | "copy" | "options" | "share" | "download";
   /** Stands for a list made when the menu opens, shown in its place, like one item per download format. */
   items?(target: ContextTarget, app: AppContext): ContextMenuItem[];
   run?(target: ContextTarget, app: AppContext): void;

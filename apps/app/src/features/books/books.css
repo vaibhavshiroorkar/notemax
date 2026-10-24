@@ -418,3 +418,25 @@
 .note:has(> .inline-subtopics) > .editor .ProseMirror {
   min-height: 4em;
 }
+
+/* Previews: each chapter's first lines under its title. */
+.chapter-list[data-view="previews"] li {
+  flex-wrap: wrap;
+}
+
+.chapter-list[data-view="previews"] > li + li {
+  margin-top: 4px;
+}
+
+.chapter-preview {
+  flex-basis: 100%;
+  min-height: 1.5em;
+  margin: -4px 0 8px calc(1.5em + 12px);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}

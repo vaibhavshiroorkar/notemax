@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.76.0 (2026-10-24)
+
+- Right-click Open lists the kinds of page: Note, Folder, Book, Board, Code page. Each makes that page and opens it. On a page's row it goes right after that page; on empty space, at the end.
+- The tab choices moved to Open in: This tab, A new tab, To the right, Below.
+- A book's page shows its chapters as Titles (at first), Previews (the first lines of each chapter) or Full text (every chapter written out). Each book keeps its choice.
+
 ## 0.75.0 (2026-10-24)
 
 - The Journal is one page now, with each day inside it as a subtopic, newest first. A new workspace's Journal starts with today's entry.
