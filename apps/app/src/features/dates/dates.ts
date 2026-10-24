@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { ROOT, createNode, setProp, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
+import { ROOT, STARTER, createNode, setProp, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
 import { peekDoc } from "@/data/docCache";
 import { holder, setRole } from "@/features/special/roles";
 import { titleFor } from "@/features/special/titles";
@@ -9,7 +9,7 @@ import type { AppContext } from "@/plugins/types";
 // A page can carry a date (its "date" setting, like 2026-10-22), which puts it
 // on the calendar. A daily note is a note made for a day: its "daily" setting
 // holds the day, and it lives in the page chosen for daily notes (Settings,
-// Special pages), or in a folder of its own.
+// Special pages), or in a Journal page that shows each day as a subtopic.
 
 const DATE = "date";
 const DAILY = "daily";
@@ -38,24 +38,28 @@ export function pagesByDay(tree: Tree): Map<string, TreeItem[]> {
   return out;
 }
 
-const dailyNote = (tree: Tree, key: string) => [...tree.items.values()].find((item) => item.props[DAILY] === key);
+export const dailyNote = (tree: Tree, key: string) => [...tree.items.values()].find((item) => item.props[DAILY] === key);
 
-/** Where daily notes go: the page chosen for them, or a new "Daily notes" folder at the top. */
+/** Where daily notes go: the page chosen for them, or a new Journal page at the top with each day inside it. */
 function dailyPlace(app: AppContext): string {
   const chosen = holder(app.tree, "dailyFolder");
   if (chosen) return chosen.id;
-  const id = createNode(app.doc, "folder", ROOT, "Daily notes");
+  const id = createNode(app.doc, "note", ROOT, "Journal", app.tree.byId.has(STARTER.journal) ? crypto.randomUUID() : STARTER.journal);
   setRole(app.doc, app.tree, "dailyFolder", id);
-  // By title, so the days read in date order whatever order they were made in.
-  setProp(app.doc, id, "sort", "title");
+  setProp(app.doc, id, "subtopics", "inline");
+  setProp(app.doc, id, "sort", "days");
   return id;
 }
 
-/** Opens the note for a day, making it first if there is none, as a copy of the template when there is one. */
-export async function openDay(app: AppContext, key: string, where?: { newTab?: boolean }) {
+/**
+ * Makes the note for a day, as a copy of the template when there is one, and
+ * returns its id. The id comes from the day, so two devices that both start
+ * today's note end up with one note once they sync, not two.
+ */
+export async function makeDay(app: AppContext, key: string): Promise<string> {
   const found = dailyNote(app.tree, key);
-  if (found) return app.open(found.id, where);
-  const id = crypto.randomUUID();
+  if (found) return found.id;
+  const id = app.tree.byId.has(`day-${key}`) ? crypto.randomUUID() : `day-${key}`;
   const template = holder(app.tree, "dailyTemplate");
   if (template) {
     // The body goes first, so the note never opens empty. Open templates give their last keystrokes too.
@@ -66,7 +70,30 @@ export async function openDay(app: AppContext, key: string, where?: { newTab?: b
   }
   createNode(app.doc, "note", dailyPlace(app), titleFor(dayOf(key)), id);
   setProp(app.doc, id, DAILY, key);
-  app.open(id, where);
+  return id;
+}
+
+/** Opens the note for a day, making it first if there is none. */
+export async function openDay(app: AppContext, key: string, where?: { newTab?: boolean }) {
+  app.open(await makeDay(app, key), where);
+}
+
+/** A new page dated a day, at the top level, opened to be named. */
+export function addPageOn(app: AppContext, key: string) {
+  const id = createNode(app.doc, "note", ROOT);
+  setDate(app, id, key);
+  app.open(id);
+}
+
+/**
+ * A new workspace's Journal starts with today's entry, once. The mark lives on
+ * the Journal itself, so it syncs, and deleting the entry does not bring it back.
+ */
+export async function startJournal(app: AppContext) {
+  const journal = app.tree.items.get(STARTER.journal);
+  if (!journal || journal.kind !== "note" || journal.props.journalStarted === true || journal.props.dailyFolder !== true) return;
+  setProp(app.doc, journal.id, "journalStarted", true);
+  if (!dailyNote(app.tree, todayKey())) await makeDay(app, todayKey());
 }
 
 /** Daily notes, the newest day first. */

@@ -315,12 +315,15 @@ export async function folderState(): Promise<{ folder: string | null; hasPassphr
   return { folder, hasPassphrase: folder ? (await readKeyCheck(folder)) !== null : false };
 }
 
+// A new workspace's Journal starts with today's entry, whose id comes from the day.
+const isStarter = (id: string) => STARTER_IDS.has(id) || /^day-\d{4}-\d{2}-\d{2}$/.test(id);
+
 /** True when this device has only the pages a new workspace starts with, so replacing them loses nothing but what writtenStarter keeps. */
 async function onlyStarter(): Promise<boolean> {
   const local = await openLocalDoc(await getRawStore(), WORKSPACE_DOC_ID);
   try {
     const tree = readTree(local.doc);
-    return [...tree.byId.keys()].every((id) => STARTER_IDS.has(id)) && tree.trash.length === 0;
+    return [...tree.byId.keys()].every(isStarter) && tree.trash.length === 0;
   } finally {
     await local.close();
   }
@@ -343,7 +346,8 @@ async function writtenStarter(store: DocStore): Promise<Written[]> {
   const tree = readTree(local.doc);
   await local.close();
   const out: Written[] = [];
-  for (const id of STARTER_IDS) {
+  for (const id of tree.byId.keys()) {
+    if (!isStarter(id)) continue;
     const node = tree.byId.get(id);
     if (!node || node.kind === "folder") continue;
     const { updates } = await store.load(id);

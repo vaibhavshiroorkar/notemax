@@ -3,6 +3,14 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.75.0 (2026-10-24)
+
+- The Journal is one page now, with each day inside it as a subtopic, newest first. A new workspace's Journal starts with today's entry.
+- A day's entry gets its id from the date, so two devices that both start today's note end up with one note, not two.
+- The calendar picks a day on a click instead of opening it. Below the month it shows that day's journal entry (or Write in journal), the pages dated that day, and "+ Add a page for this day". A double click or Enter opens the entry.
+- A folder's Page options has "Turn into one page": it becomes a note that shows what was in it as subtopics. Nothing moves. An old Journal folder keeps its days newest first.
+- Sort by has "Newest day first".
+
 ## 0.74.0 (2026-10-24)
 
 - Any note can show the pages inside it as numbered subtopics on its own page, the way a book chapter does. Turn it on from the page menu (Page options) or the right sidebar's This page. It is off at first.

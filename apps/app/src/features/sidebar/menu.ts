@@ -36,6 +36,7 @@ export const SORT_CHOICES: { value: SortOrder | null; title: string }[] = [
   { value: "title-desc", title: "Title, Z to A" },
   { value: "newest", title: "Newest first" },
   { value: "oldest", title: "Oldest first" },
+  { value: "days", title: "Newest day first" },
 ];
 
 /** How a folder or page orders what is in it, on its menu where it is easy to find. Books keep their reading order. The current choice shows greyed out. */

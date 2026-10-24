@@ -156,9 +156,10 @@ function byPosition(a: TreeNode, b: TreeNode) {
 /**
  * How a page or folder may order what is in it, set as its "sort" prop. With
  * none, the order is the one people dragged. Books always keep theirs: it is
- * the reading order.
+ * the reading order. "days" is a journal's: the newest day first, by a page's
+ * "daily" or "date" setting, then pages with no day, newest first.
  */
-export const SORTS = ["title", "title-desc", "newest", "oldest"] as const;
+export const SORTS = ["title", "title-desc", "newest", "oldest", "days"] as const;
 export type SortOrder = (typeof SORTS)[number];
 
 // Numbers inside titles count as numbers, so "Day 2" comes before "Day 10" and dates sort as dates.
@@ -176,10 +177,20 @@ export function sorterFor(parent: TreeNode | undefined): (a: TreeNode, b: TreeNo
       return (a, b) => b.createdAt - a.createdAt || byPosition(a, b);
     case "oldest":
       return (a, b) => a.createdAt - b.createdAt || byPosition(a, b);
+    case "days":
+      return (a, b) => {
+        const x = dayOf(a);
+        const y = dayOf(b);
+        if (x !== y) return x === null ? 1 : y === null ? -1 : x < y ? 1 : -1;
+        return b.createdAt - a.createdAt || byPosition(a, b);
+      };
     default:
       return byPosition;
   }
 }
+
+const isDay = (value: unknown): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+const dayOf = (node: TreeNode) => (isDay(node.props.daily) ? node.props.daily : isDay(node.props.date) ? node.props.date : null);
 
 const sameList = <T>(a: readonly T[], b: readonly T[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
@@ -474,6 +485,29 @@ export function createNode(doc: Y.Doc, kind: NodeKind, parentId: string, title =
 }
 
 /**
+ * Changes what a page is, like a folder into a note, keeping everything inside
+ * it where it is. Throws when the place it is in could not hold the new kind,
+ * or the new kind could not hold what it has inside.
+ */
+export function setKind(doc: Y.Doc, id: string, kind: NodeKind) {
+  if (!KINDS.includes(kind)) throw new Error(`unknown kind ${kind}`);
+  const fields = fieldsOf(doc, id);
+  const tree = readTree(doc);
+  const parentId = parentOf(fields);
+  if (parentId !== ROOT) {
+    const parent = tree.byId.get(parentId);
+    if (parent && !holds(parent.kind, kind)) throw new Error(`a ${parent.kind} cannot hold a ${kind}`);
+    if (isContainer(kind) && withinBook(tree, parentId)) throw new Error(`a book cannot hold a ${kind}`);
+  }
+  for (const child of tree.items.get(id)?.children ?? []) {
+    if (!holds(kind, child.kind)) throw new Error(`a ${kind} cannot hold a ${child.kind}`);
+    const sorter = kind === "book" ? sortsInside(child) : undefined;
+    if (sorter) throw new Error(`a book cannot hold a ${sorter.kind}`);
+  }
+  fields.set("kind", kind);
+}
+
+/**
  * Copies a note into the place right after it, with " copy" on its title and
  * the same tags, links and word count. Returns the new id. The body is stored
  * apart from the tree, so the caller copies it.
@@ -551,7 +585,7 @@ export const STARTER = {
 export const STARTER_IDS: ReadonlySet<string> = new Set(Object.values(STARTER));
 
 /**
- * Fills a brand-new workspace with a Welcome note, a Journal folder for the
+ * Fills a brand-new workspace with a Welcome note, a Journal page for the
  * calendar's daily notes, a drawing board and a small book to show how
  * chapters and subtopics work. Does nothing to a workspace that has anything.
  * With welcomeOnly, just the Welcome note, as workspaces started before.
@@ -561,10 +595,12 @@ export function ensureStarter(doc: Y.Doc, { welcomeOnly = false } = {}) {
   doc.transact(() => {
     createNode(doc, "note", ROOT, "Welcome", STARTER.welcome);
     if (welcomeOnly) return;
-    createNode(doc, "folder", ROOT, "Journal", STARTER.journal);
-    // The role prop the app reads for where daily notes go. Sorted by title, so dated notes read in date order.
+    // One page with each day inside it as a subtopic, the newest day first.
+    // dailyFolder is the role prop the app reads for where daily notes go.
+    createNode(doc, "note", ROOT, "Journal", STARTER.journal);
     setProp(doc, STARTER.journal, "dailyFolder", true);
-    setProp(doc, STARTER.journal, "sort", "title");
+    setProp(doc, STARTER.journal, "subtopics", "inline");
+    setProp(doc, STARTER.journal, "sort", "days");
     createNode(doc, "board", ROOT, "Drawing board", STARTER.board);
     createNode(doc, "book", ROOT, "My first book", STARTER.book);
     createNode(doc, "note", STARTER.book, "Getting started", STARTER.chapter);

@@ -1,4 +1,4 @@
-import { setProp, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
+import { setKind, setProp, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
 import { bookOf, subtopicsOf, type Subtopic } from "@/features/books/reading";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
 
@@ -74,6 +74,33 @@ export const SUBTOPICS_MENU: ContextMenuItem[] = [
     run: (target, app) => setShowsSubtopics(app, noteOf(target, app)!.id, false),
   },
 ];
+
+/**
+ * Makes a folder one page: a note that shows what was in the folder as its
+ * subtopics. Nothing moves, since a note may hold anything a folder holds.
+ * A journal (the place for daily notes) keeps its days newest first.
+ */
+export function turnIntoOnePage(app: AppContext, id: string) {
+  const node = app.tree.byId.get(id);
+  if (node?.kind !== "folder") return;
+  app.doc.transact(() => {
+    setKind(app.doc, id, "note");
+    setProp(app.doc, id, PROP, "inline");
+    if (node.props.dailyFolder === true && (node.props.sort === undefined || node.props.sort === "title")) setProp(app.doc, id, "sort", "days");
+  });
+  app.open(id);
+}
+
+export const ONE_PAGE_MENU: ContextMenuItem = {
+  id: "folders.onePage",
+  inside: "options",
+  title: "Turn into one page",
+  group: "layout",
+  icon: "outline",
+  targets: ["page"],
+  when: (target) => target.type === "page" && target.node.kind === "folder",
+  run: (target, app) => target.type === "page" && turnIntoOnePage(app, target.node.id),
+};
 
 /** Subtopics whose title has every word typed, for the filter boxes. */
 export function filterSubtopics(list: Subtopic[], query: string): Subtopic[] {

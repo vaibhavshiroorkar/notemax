@@ -11,7 +11,7 @@ import { Indent, LineSpacing, ListMarker, ParenthesisList, ShortcutUndo } from "
 import { EDITOR_MENU } from "./menu";
 import { NotePane } from "./NotePane";
 import { SubtopicSetting, SubtopicsPanel } from "./SubtopicsPanel";
-import { SUBTOPICS_MENU, inlineHost, showsSubtopics } from "./subtopics";
+import { ONE_PAGE_MENU, SUBTOPICS_MENU, inlineHost, showsSubtopics } from "./subtopics";
 import { bookOf } from "@/features/books/reading";
 
 const openNote = (app: AppContext) => (app.activeId && app.tree.byId.get(app.activeId)?.kind === "note" ? app.activeId : null);
@@ -82,6 +82,7 @@ export const notesPlugin: Plugin = {
     ...EDITOR_MENU,
     LAYOUT_MENU,
     ...SUBTOPICS_MENU,
+    ONE_PAGE_MENU,
     {
       id: "notes.copy-all",
       inside: "copy",

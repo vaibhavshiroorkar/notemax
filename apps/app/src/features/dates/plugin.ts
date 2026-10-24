@@ -2,7 +2,7 @@ import type { Plugin } from "@/plugins/types";
 import { CalendarPanel } from "./CalendarPanel";
 import { DateSetting } from "./DateSetting";
 import { JournalHome } from "./JournalHome";
-import { openDay, shiftDay, todayKey } from "./dates";
+import { openDay, shiftDay, startJournal, todayKey } from "./dates";
 import "./dates.css";
 
 export const datesPlugin: Plugin = {
@@ -12,6 +12,7 @@ export const datesPlugin: Plugin = {
   sidePanels: [{ id: "dates.calendar", title: "Calendar", order: 80, component: CalendarPanel }],
   homeSections: [{ id: "dates.home", title: "Journal", order: 50, component: JournalHome }],
   pageSettings: [{ id: "dates.date", component: DateSetting }],
+  workspaceStart: (app) => void startJournal(app).catch((err) => console.warn("[notemax] could not start the journal", err)),
   commands: [
     { id: "dates.today", title: "Open today's note", keywords: ["daily", "journal", "diary", "today"], shortcut: "Mod+Alt+D", run: (app) => void openDay(app, todayKey()) },
     { id: "dates.yesterday", title: "Open yesterday's note", keywords: ["daily", "journal", "diary"], run: (app) => void openDay(app, shiftDay(todayKey(), -1)) },

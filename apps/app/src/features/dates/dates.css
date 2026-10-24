@@ -98,3 +98,38 @@
   color: var(--text);
   font: inherit;
 }
+
+.calendar-day-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.calendar-day-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  align-self: stretch;
+}
+
+.calendar-day-info .calendar-pages,
+.calendar-entry {
+  align-self: stretch;
+}
+
+.calendar-entry {
+  width: 100%;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.calendar-entry:hover {
+  background: var(--hover);
+}
+
+.calendar-add {
+  color: var(--muted);
+}

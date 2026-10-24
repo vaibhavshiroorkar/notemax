@@ -26,6 +26,7 @@ export {
   treeUndo,
   UNTRACKED,
   createNode,
+  setKind,
   duplicateNote,
   copyNodesTo,
   ensureStarter,

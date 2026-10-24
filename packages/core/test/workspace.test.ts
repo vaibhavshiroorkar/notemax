@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { ROOT, STARTER, WELCOME_ID, addTag, createNode, duplicateNote, ensureStarter, moveNode, readTree, renameNode, restoreNode, setProp, setWords, trashNode, watchTree } from "../src";
+import { ROOT, STARTER, WELCOME_ID, addTag, createNode, duplicateNote, ensureStarter, moveNode, readTree, renameNode, restoreNode, setKind, setProp, setWords, trashNode, watchTree } from "../src";
 
 const titles = (items: { title: string }[]) => items.map((i) => i.title);
 
@@ -24,8 +24,11 @@ describe("workspace tree", () => {
     ensureStarter(doc);
     const tree = readTree(doc);
     expect(titles(tree.top)).toEqual(["Welcome", "Journal", "Drawing board", "My first book"]);
-    expect(tree.top.map((n) => n.kind)).toEqual(["note", "folder", "board", "book"]);
-    expect(tree.items.get(STARTER.journal)!.props.dailyFolder).toBe(true);
+    expect(tree.top.map((n) => n.kind)).toEqual(["note", "note", "board", "book"]);
+    const journal = tree.items.get(STARTER.journal)!;
+    expect(journal.props.dailyFolder).toBe(true);
+    expect(journal.props.subtopics).toBe("inline");
+    expect(journal.props.sort).toBe("days");
     const book = tree.items.get(STARTER.book)!;
     expect(titles(book.children)).toEqual(["Getting started"]);
     expect(titles(book.children[0].children)).toEqual(["A subtopic"]);
@@ -68,6 +71,18 @@ describe("workspace tree", () => {
     createNode(doc, "note", book, "A");
     setProp(doc, book, "sort", "title");
     expect(titles(readTree(doc).items.get(book)!.children)).toEqual(["B", "A"]);
+  });
+
+  it("puts the newest day first with the days sort, then pages with no day", () => {
+    const doc = new Y.Doc();
+    const journal = createNode(doc, "note", ROOT, "Journal");
+    setProp(doc, journal, "sort", "days");
+    const day = (key: string, title: string, prop = "daily") => setProp(doc, createNode(doc, "note", journal, title), prop, key);
+    day("2026-10-02", "2 Oct 2026");
+    day("2026-10-10", "10 Oct 2026");
+    createNode(doc, "note", journal, "No day");
+    day("2026-09-30", "Dated page", "date");
+    expect(titles(readTree(doc).items.get(journal)!.children)).toEqual(["10 Oct 2026", "2 Oct 2026", "Dated page", "No day"]);
   });
 
   it("keeps notes and folders in one top-level list, in creation order", () => {
@@ -409,5 +424,30 @@ describe("page settings", () => {
     const after = readTree(a, before);
     expect(after.byId.get(id)!.props).toEqual({ goal: 2000 });
     expect(after.byId.get(id)).not.toBe(before.byId.get(id));
+  });
+});
+
+describe("changing a page's kind", () => {
+  it("turns a folder into a note that keeps everything inside", () => {
+    const doc = new Y.Doc();
+    const folder = createNode(doc, "folder", ROOT, "Journal");
+    createNode(doc, "note", folder, "Day one");
+    createNode(doc, "folder", folder, "Old days");
+    setKind(doc, folder, "note");
+    const item = readTree(doc).items.get(folder)!;
+    expect(item.kind).toBe("note");
+    expect(titles(item.children)).toEqual(["Day one", "Old days"]);
+  });
+
+  it("refuses a kind the place cannot hold", () => {
+    const doc = new Y.Doc();
+    const book = createNode(doc, "book", ROOT, "Book");
+    const chapter = createNode(doc, "note", book, "Chapter");
+    expect(() => setKind(doc, chapter, "folder")).toThrow();
+    expect(() => setKind(doc, book, "folder")).not.toThrow();
+    const top = createNode(doc, "note", ROOT, "Holds a folder");
+    createNode(doc, "folder", top, "Inside");
+    expect(() => setKind(doc, top, "book")).toThrow();
+    expect(readTree(doc).items.get(top)!.kind).toBe("note");
   });
 });
