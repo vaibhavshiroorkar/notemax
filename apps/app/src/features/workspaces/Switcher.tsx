@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { currentWorkspace } from "@/platform/prefs";
 import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
@@ -29,7 +28,7 @@ export function Switcher({ app }: { app: AppContext }) {
     };
   }, [open]);
 
-  const current = list.find((w) => w.id === currentWorkspace);
+  const current = list.find((w) => w.id === app.workspace);
   const startNew = async () => {
     setOpen(false);
     const name = await askText({ title: "New workspace", label: "Name", placeholder: "Like Work, School or Novel", confirm: "Create" });
@@ -54,10 +53,10 @@ export function Switcher({ app }: { app: AppContext }) {
       {open && (
         <div className="menu workspace-menu" role="menu" aria-label="Workspaces">
           {list.map((workspace) => (
-            <button key={workspace.id} className="menu-item" role="menuitemradio" aria-checked={workspace.id === currentWorkspace} onClick={() => switchTo(workspace.id)}>
+            <button key={workspace.id} className="menu-item" role="menuitemradio" aria-checked={workspace.id === app.workspace} onClick={() => switchTo(workspace.id)}>
               <Dot color={workspace.color} />
               <span className="workspace-name">{nameOf(workspace)}</span>
-              {workspace.id === currentWorkspace && <span className="workspace-here">open</span>}
+              {workspace.id === app.workspace && <span className="workspace-here">open</span>}
             </button>
           ))}
           <hr />

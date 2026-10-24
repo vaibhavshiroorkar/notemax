@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
 import { ROOT, WELCOME_ID, createNode, restoreNode, trashNode, type NodeKind, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
 import { addRecent, recentPages } from "@/data/recent";
+import { PageWorkspace, shownWorkspace } from "@/data/scope";
 import { useWorkspace } from "@/data/useWorkspace";
 import { useSignInRedirect } from "@/features/account/useSignInRedirect";
 import { LinkHub } from "@/features/links/link-hub";
@@ -29,6 +30,7 @@ import { usePresence } from "@/ui/usePresence";
 import { useEdgeSwipe } from "./useEdgeSwipe";
 import { useHidingBars } from "./useHidingBars";
 import { RightSidebar } from "./RightSidebar";
+import { ForeignPage, foreignActive, foreignScopes, scopedApp } from "./ForeignPage";
 import { revealing, useReveal } from "./reveal";
 import { pageInAddress, showInAddress, startBrowserNavigation } from "./history";
 import { TabStrip } from "./TabStrip";
@@ -81,7 +83,9 @@ function firstNote(items: TreeItem[]): string | null {
 }
 
 export function App() {
-  const workspace = useWorkspace();
+  // The workspace in the sidebar. Tabs can hold pages from others too.
+  const shown = shownWorkspace.use();
+  const workspace = useWorkspace(shown);
   // The saved tabs load once, before the first draw. A page in the address
   // (a reload or a bookmark) opens in the active tab.
   useState(() => {
@@ -100,7 +104,10 @@ export function App() {
     return () => query.removeEventListener("change", onChange);
   }, []);
   const visit = currentVisit(tabs);
-  const selectedId = visit && !isView(visit.page) ? visit.page : null;
+  // The active tab's page, when it is from another workspace than the sidebar shows.
+  const foreign = visit && !isView(visit.page) && visit.ws !== shown ? visit : null;
+  const selectedId = visit && !isView(visit.page) && !foreign ? visit.page : null;
+  const foreignScope = foreignActive.use();
   // On a phone the sides cover the page, so they start closed there.
   const [sidebarOpen, setSidebarOpen] = useState(() => !isNarrow() && getPref("sidebarOpen") !== "false");
   const [sidePanelOpen, setSidePanelOpen] = useState(() => !isNarrow() && getPref("sidePanelOpen") !== "false");
@@ -125,17 +132,37 @@ export function App() {
     requestPersistentStorage().then(setPersistent, () => setPersistent(false));
   }, []);
 
-  // Plugins' start hooks, like sync, run once the workspace is open.
+  // Plugins' start hooks, like sync, run once the workspace is open. They get
+  // a context that always reads the newest state, since they keep it for later.
+  const [liveApp] = useState(
+    () =>
+      new Proxy({} as AppContext, {
+        get: (_target, key) => Reflect.get(appRef.current!, key),
+        ownKeys: () => Reflect.ownKeys(appRef.current!),
+        getOwnPropertyDescriptor: (_target, key) => ({ value: Reflect.get(appRef.current!, key), enumerable: true, configurable: true }),
+      }),
+  );
   const started = useRef(false);
+  const startedIn = useRef<string | null>(null);
   useEffect(() => {
-    if (!workspace.doc || started.current || !appRef.current) return;
-    started.current = true;
-    for (const start of registry.starters()) {
-      try {
-        start(appRef.current);
-      } catch (err) {
-        console.warn("[notemax] a plugin failed to start", err);
+    if (!workspace.doc || !appRef.current || appRef.current.workspace !== shown) return;
+    const run = (hooks: ((app: AppContext) => void)[]) => {
+      for (const hook of hooks) {
+        try {
+          hook(liveApp);
+        } catch (err) {
+          console.warn("[notemax] a plugin failed to start", err);
+        }
       }
+    };
+    if (!started.current) {
+      started.current = true;
+      run(registry.starters());
+    }
+    // What belongs to one workspace starts again for each one shown.
+    if (startedIn.current !== shown) {
+      startedIn.current = shown;
+      run(registry.workspaceStarters());
     }
   });
 
@@ -149,8 +176,9 @@ export function App() {
 
   useEffect(() => {
     if (selectedId) setPref("selectedId", selectedId);
-    showInAddress(visit?.page ?? null);
-  }, [selectedId, visit?.page]);
+    // The address opens a page of the shown workspace, so a page from another one stays out of it.
+    showInAddress(foreign ? null : (visit?.page ?? null));
+  }, [selectedId, visit?.page, foreign]);
   // Only a wide window's choice is kept: closing a side on a phone says nothing about the desktop.
   useEffect(() => void (isNarrow() || setPref("sidebarOpen", String(sidebarOpen))), [sidebarOpen]);
   useEffect(() => void (isNarrow() || setPref("sidePanelOpen", String(sidePanelOpen))), [sidePanelOpen]);
@@ -301,6 +329,7 @@ export function App() {
   const activeNode = activeId ? tree.byId.get(activeId) : undefined;
 
   const app: AppContext = {
+    workspace: shown,
     tree,
     doc,
     hub,
@@ -367,9 +396,14 @@ export function App() {
   const OverlayView = overlay && registry.overlay(overlay.id)?.component;
   const ViewPage = visit && isView(visit.page) ? registry.view(viewId(visit.page))?.component : undefined;
   const HomePage = registry.view("home")?.component;
-  const panels = registry.sidePanels(app);
+  // The right sidebar and page buttons follow the active page, from whichever workspace it is.
+  const sideApp = foreign && foreignScope?.ws === foreign.ws ? scopedApp(app, foreignScope) : app;
+  const sideNode = sideApp.activeId ? sideApp.tree.byId.get(sideApp.activeId) : undefined;
+  const panels = registry.sidePanels(sideApp);
 
-  const activePage =
+  const activePage = foreign ? (
+    <ForeignPage key={`${foreign.ws}:${version}`} base={app} visit={foreign} active version={version} />
+  ) :
     visit && isView(visit.page) ? (
       ViewPage ? (
         <Safe key={`${visit.page}:${version}`} name={viewId(visit.page)}>
@@ -404,6 +438,7 @@ export function App() {
     const tab = pane.tabs.find((t) => t.id === pane.active);
     const shown = tab?.visits[tab.index];
     if (!shown) return <p className="empty pane-empty">Click here, then open a page from the sidebar or Ctrl+K.</p>;
+    if (!isView(shown.page) && shown.ws !== app.workspace) return <ForeignPage key={`${shown.ws}:${version}`} base={app} visit={shown} active={false} version={version} />;
     if (isView(shown.page)) {
       const Shown = registry.view(viewId(shown.page))?.component;
       return Shown ? <Shown app={app} options={shown.options ?? {}} /> : null;
@@ -454,7 +489,7 @@ export function App() {
       data-calm={calm || undefined}
       style={{ "--sidebar-width": `${leftWidth}px`, "--side-panel-width": `${rightWidth}px` } as CSSProperties}
     >
-      {leftMounted && <Sidebar key={version} app={app} />}
+      {leftMounted && <Sidebar key={`${version}:${shown}`} app={app} />}
       {showLeft && (
         <ResizeHandle side="left" label="Resize sidebar" size={SIDEBAR} width={sidebarWidth} cssVar="--sidebar-width" onCollapse={() => setSidebarOpen(false)} />
       )}
@@ -474,10 +509,12 @@ export function App() {
           <Icon name="search" />
         </button>
         <div className="page-toolbar">
-          {activeNode &&
-            registry.pageCorner(activeNode.kind).map(({ id, component: Corner }) => (
+          {sideNode &&
+            registry.pageCorner(sideNode.kind).map(({ id, component: Corner }) => (
               <Safe key={id} name={id}>
-                <Corner node={activeNode} app={app} />
+                <PageWorkspace.Provider value={sideApp.workspace}>
+                  <Corner node={sideNode} app={sideApp} />
+                </PageWorkspace.Provider>
               </Safe>
             ))}
           {!narrow && (
@@ -513,7 +550,12 @@ export function App() {
         </div>
         {narrow ? <div className="page-scroll">{activePage}</div> : renderSplit(split, [])}
       </main>
-      <RightSidebar app={app} panels={panels} all={registry.allSidePanels()} open={showRight} />
+      {/* Contents only: a box for the right sidebar's workspace, without a box in the layout. */}
+      <div className="side-scope" data-workspace={sideApp.workspace}>
+        <PageWorkspace.Provider value={sideApp.workspace}>
+          <RightSidebar app={sideApp} panels={panels} all={registry.allSidePanels()} open={showRight} />
+        </PageWorkspace.Provider>
+      </div>
       {/* Phones only (CSS): a tap beside an open side closes it. */}
       {(showLeft || showRight) && (
         <div
@@ -551,7 +593,7 @@ export function App() {
           <OverlayView app={app} options={overlay!.options} onClose={() => setOverlay(null)} />
         </Safe>
       )}
-      <ContextMenuHost app={app} />
+      <ContextMenuHost app={app} appFor={(ws) => (ws === shown ? app : foreignScopes.has(ws) ? scopedApp(app, foreignScopes.get(ws)!) : undefined)} />
       <PromptHost />
       <Toasts />
       <StatusBar app={app} workspaceStatus={workspace.status} words={activeNode?.kind === "note" ? activeNode.words : null} persistent={persistent} />

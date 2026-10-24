@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import * as Y from "yjs";
 import { listVersions, type Version } from "@notemax/core";
 import { withPageDoc } from "@/features/export/content";
-import { getStore } from "@/platform/platform";
+import { storeFor } from "@/platform/platform";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { saveNow, versionEvery, versionsSaved } from "./versions";
@@ -22,18 +22,18 @@ export function VersionsPanel({ app }: { app: AppContext }) {
 
   useEffect(() => {
     let live = true;
-    getStore()
+    storeFor(app.workspace)
       .then((store) => listVersions(store, id))
       .then((list) => live && setVersions(list))
       .catch(() => live && setVersions([]));
     return () => {
       live = false;
     };
-  }, [id, saved]);
+  }, [id, saved, app.workspace]);
 
   const saveHere = async () => {
-    const state = await withPageDoc(id, (doc) => Y.encodeStateAsUpdate(doc));
-    await saveNow(id, state);
+    const state = await withPageDoc(id, (doc) => Y.encodeStateAsUpdate(doc), app.workspace);
+    await saveNow(id, state, null, app.workspace);
     app.notify("Saved a version of this page");
   };
 
@@ -43,7 +43,7 @@ export function VersionsPanel({ app }: { app: AppContext }) {
         <ul>
           {versions.map((version) => (
             <li key={version.id}>
-              <button className="version-row" onClick={() => app.openOverlay("history.preview", { pageId: id, versionId: version.id })}>
+              <button className="version-row" onClick={() => app.openOverlay("history.preview", { pageId: id, versionId: version.id, workspace: app.workspace })}>
                 <span>
                   {whenOf(version.time)}
                   {version.label && <span className="version-label">{version.label}</span>}

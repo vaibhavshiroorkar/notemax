@@ -3,7 +3,8 @@ import { yXmlFragmentToProsemirrorJSON } from "@tiptap/y-tiptap";
 import { listVersions, versionDoc, type Tree, type Version } from "@notemax/core";
 import { dataUrl, loadPictures, resolver } from "@/features/export/content";
 import { toHtml, type DocNode } from "@/features/export/serialize";
-import { getStore } from "@/platform/platform";
+import { storeFor } from "@/platform/platform";
+import { workspaceNow } from "@/platform/prefs";
 
 /**
  * One saved version of a page, its body as stored and as HTML, to show
@@ -11,7 +12,7 @@ import { getStore } from "@/platform/platform";
  * downloaded web page. All are null while loading, and stay null when the
  * version is gone.
  */
-export function useVersionHtml(pageId: string, versionId: string, tree: Tree) {
+export function useVersionHtml(pageId: string, versionId: string, tree: Tree, workspace = workspaceNow()) {
   const [version, setVersion] = useState<Version | null>(null);
   const [html, setHtml] = useState<string | null>(null);
   const [body, setBody] = useState<DocNode | null>(null);
@@ -19,12 +20,12 @@ export function useVersionHtml(pageId: string, versionId: string, tree: Tree) {
   useEffect(() => {
     let live = true;
     (async () => {
-      const found = (await listVersions(await getStore(), pageId)).find((v) => v.id === versionId) ?? null;
+      const found = (await listVersions(await storeFor(workspace), pageId)).find((v) => v.id === versionId) ?? null;
       if (!found || !live) return;
       const doc = versionDoc(found);
       const body = yXmlFragmentToProsemirrorJSON(doc.getXmlFragment("content")) as DocNode;
       doc.destroy();
-      const pictures = await loadPictures([body]);
+      const pictures = await loadPictures([body], undefined, workspace);
       if (!live) return;
       setVersion(found);
       setBody(body);

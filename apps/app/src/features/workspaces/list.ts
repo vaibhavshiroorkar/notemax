@@ -16,8 +16,7 @@ import {
   type WorkspaceInfo,
 } from "@notemax/core";
 import { WORKSPACES_CHANNEL, getRawStore, getSharedStore } from "@/platform/platform";
-import { currentWorkspace, setPref } from "@/platform/prefs";
-import { saveTabsNow } from "@/app/tabs";
+import { setWorkspace, workspaceNow } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
 
 /** Every workspace, kept current as the list changes here or on another device. */
@@ -49,14 +48,12 @@ const change = async (edit: (doc: LocalDoc["doc"]) => void) => {
   await local.flush();
 };
 
-/** Shows another workspace. The window starts over in it, with that workspace's own tabs. */
+/**
+ * Shows another workspace in the sidebar, at once. Open tabs stay open,
+ * whichever workspace their pages are in.
+ */
 export function switchTo(id: string) {
-  if (id === currentWorkspace) return;
-  // While the prefs still point at this workspace, so its tabs are kept under its name.
-  saveTabsNow();
-  setPref("workspace", id);
-  // Without the page in the address: it belongs to the workspace being left.
-  location.assign(location.pathname);
+  setWorkspace(id);
 }
 
 export async function createWorkspace(name: string, color = ""): Promise<string> {
@@ -71,7 +68,7 @@ export const move = (id: string, index: number) => change((doc) => moveWorkspace
 
 /** Erases a workspace and every page in it, here and, through sync, on other devices. */
 export async function deleteWorkspace(id: string) {
-  if (id === MAIN_WORKSPACE || id === currentWorkspace) throw new Error("switch to another workspace first");
+  if (id === MAIN_WORKSPACE || id === workspaceNow()) throw new Error("switch to another workspace first");
   const store = await getSharedStore();
   for (const stored of await store.list()) if (splitScoped(stored).workspace === id) await store.remove(stored);
   await change((doc) => removeWorkspace(doc, id));

@@ -327,6 +327,41 @@
   flex: none;
 }
 
+/* A page from another workspace than the sidebar shows: that workspace's name, in its color. */
+.tab-from {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 45%;
+  overflow: hidden;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--workspace-color, var(--muted)) 22%, transparent);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.foreign-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0 auto;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.foreign-line .workspace-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--workspace-color, var(--muted));
+}
+
 .tab-title {
   flex: 1;
   min-width: 0;
@@ -838,4 +873,9 @@
   .note-book {
     transition: none;
   }
+}
+
+/* Marks the right sidebar's workspace for menus, without a box of its own in the grid. */
+.side-scope {
+  display: contents;
 }

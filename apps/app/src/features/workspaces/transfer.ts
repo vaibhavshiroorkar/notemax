@@ -2,13 +2,12 @@ import * as Y from "yjs";
 import { WORKSPACE_DOC_ID, assetDocId, copyNodesTo, scopedId, type DocStore } from "@notemax/core";
 import { peekDoc } from "@/data/docCache";
 import { getSharedStore } from "@/platform/platform";
-import { currentWorkspace } from "@/platform/prefs";
 
 /** A page's whole stored state, taken from memory when it is open, so the last keystrokes come along. */
-async function stateOf(store: DocStore, docId: string): Promise<Uint8Array | null> {
-  const open = peekDoc(docId);
+async function stateOf(store: DocStore, docId: string, workspace: string): Promise<Uint8Array | null> {
+  const open = peekDoc(docId, workspace);
   if (open) return Y.encodeStateAsUpdate(open.doc);
-  const { updates } = await store.load(scopedId(currentWorkspace, docId));
+  const { updates } = await store.load(scopedId(workspace, docId));
   return updates.length ? Y.mergeUpdates(updates) : null;
 }
 
@@ -34,7 +33,7 @@ function picturesIn(state: Uint8Array): string[] {
  * workspace's tree is written last, so it never lists a page whose text has
  * not arrived yet.
  */
-export async function copyToWorkspace(workspaceDoc: Y.Doc, id: string, target: string): Promise<string> {
+export async function copyToWorkspace(workspaceDoc: Y.Doc, id: string, target: string, source: string): Promise<string> {
   const store = await getSharedStore();
   const treeId = scopedId(target, WORKSPACE_DOC_ID);
   const tree = new Y.Doc();
@@ -44,15 +43,21 @@ export async function copyToWorkspace(workspaceDoc: Y.Doc, id: string, target: s
     const before = Y.encodeStateVector(tree);
     const ids = copyNodesTo(workspaceDoc, id, tree);
     for (const [from, to] of ids) {
-      const state = await stateOf(store, from);
+      const state = await stateOf(store, from, source);
       if (!state) continue;
       await store.append(scopedId(target, to), state);
       for (const asset of picturesIn(state)) {
-        const picture = await stateOf(store, assetDocId(asset));
+        const picture = await stateOf(store, assetDocId(asset), source);
         if (picture) await store.append(scopedId(target, assetDocId(asset)), picture);
       }
     }
-    await store.append(treeId, Y.encodeStateAsUpdate(tree, before));
+    const update = Y.encodeStateAsUpdate(tree, before);
+    // A workspace whose tree is open, like one with a tab here, takes the
+    // change in memory, which also saves it. Written only to storage, the
+    // open tree would never see it.
+    const open = peekDoc(WORKSPACE_DOC_ID, target);
+    if (open) Y.applyUpdate(open.doc, update);
+    else await store.append(treeId, update);
     return ids.get(id)!;
   } finally {
     tree.destroy();

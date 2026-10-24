@@ -1,13 +1,13 @@
 import * as Y from "yjs";
 import { WORKSPACE_DOC_ID, plainText, readTree, splitScoped, type Tree } from "@notemax/core";
 import { remoteEdit } from "@/features/sync/live";
-import { getStore, memoryOnly, onLocalWrite } from "@/platform/platform";
-import { currentWorkspace } from "@/platform/prefs";
+import { memoryOnly, onLocalWrite, storeFor } from "@/platform/platform";
 import { createStore } from "@/platform/store";
 
 // Every note's text, for searching inside notes and for finding pages that
 // mention a title without linking to it. Kept in IndexedDB with the time the
 // note was last edited, so a restart reads only notes that changed since.
+// It covers the workspace in the sidebar, and starts over when that changes.
 
 const DB = "notemax-search";
 interface Saved {
@@ -30,14 +30,14 @@ function db(): Promise<IDBDatabase> {
   });
   return opened;
 }
-const key = (id: string) => `${currentWorkspace}:${id}`;
+const key = (workspace: string, id: string) => `${workspace}:${id}`;
 
-async function loadSaved(): Promise<Map<string, Saved>> {
+async function loadSaved(workspace: string): Promise<Map<string, Saved>> {
   // A device that keeps no pages keeps no copy of their text either; the index lives in memory.
   if (memoryOnly) return new Map();
   const tx = (await db()).transaction("texts", "readonly");
   const store = tx.objectStore("texts");
-  const prefix = `${currentWorkspace}:`;
+  const prefix = `${workspace}:`;
   const range = IDBKeyRange.bound(prefix, `${prefix}￿`);
   const [keys, values] = await Promise.all([
     new Promise<IDBValidKey[]>((resolve, reject) => {
@@ -54,16 +54,16 @@ async function loadSaved(): Promise<Map<string, Saved>> {
   return new Map(keys.map((k, i) => [String(k).slice(prefix.length), values[i]]));
 }
 
-async function save(id: string, saved: Saved | null) {
+async function save(workspace: string, id: string, saved: Saved | null) {
   if (memoryOnly) return;
   const tx = (await db()).transaction("texts", "readwrite");
-  if (saved) tx.objectStore("texts").put(saved, key(id));
-  else tx.objectStore("texts").delete(key(id));
+  if (saved) tx.objectStore("texts").put(saved, key(workspace, id));
+  else tx.objectStore("texts").delete(key(workspace, id));
 }
 
 /** A note's text, read from storage. Nothing is written to the note. */
-async function readText(id: string): Promise<string> {
-  const { updates } = await (await getStore()).load(id);
+async function readText(workspace: string, id: string): Promise<string> {
+  const { updates } = await (await storeFor(workspace)).load(id);
   const body = new Y.Doc();
   try {
     if (updates.length) Y.applyUpdate(body, Y.mergeUpdates(updates));
@@ -73,18 +73,61 @@ async function readText(id: string): Promise<string> {
   }
 }
 
-async function refresh(id: string, edited: number) {
-  const text = await readText(id);
+async function refresh(workspace: string, id: string, edited: number) {
+  const text = await readText(workspace, id);
+  // Switched away while reading: this text belongs to the other workspace.
+  if (indexed?.workspace !== workspace) return;
   texts.set(id, text);
-  await save(id, { text, edited });
+  await save(workspace, id, { text, edited });
+}
+
+/** What the index covers now. */
+let indexed: { doc: Y.Doc; workspace: string } | null = null;
+const pending = new Map<string, ReturnType<typeof setTimeout>>();
+
+/** Reads a note again a second after its last change. */
+function soon(id: string) {
+  clearTimeout(pending.get(id));
+  pending.set(
+    id,
+    setTimeout(() => {
+      pending.delete(id);
+      const now = indexed;
+      if (!now) return;
+      const node = readTree(now.doc).byId.get(id);
+      if (node?.kind === "note") void refresh(now.workspace, id, Date.now()).then(bump);
+    }, 1000),
+  );
+}
+
+let listening = false;
+function listen() {
+  if (listening) return;
+  listening = true;
+  onLocalWrite(({ docId }) => {
+    const { workspace, docId: id } = splitScoped(docId);
+    if (workspace === indexed?.workspace && id !== WORKSPACE_DOC_ID) soon(id);
+  });
+  remoteEdit.subscribe(() => {
+    const edit = remoteEdit.get();
+    if (edit) soon(edit.docId);
+  });
 }
 
 /**
- * Fills the index, a few notes at a time so typing never waits on it, then
- * keeps it current as notes change here or on other devices.
+ * Fills the index for a workspace, a few notes at a time so typing never
+ * waits on it, then keeps it current as notes change here or on other
+ * devices. Called again for the next workspace when the sidebar switches.
  */
-export async function startIndex(doc: Y.Doc) {
-  const saved = await loadSaved();
+export async function startIndex(doc: Y.Doc, workspace: string) {
+  indexed = { doc, workspace };
+  texts.clear();
+  pending.forEach((timer) => clearTimeout(timer));
+  pending.clear();
+  listen();
+  bump();
+  const saved = await loadSaved(workspace);
+  if (indexed.workspace !== workspace) return;
   const tree = readTree(doc);
   const notes = [...tree.items.values()].filter((item) => item.kind === "note");
   const stale: { id: string; edited: number }[] = [];
@@ -94,32 +137,12 @@ export async function startIndex(doc: Y.Doc) {
     if (!known || known.edited < note.editedAt) stale.push({ id: note.id, edited: note.editedAt });
   }
   // Gone from the workspace since: out of the index too.
-  for (const id of saved.keys()) if (!tree.byId.has(id)) void save(id, null);
+  for (const id of saved.keys()) if (!tree.byId.has(id)) void save(workspace, id, null);
   bump();
 
-  const pending = new Map<string, ReturnType<typeof setTimeout>>();
-  const soon = (id: string) => {
-    clearTimeout(pending.get(id));
-    pending.set(
-      id,
-      setTimeout(() => {
-        pending.delete(id);
-        const node = readTree(doc).byId.get(id);
-        if (node?.kind === "note") void refresh(id, Date.now()).then(bump);
-      }, 1000),
-    );
-  };
-  onLocalWrite(({ docId }) => {
-    const { workspace, docId: id } = splitScoped(docId);
-    if (workspace === currentWorkspace && id !== WORKSPACE_DOC_ID) soon(id);
-  });
-  remoteEdit.subscribe(() => {
-    const edit = remoteEdit.get();
-    if (edit) soon(edit.docId);
-  });
-
   for (let i = 0; i < stale.length; i += 20) {
-    await Promise.all(stale.slice(i, i + 20).map(({ id, edited }) => refresh(id, edited).catch(() => {})));
+    if (indexed.workspace !== workspace) return;
+    await Promise.all(stale.slice(i, i + 20).map(({ id, edited }) => refresh(workspace, id, edited).catch(() => {})));
     bump();
     await new Promise((resolve) => setTimeout(resolve, 0));
   }

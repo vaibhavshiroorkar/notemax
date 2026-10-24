@@ -1,6 +1,7 @@
 import { Extension, Node, type Editor } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { ReactNodeViewRenderer } from "@tiptap/react";
+import { workspaceOf } from "@/data/scope";
 import { showToast } from "@/ui/toast";
 import { ImageView } from "./ImageView";
 import { isImage, saveImage } from "./store";
@@ -55,7 +56,7 @@ export async function insertImages(editor: Editor, files: File[], pos?: number) 
   let at = pos ?? editor.state.selection.to;
   for (const file of files.filter(isImage)) {
     try {
-      const asset = await saveImage(file, file.name || "picture");
+      const asset = await saveImage(file, file.name || "picture", workspaceOf(editor.view.dom));
       editor.chain().focus().insertContentAt(at, { type: "image", attrs: { asset } }).run();
       // The next one goes after this one.
       at = editor.state.selection.to;

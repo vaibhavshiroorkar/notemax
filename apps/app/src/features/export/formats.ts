@@ -35,14 +35,14 @@ export async function partsOf(node: TreeNode, app: AppContext, { boards = true }
   const title = node.title || (node.kind === "book" ? "Untitled book" : "Untitled");
   const made = new Map<string, Asset>();
   const book = app.tree.items.get(node.id);
-  if (node.kind !== "book" || !book) return { title, parts: [{ body: await loadBody(node.id) }], made };
+  if (node.kind !== "book" || !book) return { title, parts: [{ body: await loadBody(node.id, app.workspace) }], made };
   const parts: Part[] = [];
   // The book's description comes before the first chapter.
-  const intro = await loadBody(book.id);
+  const intro = await loadBody(book.id, app.workspace);
   if (isWritten(intro)) parts.push({ body: intro });
   const partOf = async (item: TreeItem, title: string, level: number) => {
     const part: Part = { title, body: EMPTY, level };
-    if (item.kind === "note") part.body = await loadBody(item.id);
+    if (item.kind === "note") part.body = await loadBody(item.id, app.workspace);
     else if (item.kind === "board" && boards) {
       const picture = await boardPicture(item.id, app);
       if (picture) {
@@ -79,6 +79,7 @@ async function markdown(node: TreeNode, app: AppContext) {
   const pictures = await loadPictures(
     parts.map((p) => p.body),
     made,
+    app.workspace,
   );
   const path = (id: string) => `attachments/${id.slice(0, 16)}.${extOf(pictures.get(id)!.type)}`;
   const r = resolver(app.tree, (id) => (pictures.has(id) ? path(id) : null));
@@ -96,6 +97,7 @@ async function htmlPage(node: TreeNode, app: AppContext, forPrint = false) {
   const pictures = await loadPictures(
     parts.map((p) => p.body),
     made,
+    app.workspace,
   );
   const r = resolver(app.tree, (id) => (pictures.has(id) ? dataUrl(pictures.get(id)!) : null));
   const body =
@@ -131,6 +133,7 @@ async function word(node: TreeNode, app: AppContext) {
   const pictures = await loadPictures(
     parts.map((p) => p.body),
     made,
+    app.workspace,
   );
   const ready = new Map<string, DocxImage>();
   for (const [id, asset] of pictures) {
@@ -151,6 +154,7 @@ async function ebook(node: TreeNode, app: AppContext) {
   const pictures = await loadPictures(
     parts.map((p) => p.body),
     made,
+    app.workspace,
   );
   const images: { path: string; bytes: Uint8Array; type: string }[] = [];
   const paths = new Map<string, string>();

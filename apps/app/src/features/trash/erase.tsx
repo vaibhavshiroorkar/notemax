@@ -16,7 +16,7 @@ export function eraseForever(doc: Y.Doc, nodes: TreeNode[]) {
     if (!ids.includes(node.id)) ids.push(...deleteForever(doc, node.id));
   }
   // Any copy still open in memory goes first, so a late save cannot bring text back.
-  Promise.all(ids.map(forgetDoc))
+  Promise.all(ids.map((id) => forgetDoc(id)))
     .then(getStore)
     .then((store) => Promise.all(ids.flatMap((id) => [store.remove(id), store.remove(historyDocId(id))])))
     .catch((err) => console.warn("[notemax] could not erase note bodies", err));

@@ -10,5 +10,5 @@ export const searchPlugin: Plugin = {
   name: "Full-text search",
   description: "Ctrl+K finds words inside notes too, and the right sidebar lists pages that mention a page without linking to it",
   sidePanels: [{ id: "search.mentions", title: "Mentioned in", order: 32, when: onNote, component: MentionsPanel }],
-  start: (app) => void startIndex(app.doc).catch((err) => console.warn("[notemax] could not build the search index", err)),
+  workspaceStart: (app) => void startIndex(app.doc, app.workspace).catch((err) => console.warn("[notemax] could not build the search index", err)),
 };

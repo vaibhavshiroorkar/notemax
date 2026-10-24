@@ -7,6 +7,9 @@ import { TemporaryLine, TemporaryNotice } from "./TemporaryNotice";
 import { isTemporary, keep, startMarking, temporaryItems } from "./temporary";
 import "./temporary.css";
 
+// Workspace trees being marked, so going back to one does not mark twice.
+const marking = new WeakSet<object>();
+
 const pagesOf = (target: ContextTarget): TreeNode[] => (target.type === "page" ? [target.node] : target.type === "pages" ? target.nodes : []);
 
 // Keeping a page that lives only in this browser would hide the risk without
@@ -64,7 +67,10 @@ export const temporaryPlugin: Plugin = {
       run: (app) => keep(app.doc, temporaryItems(app.tree).map((item) => item.id)),
     },
   ],
-  start(app) {
+  workspaceStart(app) {
+    // Back in a workspace whose tree is still open: it is marking already.
+    if (marking.has(app.doc)) return;
+    marking.add(app.doc);
     startMarking(app.doc, app.tree);
   },
 };

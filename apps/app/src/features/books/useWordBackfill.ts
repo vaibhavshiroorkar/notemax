@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
 import * as Y from "yjs";
 import { countWords, setWords, type TreeNode } from "@notemax/core";
-import { getStore } from "@/platform/platform";
+import { usePageWorkspace } from "@/data/scope";
+import { storeFor } from "@/platform/platform";
 
 /** Reads a chapter's words straight from storage. Nothing is written to the body. */
-async function countStoredWords(id: string): Promise<number> {
-  const { updates } = await (await getStore()).load(id);
+async function countStoredWords(id: string, workspace: string): Promise<number> {
+  const { updates } = await (await storeFor(workspace)).load(id);
   const body = new Y.Doc();
   try {
     if (updates.length) Y.applyUpdate(body, Y.mergeUpdates(updates));
@@ -22,6 +23,7 @@ async function countStoredWords(id: string): Promise<number> {
  */
 export function useWordBackfill(chapters: TreeNode[], workspaceDoc: Y.Doc) {
   const requested = useRef(new Set<string>());
+  const workspace = usePageWorkspace();
   const live = useRef(true);
   useEffect(() => {
     live.current = true;
@@ -34,7 +36,7 @@ export function useWordBackfill(chapters: TreeNode[], workspaceDoc: Y.Doc) {
     for (const id of key ? key.split(",") : []) {
       if (requested.current.has(id)) continue;
       requested.current.add(id);
-      countStoredWords(id)
+      countStoredWords(id, workspace)
         .then((words) => {
           // Once the page is closed the chapter may be open in the editor,
           // which keeps its own count. An older count must not replace it.
@@ -42,5 +44,5 @@ export function useWordBackfill(chapters: TreeNode[], workspaceDoc: Y.Doc) {
         })
         .catch((err) => console.warn("[notemax] could not count words", id, err));
     }
-  }, [key, workspaceDoc]);
+  }, [key, workspaceDoc, workspace]);
 }

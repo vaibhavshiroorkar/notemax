@@ -1,8 +1,9 @@
 import { Extension, Node, type Editor } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { ReactNodeViewRenderer } from "@tiptap/react";
+import { workspaceOf } from "@/data/scope";
 import { saveAsset } from "@notemax/core";
-import { getStore } from "@/platform/platform";
+import { storeFor } from "@/platform/platform";
 import { showToast } from "@/ui/toast";
 import { VideoView } from "./VideoView";
 
@@ -62,7 +63,7 @@ export async function insertVideos(editor: Editor, files: File[], pos?: number) 
       if (file.size > MAX_VIDEO_BYTES) throw new Error(`Videos can be up to ${MAX_VIDEO_BYTES / 1024 / 1024} MB.`);
       showToast(`Adding ${name}...`);
       const bytes = new Uint8Array(await file.arrayBuffer());
-      const asset = await saveAsset(await getStore(), { bytes, type: file.type, name });
+      const asset = await saveAsset(await storeFor(workspaceOf(editor.view.dom)), { bytes, type: file.type, name });
       editor.chain().focus().insertContentAt(at, { type: "video", attrs: { asset, name } }).run();
       at = editor.state.selection.to;
     } catch (error) {

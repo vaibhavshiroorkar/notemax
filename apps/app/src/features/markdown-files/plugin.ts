@@ -16,5 +16,5 @@ export const markdownFilesPlugin: Plugin = {
       run: () => void checkNow(),
     },
   ],
-  start: (app) => void startMirror(app).catch((err) => console.warn("[notemax] could not open the Markdown folder", err)),
+  workspaceStart: (app) => void startMirror(app).catch((err) => console.warn("[notemax] could not open the Markdown folder", err)),
 };

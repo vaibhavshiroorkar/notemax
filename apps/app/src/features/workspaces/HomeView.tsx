@@ -2,7 +2,6 @@ import { useEffect, useState, type DragEvent } from "react";
 import type { WorkspaceInfo } from "@notemax/core";
 import { MAIN_WORKSPACE } from "@notemax/core";
 import { recentPages } from "@/data/recent";
-import { currentWorkspace } from "@/platform/prefs";
 import { registry } from "@/plugins/registry";
 import type { AppContext, HomeSection } from "@/plugins/types";
 import { ConfirmDialog } from "@/ui/Dialog";
@@ -19,7 +18,7 @@ import { Dot } from "./Switcher";
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 function Card({ workspace, app, count, onDragTo, onBack }: { workspace: WorkspaceInfo; app: AppContext; count: number | null; onDragTo(id: string): void; onBack(): void }) {
-  const here = workspace.id === currentWorkspace;
+  const here = workspace.id === app.workspace;
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [dropping, setDropping] = useState(false);
@@ -123,7 +122,7 @@ export function WorkspacesSection({ app }: { app: AppContext }) {
   useEffect(() => {
     let live = true;
     for (const workspace of list) {
-      if (workspace.id === currentWorkspace) continue;
+      if (workspace.id === app.workspace) continue;
       pageCount(workspace.id)
         .then((count) => live && setCounts((all) => ({ ...all, [workspace.id]: count })))
         .catch(() => {});
@@ -167,7 +166,7 @@ export function WorkspacesSection({ app }: { app: AppContext }) {
             key={workspace.id}
             workspace={workspace}
             app={app}
-            count={workspace.id === currentWorkspace ? app.tree.visible.size : (counts[workspace.id] ?? null)}
+            count={workspace.id === app.workspace ? app.tree.visible.size : (counts[workspace.id] ?? null)}
             onBack={back}
             onDragTo={(dragged) => dragged && dragged !== workspace.id && void move(dragged, list.findIndex((w) => w.id === workspace.id))}
           />

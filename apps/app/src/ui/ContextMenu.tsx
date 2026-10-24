@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
 import type { TreeNode } from "@notemax/core";
+import { workspaceOf } from "@/data/scope";
 import { createStore } from "@/platform/store";
 import { registry } from "@/plugins/registry";
 import { formatShortcut } from "@/plugins/shortcuts";
@@ -14,12 +15,14 @@ interface Open {
   target: ContextTarget;
   x: number;
   y: number;
+  /** The workspace of the page the menu was opened in, so its items change that one. */
+  workspace?: string;
 }
 
 const current = createStore<Open | null>(null);
 
-export function openContextMenu(target: ContextTarget, x: number, y: number) {
-  current.set({ target, x, y });
+export function openContextMenu(target: ContextTarget, x: number, y: number, workspace?: string) {
+  current.set({ target, x, y, workspace });
 }
 
 const closeContextMenu = () => current.set(null);
@@ -44,7 +47,7 @@ export function contextMenuHandler(target: () => ContextTarget | null) {
       x = event.type === "click" ? rect.left : rect.left + 16;
       y = rect.bottom + 2;
     }
-    openContextMenu(t, x, y);
+    openContextMenu(t, x, y, workspaceOf(event.currentTarget as Element));
   };
 }
 
@@ -113,9 +116,14 @@ function grouped(items: ContextMenuItem[]): (ContextMenuItem | "line")[] {
   return order.flatMap((group, i) => [...(i ? (["line"] as const) : []), ...byGroup.get(group)!]);
 }
 
-/** Draws the menu that is open, if any. Rendered once, by the app. */
-export function ContextMenuHost({ app }: { app: AppContext }) {
+/**
+ * Draws the menu that is open, if any. Rendered once, by the app. `appFor`
+ * gives the context of another workspace whose page is open in a tab, so a
+ * menu opened in that page acts there.
+ */
+export function ContextMenuHost({ app: shownApp, appFor }: { app: AppContext; appFor?(workspace: string): AppContext | undefined }) {
   const open = current.use();
+  const app = open?.workspace && open.workspace !== shownApp.workspace ? appFor?.(open.workspace) : shownApp;
   const returnFocus = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -155,7 +163,8 @@ export function ContextMenuHost({ app }: { app: AppContext }) {
     };
   }, [open]);
 
-  if (!open) return null;
+  // A page from a workspace that is no longer open: nothing to act on safely.
+  if (!open || !app) return null;
   const items = expand(registry.contextMenu(open.target, app), open.target, app);
   if (!items.length) return null;
   // Inside an open dialog, like the graph, the menu must belong to it: everything

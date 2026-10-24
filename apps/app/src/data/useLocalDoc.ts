@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import type { LocalDoc, SaveStatus } from "@notemax/core";
 import { acquireDoc, releaseDoc } from "./docCache";
+import { usePageWorkspace } from "./scope";
 
-export function useLocalDoc(docId: string) {
+/** Opens a doc while the component is on screen: of the page's workspace, unless one is named. */
+export function useLocalDoc(docId: string, named?: string) {
+  const scoped = usePageWorkspace();
+  const workspace = named ?? scoped;
   const [local, setLocal] = useState<LocalDoc | null>(null);
   const [status, setStatus] = useState<SaveStatus>({ state: "saved" });
   const [openError, setOpenError] = useState<string>();
@@ -11,7 +15,7 @@ export function useLocalDoc(docId: string) {
     let cancelled = false;
     let unsubscribe = () => {};
 
-    acquireDoc(docId)
+    acquireDoc(docId, workspace)
       .then((doc) => {
         // React may unmount before the doc finishes opening (StrictMode does this on purpose).
         if (cancelled) return;
@@ -25,10 +29,10 @@ export function useLocalDoc(docId: string) {
       cancelled = true;
       unsubscribe();
       // The cache keeps the doc open a while, so coming back to it is instant.
-      releaseDoc(docId);
+      releaseDoc(docId, workspace);
       setLocal(null);
     };
-  }, [docId]);
+  }, [docId, workspace]);
 
   // Ask the browser to confirm closing the tab while edits are not on disk yet.
   // The cache writes them right away when the tab is hidden or closed.

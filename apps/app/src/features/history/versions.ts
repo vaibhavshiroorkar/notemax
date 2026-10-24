@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import * as Y from "yjs";
 import { countWords, listVersions, saveVersion } from "@notemax/core";
-import { getStore } from "@/platform/platform";
+import { usePageWorkspace } from "@/data/scope";
+import { storeFor } from "@/platform/platform";
+import { workspaceNow } from "@/platform/prefs";
 import { createStore, savedStore } from "@/platform/store";
 import { registry } from "@/plugins/registry";
 
@@ -12,12 +14,12 @@ export const versionEvery = savedStore<number>("versionEvery", 10);
 export const versionsSaved = createStore(0);
 
 /** Saves a page's state as a version, with the words it had then. Returns its id. */
-export async function saveNow(pageId: string, state: Uint8Array, label: string | null = null): Promise<string> {
+export async function saveNow(pageId: string, state: Uint8Array, label: string | null = null, workspace = workspaceNow()): Promise<string> {
   const doc = new Y.Doc();
   Y.applyUpdate(doc, state);
   const words = countWords(doc.getXmlFragment("content"));
   doc.destroy();
-  const id = await saveVersion(await getStore(), pageId, state, { words, label });
+  const id = await saveVersion(await storeFor(workspace), pageId, state, { words, label });
   versionsSaved.set(versionsSaved.get() + 1);
   return id;
 }
@@ -28,6 +30,7 @@ export async function saveNow(pageId: string, state: Uint8Array, label: string |
  * was left. Opening and reading a page saves nothing.
  */
 export function useVersions(body: Y.Doc | undefined, pageId: string) {
+  const workspace = usePageWorkspace();
   useEffect(() => {
     if (!body || !registry.isOn("history")) return;
     // Null until the newest saved version is known.
@@ -37,7 +40,7 @@ export function useVersions(body: Y.Doc | undefined, pageId: string) {
     // Taken now, since the first edit is what makes it worth keeping. An empty page has nothing to keep.
     const before = Y.encodeStateAsUpdate(body);
     let keptBefore = body.getXmlFragment("content").length === 0;
-    getStore()
+    storeFor(workspace)
       .then((store) => listVersions(store, pageId))
       .then((versions) => {
         if (live) last = versions[0]?.time ?? 0;
@@ -46,7 +49,7 @@ export function useVersions(body: Y.Doc | undefined, pageId: string) {
 
     const save = (state: Uint8Array) => {
       last = Date.now();
-      saveNow(pageId, state).catch((err) => console.warn("[notemax] could not save a version", pageId, err));
+      saveNow(pageId, state, null, workspace).catch((err) => console.warn("[notemax] could not save a version", pageId, err));
     };
     const onUpdate = () => {
       const every = versionEvery.get() * 60_000;
@@ -67,5 +70,5 @@ export function useVersions(body: Y.Doc | undefined, pageId: string) {
       body.off("update", onUpdate);
       if (changed && versionEvery.get() > 0) save(Y.encodeStateAsUpdate(body));
     };
-  }, [body, pageId]);
+  }, [body, pageId, workspace]);
 }

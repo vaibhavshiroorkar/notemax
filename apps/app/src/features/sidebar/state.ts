@@ -1,4 +1,5 @@
 import type { Tree, TreeItem } from "@notemax/core";
+import { onWorkspaceChange } from "@/platform/prefs";
 import { createStore, savedStore } from "@/platform/store";
 import type { DropTarget } from "./drag";
 
@@ -131,3 +132,12 @@ export function topGroups(tree: Tree): { label: string | null; items: TreeItem[]
 
 /** The title search under the Notes heading. Null while it is closed. */
 export const titleQuery = createStore<string | null>(null);
+
+// Picks, a name being typed and a title search belong to the workspace they
+// were made in. Another workspace in the sidebar starts without them.
+onWorkspaceChange(() => {
+  clearSelection();
+  editingId.set(null);
+  markedId.set(null);
+  titleQuery.set(null);
+});

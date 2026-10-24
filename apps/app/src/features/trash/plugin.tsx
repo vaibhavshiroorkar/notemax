@@ -31,7 +31,7 @@ export const trashPlugin: Plugin = {
   views: [{ id: "trash", title: "Trash", icon: "trash", component: TrashView }],
   pageHeader: [{ id: "trash.line", component: TrashedLine }],
   commands: [{ id: "trash.open", title: "Open the trash", keywords: ["deleted", "restore", "bin", "recycle"], run: (app) => app.openView("trash") }],
-  start(app) {
+  workspaceStart(app) {
     eraseOld(app.doc, app.tree.trash);
   },
 };

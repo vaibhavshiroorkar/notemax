@@ -85,6 +85,12 @@ export interface Plugin {
   sidebarFooter?: SidebarFooterItem[];
   /** Runs once when the main window has opened the workspace, like starting sync. */
   start?(app: AppContext): void;
+  /**
+   * Runs for the workspace in the sidebar: once it is open at start, and again
+   * after each switch, with the new one. For what belongs to one workspace,
+   * like an index of its pages. `app` reads the newest state when used later.
+   */
+  workspaceStart?(app: AppContext): void;
 }
 
 /** A card on the Home page. It may draw nothing while it has nothing to show. */
@@ -124,6 +130,12 @@ export interface Overlay {
 
 /** The open workspace and the actions any command or panel may take on it. */
 export interface AppContext {
+  /**
+   * The workspace these pages are in. For a page in a tab from another
+   * workspace than the sidebar shows, its context says that workspace, and
+   * tree and doc are that workspace's.
+   */
+  workspace: string;
   tree: Tree;
   doc: Y.Doc;
   /** Opens links and says where a page sits, like "Folder / Book". */

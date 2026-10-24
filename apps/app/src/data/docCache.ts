@@ -1,5 +1,6 @@
 import { openLocalDoc, type LocalDoc } from "@notemax/core";
-import { DOC_CHANNEL, getStore } from "@/platform/platform";
+import { docChannelFor, storeFor } from "@/platform/platform";
+import { workspaceNow } from "@/platform/prefs";
 import { beforeQuit } from "@/platform/quit";
 
 // Opening a doc means reading it from storage, which takes tens of milliseconds
@@ -7,6 +8,10 @@ import { beforeQuit } from "@/platform/quit";
 // going back to a note is instant, and a note can start loading while the
 // pointer rests on it. An idle doc still gets edits from other windows through
 // the channel, so it never goes stale.
+//
+// Docs of different workspaces can share an id, like "workspace", so each is
+// kept under its workspace and id. The workspace defaults to the shown one; a
+// page from another workspace names its own.
 
 interface Entry {
   promise: Promise<LocalDoc>;
@@ -20,23 +25,28 @@ interface Entry {
 const entries = new Map<string, Entry>();
 const KEEP_IDLE = 8;
 
-function open(docId: string): Entry {
+const keyOf = (docId: string, workspace: string) => `${workspace}
+${docId}`;
+
+function open(docId: string, workspace: string): Entry {
+  const key = keyOf(docId, workspace);
   const entry: Entry = {
-    promise: getStore().then((store) => openLocalDoc(store, docId, { broadcast: DOC_CHANNEL })),
+    promise: storeFor(workspace).then((store) => openLocalDoc(store, docId, { broadcast: docChannelFor(workspace) })),
     users: 0,
   };
   entry.promise.then(
     (doc) => (entry.doc = doc),
     // A failed open is not kept, so the next try reads storage again.
-    () => entries.get(docId) === entry && entries.delete(docId),
+    () => entries.get(key) === entry && entries.delete(key),
   );
   return entry;
 }
 
-function touch(docId: string): Entry {
-  const entry = entries.get(docId) ?? open(docId);
-  entries.delete(docId);
-  entries.set(docId, entry);
+function touch(docId: string, workspace: string): Entry {
+  const key = keyOf(docId, workspace);
+  const entry = entries.get(key) ?? open(docId, workspace);
+  entries.delete(key);
+  entries.set(key, entry);
   return entry;
 }
 
@@ -49,36 +59,37 @@ function closeExtraIdle() {
 }
 
 /** Opens a doc for a page. Pair every call with releaseDoc. */
-export function acquireDoc(docId: string): Promise<LocalDoc> {
-  const entry = touch(docId);
+export function acquireDoc(docId: string, workspace = workspaceNow()): Promise<LocalDoc> {
+  const entry = touch(docId, workspace);
   entry.users += 1;
   return entry.promise;
 }
 
-export function releaseDoc(docId: string) {
-  const entry = entries.get(docId);
+export function releaseDoc(docId: string, workspace = workspaceNow()) {
+  const entry = entries.get(keyOf(docId, workspace));
   if (!entry) return;
   entry.users -= 1;
   closeExtraIdle();
 }
 
 /** Starts loading a doc that is likely to open soon. */
-export function prefetchDoc(docId: string) {
-  if (entries.has(docId)) return;
-  touch(docId);
+export function prefetchDoc(docId: string, workspace = workspaceNow()) {
+  if (entries.has(keyOf(docId, workspace))) return;
+  touch(docId, workspace);
   closeExtraIdle();
 }
 
 /** The doc, if it is open now. */
-export function peekDoc(docId: string): LocalDoc | undefined {
-  return entries.get(docId)?.doc;
+export function peekDoc(docId: string, workspace = workspaceNow()): LocalDoc | undefined {
+  return entries.get(keyOf(docId, workspace))?.doc;
 }
 
 /** Closes a doc for good, before its stored body is erased, so no late save brings any of it back. */
-export async function forgetDoc(docId: string) {
-  const entry = entries.get(docId);
+export async function forgetDoc(docId: string, workspace = workspaceNow()) {
+  const key = keyOf(docId, workspace);
+  const entry = entries.get(key);
   if (!entry) return;
-  entries.delete(docId);
+  entries.delete(key);
   await entry.promise.then((doc) => doc.close()).catch(() => {});
 }
 

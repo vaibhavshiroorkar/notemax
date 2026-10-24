@@ -1,5 +1,4 @@
 import { isInside, trashNode, type TreeNode } from "@notemax/core";
-import { currentWorkspace } from "@/platform/prefs";
 import type { AppContext, ContextMenuItem, ContextTarget, Plugin } from "@/plugins/types";
 import { HomeView, QuickStart, RecentSection, WorkspacesSection } from "./HomeView";
 import { nameOf, switchTo, workspaceList } from "./list";
@@ -17,7 +16,7 @@ async function send(target: ContextTarget, app: AppContext, workspace: string, m
   const pages = pagesOf(target, app);
   const where = nameOf(workspaceList.get().find((w) => w.id === workspace)!);
   try {
-    for (const page of pages) await copyToWorkspace(app.doc, page.id, workspace);
+    for (const page of pages) await copyToWorkspace(app.doc, page.id, workspace, app.workspace);
   } catch (error) {
     app.notify(`Could not ${move ? "move" : "copy"} to ${where}: ${error instanceof Error ? error.message : String(error)}`);
     return;
@@ -34,10 +33,10 @@ const sendItem = (move: boolean): ContextMenuItem => ({
   group: "duplicate",
   targets: ["page", "pages"],
   when: () => workspaceList.get().length > 1,
-  submenu: () =>
+  submenu: (_target, app) =>
     workspaceList
       .get()
-      .filter((w) => w.id !== currentWorkspace)
+      .filter((w) => w.id !== app.workspace)
       .map((w) => ({
         id: `workspaces.${move ? "move" : "copy"}.${w.id}`,
         title: nameOf(w),

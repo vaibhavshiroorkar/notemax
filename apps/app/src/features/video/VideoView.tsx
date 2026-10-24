@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
+import { usePageWorkspace } from "@/data/scope";
 // Any asset reads the same way; pictures were simply first.
 import { imageUrl } from "@/features/images/store";
 import "./video.css";
@@ -11,11 +12,12 @@ export function VideoView({ node, updateAttributes, selected, editor }: NodeView
   const { asset, name, width } = node.attrs as { asset: string | null; name: string; width: number | null };
   const [url, setUrl] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
+  const workspace = usePageWorkspace();
 
   useEffect(() => {
     let cancelled = false;
     if (asset)
-      imageUrl(asset).then(
+      imageUrl(asset, workspace).then(
         (found) => {
           if (cancelled) return;
           setUrl(found);
@@ -26,7 +28,7 @@ export function VideoView({ node, updateAttributes, selected, editor }: NodeView
     return () => {
       cancelled = true;
     };
-  }, [asset]);
+  }, [asset, workspace]);
 
   return (
     <NodeViewWrapper className="video-block" data-selected={selected || undefined} style={width ? { width: `${width}%` } : undefined}>

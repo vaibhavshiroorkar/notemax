@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { captureNote } from "@notemax/core";
-import { DOC_CHANNEL, getStore, isDesktop } from "@/platform/platform";
+import { docChannelFor, getStore, isDesktop } from "@/platform/platform";
+import { workspaceNow } from "@/platform/prefs";
 import { getPref, setPref } from "@/platform/prefs";
 
 const DRAFT_KEY = "captureDraft";
@@ -42,7 +43,7 @@ export function Capture() {
     if (!text.trim()) return hideWindow();
     setSaving(true);
     try {
-      await captureNote(await getStore(), text, { broadcast: DOC_CHANNEL });
+      await captureNote(await getStore(), text, { broadcast: docChannelFor(workspaceNow()) });
       edit("");
       setError(undefined);
       await hideWindow();

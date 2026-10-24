@@ -1,10 +1,10 @@
 import { withPageDoc } from "@/features/export/content";
-import type { Plugin } from "@/plugins/types";
+import type { AppContext, Plugin } from "@/plugins/types";
 import { CodePane } from "./CodePane";
 
 /** The page's code as a file of its language. */
-async function codeFile(id: string) {
-  return withPageDoc(id, (doc) => ({ code: doc.getText("code").toString(), language: doc.getMap<string>("settings").get("language") === "javascript" ? "javascript" : "python" }));
+async function codeFile(id: string, workspace: string) {
+  return withPageDoc(id, (doc) => ({ code: doc.getText("code").toString(), language: doc.getMap<string>("settings").get("language") === "javascript" ? "javascript" : "python" }), workspace);
 }
 
 export const codePlugin: Plugin = {
@@ -19,8 +19,8 @@ export const codePlugin: Plugin = {
     label: extension === "py" ? "Python file (.py)" : "JavaScript file (.js)",
     extension,
     kinds: ["code" as const],
-    async build(node: { id: string }) {
-      const { code } = await codeFile(node.id);
+    async build(node: { id: string }, app: AppContext) {
+      const { code } = await codeFile(node.id, app.workspace);
       return new Blob([code], { type: "text/plain;charset=utf-8" });
     },
   })),

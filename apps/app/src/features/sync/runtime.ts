@@ -23,7 +23,7 @@ import * as Y from "yjs";
 import { starterSeeds } from "@/features/editor/welcome";
 import { markTemporary } from "@/features/temporary/temporary";
 import { WORKSPACES_CHANNEL, docChannelFor, eraseDiskStore, getRawStore, isDesktop, keepOnDisk, memoryOnly, onLocalWrite, setMemoryFill } from "@/platform/platform";
-import { currentWorkspace } from "@/platform/prefs";
+import { workspaceNow } from "@/platform/prefs";
 import { beforeQuit } from "@/platform/quit";
 import { getPref, removePref, setPref } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
@@ -60,9 +60,9 @@ const EDIT_MARGIN_MS = 10 * 60_000;
 async function maybeUnsent(store: DocStore): Promise<string[]> {
   const ids = [SETTINGS_DOC_ID, WORKSPACES_DOC_ID, ...(await store.list()).filter((id) => splitScoped(id).docId === WORKSPACE_DOC_ID)];
   const since = Number(getPref(PREFS.lastAt) ?? 0) - EDIT_MARGIN_MS;
-  const local = await openLocalDoc(store, scopedId(currentWorkspace, WORKSPACE_DOC_ID));
+  const local = await openLocalDoc(store, scopedId(workspaceNow(), WORKSPACE_DOC_ID));
   try {
-    for (const node of readTree(local.doc).byId.values()) if (node.editedAt > since) ids.push(scopedId(currentWorkspace, node.id));
+    for (const node of readTree(local.doc).byId.values()) if (node.editedAt > since) ids.push(scopedId(workspaceNow(), node.id));
   } finally {
     await local.close();
   }
@@ -133,7 +133,7 @@ async function runEngine(signal: AbortSignal) {
     let channel = channels.get(name);
     if (!channel) channels.set(name, (channel = new BroadcastChannel(name)));
     channel.postMessage({ docId, update });
-    if (workspace === currentWorkspace) noteRemoteEdit(docId);
+    if (workspace === workspaceNow()) noteRemoteEdit(docId);
   };
   const current = createSyncEngine({
     store: await getRawStore(),
@@ -147,7 +147,7 @@ async function runEngine(signal: AbortSignal) {
     // Asked in the workspace it belongs to. Elsewhere both edits are kept all the same.
     onConflict(stored, mine, theirs) {
       const { workspace, docId } = splitScoped(stored);
-      if (workspace === currentWorkspace) void recordConflict(docId, mine, theirs).catch(() => {});
+      if (workspace === workspaceNow()) void recordConflict(docId, mine, theirs).catch(() => {});
     },
     onStatus(status) {
       if (status.state === "idle" && status.lastSynced) setPref(PREFS.lastAt, String(status.lastSynced));

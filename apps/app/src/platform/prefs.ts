@@ -12,17 +12,37 @@ function read(key: string): string | null {
   }
 }
 
-/**
- * The workspace this window shows. Chosen before anything else loads, and
- * switching reloads the window, so it never changes while the app runs.
- */
-export const currentWorkspace = read("workspace") ?? "main";
+let shown = read("workspace") ?? "main";
+const workspaceListeners = new Set<() => void>();
 
-// What belongs to one workspace: its open tabs, the pages last opened, the
-// folders closed, and its waiting sync questions. Everything else, like the
-// theme, is the same in all of them.
-const PER_WORKSPACE = new Set(["tabs", "selectedId", "recentPages", "collapsed", "syncConflicts"]);
-const keyOf = (key: string) => PREFIX + (PER_WORKSPACE.has(key) && currentWorkspace !== "main" ? `${key}@${currentWorkspace}` : key);
+/**
+ * The workspace the sidebar shows. It changes while the app runs: switching
+ * no longer reloads the window, and tabs from other workspaces stay open.
+ */
+export const workspaceNow = () => shown;
+
+/** Calls `listener` after the shown workspace changes. Returns a function that stops it. */
+export function onWorkspaceChange(listener: () => void): () => void {
+  workspaceListeners.add(listener);
+  return () => workspaceListeners.delete(listener);
+}
+
+// What belongs to one workspace: the page last opened, the pages opened
+// recently, the folders closed, and its waiting sync questions. Everything
+// else, like the theme and the open tabs, is the same in all of them.
+const PER_WORKSPACE = new Set(["selectedId", "recentPages", "collapsed", "syncConflicts"]);
+/** A setting's key in storage. Per-workspace ones carry the workspace, except in the main one. */
+const keyIn = (key: string, workspace: string) => PREFIX + (PER_WORKSPACE.has(key) && workspace !== "main" ? `${key}@${workspace}` : key);
+const keyOf = (key: string) => keyIn(key, shown);
+
+/** A setting as one workspace keeps it, whichever is shown. */
+export const getPrefIn = (key: string, workspace: string): string | null => {
+  try {
+    return localStorage.getItem(keyIn(key, workspace));
+  } catch {
+    return null;
+  }
+};
 
 export function getPref(key: string): string | null {
   try {
@@ -96,6 +116,18 @@ export function onPrefChangedElsewhere(key: string, listener: () => void) {
   });
   if (!watchers.has(key)) watchers.set(key, new Set());
   watchers.get(key)!.add(listener);
+}
+
+/**
+ * Shows another workspace. Saved settings that belong to one workspace, like
+ * the closed folders, read again from the new one's keys.
+ */
+export function setWorkspace(id: string) {
+  if (id === shown) return;
+  shown = id;
+  write("workspace", id);
+  for (const key of PER_WORKSPACE) watchers.get(key)?.forEach((listener) => listener());
+  workspaceListeners.forEach((listener) => listener());
 }
 
 /** Keeps a setting that came from another device, and tells everything watching it. */

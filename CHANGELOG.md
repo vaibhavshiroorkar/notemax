@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.73.0 (2026-10-24)
+
+- Switching workspace is instant and no longer reloads the window.
+- Open tabs stay open when you switch. A tab from another workspace shows its name beside the title, and its page still works: you can write in it, add pictures, keep versions and use its menus, and everything saves in its own workspace. A line above the page says where it is from, with a button to show that workspace in the sidebar.
+- Copying or moving a page to a workspace that has a tab open shows up there at once.
+
 ## 0.72.0 (2026-10-24)
 
 - Split view has a layout button at the top right: one pane, two side by side, two stacked, three (one left, two right) or four in a two by two grid. Tabs from panes that no longer fit move into the last pane, so nothing open is lost.

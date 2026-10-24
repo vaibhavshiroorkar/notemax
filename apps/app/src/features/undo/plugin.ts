@@ -31,8 +31,12 @@ export const undoPlugin: Plugin = {
     { id: "undo.undo", title: "Undo the last change to your pages", keywords: ["undo", "back", "revert"], run: (app) => step(app, true) },
     { id: "undo.redo", title: "Redo the last change to your pages", keywords: ["redo", "again"], run: (app) => step(app, false) },
   ],
-  start(app) {
+  // Each workspace has its own pages, so its own history of changes.
+  workspaceStart(app) {
+    manager?.destroy();
     manager = treeUndo(app.doc);
+  },
+  start(app) {
     window.addEventListener("keydown", (event) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey || ownUndo(event.target)) return;
       const key = event.key.toLowerCase();

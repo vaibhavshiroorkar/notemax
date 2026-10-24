@@ -144,6 +144,7 @@ export const registry = {
   rowMarks: (): RowMark[] => all((p) => p.rowMarks),
   sidebarFilterChoices: (): SidebarFilterChoice[] => all((p) => p.sidebarFilterChoices),
   starters: () => all((p) => (p.start ? [p.start.bind(p)] : [])),
+  workspaceStarters: () => all((p) => (p.workspaceStart ? [p.workspaceStart.bind(p)] : [])),
   pageCorner: (kind: NodeKind): PageAddon[] => all((p) => p.pageCorner).filter((addon) => addon.kinds?.includes(kind) ?? true),
   pageSettings: (kind: NodeKind): PageAddon[] => all((p) => p.pageSettings).filter((addon) => addon.kinds?.includes(kind) ?? true),
   /** Every option of the plugins that are on, with its plugin, in plugin order. */

@@ -54,7 +54,7 @@ export const videoPlugin: Plugin = {
       when: (target) => !!videoOf(target)?.asset,
       async run(target, app) {
         const video = videoOf(target)!;
-        const file = await imageBlob(video.asset!);
+        const file = await imageBlob(video.asset!, app.workspace);
         if (!file) return app.notify("This video is not on this device.");
         await saveFile(file.blob, file.name || video.name || "video");
       },

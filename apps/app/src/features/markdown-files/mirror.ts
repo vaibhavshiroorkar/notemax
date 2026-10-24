@@ -6,8 +6,8 @@ import { extOf, loadPictures, withPageDoc } from "@/features/export/content";
 import type { DocNode } from "@/features/export/serialize";
 import { saveNow } from "@/features/history/versions";
 import { remoteEdit } from "@/features/sync/live";
-import { getStore, onLocalWrite } from "@/platform/platform";
-import { currentWorkspace } from "@/platform/prefs";
+import { onLocalWrite, storeFor } from "@/platform/platform";
+import { workspaceNow } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
 import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
@@ -145,6 +145,11 @@ class Mirror {
     private app: AppContext,
   ) {}
 
+  /** The workspace this folder belongs to. Every read and write names it, whatever the sidebar shows. */
+  private get ws() {
+    return this.app.workspace;
+  }
+
   private tree = () => readTree(this.app.doc);
 
   private resolver() {
@@ -167,8 +172,8 @@ class Mirror {
       const text = blob ? await blob.text() : "";
       return { text, body: hashOf(text) };
     }
-    const body = await withPageDoc(item.id, (doc) => yXmlFragmentToProsemirrorJSON(doc.getXmlFragment("content")) as DocNode);
-    const found = await loadPictures([body]);
+    const body = await withPageDoc(item.id, (doc) => yXmlFragmentToProsemirrorJSON(doc.getXmlFragment("content")) as DocNode, this.ws);
+    const found = await loadPictures([body], undefined, this.ws);
     const r = this.resolver();
     found.forEach((_asset, id) => pictures.add(id));
     const text = noteToFile(this.front(item), body, { ...r, image: (asset) => (found.has(asset) ? `${ATTACHMENTS}/${asset.slice(0, 16)}.${extOf(found.get(asset)!.type)}` : null) });
@@ -176,11 +181,11 @@ class Mirror {
   }
 
   async start() {
-    this.written = (await read<Record<string, Written>>("written", currentWorkspace)) ?? {};
+    this.written = (await read<Record<string, Written>>("written", this.ws)) ?? {};
     this.stops.push(
       onLocalWrite(({ docId }) => {
         const { workspace, docId: id } = splitScoped(docId);
-        if (workspace === currentWorkspace && id !== WORKSPACE_DOC_ID) this.dirty.add(id);
+        if (workspace === this.ws && id !== WORKSPACE_DOC_ID) this.dirty.add(id);
       }),
       remoteEdit.subscribe(() => {
         const edit = remoteEdit.get();
@@ -203,7 +208,7 @@ class Mirror {
       .then(async () => {
         await this.bringIn();
         await this.sendOut();
-        await write("written", currentWorkspace, this.written);
+        await write("written", this.ws, this.written);
         mirrorView.set({ state: "on", folder: this.root.name, files: Object.keys(this.written).length, checked: Date.now() });
       })
       .catch((err) => {
@@ -245,7 +250,7 @@ class Mirror {
 
   private async sendPictures(ids: Set<string>) {
     const dir = await this.root.getDirectoryHandle(ATTACHMENTS, { create: true });
-    const found = await loadPictures([{ type: "doc", content: [...ids].map((asset) => ({ type: "image", attrs: { asset } })) }]);
+    const found = await loadPictures([{ type: "doc", content: [...ids].map((asset) => ({ type: "image", attrs: { asset } })) }], undefined, this.ws);
     for (const [id, asset] of found) {
       const name = `${id.slice(0, 16)}.${extOf(asset.type)}`;
       const exists = await dir.getFileHandle(name).then(
@@ -260,7 +265,7 @@ class Mirror {
   private picture = async (path: string): Promise<string | null> => {
     const handle = await (await folderOf(this.root, path, false)).getFileHandle(nameOf(path));
     const file = await handle.getFile();
-    return saveAsset(await getStore(), { bytes: new Uint8Array(await file.arrayBuffer()), type: file.type || "image/png", name: file.name });
+    return saveAsset(await storeFor(this.ws), { bytes: new Uint8Array(await file.arrayBuffer()), type: file.type || "image/png", name: file.name });
   };
 
   private async bringIn() {
@@ -295,9 +300,9 @@ class Mirror {
   /** Another app changed a page's file: keep the page as it was as a version, then take the file's text. */
   private async takeEdit(id: string, path: string, front: Front, markdown: string, text: string, modified: number) {
     const body = await fileToBody(markdown, this.tree(), this.picture);
-    const now = await withPageDoc(id, (doc) => Y.encodeStateAsUpdate(doc));
-    await saveNow(id, now, "Before an edit in another app");
-    await withPageDoc(id, (doc) => replaceBody(doc, body));
+    const now = await withPageDoc(id, (doc) => Y.encodeStateAsUpdate(doc), this.ws);
+    await saveNow(id, now, "Before an edit in another app", this.ws);
+    await withPageDoc(id, (doc) => replaceBody(doc, body), this.ws);
     const title = front.title ?? nameOf(path).replace(/\.md$/i, "");
     const node = this.tree().byId.get(id);
     if (node && title && title !== node.title) renameNode(this.app.doc, id, title);
@@ -316,7 +321,7 @@ class Mirror {
     const title = front.title ?? nameOf(path).replace(/\.md$/i, "");
     const body = await fileToBody(markdown, this.tree(), this.picture);
     const id = createNode(this.app.doc, "note", parent, title);
-    await withPageDoc(id, (doc) => replaceBody(doc, body));
+    await withPageDoc(id, (doc) => replaceBody(doc, body), this.ws);
     for (const tag of front.tags ?? []) addTag(this.app.doc, id, tag);
     await this.remember(id, path, text, modified);
   }
@@ -327,18 +332,36 @@ class Mirror {
    */
   private async remember(id: string, path: string, text: string, modified: number) {
     const item = this.tree().items.get(id);
-    const body = await withPageDoc(id, (doc) => hashOf(JSON.stringify(yXmlFragmentToProsemirrorJSON(doc.getXmlFragment("content")))));
+    const body = await withPageDoc(id, (doc) => hashOf(JSON.stringify(yXmlFragmentToProsemirrorJSON(doc.getXmlFragment("content")))), this.ws);
     this.written[id] = { path, file: hashOf(text), front: item ? hashOf(JSON.stringify(this.front(item))) : "", body, modified };
   }
 }
 
 let running: Mirror | null = null;
 let appNow: AppContext | null = null;
+/** Lets go of the lock that keeps the folder to one window, when this one stops keeping it. */
+let release: (() => void) | null = null;
 
-/** Called once at start: runs the folder this workspace keeps, if any. */
-export async function startMirror(app: AppContext) {
+function stopRunning() {
+  running?.stop();
+  running = null;
+  release?.();
+  release = null;
+}
+
+/**
+ * Runs the folder the shown workspace keeps, if any: at start, and after each
+ * switch. The folder of the workspace left stops, so a Mirror never writes
+ * into a workspace it does not belong to. `app` is copied, so its workspace
+ * and tree stay that workspace's.
+ */
+export async function startMirror(live: AppContext) {
+  const app = { ...live };
   appNow = app;
-  const root = await read<Handle>("folders", currentWorkspace);
+  stopRunning();
+  mirrorView.set({ state: "off" });
+  const root = await read<Handle>("folders", app.workspace);
+  if (appNow !== app) return;
   if (!root) return;
   const permitted = (await (root as unknown as { queryPermission(o: object): Promise<string> }).queryPermission({ mode: "readwrite" })) === "granted";
   if (!permitted) return mirrorView.set({ state: "needs-permission", folder: root.name });
@@ -346,27 +369,27 @@ export async function startMirror(app: AppContext) {
 }
 
 async function run(root: Handle, app: AppContext) {
-  running?.stop();
+  stopRunning();
   mirrorView.set({ state: "on", folder: root.name, files: 0, checked: null });
   const take = async () => {
     running = new Mirror(root, app);
     await running.start();
   };
   // One window per workspace keeps the folder, so two never write the same file.
-  if (navigator.locks) void navigator.locks.request(`notemax-markdown-${currentWorkspace}`, () => take().then(() => new Promise<void>(() => {})));
+  if (navigator.locks) void navigator.locks.request(`notemax-markdown-${app.workspace}`, () => take().then(() => new Promise<void>((resolve) => (release = resolve))));
   else await take();
 }
 
 /** Starts keeping a folder for this workspace: Choose a folder in Settings, or a test with any directory. */
 export async function useFolder(root: Handle) {
-  await write("folders", currentWorkspace, root);
-  await write("written", currentWorkspace, {});
+  await write("folders", workspaceNow(), root);
+  await write("written", workspaceNow(), {});
   if (appNow) await run(root, appNow);
 }
 
 /** Asks again for the folder, after the browser forgot the permission. Must run from a click. */
 export async function allowAgain() {
-  const root = await read<Handle>("folders", currentWorkspace);
+  const root = await read<Handle>("folders", workspaceNow());
   if (!root || !appNow) return;
   const answer = await (root as unknown as { requestPermission(o: object): Promise<string> }).requestPermission({ mode: "readwrite" });
   if (answer === "granted") await run(root, appNow);
@@ -374,10 +397,9 @@ export async function allowAgain() {
 
 /** Stops keeping the folder. The files stay where they are. */
 export async function stopFolder() {
-  running?.stop();
-  running = null;
-  await forget("folders", currentWorkspace);
-  await forget("written", currentWorkspace);
+  stopRunning();
+  await forget("folders", workspaceNow());
+  await forget("written", workspaceNow());
   mirrorView.set({ state: "off" });
 }
 

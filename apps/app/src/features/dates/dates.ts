@@ -3,7 +3,7 @@ import { ROOT, createNode, setProp, type Tree, type TreeItem, type TreeNode } fr
 import { peekDoc } from "@/data/docCache";
 import { holder, setRole } from "@/features/special/roles";
 import { titleFor } from "@/features/special/titles";
-import { getStore } from "@/platform/platform";
+import { storeFor } from "@/platform/platform";
 import type { AppContext } from "@/plugins/types";
 
 // A page can carry a date (its "date" setting, like 2026-10-22), which puts it
@@ -59,8 +59,8 @@ export async function openDay(app: AppContext, key: string, where?: { newTab?: b
   const template = holder(app.tree, "dailyTemplate");
   if (template) {
     // The body goes first, so the note never opens empty. Open templates give their last keystrokes too.
-    await peekDoc(template.id)?.flush();
-    const store = await getStore();
+    await peekDoc(template.id, app.workspace)?.flush();
+    const store = await storeFor(app.workspace);
     const { updates } = await store.load(template.id);
     if (updates.length) await store.append(id, Y.mergeUpdates(updates));
   }

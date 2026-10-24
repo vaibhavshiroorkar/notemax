@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
+import { usePageWorkspace } from "@/data/scope";
 import { saveImage, imageUrl } from "./store";
 import "./images.css";
 
@@ -24,11 +25,12 @@ export function ImageView({ node, updateAttributes, selected, editor }: NodeView
   const [missing, setMissing] = useState(false);
   const [live, setLive] = useState<number | null>(null);
   const frame = useRef<HTMLDivElement>(null);
+  const workspace = usePageWorkspace();
 
   useEffect(() => {
     let cancelled = false;
     if (asset) {
-      imageUrl(asset).then(
+      imageUrl(asset, workspace).then(
         (found) => {
           if (cancelled) return;
           setUrl(found);
@@ -40,14 +42,14 @@ export function ImageView({ node, updateAttributes, selected, editor }: NodeView
       // A picture pasted as text is kept like any other, so the note stays small.
       fetch(src)
         .then((response) => response.blob())
-        .then((blob) => saveImage(blob))
+        .then((blob) => saveImage(blob, "picture", workspace))
         .then((id) => !cancelled && updateAttributes({ asset: id, src: null }))
         .catch(() => !cancelled && setUrl(src));
     }
     return () => {
       cancelled = true;
     };
-  }, [asset, src, editor, updateAttributes]);
+  }, [asset, src, editor, updateAttributes, workspace]);
 
   const startResize = (side: "left" | "right") => (event: ReactPointerEvent) => {
     event.preventDefault();

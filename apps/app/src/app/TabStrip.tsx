@@ -1,5 +1,7 @@
-import { useLayoutEffect, useRef, useState, type DragEvent } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type DragEvent } from "react";
+import { treeIn, treesVersion } from "@/data/trees";
 import { dragged, endDrag } from "@/features/sidebar/drag";
+import { nameOf, workspaceList } from "@/features/workspaces/list";
 import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { contextMenuHandler } from "@/ui/ContextMenu";
@@ -24,8 +26,11 @@ function fitting(room: number, count: number): number {
   return Math.max(1, Math.floor((room - NEW_WIDTH - MORE_WIDTH) / (min + 2)));
 }
 
-/** What a tab shows: its title and icon. */
-function labelOf(app: AppContext, tab: Tab): { title: string; icon: IconName } {
+/**
+ * What a tab shows: its title and icon, and for a page from another workspace
+ * than the sidebar shows, that workspace's name and color.
+ */
+function labelOf(app: AppContext, tab: Tab): { title: string; icon: IconName; from?: { name: string; color: string } } {
   const visit = tab.visits[tab.index];
   // An empty tab shows Home.
   if (!visit) return { title: "Home", icon: "home" };
@@ -33,9 +38,14 @@ function labelOf(app: AppContext, tab: Tab): { title: string; icon: IconName } {
     const view = registry.view(viewId(visit.page));
     return { title: view?.title ?? "Missing view", icon: view?.icon ?? "page" };
   }
-  const node = app.tree.byId.get(visit.page);
-  if (!node) return { title: "Deleted page", icon: "note" };
-  return { title: node.title || "Untitled", icon: registry.iconOf(node.kind) };
+  const here = visit.ws === app.workspace;
+  const tree = here ? app.tree : treeIn(visit.ws);
+  const info = here ? undefined : workspaceList.get().find((w) => w.id === visit.ws);
+  const from = here ? undefined : { name: info ? nameOf(info) : "another workspace", color: info?.color ?? "" };
+  if (!tree) return { title: "Opening...", icon: "note", from };
+  const node = tree.byId.get(visit.page);
+  if (!node) return { title: "Deleted page", icon: "note", from };
+  return { title: node.title || "Untitled", icon: registry.iconOf(node.kind), from };
 }
 
 /**
@@ -47,6 +57,9 @@ export function TabStrip({ app, pane }: { app: AppContext; pane: Pane }) {
   const [dropAt, setDropAt] = useState<number | null>(null);
   const strip = useRef<HTMLDivElement>(null);
   const [room, setRoom] = useState(Infinity);
+  // Titles of pages from other workspaces come from those trees as they change.
+  treesVersion.use();
+  workspaceList.use();
 
   // The strip takes the room the page buttons leave, whatever the tabs need.
   useLayoutEffect(() => {
@@ -109,7 +122,7 @@ export function TabStrip({ app, pane }: { app: AppContext; pane: Pane }) {
     // Anything done here is done to this pane, so it becomes the active one first.
     <div className="tab-strip" ref={strip} role="tablist" aria-label="Open pages" onPointerDownCapture={() => activatePane(pane.id)} onDragOver={onDragOver} onDragLeave={() => setDropAt(null)} onDrop={onDrop}>
       {shown.map((tab, i) => {
-        const { title, icon } = labelOf(app, tab);
+        const { title, icon, from } = labelOf(app, tab);
         const active = tab.id === pane.active;
         return (
           <div
@@ -118,7 +131,8 @@ export function TabStrip({ app, pane }: { app: AppContext; pane: Pane }) {
             role="tab"
             aria-selected={active}
             data-drop={dropAt === i ? "before" : dropAt === i + 1 && i === shown.length - 1 ? "after" : undefined}
-            title={title}
+            title={from ? `${title}, from ${from.name}` : title}
+            data-from={from ? "" : undefined}
             draggable
             onDragStart={(event) => {
               event.dataTransfer.setData(TAB_TYPE, tab.id);
@@ -133,6 +147,11 @@ export function TabStrip({ app, pane }: { app: AppContext; pane: Pane }) {
           >
             <Icon name={icon} />
             <span className="tab-title">{title}</span>
+            {from && (
+              <span className="tab-from" style={{ "--workspace-color": from.color || undefined } as CSSProperties}>
+                {from.name}
+              </span>
+            )}
             <button
               className="icon-button tab-close"
               aria-label={`Close ${title}`}

@@ -13,19 +13,19 @@ export interface Legend {
 }
 
 /** Two versions of a note as one page: red went, green came, yellow was reworded. */
-export function ChangesView({ old, now, tree, legend, className = "" }: { old: DocNode | null; now: DocNode | null; tree: Tree; legend: Legend; className?: string }) {
+export function ChangesView({ old, now, tree, legend, className = "", workspace }: { old: DocNode | null; now: DocNode | null; tree: Tree; legend: Legend; className?: string; workspace?: string }) {
   const [result, setResult] = useState<DiffResult | null>(null);
 
   useEffect(() => {
     if (!old || !now) return;
     let live = true;
-    void loadPictures([old, now]).then((pictures) => {
+    void loadPictures([old, now], undefined, workspace).then((pictures) => {
       if (live) setResult(diffHtml(old, now, resolver(tree, (id) => (pictures.has(id) ? dataUrl(pictures.get(id)!) : null))));
     });
     return () => {
       live = false;
     };
-  }, [old, now, tree]);
+  }, [old, now, tree, workspace]);
 
   if (!result) return <p className="diff-legend">Comparing...</p>;
   const none = !result.gone && !result.added && !result.changed;

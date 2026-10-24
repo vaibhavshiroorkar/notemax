@@ -1,4 +1,4 @@
-import { getPref, setPref } from "@/platform/prefs";
+import { getPref, getPrefIn, setPref, workspaceNow } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
 
 // Open pages live in tabs, and each tab keeps its own Back and Forward list.
@@ -7,10 +7,13 @@ import { createStore } from "@/platform/store";
 // another split. Everything acts on the active pane, the one last clicked.
 //
 // A page is a node id, or "view:<id>" for a plugin's full page that is not a
-// node, like the graph.
+// node, like the graph. Tabs stay open when the sidebar shows another
+// workspace, so each visit says which workspace its page is in.
 
 export interface Visit {
   page: string;
+  /** The workspace the page is in. Views show the workspace in the sidebar whatever this says. */
+  ws: string;
   /** For a view, what it was opened with, like the page the graph centers on. */
   options?: Record<string, unknown>;
 }
@@ -57,11 +60,12 @@ const blankTab = (): Tab => ({ id: newId(), visits: [], index: -1 });
 const tabWith = (visit: Visit): Tab => ({ id: newId(), visits: [visit], index: 0 });
 
 function fresh(page: string | null): Layout {
-  const tab = page ? tabWith({ page }) : blankTab();
+  const tab = page ? tabWith({ page, ws: workspaceNow() }) : blankTab();
   return { panes: [{ id: "main", tabs: [tab], active: tab.id }], activePane: "main" };
 }
 
-function decode(raw: string | null, fallbackPage: string | null): Layout {
+/** `legacy` is the workspace of visits saved before visits named one. */
+function decode(raw: string | null, fallbackPage: string | null, legacy = workspaceNow()): Layout {
   try {
     const value = JSON.parse(raw ?? "") as Layout;
     const panes = value.panes.filter((pane) => pane?.tabs?.length);
@@ -69,7 +73,7 @@ function decode(raw: string | null, fallbackPage: string | null): Layout {
     for (const pane of panes) {
       for (const tab of pane.tabs) {
         if (typeof tab.id !== "string" || !Array.isArray(tab.visits)) throw new Error("bad tab");
-        tab.visits = tab.visits.filter((visit) => typeof visit?.page === "string");
+        tab.visits = tab.visits.filter((visit) => typeof visit?.page === "string").map((visit) => (typeof visit.ws === "string" ? visit : { ...visit, ws: legacy }));
         tab.index = Math.min(Math.max(tab.index, -1), tab.visits.length - 1);
         if (tab.index < 0 && tab.visits.length) tab.index = tab.visits.length - 1;
       }
@@ -155,18 +159,23 @@ layout.subscribe(() => {
   saveTimer = setTimeout(saveTabsNow, 300);
 });
 
+// One set of tabs for every workspace. Before, each workspace kept its own
+// under "tabs"; the one shown at the first start of this version is kept.
+const TABS_KEY = "openTabs";
+
 /** Saves the tabs at once, for when the window is about to start over, like switching workspaces, or close. */
 export function saveTabsNow() {
   clearTimeout(saveTimer);
   if (!unsaved) return;
   unsaved = false;
-  setPref("tabs", JSON.stringify(layout.get()));
+  setPref(TABS_KEY, JSON.stringify(layout.get()));
 }
 addEventListener("pagehide", saveTabsNow);
 
 /** Loads the saved tabs. `fallbackPage` opens when there are none, like on first start. */
 export function loadTabs(fallbackPage: string | null) {
-  layout.set(decode(getPref("tabs"), fallbackPage));
+  const saved = getPref(TABS_KEY);
+  layout.set(saved !== null ? decode(saved, fallbackPage) : decode(getPrefIn("tabs", workspaceNow()), fallbackPage));
 }
 
 /** Whether another pane fits. */
@@ -193,9 +202,9 @@ function updateTab(id: string, change: (tab: Tab) => Tab) {
   updatePane((pane) => ({ ...pane, tabs: pane.tabs.map((tab) => (tab.id === id ? change(tab) : tab)) }));
 }
 
-/** Opens a page in the active tab, or in a new tab next to it. */
-export function openPage(page: string, { newTab = false, options }: { newTab?: boolean; options?: Record<string, unknown> } = {}) {
-  const visit: Visit = options ? { page, options } : { page };
+/** Opens a page in the active tab, or in a new tab next to it. The page is in the shown workspace unless `ws` says otherwise. */
+export function openPage(page: string, { newTab = false, options, ws = workspaceNow() }: { newTab?: boolean; options?: Record<string, unknown>; ws?: string } = {}) {
+  const visit: Visit = options ? { page, ws, options } : { page, ws };
   if (newTab) {
     const tab = tabWith(visit);
     updatePane((pane) => {
@@ -206,7 +215,7 @@ export function openPage(page: string, { newTab = false, options }: { newTab?: b
   }
   const tab = activeTab();
   const current = tab.visits[tab.index];
-  if (current?.page === page && JSON.stringify(current.options) === JSON.stringify(options)) return;
+  if (current?.page === page && current.ws === ws && JSON.stringify(current.options) === JSON.stringify(options)) return;
   // Opening a page drops whatever was ahead, as in a browser.
   const visits = [...tab.visits.slice(0, tab.index + 1), visit].slice(-MAX_VISITS);
   updateTab(tab.id, () => ({ ...tab, visits, index: visits.length - 1 }));
@@ -216,7 +225,7 @@ export function openPage(page: string, { newTab = false, options }: { newTab?: b
 export function replacePage(page: string) {
   const tab = activeTab();
   if (tab.index < 0) return openPage(page);
-  const visits = tab.visits.map((visit, i) => (i === tab.index ? { page } : visit));
+  const visits = tab.visits.map((visit, i) => (i === tab.index ? { page, ws: visit.ws } : visit));
   updateTab(tab.id, () => ({ ...tab, visits }));
 }
 
@@ -331,9 +340,9 @@ export function splitActive(edge: Edge) {
  * Opens a page in a new pane beside the active one. With four panes already,
  * it opens in a new tab of the next pane instead, so it still shows beside.
  */
-export function openBeside(page: string, edge: Edge, options?: Record<string, unknown>) {
+export function openBeside(page: string, edge: Edge, options?: Record<string, unknown>, ws = workspaceNow()) {
   const value = layout.get();
-  const tab = tabWith(options ? { page, options } : { page });
+  const tab = tabWith(options ? { page, ws, options } : { page, ws });
   if (canSplit(value)) {
     const added: Pane = { id: newId(), tabs: [tab], active: tab.id };
     layout.set({ panes: [...value.panes, added], activePane: added.id, split: beside(splitOf(value), value.activePane, added.id, edge) });

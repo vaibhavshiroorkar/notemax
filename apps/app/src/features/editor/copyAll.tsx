@@ -14,8 +14,8 @@ export async function copyAll(app: AppContext, id: string) {
   const node = app.tree.byId.get(id);
   try {
     // Edits are saved in batches; the last keystrokes may not be stored yet.
-    await peekDoc(id)?.flush();
-    const body = await loadBody(id);
+    await peekDoc(id, app.workspace)?.flush();
+    const body = await loadBody(id, app.workspace);
     const r = resolver(app.tree);
     const text = toPlainText(body, r);
     const html = toHtml(body.content ?? [], r);

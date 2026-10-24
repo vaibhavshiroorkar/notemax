@@ -1,5 +1,5 @@
 import { MAIN_WORKSPACE, createMemoryStore, createSqlStore, openIdbStore, scopedStore, type DocStore } from "@notemax/core";
-import { currentWorkspace, getPref } from "./prefs";
+import { getPref, workspaceNow } from "./prefs";
 
 /** True inside the Tauri desktop app, false in a normal browser. */
 export const isDesktop = "__TAURI_INTERNALS__" in window;
@@ -8,8 +8,6 @@ export const isDesktop = "__TAURI_INTERNALS__" in window;
 export const docChannelFor = (workspace: string) => (workspace === MAIN_WORKSPACE ? "notemax-docs" : `notemax-docs@${workspace}`);
 /** Where the list of workspaces is shared between windows. */
 export const WORKSPACES_CHANNEL = "notemax-workspaces";
-/** This window's workspace's channel. Docs of other workspaces share ids like "workspace", so each has its own. */
-export const DOC_CHANNEL = docChannelFor(currentWorkspace);
 
 // Must match DB_URL in apps/desktop/src-tauri/src/lib.rs, which creates the tables.
 const DESKTOP_DB_URL = "sqlite:notemax.db";
@@ -137,9 +135,20 @@ let sharedPromise: Promise<DocStore> | undefined;
 /** Every workspace's docs under their stored ids, with edits reported for sync. For the list of workspaces. */
 export const getSharedStore = () => (sharedPromise ??= getRawStore().then(tracked));
 
-let storePromise: Promise<DocStore> | undefined;
-/** The store everything in the app saves to: this window's workspace. */
-export const getStore = () => (storePromise ??= getSharedStore().then((store) => scopedStore(store, currentWorkspace)));
+const scoped = new Map<string, Promise<DocStore>>();
+/** One workspace's docs, under the ids the app uses. */
+export function storeFor(workspace: string): Promise<DocStore> {
+  let store = scoped.get(workspace);
+  if (!store) scoped.set(workspace, (store = getSharedStore().then((shared) => scopedStore(shared, workspace))));
+  return store;
+}
+
+/**
+ * The shown workspace's docs, for what acts on the workspace in the sidebar,
+ * like making a page. A page from another workspace, open in a tab, uses
+ * storeFor with its own workspace instead.
+ */
+export const getStore = () => storeFor(workspaceNow());
 
 /**
  * Browsers may delete a site's storage when the disk runs low, unless the site

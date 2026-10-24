@@ -27,8 +27,8 @@ const choice = (id: string, title: string, attrs: Record<string, unknown>): Cont
 });
 
 /** Copies the picture as a PNG, the one picture type every app takes from the clipboard. */
-async function copyPicture(asset: string) {
-  const file = await imageBlob(asset);
+async function copyPicture(asset: string, workspace: string) {
+  const file = await imageBlob(asset, workspace);
   if (!file) throw new Error("not on this device");
   const bitmap = await createImageBitmap(file.blob);
   const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
@@ -119,10 +119,10 @@ export const imagesPlugin: Plugin = {
       group: "image",
       targets: ["editor"],
       when: (target) => !!pictureOf(target),
-      async run(target) {
+      async run(target, app) {
         const [file] = await pickImages();
         if (!file) return;
-        const asset = await saveImage(file, file.name);
+        const asset = await saveImage(file, file.name, app.workspace);
         set(target, { asset, src: null });
       },
     },
@@ -134,7 +134,7 @@ export const imagesPlugin: Plugin = {
       targets: ["editor"],
       when: (target) => !!pictureOf(target)?.attrs.asset,
       run: (target, app) =>
-        void copyPicture(String(pictureOf(target)!.attrs.asset)).then(
+        void copyPicture(String(pictureOf(target)!.attrs.asset), app.workspace).then(
           () => app.notify("Copied the picture"),
           () => app.notify("Could not copy the picture"),
         ),
@@ -147,7 +147,7 @@ export const imagesPlugin: Plugin = {
       targets: ["editor"],
       when: (target) => !!pictureOf(target)?.attrs.asset,
       async run(target, app) {
-        const file = await imageBlob(String(pictureOf(target)!.attrs.asset));
+        const file = await imageBlob(String(pictureOf(target)!.attrs.asset), app.workspace);
         if (!file) return app.notify("This picture is not on this device.");
         const base = file.name.replace(/\.[^.]+$/, "") || "picture";
         await saveFile(file.blob, `${base}.${extOf(file.blob.type)}`);

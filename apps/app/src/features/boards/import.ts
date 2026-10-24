@@ -1,5 +1,6 @@
 import { ROOT, createNode, openLocalDoc } from "@notemax/core";
-import { DOC_CHANNEL, getStore } from "@/platform/platform";
+import { docChannelFor, getStore } from "@/platform/platform";
+import { workspaceNow } from "@/platform/prefs";
 import type { AppContext } from "@/plugins/types";
 import { writeElements, writeFiles, type StoredElement, type StoredFile } from "./board-sync";
 
@@ -15,7 +16,7 @@ async function importExcalidraw(app: AppContext, file: File) {
   }
   if (data.type !== "excalidraw" || !Array.isArray(data.elements)) return app.notify(`"${file.name}" is not an Excalidraw file`);
   const id = createNode(app.doc, "board", ROOT, file.name.replace(/\.excalidraw(\.json)?$/i, ""));
-  const local = await openLocalDoc(await getStore(), id, { broadcast: DOC_CHANNEL });
+  const local = await openLocalDoc(await getStore(), id, { broadcast: docChannelFor(workspaceNow()) });
   try {
     writeElements(
       local.doc,

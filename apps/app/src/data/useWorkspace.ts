@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { MAIN_WORKSPACE, WORKSPACE_DOC_ID, ensureStarter, watchTree, type Tree } from "@notemax/core";
-import { currentWorkspace } from "@/platform/prefs";
+import { MAIN_WORKSPACE, WORKSPACE_DOC_ID, ensureStarter, watchTree, type LocalDoc, type Tree } from "@notemax/core";
 import { useLocalDoc } from "./useLocalDoc";
 
 /**
@@ -17,19 +16,21 @@ function bareForChecks(): boolean {
   }
 }
 
-/** Opens the workspace tree doc and keeps a plain snapshot of it for rendering. */
-export function useWorkspace() {
-  const { local, status, openError } = useLocalDoc(WORKSPACE_DOC_ID);
-  const [tree, setTree] = useState<Tree>();
+/** Opens a workspace's tree doc and keeps a plain snapshot of it for rendering. */
+export function useWorkspace(workspace: string) {
+  const { local, status, openError } = useLocalDoc(WORKSPACE_DOC_ID, workspace);
+  // Kept with the doc it was read from, so a switch never pairs one workspace's doc with another's tree.
+  const [read, setRead] = useState<{ doc: LocalDoc["doc"]; tree: Tree }>();
 
   useEffect(() => {
     if (!local) return;
     // Only the first workspace gets the starter pages. A new one starts empty.
-    if (currentWorkspace === MAIN_WORKSPACE) ensureStarter(local.doc, { welcomeOnly: bareForChecks() });
+    if (workspace === MAIN_WORKSPACE) ensureStarter(local.doc, { welcomeOnly: bareForChecks() });
     // Unchanged items stay the same objects, which is what lets the sidebar
     // skip rows a change did not touch.
-    return watchTree(local.doc, setTree);
-  }, [local]);
+    return watchTree(local.doc, (tree) => setRead({ doc: local.doc, tree }));
+  }, [local, workspace]);
 
-  return { doc: local?.doc, tree: local ? tree : undefined, status, openError };
+  const tree = local && read?.doc === local.doc ? read.tree : undefined;
+  return { doc: tree ? local?.doc : undefined, tree, status, openError };
 }

@@ -89,6 +89,7 @@ Every field is optional.
 | `views` | Pages of their own that open in a tab, like the graph. Open one with `app.openView(id)`. |
 | `statusItems` | The status bar at the bottom, like how sync is going. |
 | `start(app)` | Runs once when the main window has opened the workspace, like starting sync. |
+| `workspaceStart(app)` | Runs for the workspace in the sidebar: at start, and again after each switch. For what belongs to one workspace, like an index of its pages. `app.workspace` says which one. |
 | `settings` | A category in Settings. |
 | `options` | On or off switches. Without a `section`, they show under Plugins. |
 | `shortcutHints` | Keys listed in the shortcut list (Ctrl+/). |
