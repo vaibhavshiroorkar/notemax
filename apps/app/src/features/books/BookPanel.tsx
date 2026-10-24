@@ -5,14 +5,17 @@ import type { AppContext } from "@/plugins/types";
 import { dragRowMenu, pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { BookItemMenu } from "./BookItemMenu";
-import { bookOf, chapterStops, subtopicsOf } from "./reading";
+import { bookOf, chapterOf, chapterStops, subtopicsOf } from "./reading";
 import "./books.css";
 
+const NONE: ReadonlySet<string> = new Set();
+
 /**
- * A book's chapters in reading order, as a section of the right sidebar, each
- * with its subtopics under it. A subtopic is read in its chapter's
- * page, so clicking one scrolls there. It shows while the book or a chapter is
- * open, so the left sidebar can keep each book to a single row.
+ * A book's chapters in reading order, as a section of the right sidebar. The
+ * chapter being read shows its subtopics; the others are folded, and each
+ * opens by its arrow. A subtopic is read in its chapter's page, so clicking
+ * one scrolls there. It shows while the book or a chapter is open, so the
+ * left sidebar can keep each book to a single row.
  */
 export function BookPanel({ app }: { app: AppContext }) {
   const { tree, doc, activeId, open: onSelect } = app;
@@ -21,6 +24,16 @@ export function BookPanel({ app }: { app: AppContext }) {
   const dragging = useDragging();
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const bookTitle = book.title || "Untitled book";
+  // Folds opened or closed by hand, kept until another chapter is read.
+  const reading = activeId ? (chapterOf(tree, activeId)?.id ?? null) : null;
+  const [flipped, setFlipped] = useState<{ reading: string | null; ids: ReadonlySet<string> }>({ reading, ids: NONE });
+  const flips = flipped.reading === reading ? flipped.ids : NONE;
+  const unfolded = (id: string) => (id === reading) !== flips.has(id);
+  const flip = (id: string) => {
+    const ids = new Set(flips);
+    if (!ids.delete(id)) ids.add(id);
+    setFlipped({ reading, ids });
+  };
 
   useEffect(() => {
     if (!dragging) setDropTarget(null);
@@ -62,6 +75,8 @@ export function BookPanel({ app }: { app: AppContext }) {
         <ol className="book-panel-chapters">
           {chapterStops(book).map(({ item: chapter, label }) => {
             const title = chapter.title || "Untitled";
+            const subtopics = subtopicsOf(chapter, label);
+            const open = unfolded(chapter.id);
             const zone = dropTarget?.id === chapter.id ? dropTarget.zone : undefined;
             const placement = (event: DragEvent) => dragging && placementFor(tree, dragging, chapter, zoneOf(event));
             return (
@@ -93,6 +108,19 @@ export function BookPanel({ app }: { app: AppContext }) {
                     if (where && accepts(dragging, where.parentId)) drop(event, where);
                   }}
                 >
+                  {subtopics.length > 0 ? (
+                    <button
+                      className="icon-button chapter-fold"
+                      aria-expanded={open}
+                      aria-label={`${open ? "Hide" : "Show"} the subtopics of ${title}`}
+                      title={`${open ? "Hide" : "Show"} ${subtopics.length} ${subtopics.length === 1 ? "subtopic" : "subtopics"}`}
+                      onClick={() => flip(chapter.id)}
+                    >
+                      <Icon name={open ? "chevron-down" : "chevron-right"} />
+                    </button>
+                  ) : (
+                    <span className="chapter-fold" aria-hidden="true" />
+                  )}
                   <button className="row-title chapter-row" onClick={() => onSelect(chapter.id)}>
                     <span className="chapter-number">{label}</span>
                     <span className="chapter-title">{title}</span>
@@ -103,7 +131,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                   </button>
                   <BookItemMenu node={chapter} className="row-action" />
                 </li>
-                {subtopicsOf(chapter, label).map((sub) => (
+                {open && subtopics.map((sub) => (
                     <li
                       key={sub.item.id}
                       className="row subtopic"

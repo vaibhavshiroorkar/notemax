@@ -11,13 +11,16 @@ export interface Subtopic {
   depth: number;
 }
 
-/** A chapter's subtopics in reading order. Folders inside it are not subtopics. */
+/**
+ * A chapter's subtopics in reading order. Folders inside it are not subtopics.
+ * With no label, as for a note outside any book, they number from 1.
+ */
 export function subtopicsOf(chapter: TreeItem, label: string, depth = 1): Subtopic[] {
   const out: Subtopic[] = [];
   let n = 0;
   for (const item of chapter.children) {
     if (item.kind === "folder") continue;
-    const own = `${label}.${++n}`;
+    const own = label ? `${label}.${++n}` : String(++n);
     out.push({ item, label: own, depth }, ...subtopicsOf(item, own, depth + 1));
   }
   return out;

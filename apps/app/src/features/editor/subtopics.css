@@ -1,0 +1,89 @@
+/* A note's subtopics to jump between: under its row in the left sidebar, and in the right sidebar. */
+.subtopic-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.subtopic-link {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 3px 8px 3px calc(8px + (var(--depth, 1) - 1) * 12px);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+}
+
+.subtopic-link:hover,
+.subtopic-link:focus-visible {
+  background: var(--hover);
+}
+
+.subtopic-link .chapter-number {
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.subtopic-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* More than five: a box of its own, with a filter, that scrolls instead of growing. */
+.subtopic-box {
+  margin: 2px 8px 6px 0;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--hover) 40%, transparent);
+}
+
+.subtopic-box ul {
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.subtopic-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding: 2px 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.subtopic-filter svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+}
+
+.subtopic-filter input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.subtopic-none {
+  padding: 4px 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.subtopics-panel .subtopic-box {
+  margin-right: 0;
+}

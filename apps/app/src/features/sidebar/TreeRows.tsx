@@ -3,6 +3,9 @@ import { canMove, isContainer, type NodeKind, type Tree, type TreeItem } from "@
 import { prefetchDoc } from "@/data/docCache";
 import { useSelect } from "@/platform/store";
 import { registry } from "@/plugins/registry";
+import { subtopicsOf } from "@/features/books/reading";
+import { SubtopicList } from "@/features/editor/SubtopicList";
+import { BOX_FROM, showsSubtopics } from "@/features/editor/subtopics";
 import { dragRowMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { dragged, endDrag, placementFor, startDrag, zoneFor, type Placement, type Zone } from "./drag";
@@ -37,6 +40,18 @@ export function Rows({ items, depth, ctx }: { items: readonly TreeItem[]; depth:
       ))}
     </ul>
   );
+}
+
+/**
+ * What sits under an open row. A note that shows its pages inside as
+ * subtopics, with more than a few, lists them in a box with a filter, so it
+ * never pushes the rest of the sidebar far down. A click goes to the
+ * subtopic on the note's page.
+ */
+function Inside({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowContext }) {
+  const subtopics = showsSubtopics(item) ? subtopicsOf(item, "") : [];
+  if (subtopics.length < BOX_FROM) return <Rows items={item.children} depth={depth + 1} ctx={ctx} />;
+  return <SubtopicList list={subtopics} onOpen={(id) => ctx.select(id)} style={{ marginLeft: 4 + (depth + 1) * 14 }} />;
 }
 
 /** Renames a row in place. Every keystroke is saved, so Enter, Esc and clicking away all just finish. */
@@ -231,7 +246,7 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
           <Icon name="more" />
         </button>
       </div>
-      {hasChildren && open && <Rows items={item.children} depth={depth + 1} ctx={ctx} />}
+      {hasChildren && open && <Inside item={item} depth={depth} ctx={ctx} />}
     </li>
   );
 });

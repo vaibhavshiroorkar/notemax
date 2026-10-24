@@ -1,33 +1,34 @@
 import type { CSSProperties, ReactNode } from "react";
-import { createNode, renameNode, type Tree } from "@notemax/core";
+import { createNode, renameNode } from "@notemax/core";
 import type * as Y from "yjs";
 import { Icon } from "@/ui/Icon";
 import { LazyMount } from "@/ui/LazyMount";
-import { subtopicsIn } from "./reading";
+import type { Subtopic } from "./reading";
 import { BookItemMenu } from "./BookItemMenu";
 
 const LOAD_AT_ONCE = 8;
 
 /**
- * A chapter's subtopics, in the chapter's own page after its text: each with
- * its number, a title and its text to edit right there, and a ... menu to
- * move or delete it. The sidebar jumps to each one by its data-reveal.
+ * Subtopics in their page, after its text: a chapter's in a book, or those of
+ * a note set to show its pages inside. Each has its number, a title and its
+ * text to edit right there, and a ... menu to move or delete it. The sidebars
+ * jump to each one by its data-reveal.
  */
 export function InlineSubtopics({
-  tree,
-  chapterId,
+  subtopics,
+  hostId,
   workspaceDoc,
   renderNote,
   onOpen,
 }: {
-  tree: Tree;
-  chapterId: string;
+  subtopics: Subtopic[];
+  /** The chapter or note whose page this is. */
+  hostId: string;
   workspaceDoc: Y.Doc;
   /** The editor for a subtopic's text, given by the note page that holds this. */
   renderNote(id: string): ReactNode;
   onOpen(id: string): void;
 }) {
-  const subtopics = subtopicsIn(tree, chapterId);
   // A few open at once. Past that each editor loads as it comes near, so a long chapter opens fast.
   const lazy = subtopics.length > LOAD_AT_ONCE;
   return (
@@ -48,7 +49,7 @@ export function InlineSubtopics({
           )}
         </section>
       ))}
-      <button className="button add-subtopic" onClick={() => onOpen(createNode(workspaceDoc, "note", chapterId))}>
+      <button className="button add-subtopic" onClick={() => onOpen(createNode(workspaceDoc, "note", hostId))}>
         <Icon name="plus" />
         <span>Add subtopic</span>
       </button>

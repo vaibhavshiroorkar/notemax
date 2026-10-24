@@ -150,7 +150,26 @@
   padding-left: calc(var(--depth, 0) * 16px);
 }
 
+/* A chapter's arrow opens or folds its subtopics. Chapters without any keep the room, so titles line up. */
+.chapter-fold {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  color: var(--muted);
+}
 
+.chapter-fold svg {
+  width: 13px;
+  height: 13px;
+}
+
+.book-panel-chapters .row.subtopic {
+  padding-left: calc(20px + var(--depth, 1) * 12px);
+}
 
 .chapter-row {
   display: flex;

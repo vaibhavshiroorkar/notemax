@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.74.0 (2026-10-24)
+
+- Any note can show the pages inside it as numbered subtopics on its own page, the way a book chapter does. Turn it on from the page menu (Page options) or the right sidebar's This page. It is off at first.
+- In the left sidebar, a note with more than five subtopics lists them in a box of their own, with a filter and a scroll. A click goes to that subtopic on the note's page.
+- The right sidebar has "On this page" for such a note, to jump between its subtopics or add one.
+- In a book's chapter list on the right, only the chapter you are reading shows its subtopics. The others are folded, and an arrow opens any of them.
+
 ## 0.73.0 (2026-10-24)
 
 - Switching workspace is instant and no longer reloads the window.

@@ -10,6 +10,9 @@ import { JoinLists } from "./lists";
 import { Indent, LineSpacing, ListMarker, ParenthesisList, ShortcutUndo } from "./writing";
 import { EDITOR_MENU } from "./menu";
 import { NotePane } from "./NotePane";
+import { SubtopicSetting, SubtopicsPanel } from "./SubtopicsPanel";
+import { SUBTOPICS_MENU, inlineHost, showsSubtopics } from "./subtopics";
+import { bookOf } from "@/features/books/reading";
 
 const openNote = (app: AppContext) => (app.activeId && app.tree.byId.get(app.activeId)?.kind === "note" ? app.activeId : null);
 
@@ -18,7 +21,24 @@ export const notesPlugin: Plugin = {
   name: "Notes",
   description: "Writing pages",
   required: true,
-  pageSettings: [{ id: "notes.layout", kinds: ["note"], component: LayoutSetting }],
+  pageSettings: [
+    { id: "notes.layout", kinds: ["note"], component: LayoutSetting },
+    { id: "notes.subtopics", kinds: ["note"], component: SubtopicSetting },
+  ],
+  // A note set to show its pages inside opens for them, scrolled to the one asked for.
+  hostOf: inlineHost,
+  sidePanels: [
+    {
+      id: "notes.subtopics",
+      title: "On this page",
+      order: 12,
+      when: (app) => {
+        const node = app.activeId ? app.tree.byId.get(app.activeId) : undefined;
+        return !!node && showsSubtopics(node) && !bookOf(app.tree, node.id);
+      },
+      component: SubtopicsPanel,
+    },
+  ],
   settings: [{ id: "editor", order: 20, group: "Writing", title: "Editor", icon: "text", keywords: ["writing", "typing", "notes", "pages", "paper", "layout"], component: EditorSection }],
   options: [
     { id: "spellcheck", label: "Check spelling while typing", section: "editor", quick: true, default: true },
@@ -61,6 +81,7 @@ export const notesPlugin: Plugin = {
   contextMenu: [
     ...EDITOR_MENU,
     LAYOUT_MENU,
+    ...SUBTOPICS_MENU,
     {
       id: "notes.copy-all",
       inside: "copy",

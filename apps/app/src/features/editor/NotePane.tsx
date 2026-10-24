@@ -18,6 +18,7 @@ import { KeyboardBar } from "./KeyboardBar";
 import { PAGE_GAP, PAGE_MARGIN, PAPER, paperSize } from "./pages";
 import { useBodyIndex } from "./useBodyIndex";
 import { useRememberPosition } from "./usePosition";
+import { noteSubtopics, showsSubtopics } from "./subtopics";
 import { starterContent } from "./welcome";
 import "./editor.css";
 
@@ -56,7 +57,10 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
   const chosen = node.props.layout === "pages" || node.props.layout === "infinite" ? node.props.layout : pagesByDefault ? "pages" : "infinite";
   // A chapter holds its subtopics after its text. With some, it is one long page: sheets would cut through them.
   const chapter = registry.isOn("books") && chapterOf(tree, node.id)?.id === node.id;
-  const layout = roomForSheets && !(chapter && subtopicsIn(tree, node.id).length > 0) ? chosen : "infinite";
+  // Any note can hold its pages inside the same way, when it is set to.
+  const inline = !chapter && showsSubtopics(node) && !bookOf(tree, node.id);
+  const subtopics = chapter ? subtopicsIn(tree, node.id) : inline ? noteSubtopics(tree, node.id) : [];
+  const layout = roomForSheets && !subtopics.length ? chosen : "infinite";
   const paper = PAPER[paperSize.use()];
   const [pages, setPages] = useState(1);
   const editorRef = useRef<TiptapEditor | null>(null);
@@ -148,10 +152,10 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
           }}
         />
       )}
-      {local && chapter && (
+      {local && (chapter || inline) && (
         <InlineSubtopics
-          tree={tree}
-          chapterId={node.id}
+          subtopics={subtopics}
+          hostId={node.id}
           workspaceDoc={workspaceDoc}
           onOpen={(id) => hub.open(id)}
           renderNote={(id) => <InlineNote id={id} hub={hub} workspaceDoc={workspaceDoc} />}
