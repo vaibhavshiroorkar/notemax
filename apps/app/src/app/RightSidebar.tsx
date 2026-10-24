@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent } from "react";
+import { listedOnRight } from "@/features/sidebar/state";
+import { workspaceNow } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
 import type { AppContext, SidePanel } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
@@ -181,10 +183,19 @@ function Tray({ all, here }: { all: SidePanel[]; here: Set<string> }) {
  * bottom. Dragging a section onto a box makes tabs in that box.
  * It stays on the page a moment after closing, so it can slide out.
  */
+/** The right sidebar panel that lists a note's subtopics. */
+const SUBTOPICS_PANEL = "notes.subtopics";
+
 export function RightSidebar({ app, panels, all, open }: { app: AppContext; panels: SidePanel[]; all: SidePanel[]; open: boolean }) {
   const mounted = usePresence(open);
   const layout = placed(panelLayout.use(), all.map((p) => p.id));
   const moving = dragging.use();
+  // While "On this page" lists the open page's subtopics here, the left sidebar leaves them out.
+  const listing = open && app.workspace === workspaceNow() && panels.some((p) => p.id === SUBTOPICS_PANEL) && !layout.off.includes(SUBTOPICS_PANEL) ? app.activeId : null;
+  useEffect(() => {
+    listedOnRight.set(listing);
+    return () => listedOnRight.set(null);
+  }, [listing]);
   if (!mounted) return null;
 
   const here = new Set(panels.map((p) => p.id));

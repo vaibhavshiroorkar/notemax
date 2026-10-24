@@ -30,6 +30,9 @@ export function expand(...ids: string[]) {
 /** The folder whose name is being typed in its row. */
 export const editingId = createStore<string | null>(null);
 
+/** The page whose subtopics the right sidebar lists right now. Its row here leaves them out, so they show once. */
+export const listedOnRight = createStore<string | null>(null);
+
 export const dropTarget = createStore<DropTarget | null>(null);
 
 /** The row marked as the open page. For a chapter, that is its book. */

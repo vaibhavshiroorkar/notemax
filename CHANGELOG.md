@@ -3,6 +3,11 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.84.0 (2026-10-24)
+
+- A page's subtopics show in one sidebar at a time. While "On this page" lists them on the right, the left sidebar leaves them out; close the right sidebar and they are back on the left.
+- A line above each subtopic parts it from the text before it.
+
 ## 0.83.0 (2026-10-24)
 
 - Home is calmer: each card is a section with a plain title and a line above it, instead of a boxed card with a capitalised label.

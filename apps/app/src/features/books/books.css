@@ -363,9 +363,11 @@
 
 .inline-subtopic {
   padding-left: calc((var(--depth, 1) - 1) * 24px);
+  /* A line above each subtopic parts it from the text before it. */
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
   /* Clear of the sticky book bar when the sidebar jumps here. */
   scroll-margin-top: 64px;
-  border-radius: 8px;
 }
 
 /* Lights up a moment after a jump from the sidebar, so the eye finds it. */

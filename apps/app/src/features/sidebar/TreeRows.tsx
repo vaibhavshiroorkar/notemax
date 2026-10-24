@@ -9,7 +9,7 @@ import { BOX_FROM, showsSubtopics } from "@/features/editor/subtopics";
 import { dragRowMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { dragged, endDrag, placementFor, startDrag, zoneFor, type Placement, type Zone } from "./drag";
-import { collapsed, dropTarget, editingId, markedId, selection, sidebarView, sortItems, toggleCollapsed } from "./state";
+import { collapsed, dropTarget, editingId, listedOnRight, markedId, selection, sidebarView, sortItems, toggleCollapsed } from "./state";
 
 /**
  * Actions the rows share. The sidebar makes it once, so it never changes and
@@ -115,9 +115,11 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
   // A picked row fades with the one being dragged, since they all move together.
   const isDragged = useSelect(dragged, (d) => !!d && (d.id === item.id || (selected && selection.get().has(d.id))));
   const dropZone = useSelect(dropTarget, (target) => (target?.id === item.id ? target.zone : undefined));
+  const onRight = useSelect(listedOnRight, (id) => id === item.id);
 
-  // A book's chapters are listed in the book panel on the right, not here.
-  const hasChildren = item.kind !== "book" && item.children.length > 0;
+  // A book's chapters are listed in the book panel on the right, not here, and
+  // so are the subtopics of a page while "On this page" lists them there.
+  const hasChildren = item.kind !== "book" && item.children.length > 0 && !onRight;
   // A folder always shows its arrow, even empty, so it reads as a folder without an icon.
   const foldable = hasChildren || item.kind === "folder";
   const title = item.title || "Untitled";
