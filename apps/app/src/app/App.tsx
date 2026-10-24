@@ -595,6 +595,11 @@ export function App() {
       )}
       <ContextMenuHost app={app} appFor={(ws) => (ws === shown ? app : foreignScopes.has(ws) ? scopedApp(app, foreignScopes.get(ws)!) : undefined)} />
       <PromptHost />
+      {registry.floating().map(({ id, component: Floating }) => (
+        <Safe key={id} name={id}>
+          <Floating app={app} />
+        </Safe>
+      ))}
       <Toasts />
       <StatusBar app={app} workspaceStatus={workspace.status} words={activeNode?.kind === "note" ? activeNode.words : null} persistent={persistent} />
     </div>

@@ -73,4 +73,4 @@ export {
   type WorkspaceInfo,
 } from "./workspaces";
 export { parseWhen, nextDue, type When, type Repeat } from "./when";
-export { tasksIn, finishTask, type Task } from "./tasks";
+export { tasksIn, finishTask, remindAt, type Task } from "./tasks";

@@ -26,6 +26,7 @@ import type {
   SlashItem,
   StatusItem,
   View,
+  Floating,
 } from "./types";
 import type { IconName } from "@/ui/Icon";
 
@@ -138,6 +139,7 @@ export const registry = {
   pageHeader: (kind: NodeKind): PageAddon[] => all((p) => p.pageHeader).filter((addon) => addon.kinds?.includes(kind) ?? true),
   pageFooter: (kind: NodeKind): PageAddon[] => all((p) => p.pageFooter).filter((addon) => addon.kinds?.includes(kind) ?? true),
   overlay: (id: string): Overlay | undefined => all((p) => p.overlays).find((overlay) => overlay.id === id),
+  floating: (): Floating[] => all((p) => p.floating),
   view: (id: string): View | undefined => all((p) => p.views).find((view) => view.id === id),
   statusItems: (): StatusItem[] => all((p) => p.statusItems),
   sidebarFooter: (): SidebarFooterItem[] => all((p) => p.sidebarFooter),

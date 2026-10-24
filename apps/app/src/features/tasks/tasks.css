@@ -178,3 +178,66 @@
 .task-done-toggle {
   margin-bottom: 4px;
 }
+
+/* Reminders ringing now, at the bottom right above the status bar. */
+.reminders {
+  position: fixed;
+  right: 16px;
+  bottom: 40px;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(340px, calc(100vw - 32px));
+}
+
+.reminder {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
+
+.reminder-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reminder-head strong {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.reminder-head > svg {
+  flex: none;
+  color: var(--accent);
+}
+
+.reminder-when {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.reminder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reminder-snooze {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}

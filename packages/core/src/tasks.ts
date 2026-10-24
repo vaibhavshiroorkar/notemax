@@ -75,3 +75,21 @@ export function finishTask(body: Y.XmlFragment, which: string | number, done: bo
   else apply();
   return true;
 }
+
+/** A day with no time rings at this hour, when it rings at all. */
+const MORNING = "09:00";
+
+/**
+ * When a to-do's reminder rings, in milliseconds, or null for none. A to-do
+ * with a time rings at it unless told otherwise; one with only a day rings
+ * at 9 in the morning, only when asked. `remind` is the minutes before, and
+ * below zero turns it off.
+ */
+export function remindAt(task: Task): number | null {
+  if (task.done || !task.due) return null;
+  if (task.remind !== null && task.remind < 0) return null;
+  if (!task.time && task.remind === null) return null;
+  const [y, m, d] = task.due.split("-").map(Number);
+  const [h, min] = (task.time ?? MORNING).split(":").map(Number);
+  return new Date(y, m - 1, d, h, min).getTime() - (task.remind ?? 0) * 60_000;
+}

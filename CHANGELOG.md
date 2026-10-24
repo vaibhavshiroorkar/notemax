@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.78.0 (2026-10-24)
+
+- Reminders. A to-do with a time rings at that time. Its date chip can ring earlier (5 minutes to a day before), on a day with no time (at 9:00), or not at all.
+- A reminder shows as a card at the bottom right with Done and Later (10 min, 1 hour, tomorrow), and as a system notification when allowed. The desktop app shows them through Windows, even with its window closed to the tray.
+- One missed while Notemax was closed rings when it opens, if it is less than a day old. Each rings once.
+- Settings has a Reminders section, with a button to allow notifications in the browser.
+
 ## 0.77.0 (2026-10-24)
 
 - To-dos can have a day, a time, a repeat and a priority. Type them in plain words, like "call mum tomorrow 5pm", "water plants every monday" or "fix the leak !!". The words are marked while you type, and leaving the line turns them into a small chip. Click the chip to change the day, time, repeat or priority.

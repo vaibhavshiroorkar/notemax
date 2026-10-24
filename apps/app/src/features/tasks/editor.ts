@@ -12,8 +12,8 @@ import { isOverdue, whenLabel } from "./when";
 // "tomorrow 5pm" or "!!" in a to-do shows those words marked; leaving the
 // line turns them into a chip on the line, which a click changes.
 
-export const TASK_ATTRS = ["id", "due", "time", "repeat", "priority"] as const;
-const DATE_ATTRS = ["due", "time", "repeat", "priority"] as const;
+export const TASK_ATTRS = ["id", "due", "time", "repeat", "priority", "remind"] as const;
+const DATE_ATTRS = ["due", "time", "repeat", "priority", "remind"] as const;
 
 /** The stored side: every note knows these attributes, whether the Tasks plugin is on or not. */
 export const TaskAttrs = Extension.create({
@@ -36,6 +36,8 @@ export const TaskAttrs = Extension.create({
           time: attr("time"),
           repeat: attr("repeat"),
           priority: attr("priority", true),
+          // Minutes before the time to ring; below zero, no reminder. Left out, a to-do with a time rings at it.
+          remind: { ...attr("remind"), parseHTML: (el: HTMLElement) => (el.hasAttribute("data-remind") ? Number(el.getAttribute("data-remind")) : null) },
         },
       },
     ];

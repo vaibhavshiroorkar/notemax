@@ -1,6 +1,6 @@
 [package]
 name = "notemax"
-version = "0.77.0"
+version = "0.78.0"
 description = "Notemax desktop app"
 authors = ["Notemax"]
 license = ""
@@ -20,6 +20,7 @@ tauri-build = { version = "2.7.2", features = [] }
 log = "0.4"
 tauri = { version = "2.12.3", features = ["tray-icon"] }
 tauri-plugin-log = "2"
+tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 

@@ -73,6 +73,8 @@ export interface Plugin {
   shortcutHints?: ShortcutHint[];
   /** Views that cover the window. Open one with app.openOverlay. */
   overlays?: Overlay[];
+  /** Always there, over the page, like reminders that ring. Each draws nothing until it has something to show. */
+  floating?: Floating[];
   /** Pages of their own that are not in the sidebar, like the graph. They open in a tab with app.openView. */
   views?: View[];
   /** What a right click offers, on a page row, in a note, and so on. */
@@ -121,6 +123,11 @@ export interface View {
   title: string;
   icon: IconName;
   component: ComponentType<{ app: AppContext; options: Record<string, unknown> }>;
+}
+
+export interface Floating {
+  id: string;
+  component: ComponentType<{ app: AppContext }>;
 }
 
 export interface Overlay {

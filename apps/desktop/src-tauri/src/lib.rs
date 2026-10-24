@@ -157,6 +157,7 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_sql::Builder::default().add_migrations(DB_URL, migrations).build())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![open_sign_in, quit_now])
         .setup(|app| {
             if cfg!(debug_assertions) {

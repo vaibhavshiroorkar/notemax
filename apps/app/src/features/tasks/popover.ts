@@ -1,4 +1,5 @@
 import type { EditorView } from "@tiptap/pm/view";
+import { askToNotify } from "./reminders";
 
 // The small box a task's chip opens: its day, time, repeat and priority, each
 // saved on the item as it changes. Plain DOM, since it lives inside the editor.
@@ -84,6 +85,26 @@ export function openTaskPopover(view: EditorView, pos: number, anchor: HTMLEleme
   );
   priority.addEventListener("change", () => set({ priority: priority.value ? Number(priority.value) : null }));
 
+  // Left as it is, a to-do with a time rings at it and one with only a day does not ring.
+  const remind = select(
+    [
+      ["", "At the time, if it has one"],
+      ["0", "On the day (at the time, or 9:00)"],
+      ["5", "5 minutes before"],
+      ["15", "15 minutes before"],
+      ["30", "30 minutes before"],
+      ["60", "1 hour before"],
+      ["1440", "1 day before"],
+      ["-1", "No reminder"],
+    ],
+    item.attrs.remind === null || item.attrs.remind === undefined ? "" : String(item.attrs.remind),
+  );
+  remind.addEventListener("change", () => {
+    set({ remind: remind.value === "" ? null : Number(remind.value) });
+    if (remind.value !== "-1") void askToNotify();
+  });
+  time.addEventListener("change", () => time.value && void askToNotify());
+
   const actions = document.createElement("div");
   actions.className = "task-popover-actions";
   const clear = document.createElement("button");
@@ -91,7 +112,7 @@ export function openTaskPopover(view: EditorView, pos: number, anchor: HTMLEleme
   clear.className = "link-button";
   clear.textContent = "Clear";
   clear.addEventListener("click", () => {
-    set({ due: null, time: null, repeat: null, priority: null });
+    set({ due: null, time: null, repeat: null, priority: null, remind: null });
     close();
   });
   const done = document.createElement("button");
@@ -101,7 +122,7 @@ export function openTaskPopover(view: EditorView, pos: number, anchor: HTMLEleme
   done.addEventListener("click", () => close());
   actions.append(clear, done);
 
-  box.append(field("Day", date), field("Time", time), field("Repeat", repeat), field("Priority", priority), actions);
+  box.append(field("Day", date), field("Time", time), field("Repeat", repeat), field("Priority", priority), field("Remind", remind), actions);
   document.body.append(box);
 
   const rect = anchor.getBoundingClientRect();
