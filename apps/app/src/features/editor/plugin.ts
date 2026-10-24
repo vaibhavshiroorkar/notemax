@@ -86,6 +86,7 @@ export const notesPlugin: Plugin = {
     {
       id: "notes.copy-all",
       inside: "copy",
+      readsText: true,
       title: "Copy all text",
       group: "edit",
       icon: "copy",
@@ -121,7 +122,7 @@ export const notesPlugin: Plugin = {
       },
     },
     { id: "notes.new", title: "New note", keywords: ["create", "add"], run: (app) => app.create("note") },
-    { id: "notes.copy-all", title: "Copy all of this note", keywords: ["clipboard", "text", "everything"], when: (app) => openNote(app) !== null, run: (app) => void copyAll(app, openNote(app)!) },
+    { id: "notes.copy-all", readsText: true, title: "Copy all of this note", keywords: ["clipboard", "text", "everything"], when: (app) => openNote(app) !== null, run: (app) => void copyAll(app, openNote(app)!) },
     {
       id: "notes.duplicate",
       title: "Duplicate this note",

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { openLocalDoc, plainText, type TreeItem } from "@notemax/core";
 import { peekDoc } from "@/data/docCache";
+import { useHidden } from "@/features/lock/LockedInline";
 import { storeFor } from "@/platform/platform";
 
 // The first lines of a chapter, for the book page's Previews. Read once per
@@ -24,6 +25,7 @@ async function readStart(id: string, workspace: string): Promise<string> {
 export function ChapterPreview({ item, workspace }: { item: TreeItem; workspace: string }) {
   const key = `${workspace}:${item.id}`;
   const known = cache.get(key);
+  const hidden = useHidden(item);
   const [text, setText] = useState(known?.edited === item.editedAt ? known.text : null);
   useEffect(() => {
     const saved = cache.get(key);
@@ -40,6 +42,7 @@ export function ChapterPreview({ item, workspace }: { item: TreeItem; workspace:
       live = false;
     };
   }, [key, item.id, item.editedAt, workspace]);
+  if (hidden) return <p className="chapter-preview">Locked.</p>;
   if (text === null) return <p className="chapter-preview" aria-busy="true" />;
   return <p className="chapter-preview">{text || <em>Nothing written yet.</em>}</p>;
 }

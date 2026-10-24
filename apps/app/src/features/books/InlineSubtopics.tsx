@@ -2,11 +2,18 @@ import type { CSSProperties, ReactNode } from "react";
 import { createNode, renameNode } from "@notemax/core";
 import type * as Y from "yjs";
 import { Icon } from "@/ui/Icon";
+import { LockedInline, useHidden } from "@/features/lock/LockedInline";
 import { LazyMount } from "@/ui/LazyMount";
+import type { TreeItem } from "@notemax/core";
 import type { Subtopic } from "./reading";
 import { BookItemMenu } from "./BookItemMenu";
 
 const LOAD_AT_ONCE = 8;
+
+/** A subtopic's text, or a lock in its place while it is locked. */
+function Body({ item, children }: { item: TreeItem; children: ReactNode }) {
+  return useHidden(item) ? <LockedInline /> : children;
+}
 
 /**
  * Subtopics in their page, after its text: a chapter's in a book, or those of
@@ -41,7 +48,7 @@ export function InlineSubtopics({
             <BookItemMenu node={item} />
           </header>
           {item.kind === "note" ? (
-            lazy ? <LazyMount height={80}>{renderNote(item.id)}</LazyMount> : renderNote(item.id)
+            <Body item={item}>{lazy ? <LazyMount height={80}>{renderNote(item.id)}</LazyMount> : renderNote(item.id)}</Body>
           ) : (
             <button className="link-button" onClick={() => onOpen(item.id)}>
               Open this {item.kind === "board" ? "board" : "page"}

@@ -30,6 +30,7 @@ import { usePresence } from "@/ui/usePresence";
 import { useEdgeSwipe } from "./useEdgeSwipe";
 import { useHidingBars } from "./useHidingBars";
 import { RightSidebar } from "./RightSidebar";
+import { Gated } from "./Gated";
 import { ForeignPage, foreignActive, foreignScopes, scopedApp } from "./ForeignPage";
 import { revealing, useReveal } from "./reveal";
 import { pageInAddress, showInAddress, startBrowserNavigation } from "./history";
@@ -416,7 +417,9 @@ export function App() {
       )
     ) : activeNode && View ? (
       <Safe key={`${activeNode.id}:${version}`} name="This page">
-        <View node={activeNode} app={app} tree={tree} workspaceDoc={doc} hub={hub} onSelect={select} onStatus={pageStatus.set} onReady={onReady} />
+        <Gated node={activeNode} app={app}>
+          <View node={activeNode} app={app} tree={tree} workspaceDoc={doc} hub={hub} onSelect={select} onStatus={pageStatus.set} onReady={onReady} />
+        </Gated>
       </Safe>
     ) : activeNode ? (
       <PluginOff node={activeNode} app={app} />
@@ -448,7 +451,9 @@ export function App() {
     if (!node || !Page) return <p className="empty pane-empty">This page is gone.</p>;
     return (
       <Safe key={`${pane.id}:${node.id}:${version}`} name="This page">
-        <Page node={node} app={app} tree={tree} workspaceDoc={doc} hub={hub} onSelect={select} onStatus={ignore} onReady={ignore} />
+        <Gated node={node} app={app}>
+          <Page node={node} app={app} tree={tree} workspaceDoc={doc} hub={hub} onSelect={select} onStatus={ignore} onReady={ignore} />
+        </Gated>
       </Safe>
     );
   };

@@ -33,6 +33,7 @@ export const sharePlugin: Plugin = {
     {
       id: "share.open",
       inside: "share",
+      readsText: true,
       title: "Share...",
       group: "share",
       icon: "link",
@@ -45,6 +46,7 @@ export const sharePlugin: Plugin = {
     {
       id: "share.page",
       title: "Share this page",
+      readsText: true,
       keywords: ["collaborate", "together", "link", "invite"],
       when: (app) => openNote(app) !== null,
       run: (app) => app.openOverlay("share", { pageId: openNote(app)! }),

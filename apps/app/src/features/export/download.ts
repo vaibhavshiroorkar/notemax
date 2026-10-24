@@ -55,6 +55,14 @@ export async function downloadEverything(app: AppContext, from: TreeItem[] = app
 
     // A book's description is skipped when it is empty, so a book with none keeps a tidy folder.
     const markdownFile = async (id: string, path: string, heading?: string, skipEmpty = false) => {
+      // A locked page goes in by name only while it is locked.
+      if (registry.hidesText(app.tree.byId.get(id))) {
+        entries.push({ path: unique(path), data: `${heading ? `# ${heading}
+
+` : ""}This page is locked. Open it in Notemax, then download again to include its text.
+` });
+        return;
+      }
       const body = await loadBody(id);
       if (skipEmpty && !isWritten(body)) return;
       for (const [asset, file] of await loadPictures([body])) pictures.set(asset, file);

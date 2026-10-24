@@ -27,6 +27,7 @@ import type {
   StatusItem,
   View,
   Floating,
+  PageGate,
 } from "./types";
 import type { IconName } from "@/ui/Icon";
 
@@ -133,13 +134,18 @@ export const registry = {
     all((p) => p.settings)
       .filter((section) => section.when?.() ?? true)
       .sort((a, b) => a.order - b.order),
-  commands: (app: AppContext): Command[] => all((p) => p.commands).filter((command) => command.when?.(app) ?? true),
+  commands: (app: AppContext): Command[] => {
+    const hidden = registry.hidesText(app.activeId ? app.tree.byId.get(app.activeId) : undefined);
+    return all((p) => p.commands).filter((command) => !(hidden && command.readsText) && (command.when?.(app) ?? true));
+  },
   /** Every command of the plugins that are on, including ones hidden right now, for the shortcut settings. */
   allCommands: (): Command[] => all((p) => p.commands),
   pageHeader: (kind: NodeKind): PageAddon[] => all((p) => p.pageHeader).filter((addon) => addon.kinds?.includes(kind) ?? true),
   pageFooter: (kind: NodeKind): PageAddon[] => all((p) => p.pageFooter).filter((addon) => addon.kinds?.includes(kind) ?? true),
   overlay: (id: string): Overlay | undefined => all((p) => p.overlays).find((overlay) => overlay.id === id),
   floating: (): Floating[] => all((p) => p.floating),
+  /** The gates this page must get past, outermost first. */
+  gatesFor: (node: TreeNode): PageGate[] => all((p) => p.pageGates).filter((gate) => gate.applies(node)),
   view: (id: string): View | undefined => all((p) => p.views).find((view) => view.id === id),
   statusItems: (): StatusItem[] => all((p) => p.statusItems),
   sidebarFooter: (): SidebarFooterItem[] => all((p) => p.sidebarFooter),
@@ -159,8 +165,12 @@ export const registry = {
   /** Hooks: the sidebar starts over when this list changes, so they are always called in the same order. */
   sidebarFilterHooks: (): (() => SidebarFilter | null)[] => all((p) => (p.useSidebarFilter ? [p.useSidebarFilter] : undefined)),
   /** What a right click on this thing offers, from every plugin, in groups. */
-  contextMenu: (target: ContextTarget, app: AppContext): ContextMenuItem[] =>
-    all((p) => p.contextMenu).filter((item) => item.targets.includes(target.type) && (item.when?.(target, app) ?? true)),
+  contextMenu: (target: ContextTarget, app: AppContext): ContextMenuItem[] => {
+    const hidden = target.type === "page" && registry.hidesText(target.node);
+    return all((p) => p.contextMenu).filter((item) => item.targets.includes(target.type) && !(hidden && item.readsText) && (item.when?.(target, app) ?? true));
+  },
+  /** Whether a page's text must stay out of search, previews, lists and copies right now, like a locked page's. */
+  hidesText: (node: TreeNode | undefined): boolean => !!node && on().some((plugin) => plugin.hidesText?.(node)),
   /** Download formats, for one kind of page. */
   exporters: (kind: NodeKind): Exporter[] => all((p) => p.exporters).filter((exporter) => exporter.kinds.includes(kind)),
 };

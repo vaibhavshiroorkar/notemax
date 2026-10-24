@@ -1,10 +1,13 @@
 import * as React from "react";
 import * as core from "@notemax/core";
+import { treeIn } from "@/data/trees";
 import { getStore } from "@/platform/platform";
+import { workspaceNow } from "@/platform/prefs";
 import { ConfirmDialog, Dialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
 import { showToast } from "@/ui/toast";
 import { getOption, setOption, useOption } from "./options";
+import { registry } from "./registry";
 
 /**
  * What a community plugin gets. Plugins are separate files, so they cannot
@@ -26,6 +29,8 @@ export const pluginApi = Object.freeze({
   notify: showToast,
   /** A page's body as plain text, for plugins that count, search or export. */
   async pageText(id: string): Promise<string> {
+    // A locked page gives no text while it is locked.
+    if (registry.hidesText(treeIn(workspaceNow())?.byId.get(id))) return "";
     const local = await core.openLocalDoc(await getStore(), id, {});
     try {
       return core.plainText(local.doc.getXmlFragment("content"));

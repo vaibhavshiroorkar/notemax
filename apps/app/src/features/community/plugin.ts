@@ -19,6 +19,7 @@ export const communityPlugin: Plugin = {
     {
       id: "community.post",
       inside: "share",
+      readsText: true,
       title: "Post to community...",
       group: "share",
       targets: ["page"],
@@ -32,6 +33,7 @@ export const communityPlugin: Plugin = {
     {
       id: "community.post",
       title: "Post this page to the community",
+      readsText: true,
       keywords: ["publish", "public", "share"],
       when: (app) => accountsEnabled && !!app.activeId && ["note", "book"].includes(app.tree.byId.get(app.activeId)?.kind ?? ""),
       run: (app) => app.openOverlay("community.post", { pageId: app.activeId }),

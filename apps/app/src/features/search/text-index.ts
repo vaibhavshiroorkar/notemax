@@ -3,6 +3,7 @@ import { WORKSPACE_DOC_ID, plainText, readTree, splitScoped, tasksIn, type Task,
 import { remoteEdit } from "@/features/sync/live";
 import { memoryOnly, onLocalWrite, storeFor } from "@/platform/platform";
 import { createStore } from "@/platform/store";
+import { registry } from "@/plugins/registry";
 
 // Every note's text, for searching inside notes and for finding pages that
 // mention a title without linking to it, and every note's to-dos, for the
@@ -188,7 +189,7 @@ export function searchText(tree: Tree, query: string, limit = 20): TextMatch[] {
   if (!words.length) return [];
   const found: (TextMatch & { score: number })[] = [];
   for (const [id, text] of texts) {
-    if (!tree.visible.has(id)) continue;
+    if (!tree.visible.has(id) || registry.hidesText(tree.byId.get(id))) continue;
     const lower = text.toLowerCase();
     if (!words.every((word) => lower.includes(word))) continue;
     const score = words.reduce((sum, word) => sum + lower.split(word).length - 1, 0);
@@ -207,7 +208,7 @@ export function mentionsOf(tree: Tree, id: string): TextMatch[] {
   const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(title)}(?=$|[^\\p{L}\\p{N}])`, "iu");
   const out: TextMatch[] = [];
   for (const [other, text] of texts) {
-    if (other === id || linking.has(other) || !tree.visible.has(other)) continue;
+    if (other === id || linking.has(other) || !tree.visible.has(other) || registry.hidesText(tree.byId.get(other))) continue;
     const match = pattern.exec(text);
     if (match) out.push({ id: other, snippet: snippetAt(text, match.index + match[1].length, title.length) });
   }

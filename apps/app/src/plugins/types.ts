@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import type { AnyExtension, ChainedCommands, Editor } from "@tiptap/core";
 import type * as Y from "yjs";
 import type { NodeKind, SaveStatus, Tree, TreeNode } from "@notemax/core";
@@ -75,6 +75,10 @@ export interface Plugin {
   overlays?: Overlay[];
   /** Always there, over the page, like reminders that ring. Each draws nothing until it has something to show. */
   floating?: Floating[];
+  /** True when a page's text must not show outside its own page right now, like a locked one: search, previews and lists leave it out. */
+  hidesText?(node: TreeNode): boolean;
+  /** Something a page must get past before it shows, like a lock. Wraps the page wherever it is drawn. */
+  pageGates?: PageGate[];
   /** Pages of their own that are not in the sidebar, like the graph. They open in a tab with app.openView. */
   views?: View[];
   /** What a right click offers, on a page row, in a note, and so on. */
@@ -123,6 +127,14 @@ export interface View {
   title: string;
   icon: IconName;
   component: ComponentType<{ app: AppContext; options: Record<string, unknown> }>;
+}
+
+export interface PageGate {
+  id: string;
+  /** Whether this page goes through the gate at all. Cheap: it runs on every draw. */
+  applies(node: TreeNode): boolean;
+  /** Draws `children` (the page) when it may show, or what to show instead. */
+  component: ComponentType<{ node: TreeNode; app: AppContext; children: ReactNode }>;
 }
 
 export interface Floating {
@@ -192,6 +204,8 @@ export interface AppContext {
 export interface Command {
   id: string;
   title: string;
+  /** Copies, downloads or sends the open page's text, so it is left out while that page's text is hidden (locked). */
+  readsText?: boolean;
   keywords?: string[];
   /**
    * The default, like "Mod+K". Mod is Ctrl on Windows and Linux, and Cmd on
@@ -384,6 +398,8 @@ export interface ContextMenuItem {
   keys?: string;
   /** Drawn in red, for things like Move to trash. */
   danger?: boolean;
+  /** Copies, downloads or sends the page's text, so a page whose text is hidden (a locked one) leaves it out. */
+  readsText?: boolean;
   when?(target: ContextTarget, app: AppContext): boolean;
   disabled?(target: ContextTarget, app: AppContext): boolean;
   /** A small menu that opens to the side, like the download formats. */

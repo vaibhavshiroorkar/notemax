@@ -79,6 +79,7 @@ export const SYNCED_PREFS: ReadonlySet<string> = new Set([
   "temporaryNoticeHidden",
   "startAt",
   "dailyTitle",
+  "lockCheck",
 ]);
 
 let outbox: ((key: string, value: string | null) => void) | null = null;

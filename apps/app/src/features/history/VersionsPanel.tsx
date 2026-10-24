@@ -6,6 +6,7 @@ import { storeFor } from "@/platform/platform";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { saveNow, versionEvery, versionsSaved } from "./versions";
+import { useHidden } from "@/features/lock/LockedInline";
 
 export const whenOf = (time: number) => {
   const date = new Date(time);
@@ -15,6 +16,12 @@ export const whenOf = (time: number) => {
 
 /** The open page's saved versions in the right sidebar. A click shows one, with Restore. */
 export function VersionsPanel({ app }: { app: AppContext }) {
+  // A locked page's old text stays hidden with it.
+  if (useHidden(app.tree.byId.get(app.activeId!))) return <p className="versions-empty">This page is locked.</p>;
+  return <Versions app={app} />;
+}
+
+function Versions({ app }: { app: AppContext }) {
   const id = app.activeId!;
   const saved = versionsSaved.use();
   const every = versionEvery.use();

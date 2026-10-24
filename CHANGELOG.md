@@ -3,6 +3,14 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.79.0 (2026-10-24)
+
+- Lock a page from its menu (Page options, Lock page). A locked page asks for the lock password before it shows. One password opens every locked page, on all your devices.
+- While locked, its text stays out of search, Mentioned in, the Tasks list, inline subtopics, a book's Previews and Full text, and its versions. Its menu leaves out Copy all text, downloads, sharing and posting.
+- Locked pages close again with "Lock again" under the title, "Lock pages now", after 5 minutes without a key press, or when the app closes.
+- Settings, Privacy: set or change the lock password. A forgotten one can be let go by typing the workspace's name; locked pages stay locked for the next password.
+- This lock keeps out casual eyes. It is not encryption: the text stays on the device as it was.
+
 ## 0.78.0 (2026-10-24)
 
 - Reminders. A to-do with a time rings at that time. Its date chip can ring earlier (5 minutes to a day before), on a day with no time (at 9:00), or not at all.

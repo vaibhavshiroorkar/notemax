@@ -24,6 +24,7 @@ import { communityPlugin } from "@/features/community/plugin";
 import { markdownFilesPlugin } from "@/features/markdown-files/plugin";
 import { datesPlugin } from "@/features/dates/plugin";
 import { tasksPlugin } from "@/features/tasks/plugin";
+import { lockPlugin } from "@/features/lock/plugin";
 import { specialPlugin } from "@/features/special/plugin";
 import { searchPlugin } from "@/features/search/plugin";
 import { voicePlugin } from "@/features/voice/plugin";
@@ -55,6 +56,7 @@ import { registerPlugin } from "./registry";
   markdownFilesPlugin,
   datesPlugin,
   tasksPlugin,
+  lockPlugin,
   specialPlugin,
   searchPlugin,
   trashPlugin,

@@ -13,6 +13,7 @@ import { Safe } from "@/ui/Safe";
 import { showToast } from "@/ui/toast";
 import { revealing } from "./reveal";
 import { openPage, type Visit } from "./tabs";
+import { Gated } from "./Gated";
 
 /** What makes a page from another workspace work: that workspace's tree and doc, and the page. */
 export interface Scope {
@@ -116,7 +117,9 @@ export function ForeignPage({ base, visit, active, version }: { base: AppContext
         </p>
         {node && Page ? (
           <Safe key={`${ws}:${node.id}:${version}`} name="This page">
-            <Page node={node} app={app} tree={tree} workspaceDoc={doc} hub={hub} onSelect={(id) => app.open(id)} onStatus={active ? pageStatus.set : ignore} onReady={ignore} />
+            <Gated node={node} app={app}>
+              <Page node={node} app={app} tree={tree} workspaceDoc={doc} hub={hub} onSelect={(id) => app.open(id)} onStatus={active ? pageStatus.set : ignore} onReady={ignore} />
+            </Gated>
           </Safe>
         ) : (
           <p className="empty pane-empty">This page is gone.</p>

@@ -2,6 +2,7 @@ import { finishTask, type Task, type Tree } from "@notemax/core";
 import { acquireDoc, releaseDoc } from "@/data/docCache";
 import { todayKey } from "@/features/dates/dates";
 import { allTasks, indexVersion, readAgain } from "@/features/search/text-index";
+import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 
 /** A to-do and the note it is in. `index` is its place in the note, for one with no id yet. */
@@ -18,7 +19,8 @@ const byWhen = (a: Entry, b: Entry) =>
 export function entries(tree: Tree): Entry[] {
   const out: Entry[] = [];
   for (const [noteId, tasks] of allTasks()) {
-    if (!tree.visible.has(noteId)) continue;
+    // A locked note's to-dos stay hidden with it.
+    if (!tree.visible.has(noteId) || registry.hidesText(tree.byId.get(noteId))) continue;
     tasks.forEach((task, index) => task.text && out.push({ noteId, index, task }));
   }
   return out;

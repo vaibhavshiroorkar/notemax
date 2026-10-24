@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { renameNode, type TreeItem } from "@notemax/core";
 import { InlineNote } from "@/features/editor/InlineNote";
+import { LockedInline, useHidden } from "@/features/lock/LockedInline";
 import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { LazyMount } from "@/ui/LazyMount";
@@ -13,6 +14,7 @@ function Piece({ item, label, depth, props }: { item: TreeItem; label: string; d
   const untitled = "Untitled";
   // A subtopic is read in its chapter's page, so its arrow goes there.
   const where = depth > 0 ? "in its chapter" : "on its own page";
+  const hidden = useHidden(item);
   return (
     <section className="whole-piece" style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || untitled}`}>
       <header className="whole-title">
@@ -23,7 +25,9 @@ function Piece({ item, label, depth, props }: { item: TreeItem; label: string; d
         </button>
         <BookItemMenu node={item} />
       </header>
-      {item.kind === "note" ? (
+      {item.kind === "note" && hidden ? (
+        <LockedInline />
+      ) : item.kind === "note" ? (
         <LazyMount>
           <InlineNote id={item.id} hub={hub} workspaceDoc={workspaceDoc} />
         </LazyMount>

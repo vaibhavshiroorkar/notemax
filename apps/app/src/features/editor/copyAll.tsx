@@ -4,6 +4,7 @@ import { loadBody, resolver } from "@/features/export/content";
 import { toHtml, toPlainText } from "@/features/export/serialize";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
+import { registry } from "@/plugins/registry";
 
 /**
  * Puts a whole note on the clipboard: as formatted text for apps that take it,
@@ -12,6 +13,7 @@ import { Icon } from "@/ui/Icon";
  */
 export async function copyAll(app: AppContext, id: string) {
   const node = app.tree.byId.get(id);
+  if (registry.hidesText(node)) return app.notify("This page is locked. Open it first.");
   try {
     // Edits are saved in batches; the last keystrokes may not be stored yet.
     await peekDoc(id, app.workspace)?.flush();

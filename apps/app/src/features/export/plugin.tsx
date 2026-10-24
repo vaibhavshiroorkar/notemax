@@ -72,6 +72,7 @@ export const downloadsPlugin: Plugin = {
     {
       id: "downloads.page",
       title: "Download this page",
+      readsText: true,
       keywords: ["export", "save", "text", "markdown"],
       shortcut: "Mod+Shift+E",
       when: (app) => !!app.activeId && formatsFor(app.tree.byId.get(app.activeId)!.kind).length > 0,
@@ -80,6 +81,7 @@ export const downloadsPlugin: Plugin = {
     {
       id: "downloads.page-as",
       title: "Download this page as...",
+      readsText: true,
       keywords: ["export", "format", "pdf", "word", "docx", "epub", "html"],
       when: (app) => !!app.activeId && formatsFor(app.tree.byId.get(app.activeId)!.kind).length > 0,
       run(app) {
@@ -98,6 +100,7 @@ export const downloadsPlugin: Plugin = {
     {
       id: "downloads.as",
       title: "Download as",
+      readsText: true,
       group: "share",
       targets: ["page"],
       when: (target) => !!nodeOf(target) && formatsFor(nodeOf(target)!.kind).length > 0,
