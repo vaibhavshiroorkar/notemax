@@ -1,4 +1,5 @@
 import { ROOT, createNode, holds, setProp, type SortOrder, type TreeNode } from "@notemax/core";
+import { openBeside } from "@/app/tabs";
 import { isDesktop } from "@/platform/platform";
 import { registry } from "@/plugins/registry";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
@@ -79,6 +80,24 @@ export const PAGE_MENU: ContextMenuItem[] = [
     targets: ["page"],
     when: isPage,
     run: (target, app) => app.open(nodeOf(target)!.id, { newTab: true }),
+  },
+  {
+    id: "page.open-right",
+    inside: "open",
+    title: "Open to the right",
+    group: "open",
+    targets: ["page"],
+    when: isPage,
+    run: (target) => openBeside(nodeOf(target)!.id, "right"),
+  },
+  {
+    id: "page.open-below",
+    inside: "open",
+    title: "Open below",
+    group: "open",
+    targets: ["page"],
+    when: isPage,
+    run: (target) => openBeside(nodeOf(target)!.id, "bottom"),
   },
   {
     // Every kind the page can hold. Folders only go in folders: a folder inside a note has nothing to sort.

@@ -46,6 +46,9 @@ export const isView = (page: string) => page.startsWith(VIEW);
 export const viewPage = (id: string) => VIEW + id;
 export const viewId = (page: string) => page.slice(VIEW.length);
 
+/** Split view stops at four panes, two by two. More would leave each too small to write in. */
+export const MAX_PANES = 4;
+
 /** Back goes this far at most, per tab. */
 const MAX_VISITS = 50;
 
@@ -84,7 +87,7 @@ function decode(raw: string | null, fallbackPage: string | null): Layout {
 }
 
 /** Pane ids in a split, in order. */
-function panesIn(split: Split): string[] {
+export function panesIn(split: Split): string[] {
   return "pane" in split ? [split.pane] : split.parts.flatMap(panesIn);
 }
 
@@ -165,6 +168,9 @@ addEventListener("pagehide", saveTabsNow);
 export function loadTabs(fallbackPage: string | null) {
   layout.set(decode(getPref("tabs"), fallbackPage));
 }
+
+/** Whether another pane fits. */
+export const canSplit = (value = layout.get()) => value.panes.length < MAX_PANES;
 
 export const activePane = (value = layout.get()) => value.panes.find((pane) => pane.id === value.activePane)!;
 const activeTab = (value = layout.get()) => {
@@ -287,7 +293,8 @@ export function splitTab(tabId: string, target: string, edge: Edge) {
     const tabs = pane.tabs.filter((t) => t.id !== tabId);
     return { ...pane, tabs, active: pane.active === tabId ? (tabs[0]?.id ?? "") : pane.active };
   });
-  layout.set(tidy({ panes: [...panes, added], activePane: added.id, split: beside(splitOf(value), target, added.id, edge) }));
+  const next = tidy({ panes: [...panes, added], activePane: added.id, split: beside(splitOf(value), target, added.id, edge) });
+  if (next.panes.length <= MAX_PANES) layout.set(next);
 }
 
 /** Moves a tab into another pane, at `index` among its tabs. */
@@ -313,10 +320,88 @@ export function moveTabToPane(tabId: string, target: string, index = Infinity) {
 /** Opens the active tab's page again in a new pane beside it. */
 export function splitActive(edge: Edge) {
   const value = layout.get();
+  if (!canSplit(value)) return;
   const tab = activeTab(value);
   const copy: Tab = { ...tab, id: newId(), visits: tab.visits.length ? [tab.visits[tab.index]] : [], index: tab.visits.length ? 0 : -1 };
   const added: Pane = { id: newId(), tabs: [copy], active: copy.id };
   layout.set({ panes: [...value.panes, added], activePane: added.id, split: beside(splitOf(value), value.activePane, added.id, edge) });
+}
+
+/**
+ * Opens a page in a new pane beside the active one. With four panes already,
+ * it opens in a new tab of the next pane instead, so it still shows beside.
+ */
+export function openBeside(page: string, edge: Edge, options?: Record<string, unknown>) {
+  const value = layout.get();
+  const tab = tabWith(options ? { page, options } : { page });
+  if (canSplit(value)) {
+    const added: Pane = { id: newId(), tabs: [tab], active: tab.id };
+    layout.set({ panes: [...value.panes, added], activePane: added.id, split: beside(splitOf(value), value.activePane, added.id, edge) });
+    return;
+  }
+  const order = panesIn(splitOf(value));
+  const next = order[(order.indexOf(value.activePane) + 1) % order.length];
+  layout.set({ ...value, activePane: next, panes: value.panes.map((pane) => (pane.id === next ? { ...pane, tabs: [...pane.tabs, tab], active: tab.id } : pane)) });
+}
+
+/** The shapes the layout button offers. */
+export type Arrangement = "one" | "side" | "stacked" | "three" | "four";
+
+const PANES_FOR: Record<Arrangement, number> = { one: 1, side: 2, stacked: 2, three: 3, four: 4 };
+
+function shape(kind: Arrangement, ids: string[]): Split | undefined {
+  const [a, b, c, d] = ids.map((pane) => ({ pane }));
+  switch (kind) {
+    case "one":
+      return undefined;
+    case "side":
+      return { dir: "row", parts: [a, b], sizes: [1, 1] };
+    case "stacked":
+      return { dir: "column", parts: [a, b], sizes: [1, 1] };
+    case "three":
+      // One big pane on the left, two stacked on the right.
+      return { dir: "row", parts: [a, { dir: "column", parts: [b, c], sizes: [1, 1] }], sizes: [1, 1] };
+    case "four":
+      // Top left, top right, bottom left, bottom right.
+      return { dir: "column", parts: [{ dir: "row", parts: [a, b], sizes: [1, 1] }, { dir: "row", parts: [c, d], sizes: [1, 1] }], sizes: [1, 1] };
+  }
+}
+
+/** Which of the offered shapes the panes are in now, if any. */
+export function arrangementOf(value = layout.get()): Arrangement | null {
+  const split = value.split;
+  if (!split || "pane" in split) return "one";
+  const ids = panesIn(split);
+  for (const kind of ["side", "stacked", "three", "four"] as Arrangement[]) {
+    if (PANES_FOR[kind] !== ids.length) continue;
+    const want = shape(kind, ids)!;
+    const outline = (part: Split): unknown => ("pane" in part ? 0 : [part.dir, part.parts.map(outline)]);
+    if (JSON.stringify(outline(want)) === JSON.stringify(outline(split))) return kind;
+  }
+  return null;
+}
+
+/**
+ * Puts the panes in one of the offered shapes. New panes start as a new tab;
+ * when there are fewer places than panes, the tabs of the ones left over move
+ * into the last pane kept, so nothing open is lost.
+ */
+export function arrange(kind: Arrangement) {
+  const value = layout.get();
+  const want = PANES_FOR[kind];
+  const order = panesIn(splitOf(value)).map((id) => value.panes.find((pane) => pane.id === id)!);
+  let panes = order.slice(0, want);
+  const extra = order.slice(want).flatMap((pane) => pane.tabs);
+  if (extra.length) {
+    const last = panes[panes.length - 1];
+    panes = [...panes.slice(0, -1), { ...last, tabs: [...last.tabs, ...extra] }];
+  }
+  while (panes.length < want) {
+    const tab = blankTab();
+    panes.push({ id: newId(), tabs: [tab], active: tab.id });
+  }
+  const active = panes.some((pane) => pane.id === value.activePane) ? value.activePane : panes[panes.length - 1].id;
+  layout.set({ panes, activePane: active, split: shape(kind, panes.map((pane) => pane.id)) });
 }
 
 /** Closes the active pane and its tabs, when there are others. */

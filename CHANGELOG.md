@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.72.0 (2026-10-24)
+
+- Split view has a layout button at the top right: one pane, two side by side, two stacked, three (one left, two right) or four in a two by two grid. Tabs from panes that no longer fit move into the last pane, so nothing open is lost.
+- A page menu can open a page to the right or below, next to what is open. Notes, code and boards work in any pane.
+- Four panes is the most. With four, dropping a tab on an edge moves it into that pane, and Open to the right uses a tab of the next pane.
+
 ## 0.71.0 (2026-10-24)
 
 - Two versions of a note show what differs, in color: red for what went, yellow for a line worded differently with the changed words marked inside it, and green for what came. A legend counts each.

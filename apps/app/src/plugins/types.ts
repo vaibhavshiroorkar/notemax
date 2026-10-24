@@ -345,7 +345,9 @@ export type ContextTarget =
   /** The format list that "Download this page as..." opens. */
   | { type: "download"; node: TreeNode }
   /** A tab above the page. */
-  | { type: "tab"; tabId: string };
+  | { type: "tab"; tabId: string }
+  /** The layout button: how the panes of the split view are arranged. */
+  | { type: "layout" };
 
 export interface ContextMenuItem {
   id: string;

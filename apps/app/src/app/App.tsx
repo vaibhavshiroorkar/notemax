@@ -22,7 +22,7 @@ import { ResizeHandle } from "@/ui/ResizeHandle";
 import { Safe } from "@/ui/Safe";
 import { SIDEBAR, SIDE_PANEL, sidePanelWidth, sidebarWidth } from "@/ui/layout";
 import { showToast } from "@/ui/toast";
-import { ContextMenuHost } from "@/ui/ContextMenu";
+import { ContextMenuHost, contextMenuHandler } from "@/ui/ContextMenu";
 import { PromptHost } from "@/ui/Prompt";
 import { Toasts } from "@/ui/Toasts";
 import { usePresence } from "@/ui/usePresence";
@@ -37,6 +37,7 @@ import {
   activatePane,
   canGoBack,
   canGoForward,
+  canSplit,
   closePane,
   closeTab,
   moveTabToPane,
@@ -402,7 +403,7 @@ export function App() {
     if (pane.id === tabs.activePane) return activePage;
     const tab = pane.tabs.find((t) => t.id === pane.active);
     const shown = tab?.visits[tab.index];
-    if (!shown) return <p className="empty pane-empty">Click to use this pane.</p>;
+    if (!shown) return <p className="empty pane-empty">Click here, then open a page from the sidebar or Ctrl+K.</p>;
     if (isView(shown.page)) {
       const Shown = registry.view(viewId(shown.page))?.component;
       return Shown ? <Shown app={app} options={shown.options ?? {}} /> : null;
@@ -479,6 +480,17 @@ export function App() {
                 <Corner node={activeNode} app={app} />
               </Safe>
             ))}
+          {!narrow && (
+            <button
+              className="icon-button layout-button"
+              aria-label="Split view layout"
+              aria-haspopup="menu"
+              title="Split view: one to four panes"
+              onClick={contextMenuHandler(() => ({ type: "layout" }))}
+            >
+              <Icon name="layout" />
+            </button>
+          )}
           <button
             className="icon-button quick-settings-button"
             aria-label="Quick settings"
@@ -608,7 +620,8 @@ function PaneBox({ pane, app, active, showTabs, page }: { pane: Pane; app: AppCo
         if (!isTab(event)) return;
         event.preventDefault();
         event.stopPropagation();
-        const next = edgeAt(event, event.currentTarget.getBoundingClientRect());
+        // With four panes the edges take no more: a drop anywhere moves the tab into this pane.
+        const next = canSplit() ? edgeAt(event, event.currentTarget.getBoundingClientRect()) : "middle";
         if (next !== zone) setZone(next);
       }}
       onDragLeave={(event) => {
@@ -618,7 +631,7 @@ function PaneBox({ pane, app, active, showTabs, page }: { pane: Pane; app: AppCo
         if (!isTab(event)) return;
         event.preventDefault();
         event.stopPropagation();
-        const where = edgeAt(event, event.currentTarget.getBoundingClientRect());
+        const where = canSplit() ? edgeAt(event, event.currentTarget.getBoundingClientRect()) : "middle";
         setZone(null);
         const tabId = event.dataTransfer.getData(TAB_TYPE);
         if (where === "middle") moveTabToPane(tabId, pane.id);
