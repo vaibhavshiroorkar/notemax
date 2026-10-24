@@ -83,7 +83,8 @@ const CSP = [
   // ipc: is how the desktop window talks to the app around it. Local addresses are for a plugin's dev server.
   "connect-src 'self' https: wss://*.supabase.co data: blob: ipc: http://ipc.localhost http://localhost:* http://127.0.0.1:*",
   "worker-src 'self' blob:",
-  "frame-src 'self' blob:",
+  // Browser pages show other sites in a frame.
+  "frame-src 'self' blob: https: http:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

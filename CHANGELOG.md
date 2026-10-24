@@ -3,6 +3,14 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.82.0 (2026-10-24)
+
+- Browser pages: a web page inside a page, from + Others or Open. Type an address, or words to search Bing. Back, Forward and Reload, and a button to open the site in a new window.
+- The address syncs with the page, so it opens at the same place on every device. A page with no name takes the site's.
+- Put one beside a note with Open in, To the right, to read and write side by side.
+- Some sites refuse to show inside other pages; the page says so and offers the new window. Notemax's own pages are never framed.
+- The desktop app uses the same frame for now. A separate desktop web view is left for later.
+
 ## 0.81.0 (2026-10-24)
 
 - C++ runs in code pages. Clang, built for WebAssembly by YoWASP, comes from jsdelivr the first time (about 23 MB, with a download bar) and the browser keeps it. Input feeds std::cin. A mistake shows Clang's message with its line.

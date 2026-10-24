@@ -30,6 +30,7 @@ import { searchPlugin } from "@/features/search/plugin";
 import { voicePlugin } from "@/features/voice/plugin";
 import { videoPlugin } from "@/features/video/plugin";
 import { codePlugin } from "@/features/code/plugin";
+import { browserPlugin } from "@/features/browser/plugin";
 import { historyPlugin } from "@/features/history/plugin";
 import { temporaryPlugin } from "@/features/temporary/plugin";
 import { trashPlugin } from "@/features/trash/plugin";
@@ -64,6 +65,7 @@ import { registerPlugin } from "./registry";
   booksPlugin,
   boardsPlugin,
   codePlugin,
+  browserPlugin,
   tagsPlugin,
   slashPlugin,
   imagesPlugin,

@@ -4,7 +4,7 @@ import { KINDS, ROOT, canMove, createNode, readTree } from "../src";
 
 describe("page kinds", () => {
   it("lets pages hold sub-pages, and books hold anything but folders", () => {
-    expect(KINDS).toEqual(["folder", "book", "note", "board", "code"]);
+    expect(KINDS).toEqual(["folder", "book", "note", "board", "code", "browser"]);
     const doc = new Y.Doc();
     const folder = createNode(doc, "folder", ROOT, "F");
     const board = createNode(doc, "board", folder, "Sketch");
