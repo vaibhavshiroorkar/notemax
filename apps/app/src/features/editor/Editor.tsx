@@ -11,6 +11,7 @@ import { useOption } from "@/plugins/options";
 import { registry } from "@/plugins/registry";
 import { openContextMenu } from "@/ui/ContextMenu";
 import { PAPER, Pages, paperSize, relayoutPages } from "./pages";
+import { activeEditor } from "./active";
 
 /**
  * A right click in a note works like in a word processor: on a selection it
@@ -119,6 +120,17 @@ export function Editor({
   useEffect(() => {
     editor?.view.dom.setAttribute("spellcheck", String(spellcheck));
   }, [editor, spellcheck]);
+
+  // The editor being written in is the one Format and the phone's bar act on,
+  // a subtopic's as much as the page's own.
+  useEffect(() => {
+    if (!editor) return;
+    const take = () => activeEditor.set(editor);
+    editor.on("focus", take);
+    return () => {
+      editor.off("focus", take);
+    };
+  }, [editor]);
 
   // A native listener: pictures and other node views are drawn through React
   // portals beside the editor, so a React handler here would miss clicks on them.

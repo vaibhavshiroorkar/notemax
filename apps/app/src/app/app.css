@@ -546,6 +546,7 @@
 
   .app {
     --top-bar: calc(44px + env(safe-area-inset-top));
+    --format-bar: 43px;
   }
 
   .main-top {
@@ -560,7 +561,7 @@
   }
 
   /* Room is short: the page's own buttons are in its menu and in search. */
-  .page-toolbar > :not(.quick-settings-button, .side-panel-toggle, .quick-settings, .copy-all-button) {
+  .page-toolbar > :not(.quick-settings-button, .side-panel-toggle, .quick-settings, .copy-all-button, .share-button) {
     display: none;
   }
 
@@ -848,6 +849,27 @@
 
   .app[data-bars="hidden"] .main-top {
     transform: translateY(-100%);
+  }
+
+  /* The formatting bar floats under the top bar, and stays at the top when that slides away. */
+  .main > .keyboard-bar {
+    position: absolute;
+    top: var(--top-bar);
+    right: 0;
+    left: 0;
+    /* Under the sidebars and the dim behind them, which open over it. */
+    z-index: 8;
+    background: var(--sidebar-bg);
+    transition: transform 0.2s ease;
+  }
+
+  .app[data-bars="hidden"] .main > .keyboard-bar {
+    transform: translateY(calc(-1 * var(--top-bar)));
+  }
+
+  .main:has(> .keyboard-bar) > .page-scroll {
+    padding-top: calc(var(--top-bar) + var(--format-bar));
+    scroll-padding-top: calc(var(--top-bar) + var(--format-bar));
   }
 
   /* A chapter's book line, with its arrows, stays under the bar and comes and goes with it. */

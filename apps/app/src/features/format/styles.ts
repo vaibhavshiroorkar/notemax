@@ -2,7 +2,7 @@
 export const FONTS = [
   { name: "Default", value: "" },
   { name: "Serif", value: "Georgia, 'Times New Roman', serif" },
-  { name: "Sans", value: "system-ui, 'Segoe UI', Roboto, sans-serif" },
+  { name: "System", value: "system-ui, 'Segoe UI', Roboto, sans-serif" },
   { name: "Mono", value: "ui-monospace, Consolas, 'Courier New', monospace" },
   { name: "Rounded", value: "ui-rounded, 'Arial Rounded MT Bold', system-ui, sans-serif" },
   { name: "Handwriting", value: "'Segoe Print', 'Bradley Hand', cursive" },
@@ -39,7 +39,7 @@ export const HIGHLIGHTS = [
 ] as const;
 
 export const LINE_HEIGHTS = [
-  { name: "Default", value: "" },
+  { name: "Normal", value: "" },
   { name: "Single", value: "1.2" },
   { name: "1.5 lines", value: "1.8" },
   { name: "Double", value: "2.4" },

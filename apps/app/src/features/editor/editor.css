@@ -255,13 +255,18 @@
 }
 
 @media (max-width: 700px) {
-  /* Narrow margins on a phone, and room at the end for the keyboard's toolbar. */
+  /* Narrow margins on a phone, and room at the end to scroll the last lines above the keyboard. */
   .note {
-    padding: 20px 16px 160px;
+    padding: 16px 16px 160px;
+  }
+
+  /* A step smaller than on a computer, where the screen sits further away. */
+  .editor {
+    font-size: calc(var(--note-size, 16px) * 0.9375);
   }
 
   .note-title {
-    font-size: calc(var(--note-size, 16px) * 1.6);
+    font-size: calc(var(--note-size, 16px) * 1.45);
   }
 }
 

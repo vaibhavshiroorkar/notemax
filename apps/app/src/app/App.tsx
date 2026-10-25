@@ -64,6 +64,7 @@ import {
   viewPage,
 } from "./tabs";
 import "./app.css";
+import { KeyboardBar } from "@/features/editor/KeyboardBar";
 
 // Matches the breakpoint in app.css where the sidebars become overlays.
 const isNarrow = () => window.matchMedia("(max-width: 700px)").matches;
@@ -407,7 +408,7 @@ export function App() {
   ) :
     visit && isView(visit.page) ? (
       ViewPage ? (
-        <Safe key={`${visit.page}:${version}`} name={viewId(visit.page)}>
+        <Safe key={`${tabs.activePane}:${visit.page}:${version}`} name={viewId(visit.page)}>
           <ViewPage app={app} options={visit.options ?? {}} />
         </Safe>
       ) : (
@@ -416,7 +417,8 @@ export function App() {
         </div>
       )
     ) : activeNode && View ? (
-      <Safe key={`${activeNode.id}:${version}`} name="This page">
+      // Keyed like the same page in a pane that is not active, so clicking into a pane keeps its page, and the focus in it.
+      <Safe key={`${tabs.activePane}:${activeNode.id}:${version}`} name="This page">
         <Gated node={activeNode} app={app}>
           <View node={activeNode} app={app} tree={tree} workspaceDoc={doc} hub={hub} onSelect={select} onStatus={pageStatus.set} onReady={onReady} />
         </Gated>
@@ -444,7 +446,11 @@ export function App() {
     if (!isView(shown.page) && shown.ws !== app.workspace) return <ForeignPage key={`${shown.ws}:${version}`} base={app} visit={shown} active={false} version={version} />;
     if (isView(shown.page)) {
       const Shown = registry.view(viewId(shown.page))?.component;
-      return Shown ? <Shown app={app} options={shown.options ?? {}} /> : null;
+      return Shown ? (
+        <Safe key={`${pane.id}:${shown.page}:${version}`} name={viewId(shown.page)}>
+          <Shown app={app} options={shown.options ?? {}} />
+        </Safe>
+      ) : null;
     }
     const node = tree.items.get(registry.hostOf(tree, shown.page) ?? shown.page) ?? (shown.options?.fromTrash ? tree.byId.get(shown.page) : undefined);
     const Page = node && registry.pageView(node.kind)?.component;
@@ -553,6 +559,7 @@ export function App() {
           {quickOpen && <QuickSettings app={app} onClose={closeQuick} />}
         </div>
         </div>
+        <KeyboardBar />
         {narrow ? <div className="page-scroll">{activePage}</div> : renderSplit(split, [])}
       </main>
       {/* Contents only: a box for the right sidebar's workspace, without a box in the layout. */}

@@ -28,6 +28,8 @@ export function BookPane(props: PageProps) {
   const { node, app, tree, workspaceDoc, hub, onSelect, onStatus, onReady } = props;
   // A page setting, so the choice syncs with the book and each book keeps its own.
   const view: BookView = node.props.bookView === "whole" ? "whole" : node.props.bookView === "previews" ? "previews" : "titles";
+  // The list can show chapters only, for a quick look at the book's shape. Each book keeps its choice.
+  const chaptersOnly = node.props.bookSubtopics === "hidden";
   const book = tree.items.get(node.id);
   const chapters = book ? chapterStops(book) : [];
   useWordBackfill(
@@ -62,6 +64,11 @@ export function BookPane(props: PageProps) {
         {chapters.length > 0 && (
           <Segmented<BookView> label="Show the book as" value={view} options={VIEWS} onChange={(next) => setProp(workspaceDoc, node.id, "bookView", next === "titles" ? null : next)} />
         )}
+        {chapters.length > 0 && view !== "whole" && (
+          <button className="button book-subtopics-toggle" aria-pressed={!chaptersOnly} onClick={() => setProp(workspaceDoc, node.id, "bookSubtopics", chaptersOnly ? null : "hidden")}>
+            {chaptersOnly ? "Show subtopics" : "Chapters only"}
+          </button>
+        )}
       </div>
 
       <div className="book-description">
@@ -84,7 +91,7 @@ export function BookPane(props: PageProps) {
               <BookItemMenu node={item} />
               {view === "previews" && item.kind === "note" && <ChapterPreview item={item} workspace={app.workspace} />}
             </li>,
-            ...subtopicsOf(item, label).map((sub) => (
+            ...(chaptersOnly ? [] : subtopicsOf(item, label)).map((sub) => (
               <li key={sub.item.id} style={{ "--depth": sub.depth } as CSSProperties} onContextMenu={pageMenu(sub.item)}>
                 <button className="chapter" onClick={() => onSelect(sub.item.id)}>
                   <span className="chapter-number">{sub.label}</span>

@@ -14,7 +14,6 @@ import { registry } from "@/plugins/registry";
 import type { PageProps } from "@/plugins/types";
 import { Editor } from "./Editor";
 import { InlineNote } from "./InlineNote";
-import { KeyboardBar } from "./KeyboardBar";
 import { PAGE_GAP, PAGE_MARGIN, PAPER, paperSize } from "./pages";
 import { useBodyIndex } from "./useBodyIndex";
 import { useRememberPosition } from "./usePosition";
@@ -162,7 +161,6 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
         />
       )}
       {local && <PageFooter node={node} app={app} />}
-      {editor && <KeyboardBar editor={editor} />}
     </article>
   );
 }

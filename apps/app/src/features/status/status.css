@@ -48,8 +48,13 @@
     display: none;
   }
 
-  /* Out of the way of the keyboard's toolbar. */
-  :root[data-keyboard] .status-bar {
+  /* Out of the way while typing. */
+  :root:has(.ProseMirror-focused) .status-bar {
+    display: none;
+  }
+
+  /* The storage warning would sit over the page; the temporary line under the title says it already. */
+  .status-bar > .warning {
     display: none;
   }
 }

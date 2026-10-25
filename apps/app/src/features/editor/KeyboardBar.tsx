@@ -1,79 +1,67 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Editor } from "@tiptap/react";
 import { canListen, listening, startVoice, stopVoice } from "@/features/voice/voice";
-import { Icon } from "@/ui/Icon";
+import { SIZES, sizeOf } from "@/features/format/styles";
+import { Icon, type IconName } from "@/ui/Icon";
+import { activeEditor } from "./active";
 import "./keyboard-bar.css";
 
-// Phones have no shortcuts and no right click for formatting, so while the
-// note has the keyboard open, a bar of the common actions sits right above it.
+// Phones have no shortcuts and no right click for formatting, so a bar of
+// formatting buttons sits at the top, under the tabs, while a note is open.
+// It acts on the note being written in, a subtopic's too, and scrolls
+// sideways when it does not fit.
 
 const touchScreen = () => window.matchMedia("(pointer: coarse)").matches;
-
-/** Where the bar goes: above the on-screen keyboard, which covers the bottom of the window. */
-function useKeyboardOffset(active: boolean) {
-  const [offset, setOffset] = useState(0);
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!active || !viewport) return;
-    const place = () => setOffset(Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop));
-    place();
-    viewport.addEventListener("resize", place);
-    viewport.addEventListener("scroll", place);
-    return () => {
-      viewport.removeEventListener("resize", place);
-      viewport.removeEventListener("scroll", place);
-    };
-  }, [active]);
-  return offset;
-}
 
 function listType(editor: Editor) {
   return editor.isActive("taskItem") ? "taskItem" : "listItem";
 }
 
-export function KeyboardBar({ editor }: { editor: Editor }) {
-  const [focused, setFocused] = useState(false);
+const ALIGNS = ["left", "center", "right"] as const;
+
+/** The bar itself. App draws it once, under the tabs, where it takes its own room. */
+export function KeyboardBar() {
+  const editor = activeEditor.use();
   const hearing = listening.use();
-  // Redraw on every change of the selection, so the buttons show what is on.
+  // Redraw on every change, so the buttons show what is on.
   const [, setTick] = useState(0);
-  const active = focused && touchScreen();
-  const offset = useKeyboardOffset(active);
+  const touch = touchScreen();
 
   useEffect(() => {
-    const onFocus = () => setFocused(true);
-    const onBlur = () => setFocused(false);
+    if (!editor) return;
     const onChange = () => setTick((n) => n + 1);
-    editor.on("focus", onFocus);
-    editor.on("blur", onBlur);
     editor.on("selectionUpdate", onChange);
     editor.on("transaction", onChange);
-    setFocused(editor.isFocused);
+    editor.on("focus", onChange);
+    editor.on("blur", onChange);
     return () => {
-      editor.off("focus", onFocus);
-      editor.off("blur", onBlur);
       editor.off("selectionUpdate", onChange);
       editor.off("transaction", onChange);
+      editor.off("focus", onChange);
+      editor.off("blur", onChange);
     };
   }, [editor]);
 
-  // The status bar steps aside while the bar is up.
-  useEffect(() => {
-    if (!active) return;
-    document.documentElement.dataset.keyboard = "";
-    return () => void delete document.documentElement.dataset.keyboard;
-  }, [active]);
-
-  if (!active) return null;
+  if (!touch || !editor || editor.isDestroyed || !editor.isEditable) return null;
 
   const run = (action: (chain: ReturnType<Editor["chain"]>) => ReturnType<Editor["chain"]>) => action(editor.chain().focus()).run();
   const level = ([1, 2, 3] as const).find((n) => editor.isActive("heading", { level: n }));
   const inList = editor.isActive("listItem") || editor.isActive("taskItem");
+  const align = ALIGNS.find((a) => editor.isActive({ textAlign: a })) ?? "left";
+  const size = sizeOf(editor.getAttributes("textStyle").fontSize as string | undefined);
+  const stepSize = (by: 1 | -1) => {
+    const now = size || Math.round(parseFloat(getComputedStyle(editor.view.dom).fontSize)) || 16;
+    const at = SIZES.findIndex((s) => s >= now);
+    const next = SIZES[Math.max(0, Math.min(SIZES.length - 1, (at < 0 ? SIZES.length - 1 : at) + by))];
+    run((c) => c.setFontSize(`${next}px`));
+  };
 
   const button = (label: string, content: ReactNode, onPress: () => void, on = false, disabled = false) => (
     <button
       key={label}
       className="keyboard-bar-button"
       aria-label={label}
+      title={label}
       aria-pressed={on || undefined}
       disabled={disabled}
       // Pressing a button must not take the focus, or the keyboard would close.
@@ -83,26 +71,41 @@ export function KeyboardBar({ editor }: { editor: Editor }) {
       {content}
     </button>
   );
+  const icon = (name: IconName) => <Icon name={name} />;
+  const line = <span className="keyboard-bar-line" aria-hidden="true" />;
 
-  return (
-    <div className="keyboard-bar" role="toolbar" aria-label="Formatting" style={{ bottom: offset }}>
-      {button("Undo", "\u21b6", () => run((c) => c.undo()), false, !editor.can().undo())}
-      {button("Redo", "\u21b7", () => run((c) => c.redo()), false, !editor.can().redo())}
-      {canListen() && button(hearing ? "Stop voice typing" : "Voice typing", <Icon name="mic" />, () => (hearing ? stopVoice() : startVoice(editor)), hearing)}
+  const bar = (
+    <div className="keyboard-bar" role="toolbar" aria-label="Formatting">
+      {button("Undo", icon("restore"), () => run((c) => c.undo()), false, !editor.can().undo())}
+      {button("Redo", <span className="keyboard-bar-flip">{icon("restore")}</span>, () => run((c) => c.redo()), false, !editor.can().redo())}
+      {canListen() && button(hearing ? "Stop voice typing" : "Voice typing", icon("mic"), () => (hearing ? stopVoice() : startVoice(editor)), hearing)}
+      {line}
       {button(level ? `Heading ${level}, tap for the next size` : "Make a heading", level ? `H${level}` : "H", () =>
         run((c) => (level === 3 ? c.setParagraph() : c.setHeading({ level: ((level ?? 0) + 1) as 1 | 2 | 3 }))),
         !!level,
       )}
       {button("Bold", <b>B</b>, () => run((c) => c.toggleBold()), editor.isActive("bold"))}
       {button("Italic", <i>I</i>, () => run((c) => c.toggleItalic()), editor.isActive("italic"))}
-      {button("Bulleted list", "\u2022", () => run((c) => c.toggleBulletList()), editor.isActive("bulletList"))}
-      {button("Numbered list", "1.", () => run((c) => c.toggleOrderedList()), editor.isActive("orderedList"))}
-      {button("To-do list", "\u2610", () => run((c) => c.toggleTaskList()), editor.isActive("taskList"))}
-      {button("Outdent", "\u21e4", () => run((c) => c.liftListItem(listType(editor))), false, !inList)}
-      {button("Indent", "\u21e5", () => run((c) => c.sinkListItem(listType(editor))), false, !inList)}
+      {button("Underline", <u>U</u>, () => run((c) => c.toggleUnderline()), editor.isActive("underline"))}
+      {button("Strikethrough", <s>S</s>, () => run((c) => c.toggleStrike()), editor.isActive("strike"))}
+      {button("Highlight", <span className="keyboard-bar-mark">A</span>, () => run((c) => c.toggleHighlight()), editor.isActive("highlight"))}
+      {button("Smaller text", <span className="keyboard-bar-small">A-</span>, () => stepSize(-1))}
+      {button("Bigger text", <span className="keyboard-bar-small">A+</span>, () => stepSize(1))}
+      {line}
+      {button("Bulleted list", icon("list-bullet"), () => run((c) => c.toggleBulletList()), editor.isActive("bulletList"))}
+      {button("Numbered list", icon("list-number"), () => run((c) => c.toggleOrderedList()), editor.isActive("orderedList"))}
+      {button("To-do list", icon("list-check"), () => run((c) => c.toggleTaskList()), editor.isActive("taskList"))}
+      {button("Outdent", icon("outdent"), () => run((c) => c.liftListItem(listType(editor))), false, !inList)}
+      {button("Indent", icon("indent"), () => run((c) => c.sinkListItem(listType(editor))), false, !inList)}
+      {line}
+      {button(`Align ${align}, tap for the next`, icon(`align-${align}`), () => run((c) => c.setTextAlign(ALIGNS[(ALIGNS.indexOf(align) + 1) % ALIGNS.length])), align !== "left")}
+      {button("Quote", icon("quote"), () => run((c) => c.toggleBlockquote()), editor.isActive("blockquote"))}
+      {button("Code block", icon("code"), () => run((c) => c.toggleCodeBlock()), editor.isActive("codeBlock"))}
       {button("Link to a page", "[[", () => run((c) => c.insertContent("[[")))}
       {button("Insert a block", "/", () => run((c) => c.insertContent(editor.state.selection.$from.parent.textContent ? " /" : "/")))}
-      {button("Hide the keyboard", "\u2304", () => editor.commands.blur())}
+      {button("Clear formatting", icon("close"), () => run((c) => c.unsetAllMarks().unsetFontSize().unsetFontFamily()))}
+      {editor.isFocused && button("Hide the keyboard", icon("chevron-down"), () => editor.commands.blur())}
     </div>
   );
+  return bar;
 }

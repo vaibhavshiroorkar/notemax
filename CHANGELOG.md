@@ -3,6 +3,15 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.88.0 (2026-10-25)
+
+- Phones: note text is a step smaller (15px instead of 16), and so is the title.
+- Phones: the formatting bar sits at the top, under the tabs, and stays while a note is open. When the top bar slides away on scroll, the formatting bar moves up and stays. It now also has underline, strikethrough, highlight, smaller and bigger text, alignment, quote, code block and clear formatting, scrolls sideways, and works in subtopics too.
+- Phones: a Share button joins search, copy all and settings in the top bar. The red storage warning no longer covers the page.
+- Format shows real values instead of "Default": the note's font by name, and the size of the text at the cursor. Line spacing says Normal.
+- Books: "Chapters only" on the book page leaves the subtopics out of the chapter list. Each book keeps the choice.
+- Splits: clicking into a pane that was not the active one no longer redraws its page, so the click and the typing land. Notes, code, browser pages, boards and books all work side by side.
+
 ## 0.87.0 (2026-10-25)
 
 - In the desktop app, a browser page is a real web view instead of a frame, so Google and other sites that refuse frames open. Searches typed in the address bar go to Google there.

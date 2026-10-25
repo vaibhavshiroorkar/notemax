@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useEditorState, type Editor } from "@tiptap/react";
 import { activeEditor } from "@/features/editor/active";
+import { FONTS as NOTE_FONTS, font as noteFont, fontFile } from "@/ui/appearance";
 import { Icon } from "@/ui/Icon";
 import { COLORS, FONTS, HIGHLIGHTS, LINE_HEIGHTS, SIZES, sizeOf } from "./styles";
 
@@ -18,6 +19,8 @@ function useFormat(editor: Editor) {
         block,
         font: (style.fontFamily as string | undefined) ?? "",
         size: sizeOf(style.fontSize as string | undefined),
+        // The size the text at the cursor is drawn at, for text with no size of its own.
+        shownSize: shownSizeAt(e),
         color: (style.color as string | undefined) ?? "",
         lineHeight: ((e.isActive("heading") ? e.getAttributes("heading") : e.getAttributes("paragraph")).lineSpacing as string | null | undefined) ?? "",
         bold: e.isActive("bold"),
@@ -32,6 +35,26 @@ function useFormat(editor: Editor) {
       };
     },
   });
+}
+
+/** The size in pixels the text at the cursor shows at, headings and the note's own size included. */
+function shownSizeAt(editor: Editor): number {
+  try {
+    const { node } = editor.view.domAtPos(editor.state.selection.from);
+    const element = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
+    return element ? Math.round(parseFloat(getComputedStyle(element).fontSize)) || 16 : 16;
+  } catch {
+    return 16;
+  }
+}
+
+/** The note font's name, as Settings, Appearance calls it. */
+function useNoteFontName(): string {
+  const chosen = noteFont.use();
+  const file = fontFile.use();
+  if (chosen === "file") return file?.name ?? "Your font";
+  if (chosen.startsWith("custom:")) return chosen.slice("custom:".length);
+  return NOTE_FONTS[chosen as keyof typeof NOTE_FONTS]?.label ?? "Sans";
 }
 
 function Toggle({ label, on, onClick, children }: { label: string; on: boolean; onClick(): void; children: ReactNode }) {
@@ -73,9 +96,12 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 function Controls({ editor }: { editor: Editor }) {
   const f = useFormat(editor);
+  const noteFontName = useNoteFontName();
+  // Text with no size of its own shows the size it is drawn at.
+  const size = f.size || f.shownSize;
   const run = (change: (chain: Chain) => Chain) => change(editor.chain().focus()).run();
   const stepSize = (by: 1 | -1) => {
-    const at = SIZES.findIndex((size) => size >= f.size);
+    const at = SIZES.findIndex((s) => s >= size);
     const next = SIZES[Math.max(0, Math.min(SIZES.length - 1, (at < 0 ? SIZES.length - 1 : at) + by))];
     run((c) => c.setFontSize(`${next}px`));
   };
@@ -101,7 +127,7 @@ function Controls({ editor }: { editor: Editor }) {
         <select aria-label="Font" value={f.font} onChange={(event) => run((c) => (event.target.value ? c.setFontFamily(event.target.value) : c.unsetFontFamily()))}>
           {FONTS.map((font) => (
             <option key={font.name} value={font.value} style={font.value ? { fontFamily: font.value } : undefined}>
-              {font.name}
+              {font.value ? font.name : `${noteFontName} (note font)`}
             </option>
           ))}
         </select>
@@ -110,14 +136,13 @@ function Controls({ editor }: { editor: Editor }) {
         <button className="format-toggle" aria-label="Smaller text" title="Smaller" onMouseDown={(event) => event.preventDefault()} onClick={() => stepSize(-1)}>
           <Icon name="minus" />
         </button>
-        <select aria-label="Text size" value={f.size} onChange={(event) => run((c) => (Number(event.target.value) === 0 ? c.unsetFontSize() : c.setFontSize(`${event.target.value}px`)))}>
-          {!SIZES.includes(f.size) && f.size !== 0 && <option value={f.size}>{f.size}</option>}
-          <option value={0}>Default</option>
-          {SIZES.map((size) => (
-            <option key={size} value={size}>
-              {size}
+        <select aria-label="Text size" value={size} onChange={(event) => run((c) => (Number(event.target.value) === 0 ? c.unsetFontSize() : c.setFontSize(`${event.target.value}px`)))}>
+          {[...new Set([...SIZES, size])].sort((a, b) => a - b).map((s) => (
+            <option key={s} value={s}>
+              {s}
             </option>
           ))}
+          {f.size !== 0 && <option value={0}>Back to the note's size</option>}
         </select>
         <button className="format-toggle" aria-label="Bigger text" title="Bigger" onMouseDown={(event) => event.preventDefault()} onClick={() => stepSize(1)}>
           <Icon name="plus" />
