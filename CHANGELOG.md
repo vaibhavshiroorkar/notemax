@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.90.0 (2026-10-25)
+
+- Desktop app, browser pages: the web view steps aside whenever anything of Notemax is drawn over it, like a dialog, a menu, the palette, quick settings or a reminder, found by looking at what is on top across its box rather than by a fixed list. Toasts go under it instead of blanking it.
+- The view hides while a tab is dragged, so a tab can be dropped on a browser page to make a split.
+- The view is told to move only when its place changes, at most once a frame, which stops it flickering while dialogs open and close.
+
 ## 0.89.0 (2026-10-25)
 
 - Google opens in browser pages on the website too. Google refuses to show inside other pages unless the address carries igu=1, so Google's home and search pages get it. Typed searches go to Google instead of Bing.
