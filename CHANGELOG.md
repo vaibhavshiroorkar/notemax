@@ -3,6 +3,14 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.87.0 (2026-10-25)
+
+- In the desktop app, a browser page is a real web view instead of a frame, so Google and other sites that refuse frames open. Searches typed in the address bar go to Google there.
+- Links and buttons that would open a new window open in the same view, so you stay in the page. Back, Forward and Reload use the view's own history, and the address bar follows where it goes.
+- The view steps aside while a menu, dialog or the palette is open, and follows its box as the window and splits change.
+- The address bar shows the address after Enter, not the words typed.
+- On the website, Google still cannot show inside a page: it forbids other sites from framing it. Searches there go to Bing.
+
 ## 0.86.0 (2026-10-25)
 
 - Alt+Up and Alt+Down move the paragraph, heading or list item the cursor is in, up or down, and the cursor goes with it. A list item moves within its list. Code pages move the line, as before. Both are in the shortcut list.

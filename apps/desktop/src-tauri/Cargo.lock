@@ -2442,9 +2442,10 @@ checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 
 [[package]]
 name = "notemax"
-version = "0.86.0"
+version = "0.87.0"
 dependencies = [
  "log",
+ "serde",
  "tauri",
  "tauri-build",
  "tauri-plugin-global-shortcut",

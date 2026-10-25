@@ -1,16 +1,19 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { renameNode, touchNode } from "@notemax/core";
 import { useLocalDoc } from "@/data/useLocalDoc";
 import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
-import { addressFor, siteOf } from "./address";
+import { addressFor, siteOf, VIEW_SEARCH } from "./address";
+import { useNativeView, usesNativeView } from "./nativeView";
 import "./browser.css";
 
 /**
  * A web page inside a page, with its own address bar. The address syncs with
- * the page, so it opens at the same place on every device. Back and Forward
- * step through the addresses typed here; links followed inside the site are
- * the site's own.
+ * the page, so it opens at the same place on every device. On the web it is a
+ * frame, and Back and Forward step through the addresses typed here. In the
+ * desktop app it is a real web view, so sites that refuse frames open too,
+ * links that would open a new window stay in it, and Back and Forward are the
+ * view's own.
  */
 export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps) {
   const { local, status, openError } = useLocalDoc(node.id);
@@ -19,6 +22,8 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
   const [refused, setRefused] = useState(false);
   const [trail, setTrail] = useState<{ list: string[]; at: number }>({ list: [], at: -1 });
   const [reloads, setReloads] = useState(0);
+  const box = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLInputElement>(null);
   useEffect(() => onStatus(status), [status, onStatus]);
 
   useEffect(() => {
@@ -27,7 +32,8 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
     const read = () => {
       const url = settings.get("url") ?? "";
       setAddress(url);
-      setTyped(url);
+      // Not while someone is typing a new one.
+      if (document.activeElement !== bar.current) setTyped(url);
       setTrail((t) => (t.list[t.at] === url || !url ? t : { list: [...t.list.slice(0, t.at + 1), url], at: t.at + 1 }));
     };
     read();
@@ -44,14 +50,32 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
     if (!node.title) renameNode(workspaceDoc, node.id, siteOf(url));
   };
 
+  const view = useNativeView(box, `browser-${node.id}`, address, {
+    // Where a link inside the view went, kept as the page's address.
+    onVisit: (url) => {
+      if (document.activeElement !== bar.current) setTyped(url);
+      if (!local || local.doc.getMap<string>("browser").get("url") === url) return;
+      local.doc.getMap<string>("browser").set("url", url);
+      touchNode(workspaceDoc, node.id);
+    },
+    onTitle: (title) => {
+      if (title && !node.title) renameNode(workspaceDoc, node.id, title);
+    },
+  });
+
   const go = (event: FormEvent) => {
     event.preventDefault();
-    const url = addressFor(typed);
+    const url = addressFor(typed, { search: usesNativeView ? VIEW_SEARCH : undefined });
     setRefused(!url && typed.trim() !== "");
-    if (url) show(url);
+    if (!url) return;
+    show(url);
+    setTyped(url);
+    // Out of the bar, so it follows where the page goes from here.
+    bar.current?.blur();
   };
 
   const step = (by: -1 | 1) => {
+    if (usesNativeView) return view.step(by < 0 ? "back" : "forward");
     const at = trail.at + by;
     if (at < 0 || at >= trail.list.length) return;
     setTrail({ ...trail, at });
@@ -63,16 +87,17 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
   return (
     <div className="browser-page">
       <form className="browser-bar" onSubmit={go}>
-        <button type="button" className="icon-button" aria-label="Back" disabled={trail.at <= 0} onClick={() => step(-1)}>
+        <button type="button" className="icon-button" aria-label="Back" disabled={usesNativeView ? !address : trail.at <= 0} onClick={() => step(-1)}>
           <Icon name="arrow-left" />
         </button>
-        <button type="button" className="icon-button" aria-label="Forward" disabled={trail.at >= trail.list.length - 1} onClick={() => step(1)}>
+        <button type="button" className="icon-button" aria-label="Forward" disabled={usesNativeView ? !address : trail.at >= trail.list.length - 1} onClick={() => step(1)}>
           <Icon name="arrow-right" />
         </button>
-        <button type="button" className="icon-button" aria-label="Reload" disabled={!address} onClick={() => setReloads((n) => n + 1)}>
+        <button type="button" className="icon-button" aria-label="Reload" disabled={!address} onClick={() => (usesNativeView ? view.step("reload") : setReloads((n) => n + 1))}>
           <Icon name="restore" />
         </button>
         <input
+          ref={bar}
           className="browser-address"
           value={typed}
           placeholder="Type an address or search"
@@ -87,7 +112,10 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
         </button>
       </form>
       {refused && <p className="browser-note browser-refused">Only web addresses (http and https) open here, and not pages of Notemax itself.</p>}
-      {address ? (
+      {address && usesNativeView ? (
+        // The web view lies over this box; the box only holds its place.
+        <div ref={box} className="browser-frame browser-native" aria-label={node.title || siteOf(address)} />
+      ) : address ? (
         <>
           <iframe
             key={`${address}:${reloads}`}

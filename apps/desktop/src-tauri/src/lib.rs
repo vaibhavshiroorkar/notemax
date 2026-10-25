@@ -10,6 +10,8 @@ use tauri::{
 use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
+mod browser;
+
 // Must match DESKTOP_DB_URL in apps/app/src/platform.ts.
 const DB_URL: &str = "sqlite:notemax.db";
 
@@ -158,7 +160,15 @@ pub fn run() {
         .plugin(tauri_plugin_sql::Builder::default().add_migrations(DB_URL, migrations).build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
-        .invoke_handler(tauri::generate_handler![open_sign_in, quit_now])
+        .invoke_handler(tauri::generate_handler![
+            open_sign_in,
+            quit_now,
+            browser::browser_show,
+            browser::browser_place,
+            browser::browser_hide,
+            browser::browser_step,
+            browser::browser_close
+        ])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
