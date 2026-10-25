@@ -8,6 +8,7 @@ import { LAYOUT_MENU, layoutOf, toggleLayout } from "./layout";
 import { LayoutSetting } from "./LayoutSetting";
 import { WordPaste } from "./word-paste";
 import { JoinLists } from "./lists";
+import { MoveBlock } from "./moveBlock";
 import { Indent, LineSpacing, ListMarker, ParenthesisList, ShortcutUndo } from "./writing";
 import { EDITOR_MENU } from "./menu";
 import { NotePane } from "./NotePane";
@@ -55,6 +56,8 @@ export const notesPlugin: Plugin = {
   ],
   // Keys the editor itself handles (Tiptap's defaults), listed with the command shortcuts.
   shortcutHints: [
+    { title: "Move the line or list item up", keys: "Alt+Up" },
+    { title: "Move the line or list item down", keys: "Alt+Down" },
     { title: "Bold", keys: "Mod+B" },
     { title: "Italic", keys: "Mod+I" },
     { title: "Underline", keys: "Mod+U" },
@@ -75,7 +78,7 @@ export const notesPlugin: Plugin = {
     { title: "The browser's own menu, with spelling suggestions", keys: "Shift+Right click" },
   ],
   contentExtensions: () => [TaskList, TaskItem.configure({ nested: true }), CodeBlock, Indent, LineSpacing, ListMarker],
-  editorExtensions: () => [ParenthesisList, ShortcutUndo, WordPaste, JoinLists],
+  editorExtensions: () => [ParenthesisList, ShortcutUndo, WordPaste, JoinLists, MoveBlock],
   kinds: [{ kind: "note", label: "New note", icon: "note" }],
   pageViews: [{ kind: "note", component: NotePane }],
   pageCorner: [{ id: "notes.copy-all", kinds: ["note"], component: CopyAllButton }],

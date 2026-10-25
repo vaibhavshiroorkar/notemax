@@ -3,6 +3,10 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.86.0 (2026-10-25)
+
+- Alt+Up and Alt+Down move the paragraph, heading or list item the cursor is in, up or down, and the cursor goes with it. A list item moves within its list. Code pages move the line, as before. Both are in the shortcut list.
+
 ## 0.85.0 (2026-10-25)
 
 - A first visit asks "How will you use Notemax?" in a window over everything: on this device only, or on all your devices. "Not now" puts it off until the next start. It used to sit at the top of the left sidebar.
