@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { TreeNode } from "@notemax/core";
 import { accountsEnabled } from "@/features/account/config";
 import { syncView } from "@/features/sync/runtime";
+import { setupLater } from "@/features/setup/SetupDialog";
 import { onlineMode } from "@/platform/mode";
 import { savedStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
@@ -18,8 +19,8 @@ export function TemporaryNotice({ app }: { app: AppContext }) {
   const items = useMemo(() => temporaryItems(app.tree), [app.tree]);
   const synced = syncView.use().state !== "off";
   const isHidden = hidden.use();
-  // The setup card at the top asks first, and says the same with its Online choice.
-  const undecided = onlineMode.use() === null;
+  // The setup question asks first, and says the same with its Online choice.
+  const undecided = onlineMode.use() === null && !setupLater.use();
   if (!items.length || undecided || (isHidden && !synced)) return null;
 
   return (

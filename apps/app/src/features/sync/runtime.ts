@@ -318,8 +318,12 @@ export async function folderState(): Promise<{ folder: string | null; hasPassphr
 // A new workspace's Journal starts with today's entry, whose id comes from the day.
 const isStarter = (id: string) => STARTER_IDS.has(id) || /^day-\d{4}-\d{2}-\d{2}$/.test(id);
 
-/** True when this device has only the pages a new workspace starts with, so replacing them loses nothing but what writtenStarter keeps. */
-async function onlyStarter(): Promise<boolean> {
+/**
+ * True when this device has only the pages a new workspace starts with, so
+ * replacing them with an account's pages loses nothing but what
+ * writtenStarter keeps. Exported for the browser checks.
+ */
+export async function onlyStarter(): Promise<boolean> {
   const local = await openLocalDoc(await getRawStore(), WORKSPACE_DOC_ID);
   try {
     const tree = readTree(local.doc);
@@ -341,7 +345,7 @@ interface Written {
  * The starter pages someone wrote or drew in, so taking the notes from Drive
  * does not throw that away. A page that still says what it came with is left out.
  */
-async function writtenStarter(store: DocStore): Promise<Written[]> {
+export async function writtenStarter(store: DocStore): Promise<Written[]> {
   const local = await openLocalDoc(store, WORKSPACE_DOC_ID);
   const tree = readTree(local.doc);
   await local.close();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { ROOT, STARTER, WELCOME_ID, addTag, createNode, duplicateNote, ensureStarter, moveNode, readTree, renameNode, restoreNode, setKind, setProp, setWords, trashNode, watchTree } from "../src";
+import { ROOT, STARTER, STARTER_IDS, WELCOME_ID, addTag, createNode, duplicateNote, ensureStarter, moveNode, readTree, renameNode, restoreNode, setKind, setProp, setWords, trashNode, watchTree } from "../src";
 
 const titles = (items: { title: string }[]) => items.map((i) => i.title);
 
@@ -18,13 +18,16 @@ function writeRaw(doc: Y.Doc, id: string, fields: Record<string, unknown>) {
 }
 
 describe("workspace tree", () => {
-  it("starts a new workspace once with Welcome, Journal, a board and a small book", () => {
+  it("starts a new workspace once with a Notemax folder holding Welcome, Journal and a small book", () => {
     const doc = new Y.Doc();
     ensureStarter(doc);
     ensureStarter(doc);
     const tree = readTree(doc);
-    expect(titles(tree.top)).toEqual(["Welcome", "Journal", "Drawing board", "My first book"]);
-    expect(tree.top.map((n) => n.kind)).toEqual(["note", "note", "board", "book"]);
+    expect(titles(tree.top)).toEqual(["Notemax"]);
+    expect(tree.top[0].kind).toBe("folder");
+    const folder = tree.items.get(STARTER.folder)!;
+    expect(titles(folder.children)).toEqual(["Welcome", "Journal", "My first book"]);
+    expect(folder.children.map((n) => n.kind)).toEqual(["note", "note", "book"]);
     const journal = tree.items.get(STARTER.journal)!;
     expect(journal.props.dailyFolder).toBe(true);
     expect(journal.props.subtopics).toBe("inline");
@@ -40,8 +43,14 @@ describe("workspace tree", () => {
     ensureStarter(a);
     ensureStarter(b);
     sync(a, b);
-    expect(titles(readTree(a).top)).toEqual(["Welcome", "Journal", "Drawing board", "My first book"]);
+    expect(titles(readTree(a).top)).toEqual(["Notemax"]);
+    expect(titles(readTree(a).items.get(STARTER.folder)!.children)).toEqual(["Welcome", "Journal", "My first book"]);
     expect(readTree(a).byId.size).toBe(6);
+  });
+
+  it("counts the drawing board older versions started with as a starter page", () => {
+    expect(STARTER_IDS.has("welcome-board")).toBe(true);
+    expect(STARTER_IDS.has(STARTER.folder)).toBe(true);
   });
 
   it("does not bring the starter pages back after they are trashed", () => {

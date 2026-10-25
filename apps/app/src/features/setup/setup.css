@@ -1,18 +1,32 @@
-.setup-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0 8px 12px;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 12px;
+.setup-dialog {
+  width: min(440px, calc(100vw - 32px));
 }
 
-.setup-card-title {
-  margin: 0 0 2px;
+.setup-dialog .dialog-title {
+  margin: 0;
+}
+
+.setup-dialog-intro {
+  margin: 4px 0 16px;
+  color: var(--muted);
   font-size: 13px;
-  font-weight: 600;
+}
+
+.setup-dialog-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setup-dialog-choices .setup-choice {
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.setup-dialog-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
 }
 
 .setup-choice {
@@ -37,10 +51,6 @@
   gap: 6px;
   color: var(--text);
   font-weight: 600;
-}
-
-.setup-card .link-button {
-  align-self: flex-start;
 }
 
 /* What works offline and what needs online, side by side where there is room. */

@@ -3,6 +3,13 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.85.0 (2026-10-25)
+
+- A first visit asks "How will you use Notemax?" in a window over everything: on this device only, or on all your devices. "Not now" puts it off until the next start. It used to sit at the top of the left sidebar.
+- A new workspace starts with a Notemax folder holding Welcome, Journal and My first book. The drawing board is gone from the starter set.
+- Subtopics stay a choice per note; the Journal is a note with it turned on.
+- Signing in to an account that already has pages takes the account's pages and adds none of the starter pages to it, unless you wrote in one: that one is kept.
+
 ## 0.84.0 (2026-10-24)
 
 - A page's subtopics show in one sidebar at a time. While "On this page" lists them on the right, the left sidebar leaves them out; close the right sidebar and they are back on the left.

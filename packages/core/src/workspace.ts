@@ -574,35 +574,41 @@ export function copyNodesTo(from: Y.Doc, id: string, to: Y.Doc): Map<string, str
  * devices that later sync together end up with one set, not two.
  */
 export const STARTER = {
+  folder: "starter-folder",
   welcome: WELCOME_ID,
   journal: "journal",
-  board: "welcome-board",
   book: "welcome-book",
   chapter: "welcome-chapter",
   subtopic: "welcome-subtopic",
 } as const;
 
-export const STARTER_IDS: ReadonlySet<string> = new Set(Object.values(STARTER));
+/** Starter pages of earlier versions, so a device that only has those still counts as new. */
+const PAST_STARTER = ["welcome-board"];
+
+export const STARTER_IDS: ReadonlySet<string> = new Set([...Object.values(STARTER), ...PAST_STARTER]);
 
 /**
- * Fills a brand-new workspace with a Welcome note, a Journal page for the
- * calendar's daily notes, a drawing board and a small book to show how
+ * Fills a brand-new workspace with a Notemax folder holding a Welcome note, a
+ * Journal page for the calendar's daily notes, and a small book to show how
  * chapters and subtopics work. Does nothing to a workspace that has anything.
- * With welcomeOnly, just the Welcome note, as workspaces started before.
+ * With welcomeOnly, just the Welcome note at the top, as workspaces started before.
  */
 export function ensureStarter(doc: Y.Doc, { welcomeOnly = false } = {}) {
   if (nodesOf(doc).size !== 0) return;
   doc.transact(() => {
-    createNode(doc, "note", ROOT, "Welcome", STARTER.welcome);
-    if (welcomeOnly) return;
+    if (welcomeOnly) {
+      createNode(doc, "note", ROOT, "Welcome", STARTER.welcome);
+      return;
+    }
+    createNode(doc, "folder", ROOT, "Notemax", STARTER.folder);
+    createNode(doc, "note", STARTER.folder, "Welcome", STARTER.welcome);
     // One page with each day inside it as a subtopic, the newest day first.
     // dailyFolder is the role prop the app reads for where daily notes go.
-    createNode(doc, "note", ROOT, "Journal", STARTER.journal);
+    createNode(doc, "note", STARTER.folder, "Journal", STARTER.journal);
     setProp(doc, STARTER.journal, "dailyFolder", true);
     setProp(doc, STARTER.journal, "subtopics", "inline");
     setProp(doc, STARTER.journal, "sort", "days");
-    createNode(doc, "board", ROOT, "Drawing board", STARTER.board);
-    createNode(doc, "book", ROOT, "My first book", STARTER.book);
+    createNode(doc, "book", STARTER.folder, "My first book", STARTER.book);
     createNode(doc, "note", STARTER.book, "Getting started", STARTER.chapter);
     createNode(doc, "note", STARTER.chapter, "A subtopic", STARTER.subtopic);
   });
