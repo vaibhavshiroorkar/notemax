@@ -1,6 +1,6 @@
-import { ROOT, createNode, holds, moveNodes, setProp, type NodeKind, type SortOrder, type Tree, type TreeNode } from "@notemax/core";
+import { ROOT, createNode, holds, setProp, type SortOrder, type TreeNode } from "@notemax/core";
 import { openBeside } from "@/app/tabs";
-import { bookOf } from "@/features/books/reading";
+import { OPEN_FILE_ITEMS } from "@/features/open-files/plugin";
 import { isDesktop } from "@/platform/platform";
 import { registry } from "@/plugins/registry";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
@@ -24,39 +24,16 @@ function renamePage(app: AppContext, id: string) {
 /** In a New flyout, "New note" reads "Note". */
 const kindTitle = (label: string) => label.replace(/^New (\w)/, (_, first: string) => first.toUpperCase());
 
-/** Whether a new page of this kind may go where `node` is. Folders only sit at the top or in folders, and nothing in a book is a book or folder. */
-function fitsBeside(tree: Tree, node: TreeNode, kind: NodeKind): boolean {
-  const parent = tree.byId.get(node.parentId);
-  if (!parent) return true;
-  if (kind === "folder") return parent.kind === "folder";
-  if (kind === "book") return parent.kind !== "book" && !bookOf(tree, parent.id);
-  return holds(parent.kind, kind);
-}
-
-/** Makes a page of `kind` right after `node`, then opens it, or names it in its row when it is a folder. */
-function makeBeside(app: AppContext, node: TreeNode, kind: NodeKind) {
-  const siblings = app.tree.byId.has(node.parentId) ? (app.tree.items.get(node.parentId)?.children ?? []) : app.tree.top;
-  const next = siblings[siblings.findIndex((item) => item.id === node.id) + 1];
-  const id = createNode(app.doc, kind, node.parentId);
-  moveNodes(app.doc, [id], node.parentId, next?.id ?? null);
-  if (kind === "folder") editingId.set(id);
-  else app.open(id);
-}
-
-/** Open: every kind of page, made and opened. On a page's row it goes right after that page; on empty space, at the end of the top level. */
-function openKinds(target: ContextTarget, app: AppContext): ContextMenuItem[] {
-  const node = nodeOf(target);
-  const on = target.type === "page" ? "page" : "sidebar";
-  const kinds = registry.kinds().filter(({ kind }) => !node || fitsBeside(app.tree, node, kind));
-  return kinds.map(({ kind, label, icon }) => ({
-    id: `${on}.open.${kind}`,
-    inside: "open" as const,
+/** New, on empty space: every kind of page, made at the end of the top level and opened. */
+function newKinds(): ContextMenuItem[] {
+  return registry.kinds().map(({ kind, label, icon }) => ({
+    id: `sidebar.new.${kind}`,
+    inside: "new" as const,
     title: kindTitle(label),
     icon,
-    group: "open",
-    targets: [on] as ("page" | "sidebar")[],
+    group: "create",
+    targets: ["sidebar" as const],
     run(_target: ContextTarget, app: AppContext) {
-      if (node) return makeBeside(app, node, kind);
       // A folder has no page; it is named in its row instead.
       if (kind === "folder") editingId.set(createNode(app.doc, "folder", ROOT));
       else app.create(kind);
@@ -105,13 +82,7 @@ const SORT_MENU: ContextMenuItem = {
 
 export const PAGE_MENU: ContextMenuItem[] = [
   SORT_MENU,
-  {
-    id: "page.open-kinds",
-    title: "Open",
-    group: "open",
-    targets: ["page"],
-    items: openKinds,
-  },
+  ...OPEN_FILE_ITEMS,
   {
     id: "page.open",
     inside: "open-in",
@@ -245,10 +216,10 @@ export const PAGE_MENU: ContextMenuItem[] = [
           ],
   },
   {
-    id: "sidebar.open",
-    title: "Open",
-    group: "open",
+    id: "sidebar.new",
+    title: "New",
+    group: "create",
     targets: ["sidebar"],
-    items: openKinds,
+    items: newKinds,
   },
 ];

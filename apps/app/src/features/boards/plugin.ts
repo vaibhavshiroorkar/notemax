@@ -16,7 +16,6 @@ export const boardsPlugin: Plugin = {
     { id: "boards.open-file", title: "Open an Excalidraw file as a board", keywords: ["import", "excalidraw", "file", "drawing"], run: pickExcalidraw },
   ],
   contextMenu: [
-    { id: "boards.open-file", inside: "new", title: "Board from an Excalidraw file...", group: "create", icon: "board", targets: ["sidebar"], run: (_target, app) => pickExcalidraw(app) },
   ],
   // The app from the start stays good for this: it creates and opens pages, nothing that changes.
   start: (app) => acceptDroppedBoards(() => app),

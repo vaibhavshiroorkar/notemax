@@ -31,6 +31,7 @@ import { voicePlugin } from "@/features/voice/plugin";
 import { videoPlugin } from "@/features/video/plugin";
 import { codePlugin } from "@/features/code/plugin";
 import { browserPlugin } from "@/features/browser/plugin";
+import { openFilesPlugin } from "@/features/open-files/plugin";
 import { historyPlugin } from "@/features/history/plugin";
 import { temporaryPlugin } from "@/features/temporary/plugin";
 import { trashPlugin } from "@/features/trash/plugin";
@@ -66,6 +67,7 @@ import { registerPlugin } from "./registry";
   boardsPlugin,
   codePlugin,
   browserPlugin,
+  openFilesPlugin,
   tagsPlugin,
   slashPlugin,
   imagesPlugin,

@@ -105,6 +105,27 @@ export function Sidebar({ app }: { app: AppContext }) {
     [doc],
   );
 
+  // Delete moves the picked rows to the trash, or the row the keyboard is on.
+  // Never while typing, and Undo is offered as with the menu.
+  const appNow = useRef(app);
+  appNow.current = app;
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Delete" || event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable=true], .ProseMirror, .cm-content")) return;
+      const picked = [...selection.get()];
+      const row = target?.closest<HTMLElement>(".sidebar .row[data-id]")?.dataset.id;
+      const ids = picked.length ? picked : row ? [row] : [];
+      if (!ids.length) return;
+      event.preventDefault();
+      appNow.current.trash(ids);
+      clearSelection();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // Esc lets go of picked rows. Only while there are some, so Esc elsewhere is left alone.
   const picked = selection.use().size > 0;
   useEffect(() => {

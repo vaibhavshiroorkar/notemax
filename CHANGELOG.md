@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.92.0 (2026-10-25)
+
+- Right-click Open now opens files from the computer as pages: notes (Markdown with its front matter title, text, Word .docx, saved web pages), code files as code pages in their language, pictures as a note holding the picture, and Excalidraw drawings as boards. On a page's row they go right after it; on empty space, at the end. The files themselves are only read.
+- Making a new page is back under New, on empty space, and New inside on a page's row.
+- The Delete key moves the picked rows, or the row the keyboard is on, to the trash, with Undo. It never does while you type.
+
 ## 0.91.0 (2026-10-25)
 
 - Desktop app, browser pages: when the web view steps aside for a dialog or menu, the space shows the page's own colors and the site's name instead of a white sheet.
