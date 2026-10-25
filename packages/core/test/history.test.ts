@@ -15,6 +15,24 @@ function page(text: string) {
 const textOf = (doc: Y.Doc) => doc.getXmlFragment("content").toString();
 
 describe("version history", () => {
+  it("applies age and count limits to ordinary versions", () => {
+    const now = 100 * DAY;
+    const times = [now, now - DAY, now - 2 * DAY, now - 10 * DAY];
+    expect([...versionsToKeep(times, now, { maxCount: 2, maxAgeDays: 7 })]).toEqual([0, 1]);
+    expect([...versionsToKeep(times, now, { maxCount: 50, maxAgeDays: 1 })]).toEqual([0, 1]);
+  });
+
+  it("keeps recovery snapshots outside the ordinary version limits", async () => {
+    const store = await openIdbStore(`history-${Math.random()}`);
+    const doc = page("recovery text");
+    const state = Y.encodeStateAsUpdate(doc);
+    const recovery = await saveVersion(store, "limited", state, { time: DAY, label: "On another device" });
+    await saveVersion(store, "limited", state, { time: 98 * DAY });
+    const latest = await saveVersion(store, "limited", state, { time: 100 * DAY, retention: { maxCount: 1, maxAgeDays: 1 } });
+    expect((await listVersions(store, "limited")).map((v) => v.id)).toEqual([latest, recovery]);
+    doc.destroy();
+  });
+
   it("saves versions and lists them newest first", async () => {
     const store = await openIdbStore(`history-${Math.random()}`);
     const doc = page("first");

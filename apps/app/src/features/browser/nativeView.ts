@@ -1,4 +1,5 @@
 import { useEffect, useRef, type RefObject } from "react";
+import { zoom as appZoom } from "@/features/appearance/zoom";
 import { isDesktop } from "@/platform/platform";
 
 // In the desktop app a browser page is a real web view laid over the page,
@@ -13,9 +14,21 @@ const UNDER_IT = ".toasts, .status-bar";
 /** Where across the box to look for something drawn over it. */
 const SAMPLES = [0.02, 0.25, 0.5, 0.75, 0.98];
 
-async function invoke<T>(command: string, args: Record<string, unknown>): Promise<T> {
+async function send<T>(command: string, args: Record<string, unknown>): Promise<T> {
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<T>(command, args);
+}
+
+// The commands are async on the desktop side, so two sent close together can
+// land in either order. When a page remounts, as when the workspace in the
+// sidebar changes, the old page's last move could then land after the new
+// page's show and leave the view at the old size. So each view's commands
+// wait for the one before.
+const queues = new Map<string, Promise<unknown>>();
+function invoke<T>(command: string, args: { label: string } & Record<string, unknown>): Promise<T> {
+  const done = (queues.get(args.label) ?? Promise.resolve()).catch(() => {}).then(() => send<T>(command, args));
+  queues.set(args.label, done);
+  return done;
 }
 
 export interface NativeView {
@@ -49,7 +62,9 @@ export function useNativeView(
     // What the view was last told, so the same place is never sent twice.
     let sent = "";
     let frame = 0;
-    const zoom = () => Number(getComputedStyle(document.documentElement).zoom) || 1;
+    // The page measures in its own pixels, the window in its own. The app's
+    // zoom scales the whole web view, so the two differ by it.
+    const zoom = () => (appZoom.get() / 100) * (Number(getComputedStyle(document.documentElement).zoom) || 1);
     const where = () => {
       const r = box.current?.getBoundingClientRect();
       if (!r) return null;
@@ -110,6 +125,11 @@ export function useNativeView(
     const watch = new MutationObserver(sync);
     watch.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["open", "class", "style"] });
     addEventListener("resize", sync);
+    // The zoom lands a moment after the setting changes, so look again once it has.
+    const stopZoom = appZoom.subscribe(() => {
+      sync();
+      setTimeout(sync, 100);
+    });
     addEventListener("scroll", sync, true);
     document.addEventListener("visibilitychange", sync);
     // A tab dragged to make a split must be able to land on the page under the view.
@@ -137,6 +157,7 @@ export function useNativeView(
       watch.disconnect();
       cancelAnimationFrame(frame);
       removeEventListener("resize", sync);
+      stopZoom();
       removeEventListener("scroll", sync, true);
       document.removeEventListener("visibilitychange", sync);
       removeEventListener("dragstart", dragStart, true);

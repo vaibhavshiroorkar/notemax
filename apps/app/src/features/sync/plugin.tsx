@@ -2,8 +2,6 @@ import { accountsEnabled } from "@/features/account/config";
 import { startAccount } from "@/features/account/session";
 import { getPref } from "@/platform/prefs";
 import type { AppContext, Plugin } from "@/plugins/types";
-import { AccountBar } from "./AccountBar";
-import { AccountDialog } from "./AccountDialog";
 import { useEffect, useRef } from "react";
 import { ConflictDialog, ConflictLine, conflicts } from "./conflicts";
 import { remoteEdit } from "./live";
@@ -55,10 +53,7 @@ export const syncPlugin: Plugin = {
     { id: "sync.status", component: SyncStatus },
     { id: "sync.notice", component: RemoteEditNotice },
   ],
-  // A build without Supabase settings has no accounts, so the footer keeps its plain Settings button.
-  sidebarFooter: accountsEnabled ? [{ id: "sync.account", component: AccountBar }] : [],
   overlays: [
-    { id: "account", component: AccountDialog },
     { id: "sync.conflict", component: ConflictDialog },
   ],
   pageHeader: [{ id: "sync.conflict", kinds: ["note"], component: ConflictLine }],

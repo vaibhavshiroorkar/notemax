@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type DragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { listedOnRight } from "@/features/sidebar/state";
 import { workspaceNow } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
@@ -186,7 +186,7 @@ function Tray({ all, here }: { all: SidePanel[]; here: Set<string> }) {
 /** The right sidebar panel that lists a note's subtopics. */
 const SUBTOPICS_PANEL = "notes.subtopics";
 
-export function RightSidebar({ app, panels, all, open }: { app: AppContext; panels: SidePanel[]; all: SidePanel[]; open: boolean }) {
+export function RightSidebar({ app, panels, all, open, tools }: { app: AppContext; panels: SidePanel[]; all: SidePanel[]; open: boolean; tools?: ReactNode }) {
   const mounted = usePresence(open);
   const layout = placed(panelLayout.use(), all.map((p) => p.id));
   const moving = dragging.use();
@@ -210,6 +210,7 @@ export function RightSidebar({ app, panels, all, open }: { app: AppContext; pane
 
   return (
     <aside className="side-panel" aria-label="Right sidebar" data-moving={moving || undefined}>
+      {tools}
       <div className="side-panel-sections">
         {slots.map((slot) => (
           <div key={slot.shown.map((p) => p.id).join()} className="panel-slot">

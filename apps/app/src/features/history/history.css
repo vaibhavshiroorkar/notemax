@@ -14,6 +14,13 @@
   padding: 4px;
   border-radius: 4px;
   text-align: left;
+  min-height: 44px;
+}
+
+.versions > ul {
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .version-row:hover {

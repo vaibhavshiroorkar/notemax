@@ -26,17 +26,26 @@ const DAY = 24 * 60 * 60 * 1000;
 const KEEP_RECENT = 20;
 const KEEP_MOST = 100;
 
+export interface VersionRetention {
+  maxCount?: number;
+  /** Zero keeps versions regardless of age. */
+  maxAgeDays?: number;
+}
+
 /**
  * Which versions to keep, newest first: the last 20, then one a day for a
  * month, then one a week, and never more than 100. Long-lived pages keep
  * their old shape without the history growing without end.
  */
-export function versionsToKeep(times: readonly number[], now = Date.now()): Set<number> {
+export function versionsToKeep(times: readonly number[], now = Date.now(), retention: VersionRetention = {}): Set<number> {
+  const maxCount = Number.isFinite(retention.maxCount) ? Math.max(1, Math.floor(retention.maxCount!)) : KEEP_MOST;
+  const maxAgeDays = Number.isFinite(retention.maxAgeDays) ? Math.max(0, retention.maxAgeDays!) : 0;
   const order = times.map((time, i) => ({ time, i })).sort((a, b) => b.time - a.time);
   const keep = new Set<number>();
   const buckets = new Set<string>();
   for (const [rank, { time, i }] of order.entries()) {
-    if (keep.size >= KEEP_MOST) break;
+    if (keep.size >= maxCount) break;
+    if (rank > 0 && maxAgeDays > 0 && now - time > maxAgeDays * DAY) continue;
     if (rank < KEEP_RECENT) {
       keep.add(i);
       continue;
@@ -67,7 +76,7 @@ export async function saveVersion(
   store: DocStore,
   pageId: string,
   state: Uint8Array,
-  { words = null, time = Date.now(), label = null }: { words?: number | null; time?: number; label?: string | null } = {},
+  { words = null, time = Date.now(), label = null, retention }: { words?: number | null; time?: number; label?: string | null; retention?: VersionRetention } = {},
 ): Promise<string> {
   const id = crypto.randomUUID();
   const local = await openLocalDoc(store, historyDocId(pageId));
@@ -81,9 +90,11 @@ export async function saveVersion(
       entry.set("time", time);
       entry.set("words", words);
       entry.set("state", state);
-      const keep = versionsToKeep(versions.toArray().map((v) => v.get("time") as number), time);
+      const ordinary = versions.toArray().map((v, index) => ({ v, index })).filter(({ v }) => !v.get("label"));
+      const selected = versionsToKeep(ordinary.map(({ v }) => v.get("time") as number), time, retention);
+      const keep = new Set([...selected].map((i) => ordinary[i].index));
       // From the end, so the indexes still to visit do not move.
-      for (let i = versions.length - 1; i >= 0; i--) if (!keep.has(i)) versions.delete(i, 1);
+      for (let i = versions.length - 1; i >= 0; i--) if (!keep.has(i) && !versions.get(i).get("label")) versions.delete(i, 1);
     });
     await local.flush();
   } finally {

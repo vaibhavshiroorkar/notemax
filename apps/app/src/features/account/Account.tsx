@@ -88,7 +88,7 @@ export function AccountSection({ accountError, compact }: Pick<SettingsContext, 
         </>
       ) : (
         <>
-          <p>Optional. Notemax works fully without an account. Signing in lets you sync your notes between devices through your own Google Drive, and later publish books.</p>
+          <p>{compact ? "Sign in to sync your notes and use the community." : "Notemax works without an account. Sign in to sync through Google Drive, share pages, and use the community."}</p>
           <button className="button" onClick={signIn} disabled={!client}>
             Continue with Google
           </button>

@@ -62,3 +62,14 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+.keyboard-bar-size {
+  flex: none;
+  width: 86px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+}

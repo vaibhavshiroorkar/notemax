@@ -53,6 +53,8 @@ export const workspacesPlugin: Plugin = {
   required: true,
   // Above everything else in the left sidebar.
   sidebarSections: [{ id: "workspaces.switch", order: -30, component: Switcher }],
+  // Renaming, coloring, ordering and deleting workspaces, here since Home no longer has their cards.
+  settings: [{ id: "workspaces", order: 8, group: "General", title: "Workspaces", icon: "layout", keywords: ["workspace", "rename", "color", "delete", "folder"], component: ({ app }) => <WorkspacesSection app={app} /> }],
   views: [
     { id: "home", title: "Home", icon: "home", component: HomeView },
     { id: "recent", title: "Recent pages", icon: "clock", component: RecentView },
@@ -60,7 +62,6 @@ export const workspacesPlugin: Plugin = {
   homeSections: [
     { id: "home.quick", title: "Quick start", order: 10, component: QuickStart },
     { id: "home.recent", title: "Recent pages", order: 20, open: (app) => app.openView("recent"), component: RecentSection },
-    { id: "home.workspaces", title: "Workspaces", order: 60, wide: true, component: WorkspacesSection },
   ],
   contextMenu: [sendItem(false), sendItem(true)],
   commands: [{ id: "workspaces.home", title: "Go Home: all workspaces", keywords: ["workspace", "switch", "home", "profile"], shortcut: "Mod+Alt+H", run: (app) => app.openView("home") }],

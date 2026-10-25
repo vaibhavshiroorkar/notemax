@@ -3,6 +3,19 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.93.0 (2026-10-25)
+
+- Search, copy all, sharing, community, and settings live in the right sidebar. Home ends at Bookmarks, and starred pages keep their row markers without a second sidebar list.
+- Phone navigation stays put while editing. An arrow hides or reveals the tabs, chapter navigation stays above formatting, and font sizes have a number menu.
+- Back dismisses a page's More menu without changing its address.
+- The account window has an online/offline switch and stays available in either mode. Its content fits and scrolls on phones.
+- Versions scroll after five rows. History settings control saving frequency, age, and count limits. Recovery snapshots remain available.
+- Sync conflicts show a single Review button, with recovery choices inside the dialog.
+- Browser pages run in the desktop app. Saved browser pages on the website offer a link to open the site separately.
+- Desktop browser views keep their size and position when switching workspaces or zooming.
+- Right-click menus: Open opens files from the computer, Create makes pages. On a page's row Create puts the new page right after it.
+- The word count sits left of the star in the top right.
+
 ## 0.92.0 (2026-10-25)
 
 - Right-click Open now opens files from the computer as pages: notes (Markdown with its front matter title, text, Word .docx, saved web pages), code files as code pages in their language, pictures as a note holding the picture, and Excalidraw drawings as boards. On a page's row they go right after it; on empty space, at the end. The files themselves are only read.

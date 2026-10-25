@@ -109,6 +109,58 @@
 
 .account-dialog {
   width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+}
+
+.account-dialog-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.account-mode {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.account-mode > div:first-child {
+  flex: 1 1 220px;
+}
+
+.account-mode h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.account-dialog > .dialog-body {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 34px);
+  box-sizing: border-box;
+}
+
+.account-dialog .settings-header,
+.account-dialog .dialog-body > .link-button {
+  flex: none;
+}
+
+.account-dialog .profile-card {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.account-dialog .settings-row {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.account-dialog .settings-row-text,
+.account-dialog .profile-card-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .account-dialog-sync {

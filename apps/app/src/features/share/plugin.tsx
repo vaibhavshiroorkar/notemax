@@ -36,7 +36,7 @@ export const sharePlugin: Plugin = {
   name: "Sharing",
   description: "Share a note by link and write in it together, live",
   pageHeader: [{ id: "share.line", kinds: ["note"], component: ShareLine }],
-  pageCorner: [{ id: "share.button", kinds: ["note"], component: ShareButton }],
+  pageCorner: [{ id: "share.button", kinds: ["note"], side: true, component: ShareButton }],
   lockPage(node) {
     const share = shareOf(node);
     return share && !canEdit(share) ? "Shared with you to read. Ask for an edit link to write in it." : undefined;

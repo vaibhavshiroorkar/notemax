@@ -9,6 +9,8 @@ import { registry } from "@/plugins/registry";
 
 /** Minutes of editing between versions. 0 turns versions off. */
 export const versionEvery = savedStore<number>("versionEvery", 10);
+export const versionLimit = savedStore<number>("versionLimit", 100);
+export const versionDays = savedStore<number>("versionDays", 0);
 
 /** Goes up whenever a version is saved, so lists of versions read them again. */
 export const versionsSaved = createStore(0);
@@ -19,7 +21,9 @@ export async function saveNow(pageId: string, state: Uint8Array, label: string |
   Y.applyUpdate(doc, state);
   const words = countWords(doc.getXmlFragment("content"));
   doc.destroy();
-  const id = await saveVersion(await storeFor(workspace), pageId, state, { words, label });
+  const id = await saveVersion(await storeFor(workspace), pageId, state, {
+    words, label, retention: { maxCount: versionLimit.get(), maxAgeDays: versionDays.get() },
+  });
   versionsSaved.set(versionsSaved.get() + 1);
   return id;
 }

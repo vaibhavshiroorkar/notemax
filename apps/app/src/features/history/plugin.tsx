@@ -1,7 +1,7 @@
 import type { AppContext, Plugin } from "@/plugins/types";
 import { VersionPreview } from "./VersionPreview";
 import { VersionsPanel } from "./VersionsPanel";
-import { versionEvery } from "./versions";
+import { versionDays, versionEvery, versionLimit } from "./versions";
 import "./history.css";
 
 const CHOICES: [number, string][] = [
@@ -14,6 +14,8 @@ const CHOICES: [number, string][] = [
 
 function HistorySection() {
   const every = versionEvery.use();
+  const limit = versionLimit.use();
+  const days = versionDays.use();
   return (
     <>
       <p>Notemax keeps earlier versions of each note: how it was before you started editing, then one every few minutes, then how you left it. Older ones thin out to one a day, then one a week. They sync and back up with your notes.</p>
@@ -28,6 +30,19 @@ function HistorySection() {
               {label}
             </option>
           ))}
+        </select>
+      </label>
+      <label className="settings-row">
+        <span>Versions per page<span className="settings-description">Applied when the next version is saved. Recovery snapshots stay available.</span></span>
+        <select aria-label="Versions per page" className="settings-select" value={limit} onChange={(event) => versionLimit.set(Number(event.target.value))}>
+          {[20, 50, 100, 200, 500].map((count) => <option key={count} value={count}>{count}</option>)}
+        </select>
+      </label>
+      <label className="settings-row">
+        <span>Keep versions for<span className="settings-description">The latest version and recovery snapshots are always kept.</span></span>
+        <select aria-label="Keep versions for" className="settings-select" value={days} onChange={(event) => versionDays.set(Number(event.target.value))}>
+          <option value={0}>No age limit</option>
+          {[7, 30, 90, 365].map((count) => <option key={count} value={count}>{count} days</option>)}
         </select>
       </label>
     </>

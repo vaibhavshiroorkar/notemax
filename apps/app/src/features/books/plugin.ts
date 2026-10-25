@@ -2,7 +2,6 @@ import { ROOT, childrenOf, moveNode } from "@notemax/core";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { BookPane } from "./BookPane";
 import { BookPanel } from "./BookPanel";
-import { BooksHome } from "./BooksHome";
 import { ChapterFooter } from "./ChapterFooter";
 import { bookOf, chapterOf, chapterStops, hostChapter } from "./reading";
 import { BookWordCount } from "./WordCount";
@@ -23,7 +22,6 @@ export const booksPlugin: Plugin = {
   description: "Books with chapters, a chapter list on the right and word counts",
   kinds: [{ kind: "book", label: "New book", icon: "book" }],
   pageViews: [{ kind: "book", component: BookPane }],
-  homeSections: [{ id: "books.home", title: "Books", order: 40, component: BooksHome }],
   sidePanels: [{ id: "books.chapters", title: "Chapters", order: 10, when: (app) => !!bookOf(app.tree, app.activeId), component: BookPanel }],
   pageCorner: [{ id: "books.words", kinds: ["book", "note"], component: BookWordCount }],
   pageFooter: [{ id: "books.steps", kinds: ["note"], component: ChapterFooter }],

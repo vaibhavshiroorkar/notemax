@@ -282,6 +282,8 @@ export interface PageAddon {
   id: string;
   /** Kinds whose page shows it. All pages when left out. */
   kinds?: NodeKind[];
+  /** A page corner tool that sits in the right sidebar's tool row instead of over the page, like Copy all. */
+  side?: boolean;
   component: ComponentType<{ node: TreeNode; app: AppContext }>;
 }
 

@@ -3,9 +3,7 @@ import { Icon } from "@/ui/Icon";
 import { bookOf, chapterStops } from "./reading";
 
 /**
- * Shown above a chapter: its book, where it sits in the book, and arrows to
- * the chapter before and after. On a phone it comes back with the top bar when
- * scrolling up, so the way back is near.
+ * Chapter navigation stays above formatting on phones, outside the page scroller.
  */
 export function ChapterNav({ tree, chapterId: id, onOpen }: { tree: Tree; chapterId: string; onOpen(id: string): void }) {
   const book = bookOf(tree, id);

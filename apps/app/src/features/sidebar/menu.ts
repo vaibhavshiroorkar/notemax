@@ -1,5 +1,6 @@
-import { ROOT, createNode, holds, setProp, type SortOrder, type TreeNode } from "@notemax/core";
+import { ROOT, createNode, holds, moveNodes, setProp, type NodeKind, type SortOrder, type Tree, type TreeNode } from "@notemax/core";
 import { openBeside } from "@/app/tabs";
+import { bookOf } from "@/features/books/reading";
 import { OPEN_FILE_ITEMS } from "@/features/open-files/plugin";
 import { isDesktop } from "@/platform/platform";
 import { registry } from "@/plugins/registry";
@@ -21,24 +22,49 @@ function renamePage(app: AppContext, id: string) {
   );
 }
 
-/** In a New flyout, "New note" reads "Note". */
+/** In a Create flyout, "New note" reads "Note". */
 const kindTitle = (label: string) => label.replace(/^New (\w)/, (_, first: string) => first.toUpperCase());
 
-/** New, on empty space: every kind of page, made at the end of the top level and opened. */
-function newKinds(): ContextMenuItem[] {
-  return registry.kinds().map(({ kind, label, icon }) => ({
-    id: `sidebar.new.${kind}`,
-    inside: "new" as const,
-    title: kindTitle(label),
-    icon,
-    group: "create",
-    targets: ["sidebar" as const],
-    run(_target: ContextTarget, app: AppContext) {
-      // A folder has no page; it is named in its row instead.
-      if (kind === "folder") editingId.set(createNode(app.doc, "folder", ROOT));
-      else app.create(kind);
-    },
-  }));
+/** Whether a new page of this kind may go where `node` is. Folders only sit at the top or in folders, and nothing in a book is a book or folder. */
+function fitsBeside(tree: Tree, node: TreeNode, kind: NodeKind): boolean {
+  const parent = tree.byId.get(node.parentId);
+  if (!parent) return true;
+  if (kind === "folder") return parent.kind === "folder";
+  if (kind === "book") return parent.kind !== "book" && !bookOf(tree, parent.id);
+  return holds(parent.kind, kind);
+}
+
+/** Makes a page of `kind` right after `node`, then opens it, or names it in its row when it is a folder. */
+function makeBeside(app: AppContext, node: TreeNode, kind: NodeKind) {
+  const siblings = app.tree.byId.has(node.parentId) ? (app.tree.items.get(node.parentId)?.children ?? []) : app.tree.top;
+  const next = siblings[siblings.findIndex((item) => item.id === node.id) + 1];
+  const id = createNode(app.doc, kind, node.parentId);
+  moveNodes(app.doc, [id], node.parentId, next?.id ?? null);
+  if (kind === "folder") editingId.set(id);
+  else app.open(id);
+}
+
+/** Create: every kind of page, made and opened. On a page's row it goes right after that page; on empty space, at the end of the top level. */
+function createKinds(target: ContextTarget, app: AppContext): ContextMenuItem[] {
+  const node = nodeOf(target);
+  const on = node ? "page" : "sidebar";
+  return registry
+    .kinds()
+    .filter(({ kind }) => !node || fitsBeside(app.tree, node, kind))
+    .map(({ kind, label, icon }) => ({
+      id: `${on}.new.${kind}`,
+      inside: "new" as const,
+      title: kindTitle(label),
+      icon,
+      group: "create",
+      targets: [on] as ("page" | "sidebar")[],
+      run(_target: ContextTarget, app: AppContext) {
+        if (node) return makeBeside(app, node, kind);
+        // A folder has no page; it is named in its row instead.
+        if (kind === "folder") editingId.set(createNode(app.doc, "folder", ROOT));
+        else app.create(kind);
+      },
+    }));
 }
 
 const copy = (app: AppContext, text: string, what: string) =>
@@ -120,9 +146,16 @@ export const PAGE_MENU: ContextMenuItem[] = [
     run: (target) => openBeside(nodeOf(target)!.id, "bottom"),
   },
   {
+    id: "page.create",
+    title: "Create",
+    group: "create",
+    targets: ["page"],
+    items: createKinds,
+  },
+  {
     // Every kind the page can hold. Folders only go in folders: a folder inside a note has nothing to sort.
     id: "page.new",
-    title: "New inside",
+    title: "Create inside",
     group: "create",
     targets: ["page"],
     items(target) {
@@ -217,9 +250,9 @@ export const PAGE_MENU: ContextMenuItem[] = [
   },
   {
     id: "sidebar.new",
-    title: "New",
+    title: "Create",
     group: "create",
     targets: ["sidebar"],
-    items: newKinds,
+    items: createKinds,
   },
 ];

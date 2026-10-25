@@ -7,7 +7,7 @@ import { activeEditor } from "./active";
 import "./keyboard-bar.css";
 
 // Phones have no shortcuts and no right click for formatting, so a bar of
-// formatting buttons sits at the top, under the tabs, while a note is open.
+// formatting buttons sits below chapter navigation while a note is open.
 // It acts on the note being written in, a subtopic's too, and scrolls
 // sideways when it does not fit.
 
@@ -90,6 +90,14 @@ export function KeyboardBar() {
       {button("Strikethrough", <s>S</s>, () => run((c) => c.toggleStrike()), editor.isActive("strike"))}
       {button("Highlight", <span className="keyboard-bar-mark">A</span>, () => run((c) => c.toggleHighlight()), editor.isActive("highlight"))}
       {button("Smaller text", <span className="keyboard-bar-small">A-</span>, () => stepSize(-1))}
+      <select className="keyboard-bar-size" aria-label="Font size" value={size} onChange={(event) => {
+        const next = Number(event.target.value);
+        run((chain) => next ? chain.setFontSize(`${next}px`) : chain.unsetFontSize());
+      }}>
+        <option value={0}>Default</option>
+        {size > 0 && !SIZES.includes(size) && <option value={size}>{size}</option>}
+        {SIZES.map((value) => <option key={value} value={value}>{value}</option>)}
+      </select>
       {button("Bigger text", <span className="keyboard-bar-small">A+</span>, () => stepSize(1))}
       {line}
       {button("Bulleted list", icon("list-bullet"), () => run((c) => c.toggleBulletList()), editor.isActive("bulletList"))}

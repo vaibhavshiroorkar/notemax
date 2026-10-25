@@ -343,7 +343,20 @@
   white-space: nowrap;
 }
 
+/* Fills the pane like a page of the shown workspace would, so pages that
+   stretch to the pane's height, like browser pages and boards, still do. */
+.foreign-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.foreign-page > :not(.foreign-line) {
+  flex: 1 1 0;
+}
+
 .foreign-line {
+  flex: none;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -474,7 +487,29 @@
   font-size: 14px;
 }
 
-/* Top right of the page: things plugins put there, quick settings, and the right sidebar button. */
+/* The right sidebar's tool row: search, the page's tools, places and settings. */
+.side-tools {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.side-tools-space {
+  flex: 1;
+}
+
+/* Quick settings opens under the row, as wide as the sidebar allows. */
+.side-tools .quick-settings {
+  right: 8px;
+  left: 8px;
+  width: auto;
+}
+
+/* Top right of the page: things plugins put there, the layout button, and the right sidebar button. */
 .page-toolbar {
   position: relative;
   display: flex;
@@ -561,7 +596,7 @@
   }
 
   /* Room is short: the page's own buttons are in its menu and in search. */
-  .page-toolbar > :not(.quick-settings-button, .side-panel-toggle, .quick-settings, .copy-all-button, .share-button) {
+  .page-toolbar > :not(.side-panel-toggle) {
     display: none;
   }
 
@@ -828,76 +863,35 @@
   }
 }
 
-/* Phones: the top bar floats over the page so it can slide away while reading
-   down, and come back on a small scroll up (useHidingBars). */
+/* Phone navigation changes only when its arrow is pressed. */
+.mobile-navigation { display: none; }
 @media (max-width: 700px) {
-  .main {
-    position: relative;
-  }
-
-  .main-top {
-    position: absolute;
-    inset: 0 0 auto;
-    background: var(--bg);
-    transition: transform 0.2s ease;
-  }
-
-  .main > .page-scroll {
-    padding-top: var(--top-bar);
-    scroll-padding-top: var(--top-bar);
-  }
-
-  .app[data-bars="hidden"] .main-top {
-    transform: translateY(-100%);
-  }
-
-  /* The formatting bar floats under the top bar, and stays at the top when that slides away. */
-  .main > .keyboard-bar {
-    position: absolute;
-    top: var(--top-bar);
-    right: 0;
-    left: 0;
-    /* Under the sidebars and the dim behind them, which open over it. */
-    z-index: 8;
-    background: var(--sidebar-bg);
-    transition: transform 0.2s ease;
-  }
-
-  .app[data-bars="hidden"] .main > .keyboard-bar {
-    transform: translateY(calc(-1 * var(--top-bar)));
-  }
-
-  .main:has(> .keyboard-bar) > .page-scroll {
-    padding-top: calc(var(--top-bar) + var(--format-bar));
-    scroll-padding-top: calc(var(--top-bar) + var(--format-bar));
-  }
-
-  /* A chapter's book line, with its arrows, stays under the bar and comes and goes with it. */
-  /* Sticky counts from inside the scroller's padding, which already makes room for the bar. */
-  .note-book {
-    position: sticky;
-    top: 0;
-    z-index: 4;
-    margin: -8px -16px 8px;
-    padding: 6px 16px;
+  .app[data-navigation="closed"] .main-top { display: none; }
+  .mobile-navigation {
+    display: flex;
+    align-items: center;
+    flex: none;
+    min-height: 36px;
     border-bottom: 1px solid var(--border);
     background: var(--bg);
-    transition: transform 0.2s ease;
   }
-
-  .app[data-bars="hidden"] .note-book {
-    transform: translateY(calc(-100% - var(--top-bar)));
+  .mobile-navigation > .icon-button { flex: none; }
+  .mobile-navigation .note-book {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0 8px 0 0;
   }
-}
-
-@media (max-width: 700px) and (prefers-reduced-motion: reduce) {
-  .main-top,
-  .note-book {
-    transition: none;
-  }
+  .note > .note-book { display: none; }
+  .main > .keyboard-bar { position: relative; }
 }
 
 /* Marks the right sidebar's workspace for menus, without a box of its own in the grid. */
 .side-scope {
   display: contents;
+}
+
+/* The word count reads first, left of the star and the other page buttons. */
+.page-toolbar > .page-words {
+  order: -1;
 }

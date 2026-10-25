@@ -4,7 +4,6 @@ import { createStore } from "@/platform/store";
 import type { AppContext, ContextMenuItem, ContextTarget, Plugin } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { BookmarksHome, BookmarksView } from "./BookmarksHome";
-import { BookmarksSection } from "./BookmarksSection";
 import { isStarred, setStarred } from "./star";
 import "./star.css";
 
@@ -62,9 +61,8 @@ const activeNode = (app: AppContext) => (app.activeId ? app.tree.byId.get(app.ac
 export const starPlugin: Plugin = {
   id: "star",
   name: "Bookmarks",
-  description: "Star pages to keep them in Bookmarks, below your notes",
-  // Below the notes.
-  sidebarSections: [{ id: "star.section", order: 10, component: BookmarksSection }],
+  description: "Star pages to find them in Bookmarks on Home",
+  // No list of its own in the sidebar: the star on each row marks a bookmark there.
   homeSections: [{ id: "star.home", title: "Bookmarks", order: 30, open: (app) => app.openView("bookmarks"), component: BookmarksHome }],
   views: [{ id: "bookmarks", title: "Bookmarks", icon: "star", component: BookmarksView }],
   rowMarks: [{ id: "star.mark", icon: "star", label: "Bookmarked", when: isStarred }],

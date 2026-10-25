@@ -27,6 +27,12 @@ export function openContextMenu(target: ContextTarget, x: number, y: number, wor
 
 const closeContextMenu = () => current.set(null);
 
+export function dismissContextMenu(): boolean {
+  if (!current.get()) return false;
+  closeContextMenu();
+  return true;
+}
+
 /**
  * The handler for a thing's onContextMenu. A right click opens the menu at the
  * pointer; the keyboard's menu key or Shift+F10 opens it under the focused thing.
@@ -77,8 +83,8 @@ const GROUPS = ["open", "clipboard", "create", "edit", "duplicate", "format", "b
 const FLYOUTS = new Map<string, { title: string; icon: IconName; group: string }>([
   ["open", { title: "Open", icon: "folder", group: "open" }],
   ["open-in", { title: "Open in", icon: "arrow-right", group: "open" }],
-  ["new", { title: "New", icon: "plus", group: "create" }],
-  ["new-inside", { title: "New inside", icon: "plus", group: "create" }],
+  ["new", { title: "Create", icon: "plus", group: "create" }],
+  ["new-inside", { title: "Create inside", icon: "plus", group: "create" }],
   ["copy", { title: "Copy", icon: "copy", group: "edit" }],
   ["options", { title: "Page options", icon: "settings", group: "share" }],
   ["share", { title: "Share", icon: "upload", group: "share" }],
@@ -288,7 +294,7 @@ function MenuList({
         onContextMenu={(event) => event.preventDefault()}
       >
         {place.over && onBack && (
-          <button className="context-menu-item context-menu-back" role="menuitem" onClick={onBack}>
+          <button className="context-menu-item context-menu-back" role="menuitem" aria-label="Back" onPointerDown={(event) => event.preventDefault()} onClick={onBack}>
             <Icon name="chevron-left" />
             <span className="context-menu-title">{label ?? "Back"}</span>
           </button>
@@ -325,7 +331,7 @@ function MenuList({
           onClose={onClose}
           onBack={() => {
             setSub(null);
-            ref.current?.querySelector<HTMLElement>(`[data-id="${CSS.escape(open.id)}"]`)?.focus();
+            if (!fromTouch()) ref.current?.querySelector<HTMLElement>(`[data-id="${CSS.escape(open.id)}"]`)?.focus({ preventScroll: true });
           }}
         />
       )}

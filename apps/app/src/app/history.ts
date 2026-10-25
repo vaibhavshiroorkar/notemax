@@ -1,3 +1,5 @@
+import { dismissContextMenu } from "@/ui/ContextMenu";
+
 // Back and Forward belong to each tab (see tabs.ts), not to the browser. This
 // file connects the two: the address shows the open page as #id, so a reload
 // or a bookmark opens it, and the mouse's side buttons and the browser's own
@@ -14,10 +16,12 @@ export function pageInAddress(): string | null {
 export const openedOnPage = pageInAddress();
 
 const addressOf = (page: string | null) => `${location.pathname}${location.search}${page ? `#${encodeURIComponent(page)}` : ""}`;
+let shownAddress = location.href;
 
 /** Puts the open page in the address without adding a browser history entry. */
 export function showInAddress(page: string | null) {
   const address = addressOf(page);
+  shownAddress = address;
   if (address !== `${location.pathname}${location.search}${location.hash}`) history.replaceState(history.state, "", address);
 }
 
@@ -34,7 +38,7 @@ const isMarker = (state: unknown, which: Marker["notemax"]) => (state as Marker 
 export function startBrowserNavigation(back: () => void, forward: () => void): () => void {
   if (!isMarker(history.state, "top")) {
     history.replaceState({ notemax: "base" } satisfies Marker, "", location.href);
-    history.pushState({ notemax: "top" } satisfies Marker, "", location.href);
+    history.pushState({ notemax: "top" } satisfies Marker, "", shownAddress);
   }
 
   // A side button is handled here directly. If the browser also goes back for
@@ -45,13 +49,13 @@ export function startBrowserNavigation(back: () => void, forward: () => void): (
     event.preventDefault();
     if (event.type !== "mouseup") return;
     handledAt = performance.now();
-    if (event.button === 3) back();
+    if (event.button === 3) { if (!dismissContextMenu()) back(); }
     else forward();
   };
   const onPop = (event: PopStateEvent) => {
     if (!isMarker(event.state, "base")) return;
-    if (performance.now() - handledAt > 500) back();
-    history.pushState({ notemax: "top" } satisfies Marker, "", location.href);
+    if (performance.now() - handledAt > 500 && !dismissContextMenu()) back();
+    history.pushState({ notemax: "top" } satisfies Marker, "", shownAddress);
   };
   window.addEventListener("mousedown", onMouse);
   window.addEventListener("mouseup", onMouse);

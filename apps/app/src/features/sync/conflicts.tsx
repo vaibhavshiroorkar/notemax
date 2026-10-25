@@ -130,32 +130,15 @@ export function ConflictDialog({ app, options, onClose }: { app: AppContext; opt
   );
 }
 
-/**
- * Under the title of a note waiting for an answer. Every choice is here, so
- * someone happy with what they see settles it in one click; Review shows both
- * sides first.
- */
+/** Opens the recovery choices without crowding the note. */
 export function ConflictLine({ node, app }: { node: TreeNode; app: AppContext }) {
   const conflict = conflictOf(conflicts.use(), node.id);
   if (!conflict) return null;
   return (
     <p className="conflict-line">
-      <Icon name="sync" />
-      <span>Changed on two devices before they synced. Both changes are merged here.</span>
-      <span className="conflict-choices">
-        <button className="link-button" title="Keep the note as it is now, with both changes" onClick={() => void settleAs(conflict, "both", app)}>
-          Keep what you see
-        </button>
-        <button className="link-button" title="Go back to this device's side only" onClick={() => void settleAs(conflict, "mine", app)}>
-          Keep this device's
-        </button>
-        <button className="link-button" title="Go back to the other device's side only" onClick={() => void settleAs(conflict, "theirs", app)}>
-          Keep the other's
-        </button>
-        <button className="link-button" onClick={() => app.openOverlay("sync.conflict", { pageId: node.id })}>
-          Review
-        </button>
-      </span>
+      <button className="link-button" title="Review changes from two devices" onClick={() => app.openOverlay("sync.conflict", { pageId: node.id })}>
+        Review
+      </button>
     </p>
   );
 }

@@ -6,7 +6,6 @@ import { useWorkspace } from "@/data/useWorkspace";
 import { useSignInRedirect } from "@/features/account/useSignInRedirect";
 import { LinkHub } from "@/features/links/link-hub";
 import { Palette } from "@/features/palette/Palette";
-import { QuickSettings } from "@/features/settings/QuickSettings";
 import { Settings } from "@/features/settings/Settings";
 import { ShortcutsHelp } from "@/features/shortcuts/ShortcutsHelp";
 import { Sidebar } from "@/features/sidebar/Sidebar";
@@ -28,9 +27,10 @@ import { PromptHost } from "@/ui/Prompt";
 import { Toasts } from "@/ui/Toasts";
 import { usePresence } from "@/ui/usePresence";
 import { useEdgeSwipe } from "./useEdgeSwipe";
-import { useHidingBars } from "./useHidingBars";
+import { ChapterNav } from "@/features/books/ChapterNav";
 import { RightSidebar } from "./RightSidebar";
 import { Gated } from "./Gated";
+import { SideTools } from "./SideTools";
 import { ForeignPage, foreignActive, foreignScopes, scopedApp } from "./ForeignPage";
 import { revealing, useReveal } from "./reveal";
 import { pageInAddress, showInAddress, startBrowserNavigation } from "./history";
@@ -205,7 +205,7 @@ export function App() {
   }, []);
 
   const frame = useRef<HTMLDivElement>(null);
-  useHidingBars(frame, visit?.page ?? null);
+  const [navigationOpen, setNavigationOpen] = useState(true);
 
   useEdgeSwipe(
     () => openSide("left", true),
@@ -318,7 +318,7 @@ export function App() {
   const showLeft = sidebarOpen && !focusMode;
   // A side opened by a swipe brings the hidden phone bar back, with its buttons.
   useEffect(() => {
-    if ((sidebarOpen || sidePanelOpen) && frame.current) delete frame.current.dataset.bars;
+    if (sidebarOpen || sidePanelOpen) setNavigationOpen(true);
   }, [sidebarOpen, sidePanelOpen]);
   // Kept on the page a moment after closing, so it can slide out.
   const leftMounted = usePresence(showLeft);
@@ -386,7 +386,12 @@ export function App() {
     },
     openPalette: () => setPaletteOpen(true),
     openShortcuts: () => setShortcutsOpen(true),
-    toggleQuickSettings: () => setQuickOpen((open) => !open),
+    // Quick settings sits in the right sidebar's tools, so opening it opens the sidebar too.
+    toggleQuickSettings: () =>
+      setQuickOpen((open) => {
+        if (!open) openSide("right", true);
+        return !open;
+      }),
     openOverlay: (id, options = {}) => {
       setOverlay({ id, options });
       clearOverlays();
@@ -485,8 +490,6 @@ export function App() {
   const showRight = sidePanelOpen && !focusMode;
   const sidebarCommand = registry.allCommands().find((command) => command.id === "sidebar.toggle");
   const sidebarKeys = sidebarCommand ? shortcutFor(sidebarCommand, overrides) : "";
-  const quickCommand = registry.allCommands().find((command) => command.id === "settings.quick");
-  const quickKeys = quickCommand ? shortcutFor(quickCommand, overrides) : "";
   const rightCommand = registry.allCommands().find((command) => command.id === "sidebar.toggle-right");
   const rightKeys = rightCommand ? shortcutFor(rightCommand, overrides) : "";
 
@@ -498,6 +501,7 @@ export function App() {
       data-side-panel={showRight ? "open" : "closed"}
       data-focus={focusMode || undefined}
       data-calm={calm || undefined}
+      data-navigation={navigationOpen ? "open" : "closed"}
       style={{ "--sidebar-width": `${leftWidth}px`, "--side-panel-width": `${rightWidth}px` } as CSSProperties}
     >
       {leftMounted && <Sidebar key={`${version}:${shown}`} app={app} />}
@@ -515,13 +519,12 @@ export function App() {
           <Icon name="sidebar" />
         </button>
         {multi ? <div className="main-top-space" /> : <TabStrip app={app} pane={tabs.panes.find((pane) => pane.id === tabs.activePane)!} />}
-        {/* Phones have no Ctrl+K, so search gets a button there. */}
-        <button className="icon-button phone-only" aria-label="Search" title="Search" onClick={app.openPalette}>
-          <Icon name="search" />
-        </button>
         <div className="page-toolbar">
           {sideNode &&
-            registry.pageCorner(sideNode.kind).map(({ id, component: Corner }) => (
+            registry
+              .pageCorner(sideNode.kind)
+              .filter((addon) => !addon.side)
+              .map(({ id, component: Corner }) => (
               <Safe key={id} name={id}>
                 <PageWorkspace.Provider value={sideApp.workspace}>
                   <Corner node={sideNode} app={sideApp} />
@@ -540,15 +543,6 @@ export function App() {
             </button>
           )}
           <button
-            className="icon-button quick-settings-button"
-            aria-label="Quick settings"
-            aria-expanded={quickOpen}
-            title={`Quick settings${quickKeys ? ` (${formatShortcut(quickKeys)})` : ""}`}
-            onClick={app.toggleQuickSettings}
-          >
-            <Icon name="settings" />
-          </button>
-          <button
             className="icon-button side-panel-toggle"
             aria-label={`${showRight ? "Hide" : "Show"} right sidebar`}
             title={`${showRight ? "Hide" : "Show"} right sidebar${rightKeys ? ` (${formatShortcut(rightKeys)})` : ""}`}
@@ -556,16 +550,29 @@ export function App() {
           >
             <Icon name="side-panel" />
           </button>
-          {quickOpen && <QuickSettings app={app} onClose={closeQuick} />}
         </div>
         </div>
+        {narrow && (
+          <div className="mobile-navigation">
+            <button className="icon-button" aria-label={navigationOpen ? "Hide navigation" : "Show navigation"} aria-expanded={navigationOpen} onPointerDown={(event) => event.preventDefault()} onClick={() => setNavigationOpen((open) => !open)}>
+              <Icon name={navigationOpen ? "chevron-up" : "chevron-down"} />
+            </button>
+            {sideNode?.kind === "note" && registry.isOn("books") && <ChapterNav tree={sideApp.tree} chapterId={sideNode.id} onOpen={sideApp.open} />}
+          </div>
+        )}
         <KeyboardBar />
         {narrow ? <div className="page-scroll">{activePage}</div> : renderSplit(split, [])}
       </main>
       {/* Contents only: a box for the right sidebar's workspace, without a box in the layout. */}
       <div className="side-scope" data-workspace={sideApp.workspace}>
         <PageWorkspace.Provider value={sideApp.workspace}>
-          <RightSidebar app={sideApp} panels={panels} all={registry.allSidePanels()} open={showRight} />
+          <RightSidebar
+            app={sideApp}
+            panels={panels}
+            all={registry.allSidePanels()}
+            open={showRight}
+            tools={<SideTools app={sideApp} node={sideNode} quickOpen={quickOpen} onQuick={app.toggleQuickSettings} onCloseQuick={closeQuick} />}
+          />
         </PageWorkspace.Provider>
       </div>
       {/* Phones only (CSS): a tap beside an open side closes it. */}

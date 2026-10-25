@@ -3,25 +3,41 @@ import { renameNode, touchNode } from "@notemax/core";
 import { useLocalDoc } from "@/data/useLocalDoc";
 import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
-import { addressFor, forFrame, siteOf, VIEW_SEARCH } from "./address";
+import { addressFor, siteOf, VIEW_SEARCH } from "./address";
 import { useNativeView, usesNativeView } from "./nativeView";
 import "./browser.css";
 
-/**
- * A web page inside a page, with its own address bar. The address syncs with
- * the page, so it opens at the same place on every device. On the web it is a
- * frame, and Back and Forward step through the addresses typed here. In the
- * desktop app it is a real web view, so sites that refuse frames open too,
- * links that would open a new window stay in it, and Back and Forward are the
- * view's own.
- */
-export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps) {
+/** Saved browser pages stay readable on the web; browsing runs in the desktop app. */
+export function BrowserPane(props: PageProps) {
+  return usesNativeView ? <NativeBrowserPane {...props} /> : <BrowserUnavailable {...props} />;
+}
+
+function BrowserUnavailable({ node, onStatus, onReady }: PageProps) {
+  const { local, status, openError } = useLocalDoc(node.id);
+  const [address, setAddress] = useState("");
+  useEffect(() => onStatus(status), [status, onStatus]);
+  useEffect(() => {
+    if (!local) return;
+    const settings = local.doc.getMap<string>("browser");
+    const read = () => setAddress(addressFor(settings.get("url") ?? "") ?? "");
+    read();
+    onReady();
+    settings.observe(read);
+    return () => settings.unobserve(read);
+  }, [local, onReady]);
+  if (openError) return <p className="error">Could not read the saved address: {openError}</p>;
+  return <div className="browser-empty">
+    <Icon name="globe" />
+    <p>Browser pages are available in the desktop app.</p>
+    {address && <a className="button" href={address} target="_blank" rel="noopener noreferrer">Open saved site in a new tab</a>}
+  </div>;
+}
+
+function NativeBrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps) {
   const { local, status, openError } = useLocalDoc(node.id);
   const [address, setAddress] = useState("");
   const [typed, setTyped] = useState("");
   const [refused, setRefused] = useState(false);
-  const [trail, setTrail] = useState<{ list: string[]; at: number }>({ list: [], at: -1 });
-  const [reloads, setReloads] = useState(0);
   const box = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLInputElement>(null);
   useEffect(() => onStatus(status), [status, onStatus]);
@@ -34,7 +50,6 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
       setAddress(url);
       // Not while someone is typing a new one.
       if (document.activeElement !== bar.current) setTyped(url);
-      setTrail((t) => (t.list[t.at] === url || !url ? t : { list: [...t.list.slice(0, t.at + 1), url], at: t.at + 1 }));
     };
     read();
     onReady();
@@ -65,7 +80,7 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
 
   const go = (event: FormEvent) => {
     event.preventDefault();
-    const url = addressFor(typed, { search: usesNativeView ? VIEW_SEARCH : undefined });
+    const url = addressFor(typed, { search: VIEW_SEARCH });
     setRefused(!url && typed.trim() !== "");
     if (!url) return;
     show(url);
@@ -74,26 +89,18 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
     bar.current?.blur();
   };
 
-  const step = (by: -1 | 1) => {
-    if (usesNativeView) return view.step(by < 0 ? "back" : "forward");
-    const at = trail.at + by;
-    if (at < 0 || at >= trail.list.length) return;
-    setTrail({ ...trail, at });
-    local?.doc.getMap<string>("browser").set("url", trail.list[at]);
-  };
-
   if (openError) return <p className="error">Could not open this page: {openError}</p>;
 
   return (
     <div className="browser-page">
       <form className="browser-bar" onSubmit={go}>
-        <button type="button" className="icon-button" aria-label="Back" disabled={usesNativeView ? !address : trail.at <= 0} onClick={() => step(-1)}>
+        <button type="button" className="icon-button" aria-label="Back" disabled={!address} onClick={() => view.step("back")}>
           <Icon name="arrow-left" />
         </button>
-        <button type="button" className="icon-button" aria-label="Forward" disabled={usesNativeView ? !address : trail.at >= trail.list.length - 1} onClick={() => step(1)}>
+        <button type="button" className="icon-button" aria-label="Forward" disabled={!address} onClick={() => view.step("forward")}>
           <Icon name="arrow-right" />
         </button>
-        <button type="button" className="icon-button" aria-label="Reload" disabled={!address} onClick={() => (usesNativeView ? view.step("reload") : setReloads((n) => n + 1))}>
+        <button type="button" className="icon-button" aria-label="Reload" disabled={!address} onClick={() => view.step("reload")}>
           <Icon name="restore" />
         </button>
         <input
@@ -112,26 +119,12 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
         </button>
       </form>
       {refused && <p className="browser-note browser-refused">Only web addresses (http and https) open here, and not pages of Notemax itself.</p>}
-      {address && usesNativeView ? (
+      {address ? (
         // The web view lies over this box; the box only holds its place.
         <div ref={box} className="browser-frame browser-native" aria-label={node.title || siteOf(address)}>
           <Icon name="globe" />
           <span>{siteOf(address)}</span>
         </div>
-      ) : address ? (
-        <>
-          <iframe
-            key={`${address}:${reloads}`}
-            className="browser-frame"
-            src={forFrame(address)}
-            title={node.title || siteOf(address)}
-            // Its own site, scripts and forms; never this app's.
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
-            referrerPolicy="no-referrer"
-            allow="clipboard-write; fullscreen"
-          />
-          <p className="browser-note">Some sites refuse to show inside other pages. If this one stays blank, open it in a new window.</p>
-        </>
       ) : (
         <div className="browser-empty">
           <Icon name="globe" />

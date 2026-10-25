@@ -1,6 +1,8 @@
 import { accountView } from "@/features/account/session";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
+import { onlineMode } from "@/platform/mode";
+import { accountsEnabled } from "@/features/account/config";
 import { ago } from "./SyncSection";
 import { syncNow, syncView, type SyncView } from "./runtime";
 import "./account-bar.css";
@@ -30,17 +32,18 @@ function syncLine(view: SyncView): string {
 export function AccountBar({ app }: { app: AppContext }) {
   const account = accountView.use();
   const view = syncView.use();
+  const offline = onlineMode.use() === "offline";
   const open = () => app.openOverlay("account");
 
-  if (account.state !== "in") {
+  if (offline || !accountsEnabled || account.state !== "in") {
     return (
-      <button className="account-bar" onClick={open} disabled={account.state === "loading"}>
+      <button className="account-bar" onClick={open}>
         <span className="account-bar-avatar">
           <Icon name="user" />
         </span>
         <span className="account-bar-text">
-          <strong>Sign in</strong>
-          <span>Sync your devices</span>
+          <strong>{offline || !accountsEnabled ? "Account" : "Sign in"}</strong>
+          <span>{offline ? "Offline on this device" : "Account and device mode"}</span>
         </span>
       </button>
     );
