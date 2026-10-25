@@ -114,7 +114,10 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
       {refused && <p className="browser-note browser-refused">Only web addresses (http and https) open here, and not pages of Notemax itself.</p>}
       {address && usesNativeView ? (
         // The web view lies over this box; the box only holds its place.
-        <div ref={box} className="browser-frame browser-native" aria-label={node.title || siteOf(address)} />
+        <div ref={box} className="browser-frame browser-native" aria-label={node.title || siteOf(address)}>
+          <Icon name="globe" />
+          <span>{siteOf(address)}</span>
+        </div>
       ) : address ? (
         <>
           <iframe

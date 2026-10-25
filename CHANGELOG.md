@@ -3,6 +3,10 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.91.0 (2026-10-25)
+
+- Desktop app, browser pages: when the web view steps aside for a dialog or menu, the space shows the page's own colors and the site's name instead of a white sheet.
+
 ## 0.90.0 (2026-10-25)
 
 - Desktop app, browser pages: the web view steps aside whenever anything of Notemax is drawn over it, like a dialog, a menu, the palette, quick settings or a reminder, found by looking at what is on top across its box rather than by a fixed list. Toasts go under it instead of blanking it.
