@@ -3,7 +3,7 @@ import { renameNode, touchNode } from "@notemax/core";
 import { useLocalDoc } from "@/data/useLocalDoc";
 import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
-import { addressFor, siteOf, VIEW_SEARCH } from "./address";
+import { addressFor, forFrame, siteOf, VIEW_SEARCH } from "./address";
 import { useNativeView, usesNativeView } from "./nativeView";
 import "./browser.css";
 
@@ -120,7 +120,7 @@ export function BrowserPane({ node, workspaceDoc, onStatus, onReady }: PageProps
           <iframe
             key={`${address}:${reloads}`}
             className="browser-frame"
-            src={address}
+            src={forFrame(address)}
             title={node.title || siteOf(address)}
             // Its own site, scripts and forms; never this app's.
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"

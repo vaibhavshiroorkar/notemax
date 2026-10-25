@@ -3,6 +3,10 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.89.0 (2026-10-25)
+
+- Google opens in browser pages on the website too. Google refuses to show inside other pages unless the address carries igu=1, so Google's home and search pages get it. Typed searches go to Google instead of Bing.
+
 ## 0.88.0 (2026-10-25)
 
 - Phones: note text is a step smaller (15px instead of 16), and so is the title.
