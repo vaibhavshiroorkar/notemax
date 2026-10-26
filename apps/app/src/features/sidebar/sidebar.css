@@ -47,7 +47,8 @@
   opacity: 0.6;
 }
 
-.add-menu {
+.add-menu,
+.open-menu {
   position: relative;
 }
 

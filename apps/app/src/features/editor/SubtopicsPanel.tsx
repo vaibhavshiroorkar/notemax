@@ -1,4 +1,4 @@
-import { createNode, type TreeNode } from "@notemax/core";
+import { createNode, moveNodes, type TreeNode } from "@notemax/core";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { SubtopicList } from "./SubtopicList";
@@ -10,7 +10,7 @@ export function SubtopicsPanel({ app }: { app: AppContext }) {
   const list = noteSubtopics(app.tree, id);
   return (
     <div className="subtopics-panel">
-      {list.length ? <SubtopicList list={list} onOpen={(to) => app.open(to)} /> : <p className="versions-empty">No subtopics yet.</p>}
+      {list.length ? <SubtopicList list={list} onOpen={(to) => app.open(to)} onMove={(moved, parentId, nextId) => moveNodes(app.doc, [moved], parentId, nextId)} /> : <p className="versions-empty">No subtopics yet.</p>}
       <button className="footer-button" onClick={() => app.open(createNode(app.doc, "note", id))}>
         <Icon name="plus" />
         <span>Add subtopic</span>

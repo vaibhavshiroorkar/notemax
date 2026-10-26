@@ -3,6 +3,14 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.94.0 (2026-10-25)
+
+- The page's tools (word count, star, copy all, share, links, split layout) sit in the right sidebar's top row with search and one settings gear. The top bar keeps only the right sidebar button.
+- The sidebar's + is now Create, and an Open button beside it opens files from the computer. Open's file kinds say "files", so none reads like a new note.
+- No more "Create inside": Create from a row's right-click goes after the row, and from its ... button, inside it.
+- Subtopics drag in "On this page" and in the subtopic box: drop on the top or bottom of one to go before or after it, in the middle to go inside it.
+- In a heading, Bold shows as on and can't be pressed, since heading text is bold already.
+
 ## 0.93.0 (2026-10-25)
 
 - Search, copy all, sharing, community, and settings live in the right sidebar. Home ends at Bookmarks, and starred pages keep their row markers without a second sidebar list.

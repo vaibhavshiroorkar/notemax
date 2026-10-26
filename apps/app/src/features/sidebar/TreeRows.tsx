@@ -24,8 +24,10 @@ export interface RowContext {
   pick(item: TreeItem, event: MouseEvent): boolean;
   add(kind: NodeKind, parentId: string): void;
   drop(placement: Placement): void;
-  /** Right click on a row. */
-  menu(id: string, event: MouseEvent): void;
+  /** Moves a page into `parentId`, before `nextId` or at the end, as dragging a subtopic does. */
+  move(id: string, parentId: string, nextId: string | null): void;
+  /** Right click on a row, or its ... button, which passes `inside` so Create makes the page inside it. */
+  menu(id: string, event: MouseEvent, inside?: boolean): void;
 }
 
 export function Rows({ items, depth, ctx }: { items: readonly TreeItem[]; depth: number; ctx: RowContext }) {
@@ -51,7 +53,7 @@ export function Rows({ items, depth, ctx }: { items: readonly TreeItem[]; depth:
 function Inside({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowContext }) {
   const subtopics = showsSubtopics(item) ? subtopicsOf(item, "") : [];
   if (subtopics.length < BOX_FROM) return <Rows items={item.children} depth={depth + 1} ctx={ctx} />;
-  return <SubtopicList list={subtopics} onOpen={(id) => ctx.select(id)} style={{ marginLeft: 4 + (depth + 1) * 14 }} />;
+  return <SubtopicList list={subtopics} onOpen={(id) => ctx.select(id)} onMove={ctx.move} style={{ marginLeft: 4 + (depth + 1) * 14 }} />;
 }
 
 /** Renames a row in place. Every keystroke is saved, so Enter, Esc and clicking away all just finish. */
@@ -244,7 +246,7 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
           </button>
         )}
         {/* The page menu, with Move to trash in it. On a phone it is the way to the menu, since a long press drags. */}
-        <button className="icon-button row-action" aria-label={`More for ${title}`} aria-haspopup="menu" title="More" onClick={(event) => ctx.menu(item.id, event)}>
+        <button className="icon-button row-action" aria-label={`More for ${title}`} aria-haspopup="menu" title="More" onClick={(event) => ctx.menu(item.id, event, true)}>
           <Icon name="more" />
         </button>
       </div>

@@ -81,7 +81,7 @@ export const notesPlugin: Plugin = {
   editorExtensions: () => [ParenthesisList, ShortcutUndo, WordPaste, JoinLists, MoveBlock],
   kinds: [{ kind: "note", label: "New note", icon: "note" }],
   pageViews: [{ kind: "note", component: NotePane }],
-  pageCorner: [{ id: "notes.copy-all", kinds: ["note"], side: true, component: CopyAllButton }],
+  pageCorner: [{ id: "notes.copy-all", kinds: ["note"], component: CopyAllButton }],
   contextMenu: [
     ...EDITOR_MENU,
     LAYOUT_MENU,

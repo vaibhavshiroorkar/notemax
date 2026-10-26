@@ -282,8 +282,6 @@ export interface PageAddon {
   id: string;
   /** Kinds whose page shows it. All pages when left out. */
   kinds?: NodeKind[];
-  /** A page corner tool that sits in the right sidebar's tool row instead of over the page, like Copy all. */
-  side?: boolean;
   component: ComponentType<{ node: TreeNode; app: AppContext }>;
 }
 
@@ -372,7 +370,12 @@ export interface ShortcutHint {
 /** What was right-clicked. */
 export type ContextTarget =
   /** A page: its row in a sidebar, its title, or its dot in the graph. */
-  | { type: "page"; node: TreeNode }
+  | {
+      type: "page";
+      node: TreeNode;
+      /** Opened from the row's ... button: Create then makes the page inside the row, not after it. */
+      inside?: boolean;
+    }
   /** Several rows picked with Ctrl+click or Shift+click, in the order the sidebar shows them. */
   | { type: "pages"; nodes: TreeNode[] }
   /** Inside a note. The editor's selection says what is under the pointer. */
@@ -410,11 +413,11 @@ export interface ContextMenuItem {
   submenu?(target: ContextTarget, app: AppContext): ContextMenuItem[];
   /**
    * A shared flyout to sit in, so a long menu stays short: "open" (ways to
-   * open a page), "new" and "new-inside" (kinds of page to make), "copy",
+   * open a page), "new" (kinds of page to make), "copy",
    * "options" (a page's settings, like tags and layout), "share" or
    * "download". A flyout that would hold one item shows the item itself.
    */
-  inside?: "open" | "open-in" | "new" | "new-inside" | "copy" | "options" | "share" | "download";
+  inside?: "open" | "open-in" | "new" | "copy" | "options" | "share" | "download";
   /** Stands for a list made when the menu opens, shown in its place, like one item per download format. */
   items?(target: ContextTarget, app: AppContext): ContextMenuItem[];
   run?(target: ContextTarget, app: AppContext): void;

@@ -57,9 +57,9 @@ function useNoteFontName(): string {
   return NOTE_FONTS[chosen as keyof typeof NOTE_FONTS]?.label ?? "Sans";
 }
 
-function Toggle({ label, on, onClick, children }: { label: string; on: boolean; onClick(): void; children: ReactNode }) {
+function Toggle({ label, on, onClick, children, disabled, title }: { label: string; on: boolean; onClick(): void; children: ReactNode; disabled?: boolean; title?: string }) {
   return (
-    <button className="format-toggle" aria-label={label} title={label} aria-pressed={on} onMouseDown={(event) => event.preventDefault()} onClick={onClick}>
+    <button className="format-toggle" aria-label={label} title={title ?? label} aria-pressed={on} disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={onClick}>
       {children}
     </button>
   );
@@ -149,7 +149,8 @@ function Controls({ editor }: { editor: Editor }) {
         </button>
       </Row>
       <Row label="Text">
-        <Toggle label="Bold" on={f.bold} onClick={() => run((c) => c.toggleBold())}>
+        {/* A heading is bold already, so Bold there would add a mark that changes nothing. */}
+        <Toggle label="Bold" on={f.bold || f.block !== "p"} disabled={f.block !== "p" && !f.bold} title={f.block !== "p" && !f.bold ? "Headings are bold already" : undefined} onClick={() => run((c) => c.toggleBold())}>
           <b>B</b>
         </Toggle>
         <Toggle label="Italic" on={f.italic} onClick={() => run((c) => c.toggleItalic())}>

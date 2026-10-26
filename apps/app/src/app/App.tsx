@@ -22,7 +22,7 @@ import { ResizeHandle } from "@/ui/ResizeHandle";
 import { Safe } from "@/ui/Safe";
 import { SIDEBAR, SIDE_PANEL, sidePanelWidth, sidebarWidth } from "@/ui/layout";
 import { showToast } from "@/ui/toast";
-import { ContextMenuHost, contextMenuHandler } from "@/ui/ContextMenu";
+import { ContextMenuHost } from "@/ui/ContextMenu";
 import { PromptHost } from "@/ui/Prompt";
 import { Toasts } from "@/ui/Toasts";
 import { usePresence } from "@/ui/usePresence";
@@ -520,28 +520,6 @@ export function App() {
         </button>
         {multi ? <div className="main-top-space" /> : <TabStrip app={app} pane={tabs.panes.find((pane) => pane.id === tabs.activePane)!} />}
         <div className="page-toolbar">
-          {sideNode &&
-            registry
-              .pageCorner(sideNode.kind)
-              .filter((addon) => !addon.side)
-              .map(({ id, component: Corner }) => (
-              <Safe key={id} name={id}>
-                <PageWorkspace.Provider value={sideApp.workspace}>
-                  <Corner node={sideNode} app={sideApp} />
-                </PageWorkspace.Provider>
-              </Safe>
-            ))}
-          {!narrow && (
-            <button
-              className="icon-button layout-button"
-              aria-label="Split view layout"
-              aria-haspopup="menu"
-              title="Split view: one to four panes"
-              onClick={contextMenuHandler(() => ({ type: "layout" }))}
-            >
-              <Icon name="layout" />
-            </button>
-          )}
           <button
             className="icon-button side-panel-toggle"
             aria-label={`${showRight ? "Hide" : "Show"} right sidebar`}
@@ -571,7 +549,7 @@ export function App() {
             panels={panels}
             all={registry.allSidePanels()}
             open={showRight}
-            tools={<SideTools app={sideApp} node={sideNode} quickOpen={quickOpen} onQuick={app.toggleQuickSettings} onCloseQuick={closeQuick} />}
+            tools={<SideTools app={sideApp} node={sideNode} split={!narrow} quickOpen={quickOpen} onQuick={app.toggleQuickSettings} onCloseQuick={closeQuick} />}
           />
         </PageWorkspace.Provider>
       </div>

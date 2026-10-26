@@ -62,7 +62,7 @@ const expand = (items: ContextMenuItem[], target: ContextTarget, app: AppContext
   items.flatMap((item) => (item.items ? item.items(target, app) : [item]));
 
 /** The menu for a page, from its row in a list, its dot in the graph and so on. */
-export const pageMenu = (node: TreeNode | undefined) => contextMenuHandler(() => (node ? { type: "page", node } : null));
+export const pageMenu = (node: TreeNode | undefined, inside?: boolean) => contextMenuHandler(() => (node ? { type: "page", node, inside } : null));
 
 /**
  * For rows that drag and have a ... button: on a touch-only screen a long
@@ -84,7 +84,6 @@ const FLYOUTS = new Map<string, { title: string; icon: IconName; group: string }
   ["open", { title: "Open", icon: "folder", group: "open" }],
   ["open-in", { title: "Open in", icon: "arrow-right", group: "open" }],
   ["new", { title: "Create", icon: "plus", group: "create" }],
-  ["new-inside", { title: "Create inside", icon: "plus", group: "create" }],
   ["copy", { title: "Copy", icon: "copy", group: "edit" }],
   ["options", { title: "Page options", icon: "settings", group: "share" }],
   ["share", { title: "Share", icon: "upload", group: "share" }],

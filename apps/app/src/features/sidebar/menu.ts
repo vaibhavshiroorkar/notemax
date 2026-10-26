@@ -44,13 +44,29 @@ function makeBeside(app: AppContext, node: TreeNode, kind: NodeKind) {
   else app.open(id);
 }
 
-/** Create: every kind of page, made and opened. On a page's row it goes right after that page; on empty space, at the end of the top level. */
+/** Whether `parent` may hold a new page of this kind. Folders only go in folders: a folder inside a note has nothing to sort. */
+const fitsInside = (parent: TreeNode, kind: NodeKind) => holds(parent.kind, kind) && (kind !== "folder" || parent.kind === "folder");
+
+/** Makes a page of `kind` inside `parent`, at the end, then opens it, or names it in its row when it is a folder. */
+function makeInside(app: AppContext, parent: TreeNode, kind: NodeKind) {
+  expand(parent.id);
+  const id = createNode(app.doc, kind, parent.id);
+  if (kind === "folder") editingId.set(id);
+  else app.open(id);
+}
+
+/**
+ * Create: every kind of page, made and opened. From a row's right-click menu
+ * it goes right after that row; from the row's ... button, inside it; on
+ * empty space, at the end of the top level.
+ */
 function createKinds(target: ContextTarget, app: AppContext): ContextMenuItem[] {
   const node = nodeOf(target);
+  const inside = target.type === "page" && !!target.inside;
   const on = node ? "page" : "sidebar";
   return registry
     .kinds()
-    .filter(({ kind }) => !node || fitsBeside(app.tree, node, kind))
+    .filter(({ kind }) => !node || (inside ? fitsInside(node, kind) : fitsBeside(app.tree, node, kind)))
     .map(({ kind, label, icon }) => ({
       id: `${on}.new.${kind}`,
       inside: "new" as const,
@@ -59,7 +75,7 @@ function createKinds(target: ContextTarget, app: AppContext): ContextMenuItem[] 
       group: "create",
       targets: [on] as ("page" | "sidebar")[],
       run(_target: ContextTarget, app: AppContext) {
-        if (node) return makeBeside(app, node, kind);
+        if (node) return inside ? makeInside(app, node, kind) : makeBeside(app, node, kind);
         // A folder has no page; it is named in its row instead.
         if (kind === "folder") editingId.set(createNode(app.doc, "folder", ROOT));
         else app.create(kind);
@@ -151,35 +167,6 @@ export const PAGE_MENU: ContextMenuItem[] = [
     group: "create",
     targets: ["page"],
     items: createKinds,
-  },
-  {
-    // Every kind the page can hold. Folders only go in folders: a folder inside a note has nothing to sort.
-    id: "page.new",
-    title: "Create inside",
-    group: "create",
-    targets: ["page"],
-    items(target) {
-      const parent = nodeOf(target);
-      if (!parent) return [];
-      return registry
-        .kinds()
-        .filter(({ kind }) => holds(parent.kind, kind) && (kind !== "folder" || parent.kind === "folder"))
-        .map(({ kind, label, icon }) => ({
-          id: `page.new.${kind}`,
-          inside: "new-inside" as const,
-          title: kindTitle(label),
-          icon,
-          group: "create",
-          targets: ["page" as const],
-          run(_target: ContextTarget, app: AppContext) {
-            expand(parent.id);
-            const id = createNode(app.doc, kind, parent.id);
-            // A folder has no page; it is named in its row instead.
-            if (kind === "folder") editingId.set(id);
-            else app.open(id);
-          },
-        }));
-    },
   },
   {
     id: "page.rename",

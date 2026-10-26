@@ -87,3 +87,37 @@
 .subtopics-panel .subtopic-box {
   margin-right: 0;
 }
+
+/* Dragging a subtopic: a line where it would land, or a box round the one it would go inside. */
+.subtopic-list li {
+  position: relative;
+}
+
+.subtopic-list li[data-moving] {
+  opacity: 0.5;
+}
+
+.subtopic-list li[data-drop="before"]::before,
+.subtopic-list li[data-drop="after"]::after {
+  position: absolute;
+  right: 4px;
+  left: 4px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  content: "";
+  pointer-events: none;
+}
+
+.subtopic-list li[data-drop="before"]::before {
+  top: -1px;
+}
+
+.subtopic-list li[data-drop="after"]::after {
+  bottom: -1px;
+}
+
+.subtopic-list li[data-drop="inside"] > .subtopic-link {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}

@@ -5,7 +5,7 @@ import { registry } from "@/plugins/registry";
 import { Icon } from "@/ui/Icon";
 
 /**
- * The one + at the top. Notes, folders and books are listed; the other kinds,
+ * Create, the + at the top. Notes, folders and books are listed; the other kinds,
  * like boards and code, sit in an Others flyout so the list stays short.
  *
  * The flyout opens past the sidebar's edge, where the sidebar would cut it
@@ -64,7 +64,7 @@ export function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
 
   return (
     <div className="add-menu" ref={wrapper}>
-      <button className="icon-button" aria-label="New" aria-haspopup="menu" aria-expanded={open} title="New" onClick={() => setOpen(!open)}>
+      <button className="icon-button" aria-label="Create" aria-haspopup="menu" aria-expanded={open} title="Create" onClick={() => setOpen(!open)}>
         <Icon name="plus" />
       </button>
       {open && (

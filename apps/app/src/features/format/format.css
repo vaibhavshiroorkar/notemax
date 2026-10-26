@@ -59,6 +59,11 @@
   color: var(--accent);
 }
 
+.format-toggle:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 .format-toggle svg {
   width: 15px;
   height: 15px;

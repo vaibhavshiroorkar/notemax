@@ -84,7 +84,8 @@ export function KeyboardBar() {
         run((c) => (level === 3 ? c.setParagraph() : c.setHeading({ level: ((level ?? 0) + 1) as 1 | 2 | 3 }))),
         !!level,
       )}
-      {button("Bold", <b>B</b>, () => run((c) => c.toggleBold()), editor.isActive("bold"))}
+      {/* A heading is bold already, so Bold there would add a mark that changes nothing. */}
+      {button("Bold", <b>B</b>, () => run((c) => c.toggleBold()), editor.isActive("bold") || !!level, !!level && !editor.isActive("bold"))}
       {button("Italic", <i>I</i>, () => run((c) => c.toggleItalic()), editor.isActive("italic"))}
       {button("Underline", <u>U</u>, () => run((c) => c.toggleUnderline()), editor.isActive("underline"))}
       {button("Strikethrough", <s>S</s>, () => run((c) => c.toggleStrike()), editor.isActive("strike"))}

@@ -3,24 +3,25 @@ import { QuickSettings } from "@/features/settings/QuickSettings";
 import { PageWorkspace } from "@/data/scope";
 import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
+import { contextMenuHandler } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { Safe } from "@/ui/Safe";
 
 /**
  * The row of tools at the top of the right sidebar: search, the open page's
- * own tools (copy all, share), places like the community, and settings. They
- * live here rather than over the page, so the top bar stays clear.
+ * own tools (word count, star, copy all, share, links), places like the
+ * community, the split layout and settings. They live here rather than over
+ * the page, so the top bar stays clear.
  */
-export function SideTools({ app, node, quickOpen, onQuick, onCloseQuick }: { app: AppContext; node: TreeNode | undefined; quickOpen: boolean; onQuick(): void; onCloseQuick(): void }) {
+export function SideTools({ app, node, split, quickOpen, onQuick, onCloseQuick }: { app: AppContext; node: TreeNode | undefined; split: boolean; quickOpen: boolean; onQuick(): void; onCloseQuick(): void }) {
   return (
     <div className="side-tools" role="toolbar" aria-label="Tools">
-      <button className="icon-button" aria-label="Search" title="Search pages and commands (Ctrl+K)" onClick={app.openPalette}>
+      <button className="icon-button side-tools-search" aria-label="Search" title="Search pages and commands (Ctrl+K)" onClick={app.openPalette}>
         <Icon name="search" />
       </button>
       {node &&
         registry
           .pageCorner(node.kind)
-          .filter((addon) => addon.side)
           .map(({ id, component: Tool }) => (
             <Safe key={id} name={id}>
               <PageWorkspace.Provider value={app.workspace}>
@@ -34,10 +35,13 @@ export function SideTools({ app, node, quickOpen, onQuick, onCloseQuick }: { app
         </button>
       ))}
       <span className="side-tools-space" />
-      <button className="icon-button quick-settings-button" aria-label="Quick settings" aria-expanded={quickOpen} title="Quick settings" onClick={onQuick}>
-        <Icon name="settings" />
-      </button>
-      <button className="icon-button" aria-label="Settings" title="Settings (Ctrl+,)" onClick={() => app.openSettings()}>
+      {split && (
+        <button className="icon-button layout-button" aria-label="Split view layout" aria-haspopup="menu" title="Split view: one to four panes" onClick={contextMenuHandler(() => ({ type: "layout" }))}>
+          <Icon name="layout" />
+        </button>
+      )}
+      {/* One gear: quick choices, with All settings at their foot. */}
+      <button className="icon-button quick-settings-button" aria-label="Quick settings" aria-expanded={quickOpen} title="Settings" onClick={onQuick}>
         <Icon name="gear" />
       </button>
       {quickOpen && <QuickSettings app={app} onClose={onCloseQuick} />}

@@ -16,10 +16,10 @@ import type { AppContext } from "@/plugins/types";
 export type FileGroup = "notes" | "code" | "pictures" | "drawings";
 
 export const GROUPS: { id: FileGroup; title: string; accept: string }[] = [
-  { id: "notes", title: "Notes (Markdown, text, Word, web page)...", accept: ".md,.markdown,.txt,.text,.docx,.html,.htm" },
+  { id: "notes", title: "Text and Word files (.md, .txt, .docx, .html)...", accept: ".md,.markdown,.txt,.text,.docx,.html,.htm" },
   { id: "code", title: "Code files...", accept: ".py,.js,.mjs,.ts,.tsx,.jsx,.sql,.cpp,.cc,.cxx,.c,.h,.hpp,.java" },
   { id: "pictures", title: "Pictures...", accept: "image/*" },
-  { id: "drawings", title: "Excalidraw drawings...", accept: ".excalidraw,application/json" },
+  { id: "drawings", title: "Excalidraw files...", accept: ".excalidraw,application/json" },
 ];
 
 const CODE_LANGUAGES: Record<string, string> = {

@@ -487,11 +487,13 @@
   font-size: 14px;
 }
 
-/* The right sidebar's tool row: search, the page's tools, places and settings. */
+/* The right sidebar's tool row: search, the page's tools, places and settings.
+   It wraps onto a second line when the sidebar is narrow. */
 .side-tools {
   position: relative;
   display: flex;
   flex: none;
+  flex-wrap: wrap;
   align-items: center;
   gap: 2px;
   padding: 6px 8px;
@@ -502,6 +504,15 @@
   flex: 1;
 }
 
+/* Search first, then the word count, left of the star and the other page tools. */
+.side-tools > .side-tools-search {
+  order: -2;
+}
+
+.side-tools > .page-words {
+  order: -1;
+}
+
 /* Quick settings opens under the row, as wide as the sidebar allows. */
 .side-tools .quick-settings {
   right: 8px;
@@ -509,7 +520,7 @@
   width: auto;
 }
 
-/* Top right of the page: things plugins put there, the layout button, and the right sidebar button. */
+/* Top right of the page: the right sidebar button. The page's own tools are in the right sidebar. */
 .page-toolbar {
   position: relative;
   display: flex;
@@ -593,11 +604,6 @@
 
   .phone-only {
     display: inline-flex;
-  }
-
-  /* Room is short: the page's own buttons are in its menu and in search. */
-  .page-toolbar > :not(.side-panel-toggle) {
-    display: none;
   }
 
   .tab {
@@ -889,9 +895,4 @@
 /* Marks the right sidebar's workspace for menus, without a box of its own in the grid. */
 .side-scope {
   display: contents;
-}
-
-/* The word count reads first, left of the star and the other page buttons. */
-.page-toolbar > .page-words {
-  order: -1;
 }

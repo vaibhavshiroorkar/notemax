@@ -8,6 +8,7 @@ import { contextMenuHandler, pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { Safe } from "@/ui/Safe";
 import { AddMenu } from "./AddMenu";
+import { OpenMenu } from "./OpenMenu";
 import { dragged, endDrag, useDragging } from "./drag";
 import { FilteredList } from "./FilteredList";
 import {
@@ -81,14 +82,14 @@ export function Sidebar({ app }: { app: AppContext }) {
         if (kind === "folder") editingId.set(id);
         else appRef.current.open(id);
       },
-      menu(id, event) {
+      menu(id, event, inside) {
         const tree = appRef.current.tree;
         // A right click on one of several picked rows acts on all of them.
         if (selection.get().size > 1 && selection.get().has(id)) {
           const nodes = selectedInOrder(tree).flatMap((picked) => tree.byId.get(picked) ?? []);
           return contextMenuHandler(() => ({ type: "pages", nodes }))(event);
         }
-        pageMenu(tree.byId.get(id))(event);
+        pageMenu(tree.byId.get(id), inside)(event);
       },
       drop({ parentId, index }) {
         const moving = dragged.get();
@@ -100,6 +101,9 @@ export function Sidebar({ app }: { app: AppContext }) {
         moveNodes(doc, group, parentId, nextId);
         expand(parentId);
         endDrag();
+      },
+      move(id, parentId, nextId) {
+        moveNodes(doc, [id], parentId, nextId);
       },
     }),
     [doc],
@@ -198,6 +202,7 @@ export function Sidebar({ app }: { app: AppContext }) {
               </button>
               {/* The title search counts as a filter too, but it shows its own box, so it does not light the funnel. */}
               <FilterMenu app={app} filtered={filters.length > (query?.trim() ? 1 : 0)} />
+              <OpenMenu app={app} />
               <AddMenu onAdd={(kind) => ctx.add(kind, ROOT)} />
             </div>
           </header>
