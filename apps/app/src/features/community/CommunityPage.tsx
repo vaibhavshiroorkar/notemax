@@ -4,49 +4,15 @@ import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { safeHtml } from "@/ui/safeHtml";
 import { feed, follow, myId, myProfile, newestPeople, profilePage, readPost, searchPeople, searchPosts, type Post, type Profile, type ProfilePage } from "./api";
+import { Avatar, nameOf, plural, Status, useLoad, when, type Place } from "./bits";
 import { ProfileForm } from "./ProfileForm";
+import { ChatView, Comments, MessagesView, RoomsView, RoomView, useUnread } from "./Talk";
 import { accountView } from "@/features/account/session";
 
-/** Where the community screen is: a place and what it needs to show it. */
-export type Place = { view: "feed"; following: boolean } | { view: "search"; words: string } | { view: "profile"; username: string } | { view: "post"; id: string } | { view: "me" };
-
-const when = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
 /** Minutes to read, at 230 words a minute, like the status bar. */
 const readTime = (words: number) => `${Math.max(1, Math.round(words / 230))} min read`;
-const nameOf = (profile?: Profile) => profile?.display_name || profile?.username || "Someone";
 // Readers have none of the author's pages or pictures; the snapshot already holds what shows.
 const NOTHING = { title: () => null, image: () => null };
-
-/** A loader's result, with its error in words, and a way to load again. */
-function useLoad<T>(load: () => Promise<T>, deps: unknown[]): { data?: T; error?: string; loading: boolean; reload(): void } {
-  const [state, setState] = useState<{ data?: T; error?: string; loading: boolean }>({ loading: true });
-  const [round, setRound] = useState(0);
-  useEffect(() => {
-    let live = true;
-    setState((old) => ({ data: old.data, loading: true }));
-    load().then(
-      (data) => live && setState({ data, loading: false }),
-      (error: unknown) => live && setState({ error: error instanceof Error ? error.message : String(error), loading: false }),
-    );
-    return () => {
-      live = false;
-    };
-    // The caller names what the load depends on.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, round]);
-  return { ...state, reload: () => setRound((n) => n + 1) };
-}
-
-function Avatar({ profile, size = 28 }: { profile?: Profile; size?: number }) {
-  const [broken, setBroken] = useState(false);
-  if (profile?.avatar_url && !broken) return <img className="community-avatar" src={profile.avatar_url} alt="" width={size} height={size} referrerPolicy="no-referrer" onError={() => setBroken(true)} />;
-  return (
-    <span className="community-avatar" data-initial style={{ width: size, height: size }} aria-hidden="true">
-      {nameOf(profile).slice(0, 1).toUpperCase()}
-    </span>
-  );
-}
 
 function Byline({ profile, go, children }: { profile?: Profile; go(place: Place): void; children?: ReactNode }) {
   return (
@@ -93,12 +59,6 @@ function PostList({ posts, go, empty, featureFirst = false }: { posts: Post[]; g
       ))}
     </ul>
   );
-}
-
-function Status({ error, loading, children }: { error?: string; loading: boolean; children: ReactNode }) {
-  if (error) return <p className="community-error">{error}</p>;
-  if (loading) return <p className="community-empty" aria-busy="true">Loading...</p>;
-  return <>{children}</>;
 }
 
 /** Where you are in the community, and the way to start: sign in, pick a username, or your profile. */
@@ -290,9 +250,14 @@ function ProfileView({ username, go, me, hasProfile }: { username: string; go(pl
           followed !== null &&
           // Following is done as a profile, so someone without one picks a username first.
           (hasProfile ? (
-            <button className={followed ? "button" : "button button-primary"} disabled={busy} onClick={() => void toggle()}>
-              {followed ? "Following" : "Follow"}
-            </button>
+            <span className="community-profile-actions">
+              <button className={followed ? "button" : "button button-primary"} disabled={busy} onClick={() => void toggle()}>
+                {followed ? "Following" : "Follow"}
+              </button>
+              <button className="button" onClick={() => go({ view: "chat", other: profile })}>
+                Message
+              </button>
+            </span>
           ) : (
             <button className="button button-primary" onClick={() => go({ view: "me" })}>
               Pick a username to follow
@@ -324,7 +289,7 @@ function partsToShow(parts: unknown): { title?: string; level: number; body: { c
   });
 }
 
-function PostView({ id, go }: { id: string; go(place: Place): void }) {
+function PostView({ id, go, me, hasProfile }: { id: string; go(place: Place): void; me: string | null; hasProfile: boolean }) {
   const { data: post, error, loading } = useLoad(() => readPost(id), [id]);
   if (error || (loading && !post)) return <Status error={error} loading>{null}</Status>;
   if (!post) return <p className="community-empty">This post was taken down.</p>;
@@ -357,6 +322,7 @@ function PostView({ id, go }: { id: string; go(place: Place): void }) {
           </section>
         );
       })}
+      <Comments postId={post.id} postAuthor={post.author} me={me} hasProfile={hasProfile} go={go} />
     </article>
   );
 }
@@ -391,6 +357,7 @@ export function CommunityPage({ app, options }: { app: AppContext; options: Reco
       live = false;
     };
   }, [account]);
+  const unread = useUnread(me);
 
   return (
     <div className="community-screen">
@@ -429,6 +396,15 @@ export function CommunityPage({ app, options }: { app: AppContext; options: Reco
             <Icon name="search" />
           </button>
         )}
+        <button className="icon-button" aria-label="Rooms" title="Rooms" aria-pressed={place.view === "rooms" || place.view === "room"} onClick={() => go({ view: "rooms" })}>
+          <Icon name="hash" />
+        </button>
+        {me && (
+          <button className="icon-button community-messages-button" aria-label={unread.count ? `Messages, ${unread.count} unread` : "Messages"} title="Messages" aria-pressed={place.view === "messages" || place.view === "chat"} onClick={() => go({ view: "messages" })}>
+            <Icon name="mail" />
+            {unread.count > 0 && <span className="community-unread">{unread.count > 99 ? "99+" : unread.count}</span>}
+          </button>
+        )}
         {me ? (
           <button className="community-person" onClick={() => go(mine ? { view: "profile", username: mine.username } : { view: "me" })}>
             <Avatar profile={mine ?? undefined} />
@@ -444,7 +420,11 @@ export function CommunityPage({ app, options }: { app: AppContext; options: Reco
         {place.view === "feed" && <FeedView key={String(place.following)} following={place.following} go={go} app={app} me={me} mine={mine} />}
         {place.view === "search" && <SearchView key={place.words} words={place.words} go={go} />}
         {place.view === "profile" && <ProfileView key={place.username} username={place.username} go={go} me={me} hasProfile={!!mine} />}
-        {place.view === "post" && <PostView key={place.id} id={place.id} go={go} />}
+        {place.view === "post" && <PostView key={place.id} id={place.id} go={go} me={me} hasProfile={!!mine} />}
+        {place.view === "messages" && <MessagesView me={me} go={go} />}
+        {place.view === "chat" && <ChatView key={place.other.id} other={place.other} me={me} hasProfile={!!mine} go={go} onRead={unread.refresh} />}
+        {place.view === "rooms" && <RoomsView me={me} hasProfile={!!mine} go={go} />}
+        {place.view === "room" && <RoomView key={place.slug} slug={place.slug} me={me} hasProfile={!!mine} go={go} />}
         {place.view === "me" && (
           <ProfileForm
             onSaved={(saved) => {

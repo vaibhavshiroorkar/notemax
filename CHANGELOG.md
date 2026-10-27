@@ -3,6 +3,12 @@
 Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
 with `pnpm version:set 0.N.0`.
 
+## 0.95.0 (2026-10-27)
+
+- Community chat: direct messages with an unread count on the Messages button, topic rooms anyone signed in can start (three a day) and write in, and comments with one level of replies under posts. Profiles have a Message button.
+- Blocking someone stops their messages and their comments under your posts. A post's author can delete comments under it.
+- Needs supabase/migrations/20261025000000_community_chat.sql run once in Supabase; until then chat says it is not set up and posts show no comments.
+
 ## 0.94.0 (2026-10-25)
 
 - The page's tools (word count, star, copy all, share, links, split layout) sit in the right sidebar's top row with search and one settings gear. The top bar keeps only the right sidebar button.

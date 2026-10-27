@@ -482,3 +482,239 @@
   flex-direction: column;
   min-width: 0;
 }
+
+/* Talk: messages, rooms and comments. */
+.community-talk {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.community-messages-button {
+  position: relative;
+}
+
+.community-unread {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.community-messages-button .community-unread {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+}
+
+.community-conversations,
+.community-rooms,
+.community-comment-list,
+.community-replies,
+.community-thread {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.community-conversation,
+.community-room {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.community-conversation:hover,
+.community-room:hover {
+  background: var(--hover);
+}
+
+.community-conversation-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.community-conversation-text .community-meta {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.community-conversation[data-unread] strong {
+  color: var(--accent);
+}
+
+.community-room {
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.community-chat-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.community-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+/* A chat reads like one: theirs on the left, yours on the right. */
+.community-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: min(78%, 520px);
+  align-self: flex-start;
+  padding: 8px 12px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--hover);
+}
+
+.community-bubble[data-mine] {
+  align-self: flex-end;
+  border-radius: 14px 14px 4px 14px;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.community-bubble-text,
+.community-line-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.community-line-text {
+  flex-basis: 100%;
+  margin: 2px 0 0 30px;
+}
+
+.community-line,
+.community-comment {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.community-remove {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.community-composer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.community-composer textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  max-height: 200px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.community-composer .community-error {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.community-new-room {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.community-new-room h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.community-new-room input {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.community-new-room .button {
+  align-self: flex-start;
+}
+
+.community-comments {
+  margin-top: 32px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.community-comments .community-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.community-comment-list > li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.community-comment-actions {
+  display: flex;
+  flex-basis: 100%;
+  gap: 12px;
+  margin-left: 30px;
+  font-size: 12px;
+}
+
+.community-replies {
+  margin: 8px 0 0 30px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border);
+}
+
+.community-replies > li + li {
+  margin-top: 8px;
+}
+
+.community-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.community-composer textarea:focus {
+  border-color: transparent;
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
