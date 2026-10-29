@@ -214,6 +214,8 @@ export interface Command {
    * macOS. Users can change it in Settings, so read it with shortcutFor.
    */
   shortcut?: string;
+  /** The key does nothing while typing in a field or a note, where it edits the text. */
+  keyOutsideText?: boolean;
   /** Hides the command when it makes no sense, like "Move to trash" with nothing open. */
   when?(app: AppContext): boolean;
   run(app: AppContext): void;

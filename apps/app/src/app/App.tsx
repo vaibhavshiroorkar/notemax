@@ -286,6 +286,7 @@ export function App() {
         return shortcut && matchesShortcut(event, shortcut);
       });
       if (!command) return;
+      if (command.keyOutsideText && event.target instanceof Element && event.target.closest("input, textarea, [contenteditable='true']")) return;
       event.preventDefault();
       command.run(app);
     };

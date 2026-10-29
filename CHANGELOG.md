@@ -2,6 +2,13 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.100.0 (2026-10-29)
+
+- Ctrl+= and Ctrl+- zoom the whole app, and Ctrl+0 resets it. In the desktop app, Ctrl++ and the keypad's + and - work too, and a toast says the size. In a browser these keys are the browser's own zoom again.
+- Text size moves to Ctrl+Shift+. and Ctrl+Shift+, (Ctrl+> and Ctrl+<, as in Word). Voice typing moves to Ctrl+Shift+M.
+- New keys: Ctrl+N for a new note in the desktop app (Alt+N on the web), Alt+S to star the open page, Ctrl+Delete to move it to the trash (outside text, with Undo), and Alt+PageDown and Alt+PageUp for the next and previous chapter.
+- Books: the separate Chapters only button is gone. The book page offers Chapters (titles only), Outline (chapters and subtopics), Previews and Full text.
+
 ## 0.99.0 (2026-10-29)
 
 - Private notes to the author: pick lines in a post and choose Note to author, or send a note about the whole post. Only the author and the reader see it. The author finds them in Notes from readers, in the right sidebar of the page they posted; clicking the lines opens the page with them found.

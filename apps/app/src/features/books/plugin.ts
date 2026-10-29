@@ -80,7 +80,7 @@ export const booksPlugin: Plugin = {
   ],
   commands: [
     { id: "books.new", title: "New book", keywords: ["create", "add", "write"], run: (app) => app.create("book") },
-    { id: "books.next", title: "Next chapter", keywords: ["book", "subtopic", "forward"], when: (app) => !!stepFrom(app, 1), run: (app) => app.open(stepFrom(app, 1)!) },
-    { id: "books.previous", title: "Previous chapter", keywords: ["book", "subtopic", "back"], when: (app) => !!stepFrom(app, -1), run: (app) => app.open(stepFrom(app, -1)!) },
+    { id: "books.next", title: "Next chapter", keywords: ["book", "subtopic", "forward"], shortcut: "Alt+PageDown", when: (app) => !!stepFrom(app, 1), run: (app) => app.open(stepFrom(app, 1)!) },
+    { id: "books.previous", title: "Previous chapter", keywords: ["book", "subtopic", "back"], shortcut: "Alt+PageUp", when: (app) => !!stepFrom(app, -1), run: (app) => app.open(stepFrom(app, -1)!) },
   ],
 };

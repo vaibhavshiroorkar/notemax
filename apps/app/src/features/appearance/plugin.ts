@@ -1,7 +1,7 @@
 import type { Command, Plugin } from "@/plugins/types";
 import { PAGE_WIDTH, TEXT_SIZE, clampPageWidth, clampTextSize, font, pageWidth, textSize, theme, type Font, type Theme } from "@/ui/appearance";
 import { isDesktop } from "@/platform/platform";
-import { ZOOM, startZoom, zoom, zoomBy } from "./zoom";
+import { ZOOM, startZoom, zoomBy, zoomTo } from "./zoom";
 import { AppearanceSection } from "./AppearanceSection";
 
 const themeCommand = (value: Theme, title: string): Command => ({
@@ -48,13 +48,15 @@ export const appearancePlugin: Plugin = {
     fontCommand("sans", "Use a sans-serif font"),
     fontCommand("serif", "Use a serif font"),
     fontCommand("mono", "Use a monospace font"),
-    { id: "appearance.text-bigger", title: "Make text bigger", keywords: ["zoom", "font", "size"], shortcut: "Mod+=", run: () => textSize.set(clampTextSize(textSize.get() + 1)) },
-    { id: "appearance.text-smaller", title: "Make text smaller", keywords: ["zoom", "font", "size"], shortcut: "Mod+-", run: () => textSize.set(clampTextSize(textSize.get() - 1)) },
-    { id: "appearance.text-reset", title: "Reset text size", keywords: ["zoom", "font", "size"], shortcut: "Mod+0", run: () => textSize.set(TEXT_SIZE.normal) },
+    // Word's keys for font size, Ctrl+> and Ctrl+<. Ctrl+= and Ctrl+- scale the whole app instead, as everywhere else.
+    { id: "appearance.text-bigger", title: "Make text bigger", keywords: ["font", "size"], shortcut: "Mod+Shift+.", run: () => textSize.set(clampTextSize(textSize.get() + 1)) },
+    { id: "appearance.text-smaller", title: "Make text smaller", keywords: ["font", "size"], shortcut: "Mod+Shift+,", run: () => textSize.set(clampTextSize(textSize.get() - 1)) },
+    { id: "appearance.text-reset", title: "Reset text size", keywords: ["font", "size"], run: () => textSize.set(TEXT_SIZE.normal) },
     { id: "appearance.page-wider", title: "Make the page wider", keywords: ["width", "layout"], run: () => stepWidth(1) },
     { id: "appearance.page-narrower", title: "Make the page narrower", keywords: ["width", "layout"], run: () => stepWidth(-1) },
-    { id: "appearance.zoom-in", title: "Zoom in on the whole app", keywords: ["zoom", "bigger", "scale"], when: () => isDesktop, run: () => zoomBy(1) },
-    { id: "appearance.zoom-out", title: "Zoom out of the whole app", keywords: ["zoom", "smaller", "scale"], when: () => isDesktop, run: () => zoomBy(-1) },
-    { id: "appearance.zoom-reset", title: "Reset the app zoom", keywords: ["zoom", "scale", "100"], when: () => isDesktop, run: () => zoom.set(ZOOM.normal) },
+    // Desktop only: in a browser these keys stay the browser's own zoom.
+    { id: "appearance.zoom-in", title: "Zoom in on the whole app", keywords: ["zoom", "bigger", "scale"], shortcut: "Mod+=", when: () => isDesktop, run: () => zoomBy(1) },
+    { id: "appearance.zoom-out", title: "Zoom out of the whole app", keywords: ["zoom", "smaller", "scale"], shortcut: "Mod+-", when: () => isDesktop, run: () => zoomBy(-1) },
+    { id: "appearance.zoom-reset", title: "Reset the app zoom", keywords: ["zoom", "scale", "100"], shortcut: "Mod+0", when: () => isDesktop, run: () => zoomTo(ZOOM.normal) },
   ],
 };

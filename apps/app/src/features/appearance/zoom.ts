@@ -1,4 +1,5 @@
 import { isDesktop } from "@/platform/platform";
+import type { AppContext } from "@/plugins/types";
 import { savedStore } from "@/platform/store";
 
 // Zoom scales the whole app, apart from text size, which is only the note's
@@ -24,13 +25,34 @@ async function applyZoom() {
   await getCurrentWebview().setZoom(zoom.get() / 100);
 }
 
-export const zoomBy = (steps: number) => zoom.set(clampZoom(zoom.get() + steps * ZOOM.step));
+/** Tells the new size, once the app is up. The Settings slider shows its own number and skips this. */
+let say = (_percent: number) => {};
 
-/** In the desktop app: applies the saved zoom, and Ctrl with the wheel changes it. */
-export function startZoom() {
+/** From the keys, the wheel and the palette. */
+export function zoomTo(percent: number) {
+  zoom.set(clampZoom(percent));
+  say(zoom.get());
+}
+export const zoomBy = (steps: number) => zoomTo(zoom.get() + steps * ZOOM.step);
+
+/**
+ * In the desktop app: applies the saved zoom, and Ctrl with the wheel changes
+ * it. Ctrl+=, Ctrl+- and Ctrl+0 are commands; Ctrl++ (with Shift) and the
+ * keypad's + are caught here, since they are the same key to a person but not
+ * to a shortcut.
+ */
+export function startZoom(app: AppContext) {
   if (!isDesktop) return;
   void applyZoom().catch(() => {});
+  say = (percent) => app.notify(`Zoom ${percent}%`);
   zoom.subscribe(() => void applyZoom().catch(() => {}));
+  window.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.altKey) return;
+    if (event.code === "NumpadAdd" || (event.code === "Equal" && event.shiftKey)) {
+      event.preventDefault();
+      zoomBy(1);
+    }
+  });
   window.addEventListener(
     "wheel",
     (event) => {

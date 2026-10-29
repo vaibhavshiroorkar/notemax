@@ -16,7 +16,8 @@ import "./books.css";
 const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
 
 const VIEWS: { value: BookView; label: string }[] = [
-  { value: "titles", label: "Titles" },
+  { value: "chapters", label: "Chapters" },
+  { value: "titles", label: "Outline" },
   { value: "previews", label: "Previews" },
   { value: "whole", label: "Full text" },
 ];
@@ -24,8 +25,7 @@ const VIEWS: { value: BookView; label: string }[] = [
 export function BookPane(props: PageProps) {
   const { node, app, tree, workspaceDoc, hub, onSelect, onStatus, onReady } = props;
   const view = bookViewOf(node);
-  // The list can show chapters only, for a quick look at the book's shape. Each book keeps its choice.
-  const chaptersOnly = node.props.bookSubtopics === "hidden";
+  const chaptersOnly = view === "chapters";
   const book = tree.items.get(node.id);
   const chapters = book ? chapterStops(book) : [];
   useWordBackfill(
@@ -58,12 +58,16 @@ export function BookPane(props: PageProps) {
           {chapters.length > 0 && `, ${total !== null ? plural(total, "word") : "counting words..."}`}
         </p>
         {chapters.length > 0 && (
-          <Segmented<BookView> label="Show the book as" value={view} options={VIEWS} onChange={(next) => setProp(workspaceDoc, node.id, "bookView", next === "titles" ? null : next)} />
-        )}
-        {chapters.length > 0 && view !== "whole" && (
-          <button className="button book-subtopics-toggle" aria-pressed={!chaptersOnly} onClick={() => setProp(workspaceDoc, node.id, "bookSubtopics", chaptersOnly ? null : "hidden")}>
-            {chaptersOnly ? "Show subtopics" : "Chapters only"}
-          </button>
+          <Segmented<BookView>
+            label="Show the book as"
+            value={view}
+            options={VIEWS}
+            onChange={(next) => {
+              setProp(workspaceDoc, node.id, "bookView", next === "titles" ? null : next);
+              // The old Chapters only flag would otherwise pull Outline back to Chapters.
+              if (node.props.bookSubtopics) setProp(workspaceDoc, node.id, "bookSubtopics", null);
+            }}
+          />
         )}
       </div>
 

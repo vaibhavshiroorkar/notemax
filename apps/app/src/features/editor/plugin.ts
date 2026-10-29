@@ -1,4 +1,5 @@
 import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { isDesktop } from "@/platform/platform";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { CodeBlock } from "./codeBlock";
 import { CopyAllButton, copyAll } from "./copyAll";
@@ -125,7 +126,8 @@ export const notesPlugin: Plugin = {
         app.notify(next);
       },
     },
-    { id: "notes.new", title: "New note", keywords: ["create", "add"], run: (app) => app.create("note") },
+    // A browser keeps Ctrl+N for a new window, so the web gets Alt+N.
+    { id: "notes.new", title: "New note", keywords: ["create", "add"], shortcut: isDesktop ? "Mod+N" : "Alt+N", run: (app) => app.create("note") },
     { id: "notes.copy-all", readsText: true, title: "Copy all of this note", keywords: ["clipboard", "text", "everything"], when: (app) => openNote(app) !== null, run: (app) => void copyAll(app, openNote(app)!) },
     {
       id: "notes.duplicate",

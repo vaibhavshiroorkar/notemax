@@ -28,7 +28,7 @@ export function BookPanel({ app }: { app: AppContext }) {
   // On the book's own page, shown as previews or in full, a chapter is
   // already on the page: clicking one scrolls there instead of leaving.
   const view = bookViewOf(book);
-  const onBookPage = activeId === book.id && view !== "titles";
+  const onBookPage = activeId === book.id && (view === "previews" || view === "whole");
   const inView = pieceInView.use();
   const here = onBookPage && view === "whole" ? inView : activeId;
   const go = (id: string) => (onBookPage ? revealing.set(id) : onSelect(id));

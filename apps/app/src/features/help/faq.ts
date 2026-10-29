@@ -128,7 +128,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     q: "How do I change the look?",
-    a: "Settings, Appearance has the theme, fonts, text size and accent color. Ctrl+= and Ctrl+- change the text size.",
+    a: "Settings, Appearance has the theme, fonts, text size and accent color. Ctrl+Shift+. and Ctrl+Shift+, change the text size. Ctrl+= and Ctrl+- zoom the whole app.",
     words: "theme dark light font size color appearance zoom",
     section: "appearance",
   },

@@ -34,7 +34,8 @@ export const voicePlugin: Plugin = {
       id: "voice.toggle",
       title: "Start or stop voice typing",
       keywords: ["dictate", "speech", "microphone", "talk", "voice"],
-      shortcut: "Mod+Shift+.",
+      // M for mic.
+      shortcut: "Mod+Shift+M",
       run: toggle,
     },
   ],

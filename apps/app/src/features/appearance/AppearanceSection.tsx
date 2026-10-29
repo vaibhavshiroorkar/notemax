@@ -93,7 +93,7 @@ function ZoomRow() {
       <div className="settings-row">
         <span>
           Zoom
-          <span className="settings-description">Use your browser's zoom: Ctrl and the mouse wheel. Text size above changes only the note's text.</span>
+          <span className="settings-description">Use your browser's zoom: Ctrl+= and Ctrl+-, or Ctrl and the mouse wheel. Text size above changes only the note's text.</span>
         </span>
       </div>
     );
@@ -101,7 +101,7 @@ function ZoomRow() {
     <div className="settings-row">
       <label htmlFor={id}>
         Zoom
-        <span className="settings-description">Everything, not just the text. Ctrl and the mouse wheel change it too.</span>
+        <span className="settings-description">Everything, not just the text. Ctrl+= and Ctrl+-, or Ctrl and the mouse wheel, change it too. Ctrl+0 resets it.</span>
       </label>
       <span className="text-size">
         <input id={id} type="range" min={ZOOM.min} max={ZOOM.max} step={ZOOM.step} value={percent} onChange={(event) => zoom.set(Number(event.target.value))} />

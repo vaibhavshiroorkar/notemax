@@ -79,6 +79,8 @@ export const starPlugin: Plugin = {
       id: "star.toggle",
       title: "Star or unstar this page",
       keywords: ["favorite", "favourite", "pin", "bookmark"],
+      // Ctrl+Shift+S is strikethrough in a note.
+      shortcut: "Alt+S",
       when: (app) => !!activeNode(app),
       run(app) {
         const node = activeNode(app)!;

@@ -1,12 +1,20 @@
 import type { Tree, TreeItem, TreeNode } from "@notemax/core";
 import { createStore } from "@/platform/store";
 
-// How much of each chapter the book's page shows: titles only (the first
-// choice), the first lines of each, or every chapter written out.
-export type BookView = "titles" | "previews" | "whole";
+// How much of the book its page shows: chapter titles alone, the outline of
+// chapters and subtopics (the usual choice), the first lines of each chapter,
+// or every chapter written out.
+export type BookView = "chapters" | "titles" | "previews" | "whole";
 
-/** A page setting, so the choice syncs with the book and each book keeps its own. */
-export const bookViewOf = (book: TreeNode | TreeItem): BookView => (book.props.bookView === "whole" ? "whole" : book.props.bookView === "previews" ? "previews" : "titles");
+/**
+ * A page setting, so the choice syncs with the book and each book keeps its own.
+ * Books from before the Chapters choice kept it as bookSubtopics "hidden".
+ */
+export const bookViewOf = (book: TreeNode | TreeItem): BookView => {
+  const view = book.props.bookView;
+  if (view === "whole" || view === "previews" || view === "chapters") return view;
+  return book.props.bookSubtopics === "hidden" ? "chapters" : "titles";
+};
 
 /** The chapter or subtopic at the top of the screen while a book is read as one page (Full text). */
 export const pieceInView = createStore<string | null>(null);

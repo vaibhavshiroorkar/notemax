@@ -30,7 +30,19 @@ export const trashPlugin: Plugin = {
   required: true,
   views: [{ id: "trash", title: "Trash", icon: "trash", component: TrashView }],
   pageHeader: [{ id: "trash.line", component: TrashedLine }],
-  commands: [{ id: "trash.open", title: "Open the trash", keywords: ["deleted", "restore", "bin", "recycle"], run: (app) => app.openView("trash") }],
+  commands: [
+    { id: "trash.open", title: "Open the trash", keywords: ["deleted", "restore", "bin", "recycle"], run: (app) => app.openView("trash") },
+    {
+      id: "trash.page",
+      title: "Move this page to the trash",
+      keywords: ["delete", "remove", "bin"],
+      shortcut: "Mod+Delete",
+      // In text, Ctrl+Delete deletes the next word.
+      keyOutsideText: true,
+      when: (app) => app.activeId !== null && app.tree.visible.has(app.activeId),
+      run: (app) => app.trash(app.activeId!),
+    },
+  ],
   workspaceStart(app) {
     eraseOld(app.doc, app.tree.trash);
   },
