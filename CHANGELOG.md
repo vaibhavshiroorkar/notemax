@@ -2,6 +2,10 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.101.0 (2026-10-29)
+
+- Phones: selected text in a note drags again. Select it first, then hold the selection and move it. A hold on words not yet selected still only selects them.
+
 ## 0.100.0 (2026-10-29)
 
 - Ctrl+= and Ctrl+- zoom the whole app, and Ctrl+0 resets it. In the desktop app, Ctrl++ and the keypad's + and - work too, and a toast says the size. In a browser these keys are the browser's own zoom again.

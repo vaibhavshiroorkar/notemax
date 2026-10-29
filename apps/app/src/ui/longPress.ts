@@ -13,13 +13,32 @@ export const touchOnly = () => matchMedia("(pointer: coarse) and (hover: none)")
 
 /** Keeps the app's right-click menus away from a finger's long press, so the phone's own selection works. */
 export function leaveLongPressToThePhone() {
-  window.addEventListener("touchstart", () => (lastTouch = performance.now()), { capture: true, passive: true });
+  let onSelection = false;
+  window.addEventListener(
+    "touchstart",
+    (event) => {
+      lastTouch = performance.now();
+      const touch = event.touches[0];
+      onSelection = !!touch && pointOnSelection(touch.clientX, touch.clientY);
+    },
+    { capture: true, passive: true },
+  );
   // Before any handler of the app sees it, and without preventDefault, so the phone still does its part.
   window.addEventListener("contextmenu", (event) => fromTouch() && event.stopImmediatePropagation(), true);
-  // A finger held on chosen text in a note would drag it, with a drop line that
-  // jumps as the finger moves, instead of moving the phone's selection handles.
-  // Text moves by cut and paste there. Sidebar rows still drag: they are outside notes.
+  // A hold on words in a note selects them with the phone's handles. Dragging
+  // them then would start at once, with a drop line jumping under the finger.
+  // So a finger drags only text that was already selected before it touched
+  // down: select first, then hold the selection and move it.
   window.addEventListener("dragstart", (event) => {
-    if (fromTouch() && event.target instanceof Node && (event.target instanceof Element ? event.target : event.target.parentElement)?.closest(".ProseMirror")) event.preventDefault();
+    if (fromTouch() && !onSelection && event.target instanceof Node && (event.target instanceof Element ? event.target : event.target.parentElement)?.closest(".ProseMirror")) event.preventDefault();
   }, true);
+}
+
+/** True when the point is on the text selected now. */
+function pointOnSelection(x: number, y: number): boolean {
+  const selection = document.getSelection();
+  if (!selection || selection.isCollapsed || !selection.rangeCount) return false;
+  // A little slack around each line, since a fingertip is wider than a caret.
+  const slack = 6;
+  return [...selection.getRangeAt(0).getClientRects()].some((r) => x >= r.left - slack && x <= r.right + slack && y >= r.top - slack && y <= r.bottom + slack);
 }
