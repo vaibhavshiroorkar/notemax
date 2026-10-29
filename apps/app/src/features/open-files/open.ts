@@ -146,13 +146,13 @@ export async function openFiles(app: AppContext, files: File[], near: TreeNode |
   if (last) app.open(last);
 }
 
-/** Asks the system for files of one kind and opens them. */
-export function pickFiles(app: AppContext, group: FileGroup, near: TreeNode | null) {
+/** Asks the system for files of one kind, or of any kind Notemax reads as a page, and opens them. */
+export function pickFiles(app: AppContext, group: FileGroup | "any", near: TreeNode | null) {
   if (group === "drawings") return pickExcalidraw(app);
   const input = document.createElement("input");
   input.type = "file";
   input.multiple = true;
-  input.accept = GROUPS.find((g) => g.id === group)!.accept;
+  input.accept = group === "any" ? GROUPS.filter((g) => g.id !== "drawings").map((g) => g.accept).join(",") : GROUPS.find((g) => g.id === group)!.accept;
   input.onchange = () => void openFiles(app, [...(input.files ?? [])], near);
   input.click();
 }

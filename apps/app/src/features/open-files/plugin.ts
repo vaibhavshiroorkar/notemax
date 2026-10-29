@@ -20,5 +20,7 @@ export const openFilesPlugin: Plugin = {
   id: "open-files",
   name: "Open files",
   description: "Open Markdown, text, Word, web page, code, picture and Excalidraw files from the computer as pages",
-  commands: [{ id: "open-files.notes", title: "Open files from this computer", keywords: ["import", "markdown", "word", "docx", "text", "file"], run: (app) => pickFiles(app, "notes", null) }],
+  commands: [
+    { id: "open-files.notes", title: "Open files from this computer", keywords: ["import", "markdown", "word", "docx", "text", "file", "code", "picture"], shortcut: "Mod+O", run: (app) => pickFiles(app, "any", null) },
+  ],
 };

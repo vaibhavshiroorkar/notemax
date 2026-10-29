@@ -2,6 +2,13 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.96.0 (2026-10-29)
+
+- Back and Forward buttons beside the sidebar button, and Alt+Left and Alt+Right (the mouse's side buttons and Ctrl+[ and Ctrl+] already worked).
+- Find in a note with Ctrl+F, and replace with Ctrl+H: match count, next and previous, match case, replace one or all (one Undo puts them back).
+- Keys from other apps: Ctrl+1 to Ctrl+9 for tabs, Ctrl+PageUp and Ctrl+PageDown, Ctrl+P to search, Ctrl+O to open files, Ctrl+S says it is saved, F11 for full screen in the desktop app.
+- Arrow keys move between rows in the sidebar; Right and Left open and close.
+
 ## 0.95.0 (2026-10-27)
 
 - Community chat: direct messages with an unread count on the Messages button, topic rooms anyone signed in can start (three a day) and write in, and comments with one level of replies under posts. Profiles have a Message button.

@@ -518,6 +518,17 @@ export function App() {
         >
           <Icon name="sidebar" />
         </button>
+        {/* A phone has its own Back, and no room to spare. */}
+        {!narrow && (
+          <div className="history-buttons">
+            <button className="icon-button" aria-label="Back" title="Back (Alt+Left)" disabled={!app.canGoBack} onClick={app.goBack}>
+              <Icon name="arrow-left" />
+            </button>
+            <button className="icon-button" aria-label="Forward" title="Forward (Alt+Right)" disabled={!app.canGoForward} onClick={app.goForward}>
+              <Icon name="arrow-right" />
+            </button>
+          </div>
+        )}
         {multi ? <div className="main-top-space" /> : <TabStrip app={app} pane={tabs.panes.find((pane) => pane.id === tabs.activePane)!} />}
         <div className="page-toolbar">
           <button

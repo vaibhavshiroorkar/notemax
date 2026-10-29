@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, type DragEvent } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, type DragEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { ROOT, canMove, childrenOf, createNode, moveNodes, renameNode, type Tree } from "@notemax/core";
 import { registry } from "@/plugins/registry";
 import { formatShortcut, shortcutFor, shortcutOverrides } from "@/plugins/shortcuts";
@@ -30,6 +30,47 @@ import { Rows, type RowContext } from "./TreeRows";
 import { FilterMenu } from "./FilterMenu";
 import { TrashBox } from "./TrashBox";
 import "./sidebar.css";
+
+/**
+ * Arrow keys between rows, as in a file explorer: up and down, Right opens a
+ * row with pages inside, Left closes it or goes up to the row it sits in.
+ */
+function moveWithArrows(event: ReactKeyboardEvent<HTMLElement>) {
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  const row = (event.target as Element).closest(".row");
+  if (!row || !(event.target as Element).matches(".row-title, .row-fold")) return;
+  const rows = [...event.currentTarget.querySelectorAll<HTMLElement>(".row")].filter((r) => r.querySelector(":scope > .row-title"));
+  const at = rows.indexOf(row as HTMLElement);
+  const focus = (target: Element | null | undefined) => target?.querySelector<HTMLElement>(":scope > .row-title")?.focus();
+  const fold = row.querySelector<HTMLButtonElement>(":scope > .row-fold");
+  const open = fold?.getAttribute("aria-expanded") === "true";
+  switch (event.key) {
+    case "ArrowDown":
+      focus(rows[at + 1]);
+      break;
+    case "ArrowUp":
+      focus(rows[at - 1]);
+      break;
+    case "Home":
+      focus(rows[0]);
+      break;
+    case "End":
+      focus(rows.at(-1));
+      break;
+    case "ArrowRight":
+      if (!fold) return;
+      if (open) focus(rows[at + 1]);
+      else fold.click();
+      break;
+    case "ArrowLeft":
+      if (open) fold!.click();
+      else focus(row.parentElement?.parentElement?.closest("li")?.querySelector(":scope > .row"));
+      break;
+    default:
+      return;
+  }
+  event.preventDefault();
+}
 
 /** The folders above an item, nearest first. A chapter's book counts, so its folders open too. */
 function foldersAbove(tree: Tree, id: string): string[] {
@@ -181,7 +222,7 @@ export function Sidebar({ app }: { app: AppContext }) {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-scroll" onContextMenu={contextMenuHandler(() => ({ type: "sidebar" }))} onDragOver={spaceDrop.onDragOver} onDrop={spaceDrop.onDrop}>
+      <div className="sidebar-scroll" onKeyDown={moveWithArrows} onContextMenu={contextMenuHandler(() => ({ type: "sidebar" }))} onDragOver={spaceDrop.onDragOver} onDrop={spaceDrop.onDrop}>
         {sections
           .filter((section) => section.order < 0)
           .map(({ id, component: Section }) => (

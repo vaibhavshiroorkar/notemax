@@ -178,6 +178,7 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
           <button
             className="icon-button row-fold"
             data-icon={item.kind !== "folder" || undefined}
+            aria-expanded={open}
             aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
             onClick={() => toggleCollapsed(item.id)}
           >

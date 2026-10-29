@@ -231,6 +231,16 @@
   background-color: var(--accent);
 }
 
+.history-buttons {
+  display: flex;
+  flex: none;
+}
+
+.history-buttons .icon-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .main-top-space {
   flex: 1;
 }

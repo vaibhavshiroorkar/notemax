@@ -25,6 +25,9 @@ export function showInAddress(page: string | null) {
   if (address !== `${location.pathname}${location.search}${location.hash}`) history.replaceState(history.state, "", address);
 }
 
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+const typing = (target: EventTarget | null) => target instanceof Element && !!target.closest("input, textarea, [contenteditable='true']");
+
 interface Marker {
   notemax: "base" | "top";
 }
@@ -52,6 +55,19 @@ export function startBrowserNavigation(back: () => void, forward: () => void): (
     if (event.button === 3) { if (!dismissContextMenu()) back(); }
     else forward();
   };
+  // Alt+Left and Alt+Right, and the Back and Forward keys some keyboards have.
+  // On a Mac, Option+arrows move by word in text, so there they only work outside it.
+  const onKey = (event: KeyboardEvent) => {
+    if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    const arrow = event.altKey && (event.key === "ArrowLeft" || event.key === "ArrowRight");
+    const key = !event.altKey && (event.key === "BrowserBack" || event.key === "BrowserForward");
+    if (!arrow && !key) return;
+    if (arrow && isMac && typing(event.target)) return;
+    event.preventDefault();
+    handledAt = performance.now();
+    if (event.key === "ArrowLeft" || event.key === "BrowserBack") { if (!dismissContextMenu()) back(); }
+    else forward();
+  };
   const onPop = (event: PopStateEvent) => {
     if (!isMarker(event.state, "base")) return;
     if (performance.now() - handledAt > 500 && !dismissContextMenu()) back();
@@ -60,7 +76,9 @@ export function startBrowserNavigation(back: () => void, forward: () => void): (
   window.addEventListener("mousedown", onMouse);
   window.addEventListener("mouseup", onMouse);
   window.addEventListener("popstate", onPop);
+  window.addEventListener("keydown", onKey);
   return () => {
+    window.removeEventListener("keydown", onKey);
     window.removeEventListener("mousedown", onMouse);
     window.removeEventListener("mouseup", onMouse);
     window.removeEventListener("popstate", onPop);

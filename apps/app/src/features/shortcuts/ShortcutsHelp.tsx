@@ -61,7 +61,7 @@ export function ShortcutsHelp({ onClose, onCustomize }: { onClose(): void; onCus
             <h3>{group.name}</h3>
             <ul>
               {group.rows.map((row) => (
-                <li key={row.title} className="shortcut-help-row">
+                <li key={`${row.title} ${row.keys}`} className="shortcut-help-row">
                   <span>{row.title}</span>
                   <Keys keys={row.keys} />
                 </li>

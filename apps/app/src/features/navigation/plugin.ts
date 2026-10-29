@@ -1,5 +1,8 @@
-import { activePane, arrange, arrangementOf, canSplit, closeOtherTabs, closePane, closeTab, layout, splitActive, splitTab, type Arrangement } from "@/app/tabs";
-import type { Command, ContextMenuItem, Plugin } from "@/plugins/types";
+import { activePane, activateTab, arrange, arrangementOf, canSplit, closeOtherTabs, closePane, closeTab, layout, splitActive, splitTab, type Arrangement } from "@/app/tabs";
+import { isDesktop } from "@/platform/platform";
+import { registry } from "@/plugins/registry";
+import { matchesShortcut, shortcutFor } from "@/plugins/shortcuts";
+import type { AppContext, Command, ContextMenuItem, Plugin } from "@/plugins/types";
 
 /** Focuses the open page's title with the text selected, ready to type a new one. */
 function focusTitle() {
@@ -33,14 +36,67 @@ const LAYOUT_COMMANDS: Command[] = ARRANGEMENTS.map(({ kind, title }) => ({
   run: () => arrange(kind),
 }));
 
+/** Ctrl+1 to Ctrl+8 pick that tab and Ctrl+9 the last, as in a browser. */
+function pickTab(digit: number) {
+  const tabs = activePane().tabs;
+  const tab = digit === 9 ? tabs.at(-1) : tabs[digit - 1];
+  if (tab) activateTab(tab.id);
+}
+
+async function toggleFullScreen() {
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  const window = getCurrentWindow();
+  await window.setFullscreen(!(await window.isFullscreen()));
+}
+
+/**
+ * Keys people expect from any app, kept off the command list so the palette
+ * stays short. A browser keeps some of them (Ctrl+1, Ctrl+PageDown) for its
+ * own tabs, so on the web they reach the app only where the browser lets go.
+ */
+function everydayKeys(app: AppContext) {
+  window.addEventListener("keydown", (event) => {
+    if (event.defaultPrevented || event.altKey) return;
+    const mod = /Mac|iPhone|iPad/.test(navigator.platform) ? event.metaKey : event.ctrlKey;
+    if (event.key === "F11" && isDesktop && !mod && !event.shiftKey) {
+      event.preventDefault();
+      void toggleFullScreen();
+      return;
+    }
+    if (!mod || event.shiftKey) return;
+    // A key someone gave to a command in Settings is that command's.
+    if (registry.commands(app).some((command) => matchesShortcut(event, shortcutFor(command) || "-"))) return;
+    const digit = /^Digit([1-9])$/.exec(event.code);
+    if (digit) pickTab(Number(digit[1]));
+    else if (event.key === "PageDown") app.cycleTab(1);
+    else if (event.key === "PageUp") app.cycleTab(-1);
+    // The search key of Notion, Obsidian and code editors, beside Ctrl+K.
+    else if (event.code === "KeyP") app.openPalette();
+    // Everything saves as it is typed, so Ctrl+S only says so, instead of saving the web page.
+    else if (event.code === "KeyS") app.notify("Saved. Notemax saves as you type.");
+    else return;
+    event.preventDefault();
+  });
+}
+
 export const navigationPlugin: Plugin = {
   id: "navigation",
   name: "Moving around",
   description: "Tabs, back and forward, recent pages, focus mode",
   required: true,
+  shortcutHints: [
+    { title: "Go back", keys: "Alt+Left" },
+    { title: "Go forward", keys: "Alt+Right" },
+    { title: "Go to a tab by its number (1 to 8, 9 for the last)", keys: "Mod+1" },
+    { title: "Search notes and commands", keys: "Mod+P" },
+    { title: "Next tab", keys: "Mod+PageDown" },
+    { title: "Previous tab", keys: "Mod+PageUp" },
+    ...(isDesktop ? [{ title: "Full screen", keys: "F11" }] : []),
+  ],
+  start: everydayKeys,
   commands: [
-    // Mod+[ and Mod+] as in Notion and in browsers on a Mac. The mouse's side
-    // buttons and the browser's own Back work too (app/history.ts). Each tab has its own list.
+    // Mod+[ and Mod+] as in Notion and in browsers on a Mac. Alt+arrows, the
+    // mouse's side buttons and the browser's own Back work too (app/history.ts). Each tab has its own list.
     { id: "navigation.back", title: "Go back", keywords: ["previous", "history"], shortcut: "Mod+[", when: (app) => app.canGoBack, run: (app) => app.goBack() },
     { id: "navigation.forward", title: "Go forward", keywords: ["next", "history"], shortcut: "Mod+]", when: (app) => app.canGoForward, run: (app) => app.goForward() },
     // A browser keeps Ctrl+T, Ctrl+W and Ctrl+Tab for itself, so on the web

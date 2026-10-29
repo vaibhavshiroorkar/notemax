@@ -8,6 +8,7 @@ import { downloadsPlugin } from "@/features/export/plugin";
 import { graphPlugin } from "@/features/graph/plugin";
 import { imagesPlugin } from "@/features/images/plugin";
 import { linksPlugin } from "@/features/links/plugin";
+import { findPlugin } from "@/features/find/plugin";
 import { navigationPlugin } from "@/features/navigation/plugin";
 import { pageInfoPlugin } from "@/features/page-info/plugin";
 import { palettePlugin } from "@/features/palette/plugin";
@@ -80,6 +81,7 @@ import { registerPlugin } from "./registry";
   downloadsPlugin,
   palettePlugin,
   navigationPlugin,
+  findPlugin,
   appearancePlugin,
   settingsPlugin,
   shortcutsPlugin,
