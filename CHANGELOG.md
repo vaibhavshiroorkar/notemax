@@ -1,7 +1,6 @@
 # Changelog
 
-Each finished step is a version, tagged in git as `v0.N.0`. Set a new number
-with `pnpm version:set 0.N.0`.
+Each release is tagged in git as `v0.N.0`.
 
 ## 0.95.0 (2026-10-27)
 

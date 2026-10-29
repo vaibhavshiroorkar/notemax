@@ -80,7 +80,7 @@
 ## Get Notemax
 
 - **On the web:** open [notemax.pages.dev](https://notemax.pages.dev). It installs as an app on a phone or computer and works offline. Notes stay in that browser until you sign in to sync them.
-- **On the desktop:** an app built with Tauri, tested on Windows so far. It keeps your notes in one file on disk, sits in the tray, and opens quick capture with Ctrl+Alt+N from any app. There is no installer to download yet, so build it from source for now.
+- **On the desktop:** an app built with Tauri, tested on Windows so far. It keeps your notes in one file on disk, sits in the tray, and opens quick capture with Ctrl+Alt+N from any app. Build it from source with `pnpm desktop:build`.
 
 ## Run it yourself
 
@@ -114,4 +114,4 @@ Notemax has no server that sees your notes. Read the [privacy policy](https://no
 
 ## License
 
-No license has been chosen yet, so all rights are reserved for now.
+Copyright (c) 2026 Vaibhav Shiroorkar. All rights reserved.
