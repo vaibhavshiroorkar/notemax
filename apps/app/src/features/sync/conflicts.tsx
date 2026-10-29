@@ -79,7 +79,12 @@ export function ConflictDialog({ app, options, onClose }: { app: AppContext; opt
   const [view, setView] = useState<"changes" | "sides">("changes");
 
   const choose = async (which: Choice) => {
-    if (conflict) await settleAs(conflict, which, app);
+    try {
+      if (conflict) await settleAs(conflict, which, app);
+    } catch (err) {
+      app.notify(`Could not keep that side: ${err instanceof Error ? err.message : String(err)}`);
+      return;
+    }
     onClose();
   };
 

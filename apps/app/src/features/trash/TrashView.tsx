@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ROOT, descendantsOf, restoreNode, type Tree, type TreeNode } from "@notemax/core";
+import { ROOT, descendantsOf, restoreNode, titleMatches, type Tree, type TreeNode } from "@notemax/core";
 import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
@@ -30,15 +30,6 @@ function placeOf(tree: Tree, node: TreeNode): string {
   return names.join(" / ");
 }
 
-const matches = (node: TreeNode, query: string) => {
-  const title = (node.title || "Untitled").toLowerCase();
-  return query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean)
-    .every((word) => title.includes(word));
-};
-
 const KEEP_CHOICES: [number, string][] = [
   [0, "Until I empty it"],
   [7, "7 days"],
@@ -57,7 +48,7 @@ export function TrashView({ app }: { app: AppContext; options: Record<string, un
   const now = Date.now();
 
   const shown = useMemo(() => {
-    const list = query.trim() ? tree.trash.filter((node) => matches(node, query)) : [...tree.trash];
+    const list = query.trim() ? tree.trash.filter((node) => titleMatches(node.title, query)) : [...tree.trash];
     return sort === "title" ? list.sort((a, b) => (a.title || "Untitled").localeCompare(b.title || "Untitled")) : list;
   }, [tree.trash, query, sort]);
   // Pages restored or erased elsewhere drop out of the picked ones by themselves.

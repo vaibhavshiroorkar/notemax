@@ -12,8 +12,13 @@ export interface LocalDoc {
   onStatus(listener: (status: SaveStatus) => void): () => void;
   /** Resolves once every edit made so far is on disk. */
   flush(): Promise<void>;
-  /** Flushes, then stops saving. The Y.Doc is destroyed. */
+  /**
+   * Flushes, then stops saving. The Y.Doc is destroyed. When the flush fails
+   * it throws, and the edits it holds keep retrying until they are on disk.
+   */
   close(): Promise<void>;
+  /** Stops at once and drops what is not on disk yet, for a doc about to be erased. */
+  discard(): void;
 }
 
 export interface LocalDocOptions {
@@ -76,6 +81,7 @@ export async function openLocalDoc(
   let timer: ReturnType<typeof setTimeout> | undefined;
   let writing: Promise<void> = Promise.resolve();
   let status: SaveStatus = { state: "saved" };
+  let discarded = false;
   const listeners = new Set<(s: SaveStatus) => void>();
 
   const setStatus = (next: SaveStatus) => {
@@ -87,21 +93,27 @@ export async function openLocalDoc(
   const writeBatch = () => {
     timer = undefined;
     writing = writing.then(async () => {
-      if (!pending.length) return;
+      if (discarded || !pending.length) return;
       const batch = pending;
       pending = [];
+      const merged = Y.mergeUpdates(batch);
       try {
-        const merged = Y.mergeUpdates(batch);
         await store.append(docId, merged);
-        // Only after the write: others must never build on edits that could still be lost.
-        channel?.postMessage({ docId, update: merged } satisfies DocMessage);
-        setStatus(pending.length ? { state: "saving" } : { state: "saved" });
       } catch (err) {
-        // Keep the edits in memory and try again. Never drop them.
+        // Keep the edits in memory and try again, even after close. Never drop them.
         pending = [...batch, ...pending];
         setStatus({ state: "error", message: err instanceof Error ? err.message : String(err) });
         timer ??= setTimeout(writeBatch, retryMs);
+        return;
       }
+      // Only after the write: others must never build on edits that could still be lost.
+      // A channel closed meanwhile cannot take it; the batch is stored, so it is not written again.
+      try {
+        channel?.postMessage({ docId, update: merged } satisfies DocMessage);
+      } catch {
+        // Other windows read it from the store when they next open the doc.
+      }
+      setStatus(pending.length ? { state: "saving" } : { state: "saved" });
     });
     return writing;
   };
@@ -143,6 +155,14 @@ export async function openLocalDoc(
         channel?.close();
         doc.destroy();
       }
+    },
+    discard() {
+      discarded = true;
+      doc.off("update", onUpdate);
+      if (timer) clearTimeout(timer);
+      pending = [];
+      channel?.close();
+      doc.destroy();
     },
   };
 }

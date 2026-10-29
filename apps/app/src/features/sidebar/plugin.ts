@@ -1,16 +1,8 @@
+import { titleMatches } from "@notemax/core";
 import type { Plugin } from "@/plugins/types";
 import { SIDEBAR, SIDE_PANEL, sidePanelWidth, sidebarWidth } from "@/ui/layout";
 import { PAGE_MENU, SORT_CHOICES } from "./menu";
 import { titleQuery } from "./state";
-
-/** True when every word of the query is somewhere in the title, in any case. */
-const titleMatches = (title: string, query: string) => {
-  const text = (title || "Untitled").toLowerCase();
-  return query
-    .toLowerCase()
-    .split(/s+/)
-    .every((word) => text.includes(word));
-};
 
 export const sidebarPlugin: Plugin = {
   id: "sidebar",

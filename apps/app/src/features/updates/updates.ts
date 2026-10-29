@@ -1,6 +1,6 @@
 import type { Update } from "@tauri-apps/plugin-updater";
 import { isDesktop } from "@/platform/platform";
-import { beforeQuit } from "@/platform/quit";
+import { beforeQuit, runQuitHooks } from "@/platform/quit";
 import { autoUpdate } from "@/platform/behavior";
 import { createStore } from "@/platform/store";
 
@@ -71,6 +71,8 @@ export async function installUpdate(): Promise<void> {
   }
   if (!pending) return;
   try {
+    // Installing ends the app, so pages are saved and edits sent first, as on Quit.
+    await runQuitHooks({ withLast: false });
     await pending.install();
     const { relaunch } = await import("@tauri-apps/plugin-process");
     await relaunch();
@@ -91,7 +93,11 @@ export function startDesktopUpdates() {
   const look = () => autoUpdate.get() && void checkForUpdate();
   setTimeout(look, 20_000);
   setInterval(look, HOURS_6);
-  beforeQuit(async () => {
-    if (pending && autoUpdate.get()) await pending.install();
-  });
+  // Last, since installing ends the app before any later hook could run.
+  beforeQuit(
+    async () => {
+      if (pending && autoUpdate.get()) await pending.install();
+    },
+    { last: true },
+  );
 }

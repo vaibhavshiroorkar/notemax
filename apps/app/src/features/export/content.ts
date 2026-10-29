@@ -1,21 +1,29 @@
 import { yXmlFragmentToProsemirrorJSON } from "@tiptap/y-tiptap";
 import type * as Y from "yjs";
 import { loadAsset, openLocalDoc, type Asset, type Tree } from "@notemax/core";
-import { peekDoc } from "@/data/docCache";
-import { storeFor } from "@/platform/platform";
+import { acquireDoc, isCached, releaseDoc } from "@/data/docCache";
+import { docChannelFor, storeFor } from "@/platform/platform";
 import { workspaceNow } from "@/platform/prefs";
 import { assetsIn, type DocNode, type Resolve } from "./serialize";
 
 /**
- * Reads a page's own document. An open page is read from memory, so a
- * download includes the last few keystrokes. Others are read from storage and
- * closed again, so downloading everything does not fill the cache. The page
- * is in the shown workspace unless `workspace` names another.
+ * Reads or changes a page's own document. An open page, or one still opening,
+ * is used from memory, so a download includes the last few keystrokes and
+ * there is never a second copy to drift apart. Others are read from storage
+ * and closed again, so downloading everything does not fill the cache; what
+ * they write still reaches the other windows. The page is in the shown
+ * workspace unless `workspace` names another.
  */
 export async function withPageDoc<T>(id: string, read: (doc: Y.Doc) => T, workspace = workspaceNow()): Promise<T> {
-  const open = peekDoc(id, workspace);
-  if (open) return read(open.doc);
-  const local = await openLocalDoc(await storeFor(workspace), id);
+  if (isCached(id, workspace)) {
+    const open = await acquireDoc(id, workspace);
+    try {
+      return read(open.doc);
+    } finally {
+      releaseDoc(id, workspace);
+    }
+  }
+  const local = await openLocalDoc(await storeFor(workspace), id, { broadcast: docChannelFor(workspace) });
   try {
     return read(local.doc);
   } finally {

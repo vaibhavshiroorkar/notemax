@@ -1,4 +1,6 @@
-import { restoreNode, type TreeNode } from "@notemax/core";
+import { readTree, restoreNode, type TreeNode } from "@notemax/core";
+import { syncIsOn, syncView } from "@/features/sync/runtime";
+import { workspaceNow } from "@/platform/prefs";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { eraseOld } from "./erase";
@@ -44,6 +46,16 @@ export const trashPlugin: Plugin = {
     },
   ],
   workspaceStart(app) {
-    eraseOld(app.doc, app.tree.trash);
+    if (!syncIsOn()) return eraseOld(app.doc, app.tree.trash);
+    // Another device may have restored a page this one would erase, so only
+    // once this device has heard from the others: after its first sync ends.
+    let synced = false;
+    const stop = syncView.subscribe(() => {
+      const view = syncView.get();
+      if (view.state === "syncing") synced = true;
+      if (view.state !== "idle" || !synced) return;
+      stop();
+      if (app.workspace === workspaceNow()) eraseOld(app.doc, readTree(app.doc).trash);
+    });
   },
 };

@@ -2,6 +2,23 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.103.0 (2026-10-30)
+
+Keeping pages safe, from a review of how Notemax saves and syncs.
+
+- Search page titles in the sidebar works again for words with an "s" in them; it split the search on the letter s.
+- Turning on sync no longer clears the other workspaces of a device whose main workspace held only the starter pages. Any workspace of its own means its pages are merged with the account's.
+- Markdown folder: a file renamed in another app renames its page, instead of sending it to the trash and bringing it back as a copy. Two pages of the same name that swap places keep their files. A new file is never brought in twice, and edits made while files are written go out on the next look.
+- A device that keeps no pages reads back the files only it sent to Drive, instead of starting empty and writing over them. Only one tab can hold its pages; a second says it is open elsewhere.
+- "Saved" now means every page on screen is saved, subtopics included, and a subtopic that cannot save says so.
+- A page closed while saving fails keeps trying until it is saved, without saving twice. Erasing pages, or a workspace, stops every window's copy first.
+- Quitting with an update waiting saves and sends everything before the update installs; Install now does the same.
+- Old pages leave the trash only after this device has synced, so a page restored on another device is not erased here.
+- Stopping keeping pages on this device saves the last keystrokes first, and asks to close other tabs before erasing.
+- Errors that were silent now show: a version that could not be restored, a conflict that could not be kept, a sync that could not start, a link that could not be copied.
+- The browser's database is asked to write to disk before a save counts, and is opened again if the browser closes it.
+- Supabase: supabase/migrations/20261030000000_rate_limit_indexes.sql adds indexes the community's limits read on every message and comment. Run it once in the SQL Editor.
+
 ## 0.102.0 (2026-10-29)
 
 - Phones: the tabs, the chapter bar and the formatting bar ride at the top of the page. By default only the formatting bar stays while you scroll. The button with a small screen on it, under the tabs, steps through none, bottom, bottom two and all three; Settings, How it works has the same choice.

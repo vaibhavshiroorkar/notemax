@@ -36,8 +36,27 @@ export function setMemoryFill(fillFrom: (store: DocStore) => Promise<void>) {
   fill = fillFrom;
 }
 
+/**
+ * Pages held in memory live in one tab. A second tab would hold its own
+ * copy, and what it wrote would never reach Drive, since only one tab sends.
+ * True when this tab got the pages; the lock is held until the tab closes.
+ */
+function holdMemoryPages(): Promise<boolean> {
+  if (!navigator.locks) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    void navigator.locks.request("notemax-memory-pages", { ifAvailable: true }, (lock) => {
+      resolve(lock !== null);
+      return lock ? new Promise<void>(() => {}) : undefined;
+    });
+  });
+}
+
+/** Why a second tab of a device that keeps no pages cannot open. */
+const OPEN_ELSEWHERE = "Notemax is open in another tab or window. This device keeps no pages on its disk, so only one can hold them. Close the other one, then reload this one.";
+
 async function openStore(): Promise<DocStore> {
   if (!memoryOnly) return openDiskStore();
+  if (!(await holdMemoryPages())) throw new Error(OPEN_ELSEWHERE);
   const store = createMemoryStore();
   if (!fill) throw new Error("This device keeps no pages, and sync is not here to bring them.");
   try {
@@ -75,6 +94,26 @@ export async function keepOnDisk() {
     const { updates } = await memory.load(docId);
     for (const update of updates) await disk.append(docId, update);
   }
+}
+
+// Each app tab answers when another asks who is open. The capture box is not a tab of pages.
+const presence = new BroadcastChannel("notemax-presence");
+const isCaptureBox = location.pathname.endsWith("capture.html");
+presence.onmessage = ({ data }: MessageEvent<string>) => data === "who" && !isCaptureBox && presence.postMessage("here");
+
+/** True when another tab or window of the app is open on this device. Asks, and waits a moment for answers. */
+export function otherTabsOpen(waitMs = 300): Promise<boolean> {
+  return new Promise((resolve) => {
+    const ask = new BroadcastChannel("notemax-presence");
+    const done = (open: boolean) => {
+      clearTimeout(timer);
+      ask.close();
+      resolve(open);
+    };
+    ask.onmessage = ({ data }: MessageEvent<string>) => data === "here" && done(true);
+    const timer = setTimeout(() => done(false), waitMs);
+    ask.postMessage("who");
+  });
 }
 
 let rawPromise: Promise<DocStore> | undefined;

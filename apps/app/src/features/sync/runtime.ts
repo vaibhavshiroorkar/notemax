@@ -18,15 +18,18 @@ import {
   splitScoped,
   SETTINGS_DOC_ID,
   WORKSPACES_DOC_ID,
+  MAIN_WORKSPACE,
+  readWorkspaces,
 } from "@notemax/core";
 import * as Y from "yjs";
 import { starterSeeds } from "@/features/editor/welcome";
 import { markTemporary } from "@/features/temporary/temporary";
-import { WORKSPACES_CHANNEL, docChannelFor, eraseDiskStore, getRawStore, isDesktop, keepOnDisk, memoryOnly, onLocalWrite, setMemoryFill } from "@/platform/platform";
+import { WORKSPACES_CHANNEL, docChannelFor, eraseDiskStore, getRawStore, isDesktop, keepOnDisk, memoryOnly, onLocalWrite, otherTabsOpen, setMemoryFill } from "@/platform/platform";
 import { workspaceNow } from "@/platform/prefs";
-import { beforeQuit } from "@/platform/quit";
+import { beforeQuit, runQuitHooks } from "@/platform/quit";
 import { getPref, removePref, setPref } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
+import { showToast } from "@/ui/toast";
 import { accountsEnabled } from "@/features/account/config";
 import { recordConflict } from "./conflicts";
 import { liveOn, liveState, noteRemoteEdit, startLive, type LiveLink } from "./live";
@@ -147,7 +150,12 @@ async function runEngine(signal: AbortSignal) {
     // Asked in the workspace it belongs to. Elsewhere both edits are kept all the same.
     onConflict(stored, mine, theirs) {
       const { workspace, docId } = splitScoped(stored);
-      if (workspace === workspaceNow()) void recordConflict(docId, mine, theirs).catch(() => {});
+      if (workspace === workspaceNow())
+        void recordConflict(docId, mine, theirs).catch((err) => {
+          // Both sides are merged anyway; only the question about them is lost, so say so.
+          console.warn("[notemax] could not keep a conflict", docId, err);
+          showToast("A page edited on two devices was merged, but its two versions could not be kept to compare");
+        });
     },
     onStatus(status) {
       if (status.state === "idle" && status.lastSynced) setPref(PREFS.lastAt, String(status.lastSynced));
@@ -263,11 +271,15 @@ export function startSync() {
   const controller = new AbortController();
   stopRunning = () => controller.abort();
   const body = () => runEngine(controller.signal);
+  // Stopping on purpose aborts the wait; anything else is shown, not left as "another tab is syncing".
+  const failed = (err: unknown) => {
+    if (!controller.signal.aborted) syncView.set({ state: "error", lastSynced: null, message: err instanceof Error ? err.message : String(err) });
+  };
   if (navigator.locks) {
     syncView.set({ state: "elsewhere" });
     // Waits while another tab holds the lock, and takes over when that tab closes.
-    void navigator.locks.request("notemax-sync", { signal: controller.signal }, body).catch(() => {});
-  } else void body();
+    void navigator.locks.request("notemax-sync", { signal: controller.signal }, body).catch(failed);
+  } else void body().catch(failed);
 }
 
 function stopSync() {
@@ -287,6 +299,10 @@ export function syncNow() {
  */
 export async function stopKeepingPages() {
   if (!engine) throw new Error("Sync runs in another Notemax tab or window. Close the others and try again.");
+  // Another tab could save to the disk after it is erased, leaving text behind and edits unsent.
+  if (await otherTabsOpen()) throw new Error("Notemax is open in another tab or window. Close the others and try again.");
+  // The last keystrokes on disk first, so the sync below sends them.
+  await runQuitHooks({ withLast: false });
   await engine.sync();
   if (loadState().dirty.length) throw new Error("Some edits could not be sent to Drive yet, so nothing was erased. Check the connection and try again.");
   stopSync();
@@ -324,13 +340,26 @@ const isStarter = (id: string) => STARTER_IDS.has(id) || /^day-\d{4}-\d{2}-\d{2}
  * writtenStarter keeps. Exported for the browser checks.
  */
 export async function onlyStarter(): Promise<boolean> {
-  const local = await openLocalDoc(await getRawStore(), WORKSPACE_DOC_ID);
+  const store = await getRawStore();
+  // Taking the notes from Drive clears the whole store, so every workspace
+  // counts, not just the main one. One the user made, even empty, means merging instead.
+  const list = await openLocalDoc(store, WORKSPACES_DOC_ID);
   try {
-    const tree = readTree(local.doc);
-    return [...tree.byId.keys()].every(isStarter) && tree.trash.length === 0;
+    if (readWorkspaces(list.doc).some((info) => info.id !== MAIN_WORKSPACE)) return false;
   } finally {
-    await local.close();
+    await list.close();
   }
+  for (const docId of await store.list()) {
+    if (splitScoped(docId).docId !== WORKSPACE_DOC_ID) continue;
+    const local = await openLocalDoc(store, docId);
+    try {
+      const tree = readTree(local.doc);
+      if (![...tree.byId.keys()].every(isStarter) || tree.trash.length > 0) return false;
+    } finally {
+      await local.close();
+    }
+  }
+  return true;
 }
 
 const plainText = (html: string) => (new DOMParser().parseFromString(html, "text/html").body.textContent ?? "").replace(/\s+/g, "");

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { SaveStatus } from "@notemax/core";
+import { openDocsStatus } from "@/data/docCache";
 import { createStore } from "@/platform/store";
 import { useOption } from "@/plugins/options";
 import { registry } from "@/plugins/registry";
@@ -44,7 +45,7 @@ export function StatusBar({
   /** In the open page, or null when it has none or they are not counted yet. */
   words: number | null;
 }) {
-  const status = worst(workspaceStatus, pageStatus.use());
+  const status = worst(worst(workspaceStatus, pageStatus.use()), openDocsStatus.use());
   const showWords = useOption("notes", "statusWords");
   const bar = useRef<HTMLElement>(null);
   const [quiet, setQuiet] = useState(false);

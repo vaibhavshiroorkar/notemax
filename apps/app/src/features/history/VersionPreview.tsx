@@ -31,10 +31,15 @@ export function VersionPreview({ app, options, onClose }: { app: AppContext; opt
 
   const restore = async () => {
     if (!version) return;
-    // How the page is now becomes a version first, so the restore can be taken back too.
-    const now = await withPageDoc(pageId, (doc) => Y.encodeStateAsUpdate(doc), workspace);
-    await saveNow(pageId, now, null, workspace);
-    await withPageDoc(pageId, (doc) => restoreBody(doc, version), workspace);
+    try {
+      // How the page is now becomes a version first, so the restore can be taken back too.
+      const now = await withPageDoc(pageId, (doc) => Y.encodeStateAsUpdate(doc), workspace);
+      await saveNow(pageId, now, null, workspace);
+      await withPageDoc(pageId, (doc) => restoreBody(doc, version), workspace);
+    } catch (err) {
+      app.notify(`Could not restore this version: ${err instanceof Error ? err.message : String(err)}`);
+      return;
+    }
     app.notify(`Restored the version from ${whenOf(version.time)}`);
     onClose();
   };

@@ -312,6 +312,22 @@ describe.each([
     expect(text).toContain("From the phone.");
   });
 
+  it("reads back its own files when it starts from nothing, and does not overwrite them empty", async () => {
+    const { drive, key, a } = await setup();
+    await a.type("note-1", "Only this device wrote this.");
+    await a.engine.sync();
+    // The same device starts again with an empty store, as one that keeps no pages does each session.
+    const again = await device("laptop", drive, key, await freshStore("a2"));
+    await again.engine.sync();
+    expect(await again.read("note-1")).toBe("Only this device wrote this.");
+    await again.type("note-1", " And more.");
+    await again.engine.sync();
+    const third = await device("phone", drive, key, await freshStore("p"));
+    await third.engine.sync();
+    expect(await third.read("note-1")).toBe("Only this device wrote this. And more.");
+    expect(again.conflicts).toEqual([]);
+  });
+
   it("removes this device's file when the doc is gone", async () => {
     const { drive, a } = await setup();
     await a.type("note-1", "Bye.");

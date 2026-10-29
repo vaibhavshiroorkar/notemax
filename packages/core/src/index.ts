@@ -4,7 +4,7 @@ export { createSqlStore, type SqlDatabase } from "./sql-store";
 export { createMemoryStore } from "./memory-store";
 export { openLocalDoc, type LocalDoc, type LocalDocOptions, type SaveStatus } from "./local-doc";
 export { captureNote, splitCapture, INBOX_ID } from "./capture";
-export { WIKI_LINK, extractLinks, searchNodes } from "./links";
+export { WIKI_LINK, extractLinks, searchNodes, titleMatches } from "./links";
 export { countWords, plainText } from "./words";
 export { MAX_TAG_LENGTH, normalizeTag, hasTags } from "./tags";
 export {

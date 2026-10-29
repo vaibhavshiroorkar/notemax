@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { TreeNode } from "@notemax/core";
 import { accountsEnabled } from "@/features/account/config";
 import type { AppContext } from "@/plugins/types";
@@ -12,6 +12,8 @@ const namesOf = (names: string[]) => (names.length <= 2 ? names.join(" and ") : 
 /** One link with what it lets people do, and a button that copies it. */
 function LinkRow({ label, hint, link }: { label: string; hint: string; link: string }) {
   const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const field = useRef<HTMLInputElement>(null);
   return (
     <div className="share-link-row">
       <span className="share-link-label">
@@ -19,16 +21,23 @@ function LinkRow({ label, hint, link }: { label: string; hint: string; link: str
         <span className="share-link-hint">{hint}</span>
       </span>
       <div className="share-link">
-        <input readOnly aria-label={`${label} link`} value={link} onFocus={(event) => event.target.select()} />
+        <input ref={field} readOnly aria-label={`${label} link`} value={link} onFocus={(event) => event.target.select()} />
         <button
           className="button"
           onClick={() => {
-            void navigator.clipboard.writeText(link).catch(() => {});
-            setCopied(true);
+            navigator.clipboard.writeText(link).then(
+              () => setCopied(true),
+              // The browser said no. The link is selected, ready to copy by hand.
+              () => {
+                setCopied(false);
+                setFailed(true);
+                field.current?.select();
+              },
+            );
           }}
         >
           <Icon name="copy" />
-          {copied ? "Copied" : "Copy"}
+          {copied ? "Copied" : failed ? "Copy failed" : "Copy"}
         </button>
       </div>
     </div>

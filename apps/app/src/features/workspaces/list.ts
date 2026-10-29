@@ -15,6 +15,7 @@ import {
   type LocalDoc,
   type WorkspaceInfo,
 } from "@notemax/core";
+import { discardDocs } from "@/data/docCache";
 import { WORKSPACES_CHANNEL, getRawStore, getSharedStore } from "@/platform/platform";
 import { setWorkspace, workspaceNow } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
@@ -69,6 +70,8 @@ export const move = (id: string, index: number) => change((doc) => moveWorkspace
 /** Erases a workspace and every page in it, here and, through sync, on other devices. */
 export async function deleteWorkspace(id: string) {
   if (id === MAIN_WORKSPACE || id === workspaceNow()) throw new Error("switch to another workspace first");
+  // Open copies in any window stop first, so none of them writes the workspace back.
+  discardDocs(id, null);
   const store = await getSharedStore();
   for (const stored of await store.list()) if (splitScoped(stored).workspace === id) await store.remove(stored);
   await change((doc) => removeWorkspace(doc, id));

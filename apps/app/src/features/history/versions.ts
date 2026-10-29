@@ -49,7 +49,11 @@ export function useVersions(body: Y.Doc | undefined, pageId: string) {
       .then((versions) => {
         if (live) last = versions[0]?.time ?? 0;
       })
-      .catch(() => {});
+      .catch((err) => {
+        // Unknown, so treated as none: versions keep being made rather than stopping for good.
+        console.warn("[notemax] could not list versions", pageId, err);
+        if (live) last = 0;
+      });
 
     const save = (state: Uint8Array) => {
       last = Date.now();

@@ -1,17 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type * as Y from "yjs";
-import { descendantsOf, restoreNode, type Tree, type TreeNode } from "@notemax/core";
+import { descendantsOf, restoreNode, titleMatches, type Tree, type TreeNode } from "@notemax/core";
 import { DeleteDialog, eraseForever } from "@/features/trash/erase";
 import { Icon } from "@/ui/Icon";
-
-const matches = (node: TreeNode, query: string) => {
-  const title = (node.title || "Untitled").toLowerCase();
-  return query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean)
-    .every((word) => title.includes(word));
-};
 
 /** The trash at the bottom of the sidebar: a button with a count that opens a list upward, with its own search. */
 export function TrashBox({ tree, doc, onOpenAll }: { tree: Tree; doc: Y.Doc; onOpenAll(): void }) {
@@ -36,7 +27,7 @@ export function TrashBox({ tree, doc, onOpenAll }: { tree: Tree; doc: Y.Doc; onO
     };
   }, [open]);
 
-  const shown = query.trim() ? tree.trash.filter((node) => matches(node, query)) : tree.trash;
+  const shown = query.trim() ? tree.trash.filter((node) => titleMatches(node.title, query)) : tree.trash;
 
   return (
     <div className="trash-wrap" ref={wrapper}>

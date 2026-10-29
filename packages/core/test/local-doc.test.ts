@@ -131,6 +131,51 @@ describe.each(stores)("%s store", (_name, freshStore) => {
       expect(seen).toEqual(["saving", "error", "saved"]);
       expect(text((await openLocalDoc(real, "note")).doc)).toBe("precious");
     });
+
+    it("closed while a write fails, keeps retrying until the edit is stored once", async () => {
+      const real = await freshStore();
+      let failures = 2;
+      let appends = 0;
+      const flaky: DocStore = {
+        load: (id) => real.load(id),
+        compact: (id, m, s) => real.compact(id, m, s),
+        remove: (id) => real.remove(id),
+        list: () => real.list(),
+        append: async (id, u) => {
+          if (failures-- > 0) throw new Error("disk full");
+          appends++;
+          return real.append(id, u);
+        },
+      };
+      const a = await openLocalDoc(flaky, "note", { batchMs: 0, retryMs: 10, broadcast: `close-retry-${Math.random()}` });
+      a.doc.getText("t").insert(0, "last words");
+      await expect(a.close()).rejects.toThrow("disk full");
+      await new Promise((r) => setTimeout(r, 120));
+      expect(appends).toBe(1);
+      expect(text((await openLocalDoc(real, "note")).doc)).toBe("last words");
+    });
+
+    it("discarded, stops at once and stores nothing more", async () => {
+      const real = await freshStore();
+      let appends = 0;
+      const failing: DocStore = {
+        load: (id) => real.load(id),
+        compact: (id, m, s) => real.compact(id, m, s),
+        remove: (id) => real.remove(id),
+        list: () => real.list(),
+        append: async () => {
+          appends++;
+          throw new Error("disk full");
+        },
+      };
+      const a = await openLocalDoc(failing, "note", { batchMs: 0, retryMs: 10 });
+      a.doc.getText("t").insert(0, "about to be erased");
+      await a.flush().catch(() => {});
+      const tried = appends;
+      a.discard();
+      await new Promise((r) => setTimeout(r, 60));
+      expect(appends).toBe(tried);
+    });
   });
 
   describe("speed budget", () => {

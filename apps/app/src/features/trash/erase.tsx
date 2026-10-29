@@ -1,7 +1,8 @@
 import type * as Y from "yjs";
 import { deleteForever, historyDocId, type TreeNode } from "@notemax/core";
-import { forgetDoc } from "@/data/docCache";
+import { discardDocs } from "@/data/docCache";
 import { getStore } from "@/platform/platform";
+import { workspaceNow } from "@/platform/prefs";
 import { savedStore } from "@/platform/store";
 import { ConfirmDialog } from "@/ui/Dialog";
 
@@ -15,9 +16,9 @@ export function eraseForever(doc: Y.Doc, nodes: TreeNode[]) {
     // A page trashed before its folder went with the folder already.
     if (!ids.includes(node.id)) ids.push(...deleteForever(doc, node.id));
   }
-  // Any copy still open in memory goes first, so a late save cannot bring text back.
-  Promise.all(ids.map((id) => forgetDoc(id)))
-    .then(getStore)
+  // Every copy still open, in any window, goes first, so a late save cannot bring text back.
+  discardDocs(workspaceNow(), [...ids, ...ids.map(historyDocId)]);
+  getStore()
     .then((store) => Promise.all(ids.flatMap((id) => [store.remove(id), store.remove(historyDocId(id))])))
     .catch((err) => console.warn("[notemax] could not erase note bodies", err));
 }

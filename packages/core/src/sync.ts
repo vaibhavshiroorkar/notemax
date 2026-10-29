@@ -121,8 +121,12 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     const reported = new Set<string>();
     // Docs in parallel, but one doc's files from several devices in turn, so each diff sees the last.
     const byDoc = new Map<string, RemoteEntry[]>();
+    // A read from the start takes this device's own files too: a device that
+    // keeps no pages, or lost its store, would otherwise miss what only it
+    // wrote, then send its empty state over that file.
+    const fromStart = state.cursor === null;
     for (const entry of entries) {
-      if (entry.device !== device) byDoc.set(entry.docId, [...(byDoc.get(entry.docId) ?? []), entry]);
+      if (entry.device !== device || fromStart) byDoc.set(entry.docId, [...(byDoc.get(entry.docId) ?? []), entry]);
     }
     const docs = [...byDoc.values()];
     let done = 0;
@@ -134,7 +138,8 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
         // Only what this device lacks, so the store does not grow by a whole copy on every sync.
         const fresh = local ? Y.diffUpdate(incoming, Y.encodeStateVectorFromUpdate(local)) : incoming;
         if (local && isEmptyUpdate(fresh, local)) continue;
-        if (local && isPageBody(entry.docId) && state.dirty.includes(entry.docId) && !reported.has(entry.docId)) {
+        // This device's own file is an older copy of its own edits, never a conflict.
+        if (local && entry.device !== device && isPageBody(entry.docId) && state.dirty.includes(entry.docId) && !reported.has(entry.docId)) {
           reported.add(entry.docId);
           options.onConflict?.(entry.docId, local, incoming);
         }

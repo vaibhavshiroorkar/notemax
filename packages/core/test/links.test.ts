@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { ROOT, WIKI_LINK, createNode, extractLinks, readTree, searchNodes, setLinks, trashNode } from "../src";
+import { ROOT, WIKI_LINK, createNode, extractLinks, readTree, searchNodes, setLinks, titleMatches, trashNode } from "../src";
 
 function bodyWithLinks(...targets: string[]) {
   const doc = new Y.Doc();
@@ -109,5 +109,22 @@ describe("searchNodes", () => {
 
   it("does not match unrelated titles", () => {
     expect(titles("garden")).not.toContain("Cooking");
+  });
+});
+
+describe("titleMatches", () => {
+  it("needs every word, in any order and case", () => {
+    expect(titleMatches("Sunday shopping list", "list SHOPPING")).toBe(true);
+    expect(titleMatches("Sunday shopping list", "shopping cart")).toBe(false);
+  });
+
+  it("splits on spaces, not on the letter s", () => {
+    expect(titleMatches("Notes on lists", "notes lists")).toBe(true);
+    expect(titleMatches("Grocery list", "lists")).toBe(false);
+  });
+
+  it("reads an untitled page as Untitled, and an empty query matches all", () => {
+    expect(titleMatches("", "untitled")).toBe(true);
+    expect(titleMatches("Anything", "  ")).toBe(true);
   });
 });

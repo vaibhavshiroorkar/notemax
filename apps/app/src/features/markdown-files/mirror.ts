@@ -59,6 +59,21 @@ const hashOf = (text: string) => {
 
 const safe = (title: string) => (title || "Untitled").replace(/[\\/:*?"<>|\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 120) || "Untitled";
 
+/**
+ * The title a file renamed in another app asks for, or null when only its
+ * folder changed. The chapter number and the "(2)" Notemax adds are not part of it.
+ */
+export function titleFromRename(oldPath: string, newPath: string): string | null {
+  const bare = (path: string) => nameOf(path).replace(/\.md$/i, "");
+  if (bare(oldPath) === bare(newPath)) return null;
+  const numbered = /^\d{2} /.test(bare(oldPath));
+  const title = bare(newPath)
+    .replace(numbered ? /^\d{2} / : /^$/, "")
+    .replace(/ \(\d+\)$/, "")
+    .trim();
+  return title || null;
+}
+
 interface Planned {
   item: TreeItem;
   path: string;
@@ -150,7 +165,9 @@ class Mirror {
     return this.app.workspace;
   }
 
-  private tree = () => readTree(this.app.doc);
+  /** Read again only after the workspace changed, not once per file: a vault can hold thousands. */
+  private cached: Tree | null = null;
+  private tree = () => (this.cached ??= readTree(this.app.doc));
 
   private resolver() {
     const tree = this.tree();
@@ -182,7 +199,10 @@ class Mirror {
 
   async start() {
     this.written = (await read<Record<string, Written>>("written", this.ws)) ?? {};
+    const forgetTree = () => (this.cached = null);
+    this.app.doc.on("update", forgetTree);
     this.stops.push(
+      () => this.app.doc.off("update", forgetTree),
       onLocalWrite(({ docId }) => {
         const { workspace, docId: id } = splitScoped(docId);
         if (workspace === this.ws && id !== WORKSPACE_DOC_ID) this.dirty.add(id);
@@ -220,31 +240,43 @@ class Mirror {
   private async sendOut() {
     const tree = this.tree();
     const planned = plan(tree);
+    // A path some page is to have now is never removed for another: when two
+    // same-named pages swap their "(2)", each file is written over, not deleted.
+    const claimed = new Set([...planned.values()].map(({ path }) => path.toLowerCase()));
+    const removeUnclaimed = (path: string) => (claimed.has(path.toLowerCase()) ? Promise.resolve() : removeFile(this.root, path));
     const pictures = new Set<string>();
-    for (const [id, { item, path }] of planned) {
-      const before = this.written[id];
-      const front = hashOf(JSON.stringify(this.front(item)));
-      // A page's file is looked at again only when its text, title, tags or place may have changed.
-      if (!this.everything && before?.path === path && before.front === front && !this.dirty.has(id)) continue;
-      const { text, body } = await this.fileFor(item, pictures);
-      if (before?.body === body && before.path === path && before.front === front) continue;
-      const file = hashOf(text);
-      if (before?.file === file && before.path === path) {
-        before.front = front;
-        continue;
+    // Edits made while files are being written wait for the next look, instead of being cleared with these.
+    const dirty = this.dirty;
+    this.dirty = new Set();
+    try {
+      for (const [id, { item, path }] of planned) {
+        const before = this.written[id];
+        const front = hashOf(JSON.stringify(this.front(item)));
+        // A page's file is looked at again only when its text, title, tags or place may have changed.
+        if (!this.everything && before?.path === path && before.front === front && !dirty.has(id)) continue;
+        const { text, body } = await this.fileFor(item, pictures);
+        if (before?.body === body && before.path === path && before.front === front) continue;
+        const file = hashOf(text);
+        if (before?.file === file && before.path === path) {
+          before.front = front;
+          continue;
+        }
+        // The new file first, then the old one goes, so a stop in between leaves a copy rather than nothing.
+        const modified = await writeFile(this.root, path, text);
+        this.written[id] = { path, file, front, modified };
+        if (before && before.path !== path) await removeUnclaimed(before.path);
       }
-      if (before && before.path !== path) await removeFile(this.root, before.path);
-      const modified = await writeFile(this.root, path, text);
-      this.written[id] = { path, file, front, modified };
+      // Pages deleted or trashed here leave the folder too. Their versions stay in the app.
+      for (const id of Object.keys(this.written)) {
+        if (planned.has(id)) continue;
+        await removeUnclaimed(this.written[id].path);
+        delete this.written[id];
+      }
+      if (pictures.size) await this.sendPictures(pictures);
+    } catch (err) {
+      dirty.forEach((id) => this.dirty.add(id));
+      throw err;
     }
-    // Pages deleted or trashed here leave the folder too. Their versions stay in the app.
-    for (const id of Object.keys(this.written)) {
-      if (planned.has(id)) continue;
-      await removeFile(this.root, this.written[id].path);
-      delete this.written[id];
-    }
-    if (pictures.size) await this.sendPictures(pictures);
-    this.dirty.clear();
     this.everything = false;
   }
 
@@ -282,12 +314,22 @@ class Mirror {
       const { front, markdown } = splitFront(text);
       const tree = this.tree();
       const id = front.id && tree.byId.has(front.id) && tree.byId.get(front.id)!.deletedAt === null ? front.id : known;
-      if (id) await this.takeEdit(id, path, front, markdown, text, file.lastModified);
-      else await this.takeNew(path, front, markdown, text, file.lastModified);
+      if (id) {
+        // Same page under a new file name: renamed in another app, so the page takes the name.
+        const was = this.written[id]?.path;
+        const renamedTo = was && was !== path && !files.has(was) ? titleFromRename(was, path) : null;
+        await this.takeEdit(id, path, renamedTo ? { ...front, title: renamedTo } : front, markdown, text, file.lastModified);
+      } else {
+        await this.takeNew(path, front, markdown, text, file.lastModified);
+        // Kept at once, so a stop before the end of this look does not bring the file in twice.
+        await write("written", this.ws, this.written);
+      }
     }
     // A file deleted in another app takes its page to the trash, where it can still be restored.
     for (const [path, id] of byPath) {
       if (files.has(path) || path.endsWith(".excalidraw")) continue;
+      // Its page moved to a file of another name in this look: renamed, not deleted.
+      if (this.written[id] && this.written[id].path !== path && files.has(this.written[id].path)) continue;
       const node = this.tree().byId.get(id);
       delete this.written[id];
       if (node && node.deletedAt === null) {

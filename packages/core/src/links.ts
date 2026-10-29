@@ -15,6 +15,16 @@ export function extractLinks(body: Y.XmlFragment): string[] {
   return targets;
 }
 
+/** True when every word of the query is somewhere in the title, in any case. An empty query matches everything. */
+export function titleMatches(title: string, query: string): boolean {
+  const text = (title || "Untitled").toLowerCase();
+  return query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((word) => text.includes(word));
+}
+
 /**
  * Visible items whose title matches `query`, best first: exact title, then
  * title start, then word start, then anywhere in the title. Only notes by
