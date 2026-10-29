@@ -53,6 +53,13 @@ switchedOff.subscribe(() => {
   pluginsVersion.set(pluginsVersion.get() + 1);
 });
 
+/**
+ * Goes up when something a side panel's `when` reads has changed outside the
+ * app's own state, like the list of posted pages arriving from the server.
+ * The app redraws the right sidebar on it.
+ */
+export const sidePanelsChanged = createStore(0);
+
 let active: Plugin[] | null = null;
 const changed = () => {
   active = null;

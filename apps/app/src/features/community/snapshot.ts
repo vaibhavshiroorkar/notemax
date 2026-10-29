@@ -28,7 +28,8 @@ const countWords = (text: string) => text.split(/\s+/).filter(Boolean).length;
 export async function snapshotOf(node: TreeNode, app: AppContext, summary: string, tags: string[]): Promise<NewPost> {
   const { parts } = await partsOf(node, app, { boards: false });
   const r = resolver(app.tree);
-  const ready = parts.map((part) => ({ title: part.title, level: part.level, body: forReaders(part.body, r) ?? { type: "doc", content: [] } }));
+  // Each part keeps the id of its page, so a reader's note on it can lead the author back there.
+  const ready = parts.map((part) => ({ id: part.id, title: part.title, level: part.level, body: forReaders(part.body, r) ?? { type: "doc", content: [] } }));
   const text = ready.map((part) => (part.title ? `${part.title}\n` : "") + toPlainText(part.body, r)).join("\n\n");
   return {
     source_id: node.id,

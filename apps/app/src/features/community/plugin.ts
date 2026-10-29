@@ -1,8 +1,11 @@
 import { accountsEnabled } from "@/features/account/config";
+import { accountView } from "@/features/account/session";
+import { sidePanelsChanged } from "@/plugins/registry";
 import type { Plugin } from "@/plugins/types";
 import { CommunityPage } from "./CommunityPage";
 import { PostDialog } from "./PostDialog";
 import { ProfileCard } from "./ProfileCard";
+import { ReaderNotesPanel, loadPostedSources, postedSources, sourceOf } from "./ReaderNotesPanel";
 import "./community.css";
 
 export const communityPlugin: Plugin = {
@@ -14,6 +17,23 @@ export const communityPlugin: Plugin = {
   settings: [{ id: "community.profile", order: 42, group: "Account and sync", title: "Community profile", icon: "people", keywords: ["username", "name", "bio", "handle"], when: () => accountsEnabled, component: ProfileCard }],
   switcherButtons: [{ id: "community.open", label: "Community", icon: "people", when: () => accountsEnabled, run: (app) => app.openView("community") }],
   views: [{ id: "community", title: "Community", icon: "people", component: CommunityPage }],
+  // Private notes readers left on a page you posted, beside the page.
+  sidePanels: [{ id: "community.notes", title: "Notes from readers", order: 70, when: (app) => accountsEnabled && postedSources.get().has(sourceOf(app) ?? ""), component: ReaderNotesPanel }],
+  start() {
+    if (!accountsEnabled) return;
+    postedSources.subscribe(() => sidePanelsChanged.set(sidePanelsChanged.get() + 1));
+    // Again whenever someone signs in or out.
+    let last = "";
+    const look = () => {
+      const state = accountView.get().state;
+      if (state === last || state === "loading") return;
+      last = state;
+      if (state === "in") void loadPostedSources().catch(() => {});
+      else postedSources.set(new Set());
+    };
+    accountView.subscribe(look);
+    look();
+  },
   overlays: [{ id: "community.post", component: PostDialog }],
   contextMenu: [
     {

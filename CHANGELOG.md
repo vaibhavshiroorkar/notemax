@@ -2,6 +2,15 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.99.0 (2026-10-29)
+
+- Private notes to the author: pick lines in a post and choose Note to author, or send a note about the whole post. Only the author and the reader see it. The author finds them in Notes from readers, in the right sidebar of the page they posted; clicking the lines opens the page with them found.
+- Pick lines and choose Comment to quote them in a public comment.
+- Reading: text size, serif or not, a wide column, a line showing how far you have read, the reading time, Contents for books, and each post opens where you left off.
+- Security: posts may only use the classes they are written with; the site sends HSTS and a stricter opener policy; new limits on the server (30 new posts a day, lengths for page ids and picture links); reader notes count toward the 20-a-minute limit.
+- Find closes with its note, and Esc closes it from anywhere.
+- Needs supabase/migrations/20261029000000_reader_notes.sql run once in Supabase; until then private notes stay hidden.
+
 ## 0.98.0 (2026-10-29)
 
 - Settings, Help: the common questions with short answers, searched as you type, each with a button to the setting it talks about. The Welcome tab links to it.

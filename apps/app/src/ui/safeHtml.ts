@@ -35,7 +35,9 @@ const ATTRIBUTES = new Map<string, (value: string, el: Element) => boolean>([
   ["start", (value) => /^\d{1,6}$/.test(value)],
   // A list started with "1) " keeps its parenthesis.
   ["data-marker", (value, el) => el.tagName === "OL" && value === ")"],
-  ["class", (value) => /^[\w -]*$/.test(value)],
+  // Only the classes posts are written with (export/serialize.ts), so a post
+  // cannot borrow one of the app's own, like a menu fixed over everything.
+  ["class", (value) => value.split(/\s+/).filter(Boolean).every((name) => /^(link|tasks|align-(left|center|right)|language-[\w-]+)$/.test(name))],
   ["type", (value, el) => el.tagName === "INPUT" && value === "checkbox"],
   ["checked", (_value, el) => el.tagName === "INPUT"],
   ["disabled", (_value, el) => el.tagName === "INPUT"],

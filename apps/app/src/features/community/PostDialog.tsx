@@ -5,6 +5,7 @@ import { Dialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
 import { myId, myPostOf, myProfile, publish, unpublish, type Post, type Profile } from "./api";
 import { ProfileForm } from "./ProfileForm";
+import { loadPostedSources } from "./ReaderNotesPanel";
 import { snapshotOf } from "./snapshot";
 
 const RIGHTS = "communityRights";
@@ -85,6 +86,7 @@ export function PostDialog({ app, options, onClose }: { app: AppContext; options
               .filter(Boolean)
               .slice(0, 10);
             const post = await publish(await snapshotOf(node, app, summary, words));
+            void loadPostedSources().catch(() => {});
             setPref(RIGHTS, "1");
             setState({ ...state, post });
             app.notify(state.post ? "Updated your post" : "Posted to the community", { label: "See it", run: () => app.openView("community", { username: state.profile!.username }) });
@@ -121,6 +123,7 @@ export function PostDialog({ app, options, onClose }: { app: AppContext; options
               onClick={() =>
                 void run(async () => {
                   await unpublish(node.id);
+                  void loadPostedSources().catch(() => {});
                   setState({ ...state, post: null });
                   app.notify("Took the post down");
                 })

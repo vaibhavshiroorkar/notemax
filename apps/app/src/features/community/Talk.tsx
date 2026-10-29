@@ -55,8 +55,18 @@ export function useUnread(me: string | null): { count: number; refresh(): void }
 }
 
 /** A box to write in. Enter sends; Shift+Enter starts a new line. */
-function Composer({ label, placeholder, onSend, autoFocus = false }: { label: string; placeholder: string; onSend(text: string): Promise<unknown>; autoFocus?: boolean }) {
+function Composer({ label, placeholder, onSend, autoFocus = false, seed }: { label: string; placeholder: string; onSend(text: string): Promise<unknown>; autoFocus?: boolean; seed?: Seed | null }) {
   const [text, setText] = useState("");
+  const box = useRef<HTMLTextAreaElement>(null);
+  // Lines picked in a post start a comment quoting them.
+  useEffect(() => {
+    if (!seed) return;
+    setText((old) => (old ? `${seed.text}\n${old}` : seed.text));
+    requestAnimationFrame(() => {
+      box.current?.focus();
+      box.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  }, [seed]);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string>();
   const send = async (event?: FormEvent) => {
@@ -76,6 +86,7 @@ function Composer({ label, placeholder, onSend, autoFocus = false }: { label: st
   return (
     <form className="community-composer" onSubmit={(event) => void send(event)}>
       <textarea
+        ref={box}
         aria-label={label}
         placeholder={placeholder}
         rows={2}
@@ -335,7 +346,12 @@ function CommentItem({ comment, me, postAuthor, go, onReply, onRemoved }: { comm
 }
 
 /** Comments under a post, with replies one level in. */
-export function Comments({ postId, postAuthor, me, hasProfile, go }: { postId: string; postAuthor: string; me: string | null; hasProfile: boolean; go(place: Place): void }) {
+/** Text to start a comment with, like quoted lines. A new object each time, so the same quote can be asked for twice. */
+export interface Seed {
+  text: string;
+}
+
+export function Comments({ postId, postAuthor, me, hasProfile, go, seed }: { postId: string; postAuthor: string; me: string | null; hasProfile: boolean; go(place: Place): void; seed?: Seed | null }) {
   const { data, error, loading, reload } = useLoad(() => commentsOn(postId), [postId]);
   useLive("comments", `post_id=eq.${postId}`, reload);
   const [replying, setReplying] = useState<string | null>(null);
@@ -350,7 +366,7 @@ export function Comments({ postId, postAuthor, me, hasProfile, go }: { postId: s
         <Icon name="people" />
         {all.length ? `${all.length} comment${all.length === 1 ? "" : "s"}` : "Comments"}
       </h2>
-      {hasProfile ? <Composer label="Comment" placeholder="Add a comment" onSend={(text) => addComment(postId, text).then(reload)} /> : <JoinFirst me={me} go={go} doing="comment" />}
+      {hasProfile ? <Composer label="Comment" placeholder="Add a comment" seed={seed} onSend={(text) => addComment(postId, text).then(reload)} /> : <JoinFirst me={me} go={go} doing="comment" />}
       <Status error={error} loading={loading && !data}>
         <ul className="community-comment-list">
           {top.map((comment) => (

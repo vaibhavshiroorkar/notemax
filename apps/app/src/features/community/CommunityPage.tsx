@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { toHtml } from "@/features/export/serialize";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
@@ -6,7 +6,8 @@ import { safeHtml } from "@/ui/safeHtml";
 import { feed, follow, myId, myProfile, newestPeople, profilePage, readPost, searchPeople, searchPosts, type Post, type Profile, type ProfilePage } from "./api";
 import { Avatar, nameOf, plural, Status, useLoad, when, type Place } from "./bits";
 import { ProfileForm } from "./ProfileForm";
-import { ChatView, Comments, MessagesView, RoomsView, RoomView, useUnread } from "./Talk";
+import { NoteToAuthor, ReadingBar, SelectionButtons, readingMinutes, useReaderStyle, type Picked } from "./Reader";
+import { ChatView, Comments, MessagesView, RoomsView, RoomView, useUnread, type Seed } from "./Talk";
 import { accountView } from "@/features/account/session";
 
 /** Minutes to read, at 230 words a minute, like the status bar. */
@@ -272,15 +273,16 @@ function ProfileView({ username, go, me, hasProfile }: { username: string; go(pl
 }
 
 /** A post's parts as far as they can be shown. Anyone can write a post straight to the database, so its shape is checked, not trusted. */
-function partsToShow(parts: unknown): { title?: string; level: number; body: { content?: [] } }[] {
+function partsToShow(parts: unknown): { id: string; title?: string; level: number; body: { content?: [] } }[] {
   if (!Array.isArray(parts)) return [];
   return parts.flatMap((part: unknown) => {
     if (!part || typeof part !== "object") return [];
-    const { title, level, body } = part as { title?: unknown; level?: unknown; body?: unknown };
+    const { id, title, level, body } = part as { id?: unknown; title?: unknown; level?: unknown; body?: unknown };
     if (!body || typeof body !== "object") return [];
     const content = (body as { content?: unknown }).content;
     return [
       {
+        id: typeof id === "string" ? id : "",
         title: typeof title === "string" ? title : undefined,
         level: typeof level === "number" && Number.isFinite(level) ? Math.max(0, Math.floor(level)) : 0,
         body: { content: (Array.isArray(content) ? content : []) as [] },
@@ -289,16 +291,34 @@ function partsToShow(parts: unknown): { title?: string; level: number; body: { c
   });
 }
 
+/** Lines as a comment quotes them, each after "> ". */
+const quoted = (text: string) =>
+  text
+    .split(/\n+/)
+    .map((line) => `> ${line}`)
+    .join("\n");
+
 function PostView({ id, go, me, hasProfile }: { id: string; go(place: Place): void; me: string | null; hasProfile: boolean }) {
   const { data: post, error, loading } = useLoad(() => readPost(id), [id]);
+  const style = useReaderStyle();
+  const own = useRef<HTMLElement>(null);
+  const [picked, setPicked] = useState<Picked | null>(null);
+  const [seed, setSeed] = useState<Seed | null>(null);
   if (error || (loading && !post)) return <Status error={error} loading>{null}</Status>;
   if (!post) return <p className="community-empty">This post was taken down.</p>;
+  const parts = partsToShow(post.parts);
+  const titled = parts.filter((part) => part.title);
+  // Readers write privately to someone else, never to themselves.
+  const canNote = !!me && hasProfile && me !== post.author;
+  const toPart = (i: number) => own.current?.querySelector(`[data-part="${i}"]`)?.scrollIntoView({ block: "start", behavior: "smooth" });
   return (
-    <article className="community-post">
+    <article className="community-post" data-reading="" ref={own} style={style}>
+      <ReadingBar post={own} postId={post.id} />
       <Byline profile={post.profile} go={go}>
         <span className="community-meta">
           {when(post.published_at)}
           {post.updated_at.slice(0, 10) !== post.published_at.slice(0, 10) && `, updated ${when(post.updated_at)}`}
+          {`, ${readingMinutes(post.words)} min read`}
         </span>
       </Byline>
       <h1>{post.title}</h1>
@@ -312,17 +332,38 @@ function PostView({ id, go, me, hasProfile }: { id: string; go(place: Place): vo
           ))}
         </p>
       )}
-      {partsToShow(post.parts).map((part, i) => {
+      {titled.length > 2 && (
+        <details className="reader-contents-box">
+          <summary className="community-meta">Contents</summary>
+          <ol className="reader-contents">
+            {parts.map((part, i) =>
+              part.title ? (
+                <li key={i} style={{ paddingLeft: part.level * 14 }}>
+                  <button onClick={() => toPart(i)}>{part.title}</button>
+                </li>
+              ) : null,
+            )}
+          </ol>
+        </details>
+      )}
+      {parts.map((part, i) => {
         const level = Math.min(2 + part.level, 6);
         const Heading = `h${level}` as "h2";
         return (
-          <section key={i} className="community-part">
+          <section key={i} className="community-part" data-part={i}>
             {part.title && <Heading>{part.title}</Heading>}
             <div className="community-body" dangerouslySetInnerHTML={{ __html: safeHtml(toHtml(part.body.content ?? [], NOTHING)) }} />
           </section>
         );
       })}
-      <Comments postId={post.id} postAuthor={post.author} me={me} hasProfile={hasProfile} go={go} />
+      <SelectionButtons
+        root={own}
+        canNote={canNote}
+        onNote={setPicked}
+        onComment={(lines) => setSeed({ text: `${quoted(lines.quote)}\n\n` })}
+      />
+      {canNote && <NoteToAuthor post={post} picked={picked} onClearPick={() => setPicked(null)} partIds={parts.map((part) => part.id)} />}
+      <Comments postId={post.id} postAuthor={post.author} me={me} hasProfile={hasProfile} go={go} seed={seed} />
     </article>
   );
 }

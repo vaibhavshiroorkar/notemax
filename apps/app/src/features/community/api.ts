@@ -14,6 +14,8 @@ export interface Profile {
 }
 
 export interface PostPart {
+  /** The page the part came from. Posts from before 0.99 have none. */
+  id?: string;
   title?: string;
   level?: number;
   body: DocNode;
@@ -41,7 +43,8 @@ const PAGE = 30;
 const client = async () => (await import("@/features/account/client")).supabase;
 
 /** Plain words for messages from the database, which speak Postgres. */
-function fail(error: { code?: string; message: string }): never {
+function fail(error: { code?: string; message: string; hint?: string }): never {
+  if (error.hint === "post_limit") throw new Error("That is 30 new posts today. Try again tomorrow.");
   if (error.code === "23505") throw new Error("That username is taken. Try another.");
   // A check failed. Postgres names the constraint in the message, like "profiles_username_check".
   if (error.code === "23514") {
@@ -199,6 +202,15 @@ export async function publish(post: NewPost): Promise<Post> {
     .single();
   if (error) fail(error);
   return data as unknown as Post;
+}
+
+/** The pages this person has posted, by the id of the page each came from. */
+export async function myPostedSources(): Promise<string[]> {
+  const me = await myId();
+  if (!me) return [];
+  const { data, error } = await (await client()).from("posts").select("source_id").eq("author", me).limit(1000);
+  if (error) fail(error);
+  return ((data ?? []) as { source_id: string }[]).map((row) => row.source_id);
 }
 
 export async function unpublish(sourceId: string) {

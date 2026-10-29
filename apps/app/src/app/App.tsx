@@ -14,7 +14,7 @@ import { memoryOnly, requestPersistentStorage } from "@/platform/platform";
 import { startAt } from "@/platform/mode";
 import { getPref, setPref } from "@/platform/prefs";
 import { useOption } from "@/plugins/options";
-import { pluginsVersion, registry, setPluginOn } from "@/plugins/registry";
+import { pluginsVersion, registry, setPluginOn, sidePanelsChanged } from "@/plugins/registry";
 import { formatShortcut, matchesShortcut, shortcutFor, shortcutOverrides } from "@/plugins/shortcuts";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
@@ -131,6 +131,7 @@ export function App() {
   const calm = useOption("appearance", "fadeControls");
   // Switching a plugin on or off redraws everything, and starts the editor and sidebar over.
   const version = pluginsVersion.use();
+  sidePanelsChanged.use();
 
   useEffect(() => {
     requestPersistentStorage().then(setPersistent, () => setPersistent(false));

@@ -6,8 +6,8 @@
 // The signing key lives outside the repo, in ~/.tauri/notemax-updater.key
 // (made with `tauri signer generate`). Its public half is in tauri.conf.json.
 // Without the key no app will accept an update, so keep a copy of it safe.
-import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,10 +19,15 @@ if (!existsSync(key)) throw new Error(`no signing key at ${key}`);
 const { version } = JSON.parse(readFileSync(join(root, "apps/desktop/src-tauri/tauri.conf.json"), "utf8"));
 const notes = process.argv.slice(2).join(" ") || `Notemax ${version}`;
 
-execFileSync("pnpm", ["--filter", "./apps/desktop", "exec", "tauri", "build", "--bundles", "nsis"], {
+// Emptied first: the app is built from the web build, and an installer left
+// here would end up inside the next installer.
+const out = join(root, "apps/app/public/desktop");
+rmSync(out, { recursive: true, force: true });
+
+// A fixed command with nothing from outside in it. pnpm is a .cmd file on Windows, which needs a shell.
+execSync("pnpm --filter ./apps/desktop exec tauri build --bundles nsis", {
   cwd: root,
   stdio: "inherit",
-  shell: true,
   env: { ...process.env, TAURI_SIGNING_PRIVATE_KEY: readFileSync(key, "utf8").trim(), TAURI_SIGNING_PRIVATE_KEY_PASSWORD: "" },
 });
 
@@ -30,10 +35,10 @@ const bundle = join(root, "apps/desktop/src-tauri/target/release/bundle/nsis");
 const installer = `Notemax_${version}_x64-setup.exe`;
 const signature = readFileSync(join(bundle, `${installer}.sig`), "utf8").trim();
 
-// Only the newest installer is served, so the site stays small.
-const out = join(root, "apps/app/public/desktop");
+// Cloudflare Pages serves files up to 25 MiB.
+const size = statSync(join(bundle, installer)).size;
+if (size > 25 * 1024 * 1024) throw new Error(`${installer} is ${(size / 1048576).toFixed(1)} MiB, over the 25 MiB a page file may be`);
 mkdirSync(out, { recursive: true });
-for (const old of readdirSync(out)) rmSync(join(out, old));
 copyFileSync(join(bundle, installer), join(out, installer));
 writeFileSync(
   join(out, "latest.json"),

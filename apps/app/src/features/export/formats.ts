@@ -10,6 +10,8 @@ import { escapeHtml, htmlDocument, toHtml, toMarkdown, toPlainText, type DocNode
 import { zip } from "./zip";
 
 export interface Part {
+  /** The page it came from. */
+  id?: string;
   title?: string;
   body: DocNode;
   /** 0 for a chapter right in the book, 1 for one inside a part, and so on. A part's body is its description. */
@@ -35,13 +37,13 @@ export async function partsOf(node: TreeNode, app: AppContext, { boards = true }
   const title = node.title || (node.kind === "book" ? "Untitled book" : "Untitled");
   const made = new Map<string, Asset>();
   const book = app.tree.items.get(node.id);
-  if (node.kind !== "book" || !book) return { title, parts: [{ body: await loadBody(node.id, app.workspace) }], made };
+  if (node.kind !== "book" || !book) return { title, parts: [{ id: node.id, body: await loadBody(node.id, app.workspace) }], made };
   const parts: Part[] = [];
   // The book's description comes before the first chapter.
   const intro = await loadBody(book.id, app.workspace);
-  if (isWritten(intro)) parts.push({ body: intro });
+  if (isWritten(intro)) parts.push({ id: book.id, body: intro });
   const partOf = async (item: TreeItem, title: string, level: number) => {
-    const part: Part = { title, body: EMPTY, level };
+    const part: Part = { id: item.id, title, body: EMPTY, level };
     if (item.kind === "note") part.body = await loadBody(item.id, app.workspace);
     else if (item.kind === "board" && boards) {
       const picture = await boardPicture(item.id, app);

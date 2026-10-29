@@ -54,6 +54,19 @@ export function FindBar({ app }: { app: AppContext }) {
     };
   }, [open, editor, query, matchCase]);
 
+  // The bar belongs to its note: it goes when the note closes, and Esc closes it from anywhere.
+  useEffect(() => {
+    if (!open || !editor) return;
+    const gone = () => finding.set(null);
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && finding.set(null);
+    editor.on("destroy", gone);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      editor.off("destroy", gone);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open, editor]);
+
   if (!open) return null;
   const { matches, current } = editor ? findState(editor) : { matches: [], current: -1 };
   const close = (focusNote = true) => {
