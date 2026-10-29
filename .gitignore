@@ -24,3 +24,6 @@ Thumbs.db
 
 # Downloaded by scripts/fetch-runtimes.mjs before dev and build
 apps/app/public/runtimes/
+
+# The signed desktop installer and latest.json, made by scripts/release-desktop.mjs
+apps/app/public/desktop/

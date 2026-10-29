@@ -2,6 +2,13 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.98.0 (2026-10-29)
+
+- Settings, Help: the common questions with short answers, searched as you type, each with a button to the setting it talks about. The Welcome tab links to it.
+- Settings, Updates: the version, Check for updates, and Update automatically (on at first). The website switches to a new version at its next start. The desktop app downloads signed updates from notemax.pages.dev/desktop and installs them when it restarts or quits.
+- Settings, How it works: whether sidebar pages and links open in this tab or a new one, what a new tab shows (Home, Search or a new note), whether new pages go at the end or the top, and the Welcome tab.
+- `pnpm desktop:release` builds and signs the Windows installer and writes latest.json for the updater. The signing key stays outside the repo.
+
 ## 0.97.0 (2026-10-29)
 
 - A new workspace starts empty: no starter notes. It opens a Welcome tab once instead, which is not a page and leaves nothing in the sidebar.

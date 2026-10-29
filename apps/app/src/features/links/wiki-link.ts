@@ -78,7 +78,7 @@ export const WikiLink = Node.create<WikiLinkOptions>({
       const unsubscribe = hub.subscribe(render);
       dom.addEventListener("click", (event) => {
         event.preventDefault();
-        hub.open(node.attrs.targetId);
+        hub.follow(node.attrs.targetId);
       });
       return {
         dom,
@@ -100,7 +100,7 @@ export const WikiLink = Node.create<WikiLinkOptions>({
       "Mod-Enter": ({ editor }) => {
         const { selection } = editor.state;
         if (!(selection instanceof NodeSelection) || selection.node.type.name !== WIKI_LINK) return false;
-        this.options.hub.open(selection.node.attrs.targetId);
+        this.options.hub.follow(selection.node.attrs.targetId);
         return true;
       },
     };

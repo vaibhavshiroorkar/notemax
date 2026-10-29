@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, type DragEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { ROOT, canMove, childrenOf, createNode, moveNodes, renameNode, type Tree } from "@notemax/core";
+import { ROOT, canMove, childrenOf, createNode, moveNode, moveNodes, renameNode, type Tree } from "@notemax/core";
+import { newPagesAt, sidebarOpens } from "@/platform/behavior";
 import { registry } from "@/plugins/registry";
 import { formatShortcut, shortcutFor, shortcutOverrides } from "@/plugins/shortcuts";
 import type { AppContext } from "@/plugins/types";
@@ -105,7 +106,7 @@ export function Sidebar({ app }: { app: AppContext }) {
     () => ({
       tree: () => appRef.current.tree,
       rename: (id, title) => renameNode(doc, id, title),
-      select: (id, newTab) => appRef.current.open(id, newTab ? { newTab } : undefined),
+      select: (id, newTab) => appRef.current.open(id, newTab || sidebarOpens.get() === "new-tab" ? { newTab: true } : undefined),
       pick(item, event) {
         if (event.ctrlKey || event.metaKey) toggleSelected(item.id, markedId.get());
         else if (event.shiftKey) selectRange(appRef.current.tree, item.id, markedId.get());
@@ -117,6 +118,7 @@ export function Sidebar({ app }: { app: AppContext }) {
       },
       add(kind, parentId) {
         const id = createNode(doc, kind, parentId);
+        if (newPagesAt.get() === "top") moveNode(doc, id, parentId, 0);
         expand(parentId);
         // A note or book opens so its title can be typed. A folder has no page,
         // so its name is typed in the sidebar row instead.

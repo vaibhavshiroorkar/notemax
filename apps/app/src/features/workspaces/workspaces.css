@@ -437,6 +437,10 @@
   list-style: none;
 }
 
+.welcome-help {
+  margin-top: 24px;
+}
+
 .welcome-keys kbd {
   display: inline-block;
   min-width: 24px;

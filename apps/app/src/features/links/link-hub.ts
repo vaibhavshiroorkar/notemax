@@ -15,7 +15,11 @@ export class LinkHub {
   private doc?: Y.Doc;
   private listeners = new Set<() => void>();
 
-  constructor(private readonly openNote: (id: string) => void) {}
+  constructor(
+    private readonly openNote: (id: string) => void,
+    /** For links in the text and backlinks, which may open in a new tab (Settings, How it works). */
+    private readonly followLink: (id: string) => void = openNote,
+  ) {}
 
   update(doc: Y.Doc, tree: Tree) {
     this.doc = doc;
@@ -40,6 +44,11 @@ export class LinkHub {
 
   open(id: string) {
     if (this.isOpenable(id)) this.openNote(id);
+  }
+
+  /** Opens a page from a link to it. */
+  follow(id: string) {
+    if (this.isOpenable(id)) this.followLink(id);
   }
 
   /** The folder or book a note is in, or "" at the top level. Tells apart two notes with one title. */

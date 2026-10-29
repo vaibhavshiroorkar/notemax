@@ -1,25 +1,28 @@
 import { showToast } from "@/ui/toast";
+import { autoUpdate } from "./behavior";
 import { isDesktop } from "./platform";
 
 /**
- * Lets the web app open with no network (see sw.js). A new version waits until
- * the user says to reload, so it never swaps the app out from under typing.
+ * Lets the web app open with no network (see sw.js). A new version found
+ * while the app is open waits until the user says to reload, so it never
+ * swaps the app out from under typing. With Update automatically on, one
+ * that was already waiting at start takes over right away, before any typing.
  */
 export function startOffline() {
   if (isDesktop || !import.meta.env.PROD || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register("/sw.js");
-      const offer = (worker: ServiceWorker) =>
-        showToast("A new version of Notemax is ready.", {
-          label: "Reload",
-          run: () => {
-            navigator.serviceWorker.addEventListener("controllerchange", () => location.reload(), { once: true });
-            worker.postMessage("update");
-          },
-        });
+      const take = (worker: ServiceWorker) => {
+        navigator.serviceWorker.addEventListener("controllerchange", () => location.reload(), { once: true });
+        worker.postMessage("update");
+      };
+      const offer = (worker: ServiceWorker) => showToast("A new version of Notemax is ready.", { label: "Reload", run: () => take(worker) });
       // A first install has no controller yet and needs no reload.
-      if (registration.waiting && navigator.serviceWorker.controller) offer(registration.waiting);
+      if (registration.waiting && navigator.serviceWorker.controller) {
+        if (autoUpdate.get()) take(registration.waiting);
+        else offer(registration.waiting);
+      }
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing;
         worker?.addEventListener("statechange", () => {

@@ -182,6 +182,9 @@ pub fn run() {
             {
                 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
                 app.handle().plugin(tauri_plugin_global_shortcut::Builder::new().build())?;
+                // New versions come signed from notemax.pages.dev/desktop (tauri.conf.json).
+                app.handle().plugin(tauri_plugin_updater::Builder::new().build())?;
+                app.handle().plugin(tauri_plugin_process::init())?;
                 // Another program may already own the shortcut. The app still
                 // works without it, through the tray menu.
                 if let Err(err) = app.global_shortcut().on_shortcut(CAPTURE_SHORTCUT, |app, _shortcut, event| {

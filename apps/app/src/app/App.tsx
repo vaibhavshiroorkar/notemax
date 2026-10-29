@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
-import { ROOT, WELCOME_ID, createNode, restoreNode, trashNode, type NodeKind, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
+import { ROOT, WELCOME_ID, createNode, moveNode, restoreNode, trashNode, type NodeKind, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
 import { addRecent, recentPages } from "@/data/recent";
 import { PageWorkspace, shownWorkspace } from "@/data/scope";
 import { useWorkspace } from "@/data/useWorkspace";
@@ -35,6 +35,7 @@ import { ForeignPage, foreignActive, foreignScopes, scopedApp } from "./ForeignP
 import { revealing, useReveal } from "./reveal";
 import { pageInAddress, showInAddress, startBrowserNavigation } from "./history";
 import { TabStrip } from "./TabStrip";
+import { linksOpen, newPagesAt, newTabShows } from "@/platform/behavior";
 import { SplitDivider } from "./SplitDivider";
 import {
   activatePane,
@@ -116,7 +117,8 @@ export function App() {
   const [focusMode, setFocusMode] = useState(false);
   const [persistent, setPersistent] = useState<boolean>();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsSection, setSettingsSection] = useState<string>();
+  // A count beside the section, so asking for the same section again while Settings is open still goes there.
+  const [settingsSection, setSettingsSection] = useState<{ id?: string; ask: number }>({ ask: 0 });
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
@@ -172,7 +174,7 @@ export function App() {
     // The account window, or Settings when the Sync plugin that adds it is off.
     if (registry.overlay("account")) return setOverlay({ id: "account", options: { error } });
     setAccountError(error);
-    setSettingsSection("account");
+    setSettingsSection((old) => ({ id: "account", ask: old.ask + 1 }));
     setSettingsOpen(true);
   });
 
@@ -251,7 +253,7 @@ export function App() {
     [clearOverlays],
   );
 
-  const [hub] = useState(() => new LinkHub(select));
+  const [hub] = useState(() => new LinkHub(select, (id) => select(id, linksOpen.get() === "new-tab" ? { newTab: true } : undefined)));
   // Before paint, so links never show an old title for a frame.
   useLayoutEffect(() => {
     if (workspace.doc && workspace.tree) hub.update(workspace.doc, workspace.tree);
@@ -339,6 +341,7 @@ export function App() {
     open: select,
     create(kind: NodeKind) {
       const id = createNode(doc, kind, ROOT);
+      if (newPagesAt.get() === "top") moveNode(doc, id, ROOT, 0);
       // A folder has no page; it is named in its sidebar row instead.
       if (kind !== "folder") select(id);
     },
@@ -367,7 +370,12 @@ export function App() {
     canGoForward: canGoForward(tabs),
     goBack,
     goForward,
-    newTab,
+    newTab() {
+      newTab();
+      const shows = newTabShows.get();
+      if (shows === "search") setPaletteOpen(true);
+      else if (shows === "note") app.create("note");
+    },
     closeTab: () => closeTab(),
     reopenClosedTab,
     cycleTab,
@@ -381,7 +389,7 @@ export function App() {
     showSidebar: () => openSide("left", true),
     toggleSidePanel: () => openSide("right", focusMode || !sidePanelOpen),
     openSettings(section) {
-      setSettingsSection(section);
+      setSettingsSection((old) => ({ id: section, ask: old.ask + 1 }));
       setSettingsOpen(true);
     },
     openPalette: () => setPaletteOpen(true),
@@ -585,7 +593,7 @@ export function App() {
           onCollapse={() => setSidePanelOpen(false)}
         />
       )}
-      {settingsOpen && <Settings app={app} persistent={persistent} accountError={accountError} initialSection={settingsSection} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <Settings app={app} persistent={persistent} accountError={accountError} initialSection={settingsSection.id} ask={settingsSection.ask} onClose={() => setSettingsOpen(false)} />}
       {paletteOpen && <Palette app={app} onClose={() => setPaletteOpen(false)} />}
       {shortcutsOpen && (
         <ShortcutsHelp

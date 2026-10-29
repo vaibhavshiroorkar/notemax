@@ -1,6 +1,6 @@
 {
   "name": "notemax",
-  "version": "0.97.0",
+  "version": "0.98.0",
   "description": "A local-first note app for writing that grows into books",
   "homepage": "https://notemax.pages.dev",
   "repository": {
@@ -17,6 +17,7 @@
     "desktop": "pnpm --filter @notemax/desktop dev",
     "build": "pnpm --filter @notemax/app build",
     "desktop:build": "pnpm --filter @notemax/desktop build",
+    "desktop:release": "node scripts/release-desktop.mjs",
     "typecheck": "pnpm -r typecheck",
     "version:set": "node scripts/set-version.mjs",
     "test": "pnpm -r test"

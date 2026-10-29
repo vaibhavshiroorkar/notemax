@@ -13,7 +13,7 @@ export function BacklinksPanel({ app }: { app: AppContext }) {
         <ul className="backlinks-list">
           {sources.map((source) => (
             <li key={source.id}>
-              <button className="backlink" onClick={() => hub.open(source.id)}>
+              <button className="backlink" onClick={() => hub.follow(source.id)}>
                 <span className="backlink-title">{source.title || "Untitled"}</span>
                 <span className="backlink-where">{hub.where(source.id)}</span>
               </button>

@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "What the app windows may do: core features, the local notes database, letting the capture box hide or move itself, zooming the app, full screen with F11, and showing reminders.",
+  "description": "What the app windows may do: core features, the local notes database, letting the capture box hide or move itself, zooming the app, full screen with F11, showing reminders, and installing updates.",
   "windows": ["main", "capture"],
   "permissions": [
     "core:default",
@@ -11,6 +11,8 @@
     "core:webview:allow-set-webview-zoom",
     "sql:default",
     "sql:allow-execute",
-    "notification:default"
+    "notification:default",
+    "updater:default",
+    "process:allow-restart"
   ]
 }

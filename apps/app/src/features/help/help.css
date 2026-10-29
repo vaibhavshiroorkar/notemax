@@ -1,0 +1,31 @@
+.help-search {
+  margin-bottom: 12px;
+}
+
+.help-list {
+  display: grid;
+}
+
+.help-item {
+  border-bottom: 1px solid var(--border);
+}
+
+.help-item summary {
+  padding: 10px 0;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.help-item p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.help-item .link-button {
+  margin-bottom: 10px;
+}
+
+.help-none {
+  color: var(--muted);
+}

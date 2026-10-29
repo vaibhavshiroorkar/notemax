@@ -1,6 +1,6 @@
 {
   "name": "@notemax/app",
-  "version": "0.97.0",
+  "version": "0.98.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -29,7 +29,9 @@
     "@supabase/supabase-js": "^2.118.0",
     "@tauri-apps/api": "^2.12.3",
     "@tauri-apps/plugin-notification": "^2.7.0",
+    "@tauri-apps/plugin-process": "^2.4.0",
     "@tauri-apps/plugin-sql": "^2.5.0",
+    "@tauri-apps/plugin-updater": "^2.14.1",
     "@tiptap/core": "3.31.4",
     "@tiptap/extension-code-block-lowlight": "^3.32.0",
     "@tiptap/extension-collaboration": "^3.31.4",

@@ -7,7 +7,7 @@ import type { AppContext } from "@/plugins/types";
 import { contextMenuHandler } from "@/ui/ContextMenu";
 import { Icon, type IconName } from "@/ui/Icon";
 import { TabOverflow } from "./TabOverflow";
-import { activatePane, activePane, activateTab, closeTab, isView, moveTab, moveTabToPane, newTab, openPage, viewId, type Pane, type Tab } from "./tabs";
+import { activatePane, activePane, activateTab, closeTab, isView, moveTab, moveTabToPane, openPage, viewId, type Pane, type Tab } from "./tabs";
 
 const TAB_TYPE = "application/x-notemax-tab";
 
@@ -167,7 +167,7 @@ export function TabStrip({ app, pane }: { app: AppContext; pane: Pane }) {
         );
       })}
       {hidden.length > 0 && <TabOverflow hidden={hidden.map((tab) => ({ tab, ...labelOf(app, tab) }))} />}
-      <button className="icon-button tab-new" aria-label="New tab" title="New tab" onClick={newTab}>
+      <button className="icon-button tab-new" aria-label="New tab" title="New tab" onClick={() => app.newTab()}>
         <Icon name="plus" />
       </button>
     </div>

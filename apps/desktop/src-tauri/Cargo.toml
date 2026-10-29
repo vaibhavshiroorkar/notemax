@@ -1,6 +1,6 @@
 [package]
 name = "notemax"
-version = "0.97.0"
+version = "0.98.0"
 description = "Notemax desktop app"
 authors = ["Notemax"]
 license = ""
@@ -19,6 +19,8 @@ tauri-build = { version = "2.7.2", features = [] }
 [dependencies]
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
+# tauri::generate_context! writes the plugins config from tauri.conf.json as JSON values.
+serde_json = "1"
 tauri = { version = "2.12.3", features = ["tray-icon", "unstable"] }
 tauri-plugin-log = "2"
 tauri-plugin-notification = "2"
@@ -27,4 +29,6 @@ tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"
+tauri-plugin-process = "2"
 tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2"

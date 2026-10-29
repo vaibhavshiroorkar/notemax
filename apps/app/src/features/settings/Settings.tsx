@@ -1,4 +1,4 @@
-import { Fragment, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { setOption, useOption } from "@/plugins/options";
 import { registry } from "@/plugins/registry";
 import type { Plugin, PluginOption, SettingsContext, SettingsSection } from "@/plugins/types";
@@ -61,7 +61,7 @@ const matches = (text: string, query: string[]) => query.every((word) => text.to
  * searchable with no extra work. A phone shows the list of categories first,
  * then one category with a way back.
  */
-export function Settings({ onClose, initialSection, ...ctx }: SettingsContext & { onClose(): void; initialSection?: string }) {
+export function Settings({ onClose, initialSection, ask, ...ctx }: SettingsContext & { onClose(): void; initialSection?: string; ask?: number }) {
   const sections = grouped(registry.settings());
   const [current, setCurrent] = useState(() => sections.find((s) => s.id === (initialSection ?? lastSection))?.id ?? sections[0]?.id);
   lastSection = current;
@@ -69,6 +69,16 @@ export function Settings({ onClose, initialSection, ...ctx }: SettingsContext & 
   const [pane, setPane] = useState<"list" | "section">(() => (initialSection ? "section" : "list"));
   const [query, setQuery] = useState("");
   const [found, setFound] = useState(true);
+  // Asked for a section while already open, like from a Help answer: go there.
+  const asked = useRef(ask);
+  useEffect(() => {
+    if (ask === asked.current) return;
+    asked.current = ask;
+    if (!initialSection || !sections.some((s) => s.id === initialSection)) return;
+    setCurrent(initialSection);
+    setPane("section");
+    setQuery("");
+  }, [ask, initialSection, sections]);
   const content = useRef<HTMLDivElement>(null);
   const searching = query.trim() !== "";
 

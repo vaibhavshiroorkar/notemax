@@ -1,3 +1,4 @@
+import { showWelcome } from "@/platform/behavior";
 import { savedStore } from "@/platform/store";
 import { formatShortcut } from "@/plugins/shortcuts";
 import type { AppContext } from "@/plugins/types";
@@ -19,7 +20,7 @@ function quietForChecks(): boolean {
 
 /** True once for a workspace with no pages at all, and marks it shown. */
 export function welcomeDue(app: AppContext): boolean {
-  if (app.tree.byId.size > 0 || welcomed.get().includes(app.workspace) || quietForChecks()) return false;
+  if (!showWelcome.get() || app.tree.byId.size > 0 || welcomed.get().includes(app.workspace) || quietForChecks()) return false;
   welcomed.set([...welcomed.get(), app.workspace]);
   return true;
 }
@@ -49,6 +50,9 @@ export function WelcomeView({ app }: { app: AppContext; options: Record<string, 
           <kbd>{formatShortcut("Mod+/")}</kbd> for every shortcut
         </li>
       </ul>
+      <button className="link-button welcome-help" onClick={() => app.openSettings("help")}>
+        Questions? See Help
+      </button>
     </article>
   );
 }
