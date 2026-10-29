@@ -29,3 +29,18 @@ export const autoUpdate = savedStore<boolean>("autoUpdate", true);
 
 /** A Welcome tab for each new, empty workspace. */
 export const showWelcome = savedStore<boolean>("showWelcome", true);
+
+export type PinnedBars = 0 | 1 | 2 | 3;
+/**
+ * On a phone, how many of the three bars at the top stay on screen while a
+ * page scrolls, counted from the bottom: the formatting bar (or a post's
+ * reading tools), then the chapter bar above it, then the tabs. The rest
+ * scroll away with the page.
+ */
+export const pinnedBars = savedStore<PinnedBars>("pinnedBars", 1, {
+  decode: (raw) => {
+    const n = Number(raw);
+    return n === 0 || n === 1 || n === 2 || n === 3 ? n : 1;
+  },
+  encode: String,
+});

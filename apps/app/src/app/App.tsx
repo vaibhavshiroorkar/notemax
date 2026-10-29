@@ -28,6 +28,7 @@ import { Toasts } from "@/ui/Toasts";
 import { usePresence } from "@/ui/usePresence";
 import { useEdgeSwipe } from "./useEdgeSwipe";
 import { ChapterNav } from "@/features/books/ChapterNav";
+import { PhoneScroll, PinnedBarsButton } from "./PhoneBars";
 import { RightSidebar } from "./RightSidebar";
 import { Gated } from "./Gated";
 import { SideTools } from "./SideTools";
@@ -208,7 +209,6 @@ export function App() {
   }, []);
 
   const frame = useRef<HTMLDivElement>(null);
-  const [navigationOpen, setNavigationOpen] = useState(true);
 
   useEdgeSwipe(
     () => openSide("left", true),
@@ -320,10 +320,6 @@ export function App() {
   useReveal();
 
   const showLeft = sidebarOpen && !focusMode;
-  // A side opened by a swipe brings the hidden phone bar back, with its buttons.
-  useEffect(() => {
-    if (sidebarOpen || sidePanelOpen) setNavigationOpen(true);
-  }, [sidebarOpen, sidePanelOpen]);
   // Kept on the page a moment after closing, so it can slide out.
   const leftMounted = usePresence(showLeft);
 
@@ -503,6 +499,41 @@ export function App() {
   const rightCommand = registry.allCommands().find((command) => command.id === "sidebar.toggle-right");
   const rightKeys = rightCommand ? shortcutFor(rightCommand, overrides) : "";
 
+  const mainTop = (
+    <div className="main-top">
+      <button
+        className="icon-button sidebar-toggle"
+        aria-label={showLeft ? "Hide sidebar" : "Show sidebar"}
+        title={`${showLeft ? "Hide" : "Show"} sidebar${sidebarKeys ? ` (${formatShortcut(sidebarKeys)})` : ""}`}
+        onClick={app.toggleSidebar}
+      >
+        <Icon name="sidebar" />
+      </button>
+      {/* A phone has its own Back, and no room to spare. */}
+      {!narrow && (
+        <div className="history-buttons">
+          <button className="icon-button" aria-label="Back" title="Back (Alt+Left)" disabled={!app.canGoBack} onClick={app.goBack}>
+            <Icon name="arrow-left" />
+          </button>
+          <button className="icon-button" aria-label="Forward" title="Forward (Alt+Right)" disabled={!app.canGoForward} onClick={app.goForward}>
+            <Icon name="arrow-right" />
+          </button>
+        </div>
+      )}
+      {multi ? <div className="main-top-space" /> : <TabStrip app={app} pane={tabs.panes.find((pane) => pane.id === tabs.activePane)!} />}
+      <div className="page-toolbar">
+        <button
+          className="icon-button side-panel-toggle"
+          aria-label={`${showRight ? "Hide" : "Show"} right sidebar`}
+          title={`${showRight ? "Hide" : "Show"} right sidebar${rightKeys ? ` (${formatShortcut(rightKeys)})` : ""}`}
+          onClick={app.toggleSidePanel}
+        >
+          <Icon name="side-panel" />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div
       ref={frame}
@@ -511,7 +542,6 @@ export function App() {
       data-side-panel={showRight ? "open" : "closed"}
       data-focus={focusMode || undefined}
       data-calm={calm || undefined}
-      data-navigation={navigationOpen ? "open" : "closed"}
       style={{ "--sidebar-width": `${leftWidth}px`, "--side-panel-width": `${rightWidth}px` } as CSSProperties}
     >
       {leftMounted && <Sidebar key={`${version}:${shown}`} app={app} />}
@@ -519,48 +549,26 @@ export function App() {
         <ResizeHandle side="left" label="Resize sidebar" size={SIDEBAR} width={sidebarWidth} cssVar="--sidebar-width" onCollapse={() => setSidebarOpen(false)} />
       )}
       <main className="main">
-        <div className="main-top">
-        <button
-          className="icon-button sidebar-toggle"
-          aria-label={showLeft ? "Hide sidebar" : "Show sidebar"}
-          title={`${showLeft ? "Hide" : "Show"} sidebar${sidebarKeys ? ` (${formatShortcut(sidebarKeys)})` : ""}`}
-          onClick={app.toggleSidebar}
-        >
-          <Icon name="sidebar" />
-        </button>
-        {/* A phone has its own Back, and no room to spare. */}
-        {!narrow && (
-          <div className="history-buttons">
-            <button className="icon-button" aria-label="Back" title="Back (Alt+Left)" disabled={!app.canGoBack} onClick={app.goBack}>
-              <Icon name="arrow-left" />
-            </button>
-            <button className="icon-button" aria-label="Forward" title="Forward (Alt+Right)" disabled={!app.canGoForward} onClick={app.goForward}>
-              <Icon name="arrow-right" />
-            </button>
-          </div>
-        )}
-        {multi ? <div className="main-top-space" /> : <TabStrip app={app} pane={tabs.panes.find((pane) => pane.id === tabs.activePane)!} />}
-        <div className="page-toolbar">
-          <button
-            className="icon-button side-panel-toggle"
-            aria-label={`${showRight ? "Hide" : "Show"} right sidebar`}
-            title={`${showRight ? "Hide" : "Show"} right sidebar${rightKeys ? ` (${formatShortcut(rightKeys)})` : ""}`}
-            onClick={app.toggleSidePanel}
+        {narrow ? (
+          <PhoneScroll
+            tabs={mainTop}
+            navigation={
+              <div className="mobile-navigation">
+                <PinnedBarsButton />
+                {sideNode?.kind === "note" && registry.isOn("books") && <ChapterNav tree={sideApp.tree} chapterId={sideNode.id} onOpen={sideApp.open} />}
+              </div>
+            }
+            tools={<KeyboardBar />}
           >
-            <Icon name="side-panel" />
-          </button>
-        </div>
-        </div>
-        {narrow && (
-          <div className="mobile-navigation">
-            <button className="icon-button" aria-label={navigationOpen ? "Hide navigation" : "Show navigation"} aria-expanded={navigationOpen} onPointerDown={(event) => event.preventDefault()} onClick={() => setNavigationOpen((open) => !open)}>
-              <Icon name={navigationOpen ? "chevron-up" : "chevron-down"} />
-            </button>
-            {sideNode?.kind === "note" && registry.isOn("books") && <ChapterNav tree={sideApp.tree} chapterId={sideNode.id} onOpen={sideApp.open} />}
-          </div>
+            {activePage}
+          </PhoneScroll>
+        ) : (
+          <>
+            {mainTop}
+            <KeyboardBar />
+            {renderSplit(split, [])}
+          </>
         )}
-        <KeyboardBar />
-        {narrow ? <div className="page-scroll">{activePage}</div> : renderSplit(split, [])}
       </main>
       {/* Contents only: a box for the right sidebar's workspace, without a box in the layout. */}
       <div className="side-scope" data-workspace={sideApp.workspace}>

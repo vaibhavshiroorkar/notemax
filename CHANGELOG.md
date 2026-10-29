@@ -2,6 +2,12 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.102.0 (2026-10-29)
+
+- Phones: the tabs, the chapter bar and the formatting bar ride at the top of the page. By default only the formatting bar stays while you scroll. The button with a small screen on it, under the tabs, steps through none, bottom, bottom two and all three; Settings, How it works has the same choice.
+- Phones: a post's reading tools sit in that bottom bar, and picked lines put Note to author and Comment there, clear of the phone's own menu.
+- Zoom and the bar choice replace their last message instead of piling up toasts.
+
 ## 0.101.0 (2026-10-29)
 
 - Phones: selected text in a note drags again. Select it first, then hold the selection and move it. A hold on words not yet selected still only selects them.

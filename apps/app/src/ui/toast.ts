@@ -23,3 +23,14 @@ export function showToast(message: string, action?: Toast["action"]): number {
 export function dismissToast(id: number) {
   toasts.set(toasts.get().filter((toast) => toast.id !== id));
 }
+
+const lastOfKind = new Map<string, number>();
+
+/** Like showToast, but in the place of the last message of the same kind, so steps through a setting do not pile up. */
+export function replaceToast(kind: string, message: string): number {
+  const last = lastOfKind.get(kind);
+  if (last !== undefined) dismissToast(last);
+  const id = showToast(message);
+  lastOfKind.set(kind, id);
+  return id;
+}

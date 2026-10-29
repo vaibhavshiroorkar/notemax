@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { savedStore } from "@/platform/store";
 import { Icon } from "@/ui/Icon";
+import { phoneBar } from "@/ui/phoneBar";
 import type { Post } from "./api";
 import { messageOf, plural, useLoad } from "./bits";
 import { MAX_NOTE, MAX_QUOTE, NOTES_NOT_SET_UP, notesOn, removeNote, sendNote, type ReaderNote } from "./notes";
@@ -34,10 +36,12 @@ export function useReaderStyle(): CSSProperties {
 /**
  * Text size, serif or not, narrow or wide, and a thin line along the top
  * showing how far down the post is read. `post` is the post's own element;
- * the page around it is what scrolls.
+ * the page around it is what scrolls. On a phone the buttons sit in the
+ * third bar at the top, where a note has its formatting.
  */
 export function ReadingBar({ post, postId }: { post: RefObject<HTMLElement | null>; postId: string }) {
   const current = look.use();
+  const slot = phoneBar.use();
   const [done, setDone] = useState(0);
   const set = (change: Partial<Look>) => look.set({ ...look.get(), ...change });
 
@@ -72,9 +76,7 @@ export function ReadingBar({ post, postId }: { post: RefObject<HTMLElement | nul
     };
   }, [post, postId]);
 
-  return (
-    <>
-    <div className="reader-progress" style={{ transform: `scaleX(${done})` }} aria-hidden="true" />
+  const tools = (
     <div className="reader-bar" role="toolbar" aria-label="Reading">
       <button className="icon-button" aria-label="Smaller text" title="Smaller text" disabled={current.size <= 14} onClick={() => set({ size: current.size - 1 })}>
         A-
@@ -85,10 +87,18 @@ export function ReadingBar({ post, postId }: { post: RefObject<HTMLElement | nul
       <button className="icon-button reader-serif" aria-pressed={current.serif} title="Book type" onClick={() => set({ serif: !current.serif })}>
         Serif
       </button>
-      <button className="icon-button" aria-pressed={current.wide} aria-label="Wide column" title="Wide column" onClick={() => set({ wide: !current.wide })}>
-        <Icon name="expand" />
-      </button>
+      {/* A phone's column is the screen already. */}
+      {!slot && (
+        <button className="icon-button" aria-pressed={current.wide} aria-label="Wide column" title="Wide column" onClick={() => set({ wide: !current.wide })}>
+          <Icon name="expand" />
+        </button>
+      )}
     </div>
+  );
+  return (
+    <>
+      <div className="reader-progress" style={{ transform: `scaleX(${done})` }} aria-hidden="true" />
+      {slot ? createPortal(tools, slot) : tools}
     </>
   );
 }
@@ -105,6 +115,7 @@ export interface Picked {
  */
 export function SelectionButtons({ root, canNote, onNote, onComment }: { root: RefObject<HTMLElement | null>; canNote: boolean; onNote(picked: Picked): void; onComment(picked: Picked): void }) {
   const [at, setAt] = useState<{ x: number; y: number; picked: Picked } | null>(null);
+  const slot = phoneBar.use();
   useEffect(() => {
     const read = () => {
       const selection = document.getSelection();
@@ -136,8 +147,9 @@ export function SelectionButtons({ root, canNote, onNote, onComment }: { root: R
     setAt(null);
     document.getSelection()?.removeAllRanges();
   };
-  return (
-    <div className="reader-picked" style={{ left: at.x, top: at.y }} role="toolbar" aria-label="Picked lines" onMouseDown={(event) => event.preventDefault()}>
+  // A phone shows its own menu over picked text, so there the buttons wait in the bar at the top.
+  const buttons = (
+    <div className="reader-picked" data-in-bar={slot ? "" : undefined} style={slot ? undefined : { left: at.x, top: at.y }} role="toolbar" aria-label="Picked lines" onMouseDown={(event) => event.preventDefault()}>
       {canNote && (
         <button className="button" onClick={pick(onNote)}>
           <Icon name="lock" /> Note to author
@@ -148,6 +160,7 @@ export function SelectionButtons({ root, canNote, onNote, onComment }: { root: R
       </button>
     </div>
   );
+  return slot ? createPortal(buttons, slot) : buttons;
 }
 
 function NoteItem({ note, onRemoved }: { note: ReaderNote; onRemoved(): void }) {

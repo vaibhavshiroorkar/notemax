@@ -1,4 +1,4 @@
-import { linksOpen, newPagesAt, newTabShows, showWelcome, sidebarOpens, type NewTabShows, type Where } from "@/platform/behavior";
+import { linksOpen, newPagesAt, newTabShows, pinnedBars, showWelcome, sidebarOpens, type NewTabShows, type PinnedBars, type Where } from "@/platform/behavior";
 import { Segmented } from "@/ui/Segmented";
 
 const WHERE: { value: Where; label: string }[] = [
@@ -10,6 +10,13 @@ const NEW_TAB: { value: NewTabShows; label: string }[] = [
   { value: "home", label: "Home" },
   { value: "search", label: "Search" },
   { value: "note", label: "A new note" },
+];
+
+const PINNED: { value: `${PinnedBars}`; label: string }[] = [
+  { value: "0", label: "None" },
+  { value: "1", label: "Bottom" },
+  { value: "2", label: "Bottom two" },
+  { value: "3", label: "All three" },
 ];
 
 /** Choices about how the app acts, each starting the way it always worked. */
@@ -40,6 +47,13 @@ export function BehaviorSection() {
           ]}
           onChange={newPagesAt.set}
         />
+      </div>
+      <div className="settings-row">
+        <span>
+          On a phone, bars that stay while scrolling
+          <span className="settings-description">The bottom bar has formatting in a note and reading tools in a post. The button with three lines, under the tabs, changes it too.</span>
+        </span>
+        <Segmented<`${PinnedBars}`> label="On a phone, bars that stay while scrolling" value={`${pinnedBars.use()}`} options={PINNED} onChange={(value) => pinnedBars.set(Number(value) as PinnedBars)} />
       </div>
       <label className="settings-row settings-check">
         <span>Open a Welcome tab in each new workspace</span>

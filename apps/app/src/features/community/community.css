@@ -5,7 +5,7 @@
 
 .community-top {
   position: sticky;
-  top: 0;
+  top: var(--pinned-height, 0px);
   z-index: 3;
   background: var(--bg);
   display: flex;
@@ -309,7 +309,7 @@
 
 .community-aside {
   position: sticky;
-  top: 72px;
+  top: calc(var(--pinned-height, 0px) + 72px);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -754,7 +754,7 @@
 /* Sticks to the top of the pane, over the community's own top bar. */
 .reader-progress {
   position: sticky;
-  top: 0;
+  top: var(--pinned-height, 0px);
   z-index: 4;
   height: 2px;
   margin-bottom: -2px;
@@ -789,6 +789,30 @@
   border-radius: 8px;
   box-shadow: 0 6px 20px rgb(0 0 0 / 0.16);
   transform: translate(-50%, calc(-100% - 8px));
+}
+
+/* On a phone, in the bar at the top instead of over the text. */
+.reader-picked[data-in-bar] {
+  position: static;
+  transform: none;
+  box-shadow: none;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 3px 4px;
+}
+
+.phone-tools > .reader-bar {
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 3px 4px;
+}
+
+.phone-tools > .reader-bar .icon-button {
+  min-width: 38px;
+  height: 36px;
+  font-size: 15px;
 }
 
 .reader-picked .button {

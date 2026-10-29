@@ -1,5 +1,5 @@
 import { isDesktop } from "@/platform/platform";
-import type { AppContext } from "@/plugins/types";
+import { replaceToast } from "@/ui/toast";
 import { savedStore } from "@/platform/store";
 
 // Zoom scales the whole app, apart from text size, which is only the note's
@@ -41,10 +41,10 @@ export const zoomBy = (steps: number) => zoomTo(zoom.get() + steps * ZOOM.step);
  * keypad's + are caught here, since they are the same key to a person but not
  * to a shortcut.
  */
-export function startZoom(app: AppContext) {
+export function startZoom() {
   if (!isDesktop) return;
   void applyZoom().catch(() => {});
-  say = (percent) => app.notify(`Zoom ${percent}%`);
+  say = (percent) => replaceToast("zoom", `Zoom ${percent}%`);
   zoom.subscribe(() => void applyZoom().catch(() => {}));
   window.addEventListener("keydown", (event) => {
     if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.altKey) return;

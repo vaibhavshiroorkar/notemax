@@ -879,10 +879,38 @@
   }
 }
 
-/* Phone navigation changes only when its arrow is pressed. */
+/*
+ * A phone: the three bars ride at the top of the page (PhoneBars.tsx). The
+ * ones that stay are pulled up into view by a sticky box; sticky parts of a
+ * page sit under them, and scrolling to a part leaves room for them.
+ */
 .mobile-navigation { display: none; }
+.phone-scroll {
+  scroll-padding-top: var(--pinned-height, 0px);
+}
+.phone-bars {
+  position: sticky;
+  z-index: 6;
+  background: var(--bg);
+}
+.phone-page {
+  position: relative;
+  height: calc(100% - var(--bars-height, 0px));
+}
+.phone-tools {
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  background: var(--sidebar-bg);
+  scrollbar-width: none;
+}
+.phone-tools:empty { display: none; }
+.phone-tools::-webkit-scrollbar { display: none; }
+.phone-tools > .keyboard-bar {
+  flex: 1;
+  border-bottom: 0;
+}
 @media (max-width: 700px) {
-  .app[data-navigation="closed"] .main-top { display: none; }
   .mobile-navigation {
     display: flex;
     align-items: center;
@@ -899,7 +927,6 @@
     padding: 0 8px 0 0;
   }
   .note > .note-book { display: none; }
-  .main > .keyboard-bar { position: relative; }
 }
 
 /* Marks the right sidebar's workspace for menus, without a box of its own in the grid. */
