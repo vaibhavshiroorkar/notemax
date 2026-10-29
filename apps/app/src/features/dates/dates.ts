@@ -5,6 +5,7 @@ import { holder, setRole } from "@/features/special/roles";
 import { titleFor } from "@/features/special/titles";
 import { storeFor } from "@/platform/platform";
 import type { AppContext } from "@/plugins/types";
+import { addPage } from "@/data/addPage";
 
 // A page can carry a date (its "date" setting, like 2026-10-22), which puts it
 // on the calendar. A daily note is a note made for a day: its "daily" setting
@@ -80,7 +81,7 @@ export async function openDay(app: AppContext, key: string, where?: { newTab?: b
 
 /** A new page dated a day, at the top level, opened to be named. */
 export function addPageOn(app: AppContext, key: string) {
-  const id = createNode(app.doc, "note", ROOT);
+  const id = addPage(app.doc, "note");
   setDate(app, id, key);
   app.open(id);
 }

@@ -1,11 +1,41 @@
-/* Left sidebar, page, right sidebar. A hidden side keeps its column at zero width.
-   The widths are variables so the resize handles can change them. */
+/*
+ * Left sidebar, page, right sidebar. Each side's width, and how open it is
+ * (0 shut, 1 open), are animated values. The columns, the resize handles, the
+ * sides' contents and the status bar are all worked out from them, so they
+ * move as one: nothing jumps ahead while the rest slides.
+ */
+@property --sidebar-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 260px;
+}
+@property --side-panel-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 240px;
+}
+@property --left-open {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+@property --right-open {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 .app {
   --sidebar-width: 260px;
   --side-panel-width: 240px;
+  --left-open: 1;
+  --right-open: 0;
+  /* What the sidebars take from the window's width right now, mid-slide too. */
+  --left-room: calc(min(var(--sidebar-width), 45vw) * var(--left-open));
+  --right-room: calc(min(var(--side-panel-width), 45vw) * var(--right-open));
   position: relative;
   display: grid;
-  grid-template-columns: min(var(--sidebar-width), 45vw) 1fr 0;
+  grid-template-columns: var(--left-room) 1fr var(--right-room);
   height: 100vh;
   /* A phone's address bar comes and goes; dvh is the height actually shown. */
   height: 100dvh;
@@ -18,25 +48,32 @@
 }
 
 .app[data-sidebar="closed"] {
-  grid-template-columns: 0 1fr 0;
+  --left-open: 0;
 }
 
 .app[data-side-panel="open"] {
-  grid-template-columns: min(var(--sidebar-width), 45vw) 1fr min(var(--side-panel-width), 45vw);
+  --right-open: 1;
 }
 
-.app[data-sidebar="closed"][data-side-panel="open"] {
-  grid-template-columns: 0 1fr min(var(--side-panel-width), 45vw);
-}
-
-/* Opening and closing slide the columns. Not while a resize handle is dragged,
-   where the width must follow the pointer exactly. */
+/* Opening, closing and a double-click back to the usual width all ease the
+   same way. Not while a resize handle is dragged, where the width must follow
+   the pointer exactly. */
 .app {
-  transition: grid-template-columns 0.18s ease;
+  transition:
+    --sidebar-width 0.24s cubic-bezier(0.2, 0, 0, 1),
+    --side-panel-width 0.24s cubic-bezier(0.2, 0, 0, 1),
+    --left-open 0.22s cubic-bezier(0.2, 0, 0, 1),
+    --right-open 0.22s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .resizing .app {
   transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app {
+    transition: none;
+  }
 }
 
 /* Nothing in the layout may make the window itself scroll. Without this, a
@@ -53,20 +90,11 @@
   min-width: 0;
 }
 
-/* The status bar moves aside for the right sidebar at the same pace it slides. */
-.status-bar {
-  transition: right 0.18s ease;
-}
-
-.resizing .status-bar {
-  transition: none;
-}
-
-/* Status text is for the moment it changes; after that it fades until pointed at. */
+/* Status text is for the moment it changes; after that it fades until pointed at.
+   Its place follows the right sidebar through --right-room, which slides already. */
 .app .status-bar {
-  transition:
-    right 0.18s ease,
-    opacity 0.6s ease;
+  right: calc(var(--right-room) + 16px);
+  transition: opacity 0.6s ease;
 }
 
 .app .status-bar[data-quiet]:not(:hover) {
@@ -547,20 +575,6 @@
   white-space: nowrap;
 }
 
-/* The status bar is pinned to the window corner; keep it off the right sidebar. */
-.app[data-side-panel="open"] .status-bar {
-  right: calc(min(var(--side-panel-width), 45vw) + 16px);
-}
-
-/* What the sidebars take from the window's width, for the status bar to stay between them. */
-.app[data-sidebar="open"] {
-  --left-room: min(var(--sidebar-width), 45vw);
-}
-
-.app[data-side-panel="open"] {
-  --right-room: min(var(--side-panel-width), 45vw);
-}
-
 @media (max-width: 700px) {
   /* Both sides float over the page here, so match every attribute combination. */
   .app[data-sidebar][data-side-panel] {
@@ -569,10 +583,6 @@
 
   .main {
     grid-column: 1;
-  }
-
-  .app[data-side-panel="open"] .status-bar {
-    right: 16px;
   }
 
   /* The sides float over the page here, so they take no room from the status bar. */
@@ -904,10 +914,25 @@
   background: var(--sidebar-bg);
   scrollbar-width: none;
 }
-.phone-tools:empty { display: none; }
+/* The bar of tools shows when a page has tools for it. The button that picks
+   which bars stay sits at its start, and in the bar above when there is none. */
+.phone-tools:not(:has(> :not(.pinned-bars-button))) { display: none; }
+.phone-bars:has(.phone-tools > :not(.pinned-bars-button)) .mobile-navigation > .pinned-bars-button { display: none; }
+/* With its button gone below, the chapter bar shows only for a chapter of a book. */
+.phone-bars:has(.phone-tools > :not(.pinned-bars-button)) .mobile-navigation:not(:has(.note-book)) { display: none; }
+.phone-tools > .pinned-bars-button {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  flex: none;
+  align-self: center;
+  margin-left: max(4px, env(safe-area-inset-left));
+  background: var(--sidebar-bg);
+}
 .phone-tools::-webkit-scrollbar { display: none; }
 .phone-tools > .keyboard-bar {
   flex: 1;
+  min-width: 0;
   border-bottom: 0;
 }
 @media (max-width: 700px) {

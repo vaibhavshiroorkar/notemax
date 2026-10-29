@@ -1,10 +1,11 @@
-import { ROOT, createNode, type TreeNode } from "@notemax/core";
+import { ROOT, type TreeNode } from "@notemax/core";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { registry } from "@/plugins/registry";
 import { Icon } from "@/ui/Icon";
 import { ShareDialog, ShareLine } from "./ShareDialog";
 import { canEdit, keepShare, shareFromLink, shareOf } from "./share";
 import "./share.css";
+import { addPage } from "@/data/addPage";
 
 const openNote = (app: AppContext) => (app.activeId && app.tree.byId.get(app.activeId)?.kind === "note" ? app.activeId : null);
 
@@ -14,7 +15,7 @@ function openFromLink(app: AppContext) {
   const { share, title } = shareFromLink;
   const here = [...app.tree.byId.values()].find((node) => node.deletedAt === null && shareOf(node)?.room === share.room);
   if (here) return app.open(here.id);
-  const id = createNode(app.doc, "note", ROOT, title || "Shared page");
+  const id = addPage(app.doc, "note", ROOT, title || "Shared page");
   keepShare(app.doc, id, share);
   app.open(id);
   app.notify(canEdit(share) ? "Opened a shared page. Its text arrives from the people who have it open." : "Opened a page shared with you to read. Its text arrives from the people who can edit it.");

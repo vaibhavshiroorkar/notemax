@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type * as Y from "yjs";
 import { descendantsOf, restoreNode, titleMatches, type Tree, type TreeNode } from "@notemax/core";
 import { DeleteDialog, eraseForever } from "@/features/trash/erase";
 import { Icon } from "@/ui/Icon";
+import { useDismiss } from "@/ui/useDismiss";
 
 /** The trash at the bottom of the sidebar: a button with a count that opens a list upward, with its own search. */
 export function TrashBox({ tree, doc, onOpenAll }: { tree: Tree; doc: Y.Doc; onOpenAll(): void }) {
@@ -12,20 +13,7 @@ export function TrashBox({ tree, doc, onOpenAll }: { tree: Tree; doc: Y.Doc; onO
   const wrapper = useRef<HTMLDivElement>(null);
   const count = tree.trash.length;
 
-  useEffect(() => {
-    if (!open) return;
-    // The confirm dialog is inside the wrapper too, so answering it keeps the box open.
-    const onPointer = (event: PointerEvent) => {
-      if (!wrapper.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && !document.querySelector("dialog[open]") && setOpen(false);
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useDismiss(open, () => setOpen(false), wrapper);
 
   const shown = query.trim() ? tree.trash.filter((node) => titleMatches(node.title, query)) : tree.trash;
 

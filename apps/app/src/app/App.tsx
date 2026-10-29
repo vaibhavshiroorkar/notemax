@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
-import { ROOT, WELCOME_ID, createNode, moveNode, restoreNode, trashNode, type NodeKind, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
+import { WELCOME_ID, restoreNode, trashNode, type NodeKind, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
 import { addRecent, recentPages } from "@/data/recent";
 import { PageWorkspace, shownWorkspace } from "@/data/scope";
 import { useWorkspace } from "@/data/useWorkspace";
@@ -20,7 +20,7 @@ import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { ResizeHandle } from "@/ui/ResizeHandle";
 import { Safe } from "@/ui/Safe";
-import { SIDEBAR, SIDE_PANEL, sidePanelWidth, sidebarWidth } from "@/ui/layout";
+import { NARROW_QUERY, SIDEBAR, SIDE_PANEL, isNarrow, sidePanelWidth, sidebarWidth, useNarrow } from "@/ui/layout";
 import { showToast } from "@/ui/toast";
 import { ContextMenuHost } from "@/ui/ContextMenu";
 import { PromptHost } from "@/ui/Prompt";
@@ -36,7 +36,7 @@ import { ForeignPage, foreignActive, foreignScopes, scopedApp } from "./ForeignP
 import { revealing, useReveal } from "./reveal";
 import { pageInAddress, showInAddress, startBrowserNavigation } from "./history";
 import { TabStrip } from "./TabStrip";
-import { linksOpen, newPagesAt, newTabShows } from "@/platform/behavior";
+import { linksOpen, newTabShows } from "@/platform/behavior";
 import { SplitDivider } from "./SplitDivider";
 import {
   activatePane,
@@ -67,9 +67,10 @@ import {
 } from "./tabs";
 import "./app.css";
 import { KeyboardBar } from "@/features/editor/KeyboardBar";
+import { isTypingTarget } from "@/ui/typing";
+import { addPage } from "@/data/addPage";
 
 // Matches the breakpoint in app.css where the sidebars become overlays.
-const isNarrow = () => window.matchMedia("(max-width: 700px)").matches;
 
 // Folders do not open as pages.
 const isPage = (tree: Tree, id: string) => {
@@ -100,13 +101,7 @@ export function App() {
   });
   const tabs = layout.use();
   // Split view needs room: a phone shows the active pane alone.
-  const [narrow, setNarrow] = useState(isNarrow);
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 700px)");
-    const onChange = () => setNarrow(query.matches);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
-  }, []);
+  const narrow = useNarrow();
   const visit = currentVisit(tabs);
   // The active tab's page, when it is from another workspace than the sidebar shows.
   const foreign = visit && !isView(visit.page) && visit.ws !== shown ? visit : null;
@@ -191,7 +186,7 @@ export function App() {
 
   // A window that becomes phone-sized closes its sides, so the page shows.
   useEffect(() => {
-    const narrow = window.matchMedia("(max-width: 700px)");
+    const narrow = window.matchMedia(NARROW_QUERY);
     const onChange = () => {
       if (!narrow.matches) return;
       setSidebarOpen(false);
@@ -286,7 +281,7 @@ export function App() {
         return shortcut && matchesShortcut(event, shortcut);
       });
       if (!command) return;
-      if (command.keyOutsideText && event.target instanceof Element && event.target.closest("input, textarea, [contenteditable='true']")) return;
+      if (command.keyOutsideText && isTypingTarget(event.target)) return;
       event.preventDefault();
       command.run(app);
     };
@@ -338,8 +333,7 @@ export function App() {
     activeId,
     open: select,
     create(kind: NodeKind) {
-      const id = createNode(doc, kind, ROOT);
-      if (newPagesAt.get() === "top") moveNode(doc, id, ROOT, 0);
+      const id = addPage(doc, kind);
       // A folder has no page; it is named in its sidebar row instead.
       if (kind !== "folder") select(id);
     },

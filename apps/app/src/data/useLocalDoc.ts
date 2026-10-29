@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { LocalDoc, SaveStatus } from "@notemax/core";
 import { acquireDoc, releaseDoc } from "./docCache";
 import { usePageWorkspace } from "./scope";
+import { messageOf } from "@/ui/format";
 
 /** Opens a doc while the component is on screen: of the page's workspace, unless one is named. */
 export function useLocalDoc(docId: string, named?: string) {
@@ -23,7 +24,7 @@ export function useLocalDoc(docId: string, named?: string) {
         setStatus(doc.status());
         setLocal(doc);
       })
-      .catch((err) => !cancelled && setOpenError(err instanceof Error ? err.message : String(err)));
+      .catch((err) => !cancelled && setOpenError(messageOf(err)));
 
     return () => {
       cancelled = true;

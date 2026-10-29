@@ -3,6 +3,7 @@ import { captureNote } from "@notemax/core";
 import { docChannelFor, getStore, isDesktop } from "@/platform/platform";
 import { workspaceNow } from "@/platform/prefs";
 import { getPref, setPref } from "@/platform/prefs";
+import { messageOf } from "@/ui/format";
 
 const DRAFT_KEY = "captureDraft";
 
@@ -49,7 +50,7 @@ export function Capture() {
       await hideWindow();
     } catch (err) {
       // Keep the window open with the text in it, so nothing is lost.
-      setError(err instanceof Error ? err.message : String(err));
+      setError(messageOf(err));
     } finally {
       setSaving(false);
     }

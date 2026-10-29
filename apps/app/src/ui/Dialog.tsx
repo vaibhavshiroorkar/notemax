@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { touchFirst } from "./layout";
 
 /**
  * A modal built on <dialog>, which gives focus trapping, Esc to close and a
@@ -27,7 +28,7 @@ export function Dialog({
     // screen that would pop the keyboard up over the dialog, so only fields
     // marked "always", where typing is the whole point, get it there.
     const field = ref.current?.querySelector<HTMLElement>("[data-autofocus]");
-    const touch = matchMedia("(pointer: coarse)").matches;
+    const touch = touchFirst();
     if (field && (field.dataset.autofocus === "always" || !touch)) field.focus();
     // On a touch screen nothing needs the keyboard yet, so the dialog itself takes focus,
     // not the Close button, which would show a focus ring nobody asked for.

@@ -17,6 +17,7 @@ import { pluginsVersion, registry, setPluginOn, switchedOff } from "@/plugins/re
 import { ConfirmDialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
 import { OptionRow } from "./Settings";
+import { messageOf } from "@/ui/format";
 
 const GUIDE = "https://github.com/vaibhavshiroorkar/notemax/blob/main/docs/plugins.md";
 
@@ -53,7 +54,7 @@ export function PluginOptionsSection() {
     try {
       await install(pending.code, pending.source);
     } catch (error) {
-      setProblem(`${pending.label}: ${error instanceof Error ? error.message : String(error)}`);
+      setProblem(`${pending.label}: ${messageOf(error)}`);
     } finally {
       setBusy(false);
     }
@@ -66,7 +67,7 @@ export function PluginOptionsSection() {
       const code = await download(address);
       setAsking({ code, source: address, label: address });
     } catch (error) {
-      setProblem(`${address}: ${error instanceof Error ? error.message : String(error)}`);
+      setProblem(`${address}: ${messageOf(error)}`);
     } finally {
       setBusy(false);
     }

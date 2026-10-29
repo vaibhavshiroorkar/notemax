@@ -14,6 +14,7 @@ import sql from "highlight.js/lib/languages/sql";
 import typescript from "highlight.js/lib/languages/typescript";
 import xml from "highlight.js/lib/languages/xml";
 import { Icon } from "@/ui/Icon";
+import { copyText } from "@/ui/clipboard";
 
 // Code blocks in notes: colored by language, with a language picker and a
 // copy button on top. The node keeps the name "codeBlock" and its "language"
@@ -57,7 +58,8 @@ function CodeBlockView({ node, updateAttributes, editor }: ReactNodeViewProps) {
           aria-label={copied ? "Copied" : "Copy code"}
           title={copied ? "Copied" : "Copy code"}
           onClick={() =>
-            void navigator.clipboard.writeText(node.textContent).then(() => {
+            void copyText(node.textContent, "the code").then((done) => {
+              if (!done) return;
               setCopied(true);
               setTimeout(() => setCopied(false), 1200);
             })

@@ -3,6 +3,7 @@ import { accountView } from "@/features/account/session";
 import { myProfile, type Profile } from "./api";
 import { ProfileForm } from "./ProfileForm";
 import "./community.css";
+import { messageOf } from "@/ui/format";
 
 /**
  * Your community name where account things live: the username with a way to
@@ -19,7 +20,7 @@ export function ProfileCard() {
     let live = true;
     myProfile().then(
       (found) => live && setProfile(found),
-      (failure: unknown) => live && setError(failure instanceof Error ? failure.message : String(failure)),
+      (failure: unknown) => live && setError(messageOf(failure)),
     );
     return () => {
       live = false;

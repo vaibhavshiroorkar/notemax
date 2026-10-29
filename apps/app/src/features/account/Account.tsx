@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import type { SettingsContext } from "@/plugins/types";
 import "./account.css";
+import { messageOf } from "@/ui/format";
 
 type Client = typeof import("./client");
 
-const messageOf = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 /**
  * The Account part of Settings. The Supabase library loads only when this

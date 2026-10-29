@@ -13,6 +13,7 @@ import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { fileToBody, noteToFile, splitFront, type Front } from "./convert";
 import { forget, read, write } from "./keep";
+import { messageOf } from "@/ui/format";
 
 // Keeps a workspace and a folder of plain Markdown files in step, both ways.
 // Every note is a .md file; folders are folders; a book is a folder of
@@ -232,7 +233,7 @@ class Mirror {
         mirrorView.set({ state: "on", folder: this.root.name, files: Object.keys(this.written).length, checked: Date.now() });
       })
       .catch((err) => {
-        mirrorView.set({ state: "on", folder: this.root.name, files: Object.keys(this.written).length, checked: Date.now(), error: err instanceof Error ? err.message : String(err) });
+        mirrorView.set({ state: "on", folder: this.root.name, files: Object.keys(this.written).length, checked: Date.now(), error: messageOf(err) });
       });
     return this.busy;
   }

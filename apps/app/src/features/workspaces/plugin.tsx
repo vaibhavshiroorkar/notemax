@@ -6,6 +6,7 @@ import { Switcher } from "./Switcher";
 import { copyToWorkspace } from "./transfer";
 import { WelcomeView, welcomeDue } from "./WelcomeView";
 import "./workspaces.css";
+import { messageOf } from "@/ui/format";
 
 /** The pages a menu acts on. A page picked along with a folder it sits in goes with that folder. */
 function pagesOf(target: ContextTarget, app: AppContext): TreeNode[] {
@@ -19,7 +20,7 @@ async function send(target: ContextTarget, app: AppContext, workspace: string, m
   try {
     for (const page of pages) await copyToWorkspace(app.doc, page.id, workspace, app.workspace);
   } catch (error) {
-    app.notify(`Could not ${move ? "move" : "copy"} to ${where}: ${error instanceof Error ? error.message : String(error)}`);
+    app.notify(`Could not ${move ? "move" : "copy"} to ${where}: ${messageOf(error)}`);
     return;
   }
   // Moving trashes the original only once the copy is safely stored.

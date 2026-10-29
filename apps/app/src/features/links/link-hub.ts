@@ -1,5 +1,6 @@
 import type * as Y from "yjs";
-import { ROOT, createNode, searchNodes, type Tree, type TreeNode } from "@notemax/core";
+import { ROOT, searchNodes, type Tree, type TreeNode } from "@notemax/core";
+import { addPage } from "@/data/addPage";
 
 export type LinkMenuItem =
   | { kind: "existing"; node: TreeNode; where: string }
@@ -72,6 +73,6 @@ export class LinkHub {
   /** New notes from a link go to the top level, like every other quick note. */
   create(title: string): string {
     if (!this.doc) throw new Error("workspace is not open");
-    return createNode(this.doc, "note", ROOT, title);
+    return addPage(this.doc, "note", ROOT, title);
   }
 }

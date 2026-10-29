@@ -6,6 +6,7 @@ import { saveAsset } from "@notemax/core";
 import { storeFor } from "@/platform/platform";
 import { showToast } from "@/ui/toast";
 import { VideoView } from "./VideoView";
+import { messageOf } from "@/ui/format";
 
 /**
  * Big enough for a few minutes of phone video. The whole file is held in
@@ -67,7 +68,7 @@ export async function insertVideos(editor: Editor, files: File[], pos?: number) 
       editor.chain().focus().insertContentAt(at, { type: "video", attrs: { asset, name } }).run();
       at = editor.state.selection.to;
     } catch (error) {
-      showToast(`Could not add ${name}: ${error instanceof Error ? error.message : String(error)}`);
+      showToast(`Could not add ${name}: ${messageOf(error)}`);
     }
   }
 }

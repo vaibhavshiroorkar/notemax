@@ -1,7 +1,7 @@
 import { activePane, activateTab, arrange, arrangementOf, canSplit, closeOtherTabs, closePane, closeTab, layout, splitActive, splitTab, type Arrangement } from "@/app/tabs";
 import { isDesktop } from "@/platform/platform";
 import { registry } from "@/plugins/registry";
-import { matchesShortcut, shortcutFor } from "@/plugins/shortcuts";
+import { matchesShortcut, modPressed, shortcutFor } from "@/plugins/shortcuts";
 import type { AppContext, Command, ContextMenuItem, Plugin } from "@/plugins/types";
 
 /** Focuses the open page's title with the text selected, ready to type a new one. */
@@ -57,7 +57,7 @@ async function toggleFullScreen() {
 function everydayKeys(app: AppContext) {
   window.addEventListener("keydown", (event) => {
     if (event.defaultPrevented || event.altKey) return;
-    const mod = /Mac|iPhone|iPad/.test(navigator.platform) ? event.metaKey : event.ctrlKey;
+    const mod = modPressed(event);
     if (event.key === "F11" && isDesktop && !mod && !event.shiftKey) {
       event.preventDefault();
       void toggleFullScreen();

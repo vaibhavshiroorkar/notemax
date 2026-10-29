@@ -4,6 +4,7 @@ import { activeEditor } from "@/features/editor/active";
 import { FONTS as NOTE_FONTS, font as noteFont, fontFile } from "@/ui/appearance";
 import { Icon } from "@/ui/Icon";
 import { COLORS, FONTS, HIGHLIGHTS, LINE_HEIGHTS, SIZES, sizeOf } from "./styles";
+import { clearFormatting, stepIndent } from "@/features/editor/writing";
 
 type Chain = ReturnType<Editor["chain"]>;
 
@@ -195,15 +196,15 @@ function Controls({ editor }: { editor: Editor }) {
         <Toggle label="To-do list" on={f.task} onClick={() => run((c) => c.toggleTaskList())}>
           <Icon name="list-check" />
         </Toggle>
-        <Toggle label="Outdent" on={false} onClick={() => run((c) => c.outdent())}>
+        <Toggle label="Outdent" on={false} onClick={() => stepIndent(editor, -1)}>
           <Icon name="outdent" />
         </Toggle>
-        <Toggle label="Indent" on={false} onClick={() => run((c) => c.indent())}>
+        <Toggle label="Indent" on={false} onClick={() => stepIndent(editor, 1)}>
           <Icon name="indent" />
         </Toggle>
       </Row>
-      <button className="footer-button" onMouseDown={(event) => event.preventDefault()} onClick={() => run((c) => c.unsetAllMarks().unsetTextAlign().setLineSpacing(null))}>
-        <Icon name="close" />
+      <button className="footer-button" onMouseDown={(event) => event.preventDefault()} onClick={() => clearFormatting(editor)}>
+        <Icon name="clear-format" />
         <span>Clear formatting</span>
       </button>
     </div>

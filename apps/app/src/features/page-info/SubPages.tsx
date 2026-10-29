@@ -1,8 +1,8 @@
-import { createNode } from "@notemax/core";
 import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
+import { addPage } from "@/data/addPage";
 
 /** The open page's sub-pages, so they are a click away even where the left sidebar does not list them, like inside a chapter. */
 export function SubPages({ app }: { app: AppContext }) {
@@ -20,7 +20,7 @@ export function SubPages({ app }: { app: AppContext }) {
           </li>
         ))}
       </ul>
-      <button className="footer-button" onClick={() => app.open(createNode(app.doc, "note", item.id))}>
+      <button className="footer-button" onClick={() => app.open(addPage(app.doc, "note", item.id))}>
         <Icon name="plus" />
         <span>Add a page inside</span>
       </button>

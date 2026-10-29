@@ -2,6 +2,15 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.104.0 (2026-10-30)
+
+- Phones: the button that picks which bars stay while scrolling sits at the start of the formatting bar (or the reading tools). On a page with no tools bar, like a board, it stays in the bar above. A note outside a book no longer shows an empty bar there.
+- Clear formatting has its own icon, a T with a small x, instead of a close cross. With nothing picked it clears the line the cursor is in. Phone and desktop clear the same things: marks, size, font, alignment and line spacing.
+- Indent and Outdent do what Tab does, on phones and in the Format panel: nest list items, or indent a line. The phone's align button reaches justify too.
+- A double-click on a sidebar's edge eases it back to its usual width, with the edge, the column and the sidebar moving together. Opening and closing a sidebar ease the same way.
+- New pages go at the top everywhere when Settings, How it works says so: from a row's menu, from a [[link]], from Sub-pages, a dated page, a shared page, and pages of another workspace.
+- Smaller, shared pieces behind the scenes: one check for phone width and touch, one for the Mac's Cmd key (Ctrl+Z on a Mac no longer undoes page moves), one for typing in a field, one for closing menus on a click outside or Esc, and one way to say what went wrong.
+
 ## 0.103.0 (2026-10-30)
 
 Keeping pages safe, from a review of how Notemax saves and syncs.

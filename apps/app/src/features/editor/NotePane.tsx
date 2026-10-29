@@ -20,6 +20,7 @@ import { useRememberPosition } from "./usePosition";
 import { noteSubtopics, showsSubtopics } from "./subtopics";
 import { starterContent } from "./welcome";
 import "./editor.css";
+import { isTypingTarget } from "@/ui/typing";
 
 // Tiptap's focus() waits for the next animation frame, so keys typed right after
 // Enter would still land in the title. Focusing the view directly is immediate;
@@ -30,10 +31,7 @@ function focusBody(editor: TiptapEditor) {
 }
 
 // Opening a note should not pull focus out of a field someone is typing in.
-const isTyping = () => {
-  const el = document.activeElement;
-  return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || (el as HTMLElement).isContentEditable);
-};
+const isTyping = () => isTypingTarget(document.activeElement);
 
 const WIDE_ENOUGH = "(min-width: 900px)";
 

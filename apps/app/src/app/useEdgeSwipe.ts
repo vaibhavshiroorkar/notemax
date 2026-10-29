@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { NARROW_QUERY } from "@/ui/layout";
 
 /** How far from the left edge a swipe must start to open the sidebar. */
 const EDGE = 24;
@@ -14,7 +15,7 @@ export function useEdgeSwipe(open: () => void, close: () => void) {
   actions.current = { open, close };
 
   useEffect(() => {
-    const narrow = window.matchMedia("(max-width: 700px)");
+    const narrow = window.matchMedia(NARROW_QUERY);
     let start: { x: number; y: number; fromEdge: boolean; side: "left" | "right" | null } | null = null;
 
     const onStart = (event: TouchEvent) => {

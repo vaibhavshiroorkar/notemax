@@ -8,9 +8,6 @@ let lastTouch = -Infinity;
 /** True when the event being handled now came from a finger, not a mouse. */
 export const fromTouch = () => performance.now() - lastTouch < 1500;
 
-/** A screen with touch and no mouse. */
-export const touchOnly = () => matchMedia("(pointer: coarse) and (hover: none)").matches;
-
 /** Keeps the app's right-click menus away from a finger's long press, so the phone's own selection works. */
 export function leaveLongPressToThePhone() {
   let onSelection = false;

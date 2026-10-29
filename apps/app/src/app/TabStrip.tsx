@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type DragEvent } from "react";
 import { treeIn, treesVersion } from "@/data/trees";
+import { isNarrow } from "@/ui/layout";
 import { dragged, endDrag } from "@/features/sidebar/drag";
 import { nameOf, workspaceList } from "@/features/workspaces/list";
 import { registry } from "@/plugins/registry";
@@ -20,7 +21,7 @@ const MORE_WIDTH = 44;
 
 /** How many tabs fit in `room` pixels, leaving space for the buttons beside them. */
 function fitting(room: number, count: number): number {
-  const min = innerWidth <= 700 ? PHONE_TAB_MIN : TAB_MIN;
+  const min = isNarrow() ? PHONE_TAB_MIN : TAB_MIN;
   const all = Math.floor((room - NEW_WIDTH) / (min + 2));
   if (all >= count) return count;
   return Math.max(1, Math.floor((room - NEW_WIDTH - MORE_WIDTH) / (min + 2)));

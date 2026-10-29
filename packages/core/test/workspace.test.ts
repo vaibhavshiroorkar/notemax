@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { ROOT, STARTER, STARTER_IDS, WELCOME_ID, addTag, createNode, duplicateNote, ensureStarter, moveNode, readTree, renameNode, restoreNode, setKind, setProp, setWords, trashNode, watchTree } from "../src";
+import { ROOT, STARTER, STARTER_IDS, addTag, createNode, duplicateNote, ensureStarter, moveNode, readTree, renameNode, restoreNode, setKind, setProp, setWords, trashNode, watchTree } from "../src";
 
 const titles = (items: { title: string }[]) => items.map((i) => i.title);
 

@@ -4,7 +4,8 @@ import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { safeHtml } from "@/ui/safeHtml";
 import { feed, follow, myId, myProfile, newestPeople, profilePage, readPost, searchPeople, searchPosts, type Post, type Profile, type ProfilePage } from "./api";
-import { Avatar, nameOf, plural, Status, useLoad, when, type Place } from "./bits";
+import { Avatar, nameOf, Status, useLoad, when, type Place } from "./bits";
+import { messageOf, plural } from "@/ui/format";
 import { ProfileForm } from "./ProfileForm";
 import { NoteToAuthor, ReadingBar, SelectionButtons, readingMinutes, useReaderStyle, type Picked } from "./Reader";
 import { ChatView, Comments, MessagesView, RoomsView, RoomView, useUnread, type Seed } from "./Talk";
@@ -226,7 +227,7 @@ function ProfileView({ username, go, me, hasProfile }: { username: string; go(pl
       await follow(profile.id, !followed);
       reload();
     } catch (failure) {
-      setProblem(failure instanceof Error ? failure.message : String(failure));
+      setProblem(messageOf(failure));
     } finally {
       setBusy(false);
     }

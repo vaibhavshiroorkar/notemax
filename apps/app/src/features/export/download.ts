@@ -6,6 +6,7 @@ import { extOf, fileName, isWritten, loadBody, loadPictures } from "./content";
 import { saveFile } from "./save";
 import { toMarkdown } from "./serialize";
 import { zip, type ZipEntry } from "./zip";
+import { messageOf } from "@/ui/format";
 
 /** The format "Download" uses when none is picked. Plain text unless the user chose another. */
 export const defaultFormat = savedStore<string>("downloadFormat", "txt", { decode: (raw) => raw, encode: (value) => value });
@@ -18,7 +19,6 @@ export function defaultFor(kind: TreeNode["kind"]): Exporter | undefined {
   return formats.find((f) => f.id === defaultFormat.get()) ?? formats[0];
 }
 
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 export async function download(node: TreeNode, app: AppContext, exporter = defaultFor(node.kind)) {
   if (!exporter) return app.notify("This page has nothing to download.");
@@ -30,7 +30,7 @@ export async function download(node: TreeNode, app: AppContext, exporter = defau
     const name = fileName(node.title || `Untitled ${node.kind}`, ext);
     if (await saveFile(blob, name)) app.notify(`Downloaded ${name}`);
   } catch (error) {
-    app.notify(`Could not download: ${message(error)}`);
+    app.notify(`Could not download: ${messageOf(error)}`);
   }
 }
 
@@ -108,6 +108,6 @@ export async function downloadEverything(app: AppContext, from: TreeItem[] = app
     const name = `${safe(label)} ${date}.zip`;
     if (await saveFile(zip(entries.filter((e) => !e.path.endsWith("/"))), name)) app.notify(`Downloaded ${name}`);
   } catch (error) {
-    app.notify(`Could not download: ${message(error)}`);
+    app.notify(`Could not download: ${messageOf(error)}`);
   }
 }

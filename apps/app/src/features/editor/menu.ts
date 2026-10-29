@@ -1,5 +1,6 @@
 import { NodeSelection } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/core";
+import { formatShortcut } from "@/plugins/shortcuts";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
 import { askText } from "@/ui/Prompt";
 
@@ -37,7 +38,7 @@ async function paste(editor: Editor, app: AppContext, plain: boolean) {
     editor.view.focus();
     editor.view.dom.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
   } catch {
-    app.notify(`This window may not read the clipboard. Press ${navigator.platform.includes("Mac") ? "Cmd" : "Ctrl"}+V${plain ? " with Shift" : ""} instead.`);
+    app.notify(`This window may not read the clipboard. Press ${formatShortcut("Mod+V")}${plain ? " with Shift" : ""} instead.`);
   }
 }
 

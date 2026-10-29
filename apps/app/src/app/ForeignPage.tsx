@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useState, type CSSProperties } from "react";
-import { ROOT, createNode, restoreNode, trashNode, type Tree } from "@notemax/core";
+import { restoreNode, trashNode, type Tree } from "@notemax/core";
 import type * as Y from "yjs";
 import { PageWorkspace } from "@/data/scope";
 import { useWorkspace } from "@/data/useWorkspace";
@@ -14,6 +14,7 @@ import { showToast } from "@/ui/toast";
 import { revealing } from "./reveal";
 import { openPage, type Visit } from "./tabs";
 import { Gated } from "./Gated";
+import { addPage } from "@/data/addPage";
 
 /** What makes a page from another workspace work: that workspace's tree and doc, and the page. */
 export interface Scope {
@@ -50,7 +51,7 @@ export function scopedApp(base: AppContext, { ws, name, tree, doc, hub, nodeId }
       openPage(host ?? id, { ws, newTab: where?.newTab, options: where?.fromTrash ? { fromTrash: true } : undefined });
     },
     create(kind) {
-      const id = createNode(doc, kind, ROOT);
+      const id = addPage(doc, kind);
       if (kind !== "folder") openPage(id, { ws });
     },
     trash(ids) {

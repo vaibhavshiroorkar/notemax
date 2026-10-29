@@ -1,4 +1,6 @@
 import { dismissContextMenu } from "@/ui/ContextMenu";
+import { isMac } from "@/plugins/shortcuts";
+import { isTypingTarget } from "@/ui/typing";
 
 // Back and Forward belong to each tab (see tabs.ts), not to the browser. This
 // file connects the two: the address shows the open page as #id, so a reload
@@ -25,8 +27,6 @@ export function showInAddress(page: string | null) {
   if (address !== `${location.pathname}${location.search}${location.hash}`) history.replaceState(history.state, "", address);
 }
 
-const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
-const typing = (target: EventTarget | null) => target instanceof Element && !!target.closest("input, textarea, [contenteditable='true']");
 
 interface Marker {
   notemax: "base" | "top";
@@ -62,7 +62,7 @@ export function startBrowserNavigation(back: () => void, forward: () => void): (
     const arrow = event.altKey && (event.key === "ArrowLeft" || event.key === "ArrowRight");
     const key = !event.altKey && (event.key === "BrowserBack" || event.key === "BrowserForward");
     if (!arrow && !key) return;
-    if (arrow && isMac && typing(event.target)) return;
+    if (arrow && isMac && isTypingTarget(event.target)) return;
     event.preventDefault();
     handledAt = performance.now();
     if (event.key === "ArrowLeft" || event.key === "BrowserBack") { if (!dismissContextMenu()) back(); }

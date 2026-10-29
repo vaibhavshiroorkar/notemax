@@ -12,8 +12,8 @@ import { WholeBook } from "./WholeBook";
 import { allStops, bookViewOf, bookWords, chapterStops, subtopicsOf, type BookView } from "./reading";
 import { useWordBackfill } from "./useWordBackfill";
 import "./books.css";
+import { plural } from "@/ui/format";
 
-const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
 
 const VIEWS: { value: BookView; label: string }[] = [
   { value: "chapters", label: "Chapters" },

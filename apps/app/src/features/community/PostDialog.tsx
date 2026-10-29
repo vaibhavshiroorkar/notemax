@@ -7,6 +7,7 @@ import { myId, myPostOf, myProfile, publish, unpublish, type Post, type Profile 
 import { ProfileForm } from "./ProfileForm";
 import { loadPostedSources } from "./ReaderNotesPanel";
 import { snapshotOf } from "./snapshot";
+import { messageOf } from "@/ui/format";
 
 const RIGHTS = "communityRights";
 
@@ -33,7 +34,7 @@ export function PostDialog({ app, options, onClose }: { app: AppContext; options
           setTags(post.tags.join(", "));
         }
       })
-      .catch((failure: unknown) => setError(failure instanceof Error ? failure.message : String(failure)));
+      .catch((failure: unknown) => setError(messageOf(failure)));
     // By id: the tree makes a new node on every change, and a reload would overwrite what is being typed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [node?.id]);
@@ -49,7 +50,7 @@ export function PostDialog({ app, options, onClose }: { app: AppContext; options
     try {
       await work();
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : String(failure));
+      setError(messageOf(failure));
     } finally {
       setBusy(false);
     }

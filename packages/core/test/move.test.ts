@@ -68,7 +68,7 @@ describe("moveNode", () => {
   });
 
   it("refuses moves that break the structure", () => {
-    const { doc, folder, a, b, sub } = setup();
+    const { doc, folder, a, sub } = setup();
     const tree = readTree(doc);
     expect(canMove(tree, folder, folder)).toMatch(/inside itself/);
     expect(canMove(tree, folder, sub)).toMatch(/inside itself/);

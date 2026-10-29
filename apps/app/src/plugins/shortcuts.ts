@@ -1,7 +1,11 @@
 import { savedStore } from "@/platform/store";
 import type { Command } from "./types";
 
-const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+/** Apple keyboards: Cmd where others have Ctrl, and Option for Alt. */
+export const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
+/** The key that goes with shortcuts here: Cmd on a Mac, Ctrl elsewhere. Ctrl on a Mac is something else. */
+export const modPressed = (event: KeyboardEvent) => (isMac ? event.metaKey : event.ctrlKey);
 
 /**
  * Shortcuts the user picked in Settings, by command id. They replace the
@@ -68,7 +72,7 @@ const PUNCTUATION: Record<string, string> = {
 
 export function matchesShortcut(event: KeyboardEvent, shortcut: string): boolean {
   const want = parse(shortcut);
-  const mod = isMac ? event.metaKey : event.ctrlKey;
+  const mod = modPressed(event);
   return mod === want.mod && event.shiftKey === want.shift && event.altKey === want.alt && keyOf(event).toLowerCase() === want.key;
 }
 
@@ -79,7 +83,7 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: string): boolean
  */
 export function shortcutFromEvent(event: KeyboardEvent): string | null {
   if (["Control", "Shift", "Alt", "Meta", "AltGraph", "CapsLock"].includes(event.key)) return null;
-  const mod = isMac ? event.metaKey : event.ctrlKey;
+  const mod = modPressed(event);
   if (!mod && !event.altKey && !/^F\d{1,2}$/.test(event.key)) return null;
   return [mod && "Mod", event.altKey && "Alt", event.shiftKey && "Shift", keyOf(event)].filter(Boolean).join("+");
 }

@@ -12,6 +12,7 @@ import { ChangesView } from "./ChangesView";
 import { useVersionHtml } from "./useVersionHtml";
 import { saveNow } from "./versions";
 import { whenOf } from "./VersionsPanel";
+import { messageOf } from "@/ui/format";
 
 /** One saved version, read-only, with a button to make the page say that again. */
 export function VersionPreview({ app, options, onClose }: { app: AppContext; options: Record<string, unknown>; onClose(): void }) {
@@ -37,7 +38,7 @@ export function VersionPreview({ app, options, onClose }: { app: AppContext; opt
       await saveNow(pageId, now, null, workspace);
       await withPageDoc(pageId, (doc) => restoreBody(doc, version), workspace);
     } catch (err) {
-      app.notify(`Could not restore this version: ${err instanceof Error ? err.message : String(err)}`);
+      app.notify(`Could not restore this version: ${messageOf(err)}`);
       return;
     }
     app.notify(`Restored the version from ${whenOf(version.time)}`);

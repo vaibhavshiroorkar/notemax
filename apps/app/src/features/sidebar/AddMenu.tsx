@@ -3,6 +3,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { NodeKind } from "@notemax/core";
 import { registry } from "@/plugins/registry";
 import { Icon } from "@/ui/Icon";
+import { isNarrow } from "@/ui/layout";
+import { useDismiss } from "@/ui/useDismiss";
 
 /**
  * Create, the + at the top. Notes, folders and books are listed; the other kinds,
@@ -20,23 +22,14 @@ export function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
   const othersButton = useRef<HTMLButtonElement>(null);
   const flyout = useRef<HTMLDivElement>(null);
   const [place, setPlace] = useState<{ left: number; top: number } | null>(null);
-  const narrow = typeof matchMedia === "function" && matchMedia("(max-width: 700px)").matches;
+  const narrow = isNarrow();
 
   useEffect(() => {
     if (!open) return setOthers(false);
     first.current?.focus();
-    const onPointer = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (!wrapper.current?.contains(target) && !flyout.current?.contains(target)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
   }, [open]);
+  // The flyout is drawn outside the menu's box, so it counts as inside too.
+  useDismiss(open, () => setOpen(false), wrapper, flyout);
 
   // Beside the menu, on whichever side has room, and up when it would run off the bottom.
   useLayoutEffect(() => {

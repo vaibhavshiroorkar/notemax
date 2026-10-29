@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { Safe } from "@/ui/Safe";
 import { sidebarView, type GroupBy, type SortBy } from "./state";
+import { useDismiss } from "@/ui/useDismiss";
 
 const SORTS: [SortBy, string][] = [
   ["manual", "Your order"],
@@ -25,19 +26,7 @@ export function FilterMenu({ app, filtered }: { app: AppContext; filtered: boole
   // The funnel shows a dot while the list is not the plain tree, so that is never a surprise.
   const changed = reordered || filtered;
 
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: PointerEvent) => {
-      if (!wrapper.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useDismiss(open, () => setOpen(false), wrapper);
 
   return (
     <div className="filter-wrap" ref={wrapper}>

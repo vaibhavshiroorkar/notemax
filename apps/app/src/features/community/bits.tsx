@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Profile } from "./api";
+import { messageOf } from "@/ui/format";
 
 // Small parts the community screens share.
 
@@ -21,9 +22,7 @@ export const whenSent = (iso: string) => {
   const date = new Date(iso);
   return date.toDateString() === new Date().toDateString() ? date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) : when(iso);
 };
-export const plural = (n: number, word: string) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
 export const nameOf = (profile?: Profile) => profile?.display_name || profile?.username || "Someone";
-export const messageOf = (failure: unknown) => (failure instanceof Error ? failure.message : String(failure));
 
 /** A loader's result, with its error in words, and a way to load again. */
 export function useLoad<T>(load: () => Promise<T>, deps: unknown[]): { data?: T; error?: string; loading: boolean; reload(): void } {

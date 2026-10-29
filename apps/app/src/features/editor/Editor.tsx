@@ -3,7 +3,6 @@ import { EditorContent, useEditor, type Editor as TiptapEditor } from "@tiptap/r
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
 import { Placeholder } from "@tiptap/extensions";
-import type { Selection } from "@tiptap/pm/state";
 import type * as Y from "yjs";
 import { workspaceOf } from "@/data/scope";
 import type { LinkHub } from "@/features/links/link-hub";

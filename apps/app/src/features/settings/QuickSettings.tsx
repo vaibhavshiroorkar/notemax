@@ -1,17 +1,18 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { registry } from "@/plugins/registry";
 import { formatShortcut, shortcutFor } from "@/plugins/shortcuts";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
-import { touchOnly } from "@/ui/longPress";
+import { touchFirst } from "@/ui/layout";
 import { QuickOptions, TextSizeRow, ThemeRow } from "./BasicRows";
 import "./quick-settings.css";
+import { useDismiss } from "@/ui/useDismiss";
 
 const keysOf = (commandId: string) => {
   const command = registry.allCommands().find((c) => c.id === commandId);
   const keys = command ? shortcutFor(command) : "";
   // A phone has no keys to press.
-  return keys && !touchOnly() ? ` (${formatShortcut(keys)})` : "";
+  return keys && !touchFirst() ? ` (${formatShortcut(keys)})` : "";
 };
 
 /**
@@ -21,20 +22,8 @@ const keysOf = (commandId: string) => {
 export function QuickSettings({ app, onClose }: { app: AppContext; onClose(): void }) {
   const ref = useRef<HTMLDivElement>(null);
 
-  // A click anywhere else or Esc closes it, like any menu.
-  useEffect(() => {
-    const onPointer = (event: PointerEvent) => {
-      const target = event.target as Element;
-      if (!ref.current?.contains(target) && !target.closest?.(".quick-settings-button")) onClose();
-    };
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
+  // The button that opens it toggles it, so a press there is not "outside".
+  useDismiss(true, onClose, ref, ".quick-settings-button");
 
   const leave = (then: () => void) => () => {
     onClose();

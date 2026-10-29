@@ -6,7 +6,8 @@ import { finding } from "@/features/find/FindBar";
 import { createStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
 import { myPostOf, myPostedSources } from "./api";
-import { Avatar, messageOf, nameOf, useLoad, whenSent } from "./bits";
+import { Avatar, nameOf, useLoad, whenSent } from "./bits";
+import { messageOf } from "@/ui/format";
 import { markNotesRead, notesOn, removeNote, NOTES_NOT_SET_UP, type ReaderNote } from "./notes";
 
 /** Pages this person has posted, by the page id the post came from. Filled once signed in. */

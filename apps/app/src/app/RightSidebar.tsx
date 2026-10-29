@@ -7,6 +7,7 @@ import { Icon } from "@/ui/Icon";
 import { Safe } from "@/ui/Safe";
 import { usePresence } from "@/ui/usePresence";
 import { joinSlot, newSlot, panelLayout, placed, setActive, setOn, type PanelLayout } from "./panelLayout";
+import { useDismiss } from "@/ui/useDismiss";
 
 const PANEL_TYPE = "application/x-notemax-panel";
 /** The section being dragged, so the gaps between boxes can show where it may go. */
@@ -124,17 +125,7 @@ function Tray({ all, here }: { all: SidePanel[]; here: Set<string> }) {
   const wrapper = useRef<HTMLDivElement>(null);
   const layout = panelLayout.use();
   const moving = dragging.use();
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: PointerEvent) => !wrapper.current?.contains(event.target as Node) && setOpen(false);
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useDismiss(open, () => setOpen(false), wrapper);
   return (
     <div className="side-panel-bottom" ref={wrapper}>
       <button className="footer-button" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(!open)}>

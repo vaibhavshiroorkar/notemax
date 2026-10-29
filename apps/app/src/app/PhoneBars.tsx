@@ -79,6 +79,7 @@ export function PhoneScroll({ tabs, navigation, tools, children }: { tabs: React
         {tabs}
         {navigation}
         <div className="phone-tools" ref={phoneBar.set}>
+          <PinnedBarsButton />
           {tools}
         </div>
       </div>

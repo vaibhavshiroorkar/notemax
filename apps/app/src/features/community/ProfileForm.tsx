@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { accountNames, myProfile, saveProfile, type Profile } from "./api";
+import { messageOf } from "@/ui/format";
 
 /** A first guess at a username from a name: small letters, digits and _. */
 const guess = (name: string) =>
@@ -29,7 +30,7 @@ export function ProfileForm({ onSaved, intro }: { onSaved(profile: Profile): voi
         setBio(profile?.bio ?? "");
         setAvatar(profile?.avatar_url || account.avatar);
       })
-      .catch((failure: unknown) => setError(failure instanceof Error ? failure.message : String(failure)));
+      .catch((failure: unknown) => setError(messageOf(failure)));
   }, []);
 
   return (
@@ -40,7 +41,7 @@ export function ProfileForm({ onSaved, intro }: { onSaved(profile: Profile): voi
         setBusy(true);
         setError(undefined);
         saveProfile({ username, display_name: name.trim(), bio: bio.trim(), avatar_url: avatar.startsWith("https://") ? avatar : "" })
-          .then(onSaved, (failure: unknown) => setError(failure instanceof Error ? failure.message : String(failure)))
+          .then(onSaved, (failure: unknown) => setError(messageOf(failure)))
           .finally(() => setBusy(false));
       }}
     >

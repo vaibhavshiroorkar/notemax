@@ -1,5 +1,6 @@
 import { MAIN_WORKSPACE, createMemoryStore, createSqlStore, openIdbStore, scopedStore, type DocStore } from "@notemax/core";
 import { getPref, workspaceNow } from "./prefs";
+import { messageOf } from "@/ui/format";
 
 /** True inside the Tauri desktop app, false in a normal browser. */
 export const isDesktop = "__TAURI_INTERNALS__" in window;
@@ -62,7 +63,7 @@ async function openStore(): Promise<DocStore> {
   try {
     await fill(store);
   } catch (error) {
-    throw new Error(`Could not get your pages from Google Drive (${error instanceof Error ? error.message : String(error)}). This device keeps no copy of them; check the connection and reload.`);
+    throw new Error(`Could not get your pages from Google Drive (${messageOf(error)}). This device keeps no copy of them; check the connection and reload.`);
   }
   return store;
 }

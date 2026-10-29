@@ -1,4 +1,4 @@
-import { ROOT, createNode, holds, moveNodes, setProp, type NodeKind, type SortOrder, type Tree, type TreeNode } from "@notemax/core";
+import { createNode, holds, moveNodes, setProp, type NodeKind, type SortOrder, type Tree, type TreeNode } from "@notemax/core";
 import { openBeside } from "@/app/tabs";
 import { bookOf } from "@/features/books/reading";
 import { OPEN_FILE_ITEMS } from "@/features/open-files/plugin";
@@ -6,6 +6,8 @@ import { isDesktop } from "@/platform/platform";
 import { registry } from "@/plugins/registry";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
 import { clearSelection, editingId, expand } from "./state";
+import { copyText } from "@/ui/clipboard";
+import { addPage } from "@/data/addPage";
 
 const nodeOf = (target: ContextTarget): TreeNode | null => (target.type === "page" ? target.node : null);
 const isPage = (target: ContextTarget) => !!nodeOf(target) && nodeOf(target)!.kind !== "folder";
@@ -50,7 +52,7 @@ const fitsInside = (parent: TreeNode, kind: NodeKind) => holds(parent.kind, kind
 /** Makes a page of `kind` inside `parent`, at the end, then opens it, or names it in its row when it is a folder. */
 function makeInside(app: AppContext, parent: TreeNode, kind: NodeKind) {
   expand(parent.id);
-  const id = createNode(app.doc, kind, parent.id);
+  const id = addPage(app.doc, kind, parent.id);
   if (kind === "folder") editingId.set(id);
   else app.open(id);
 }
@@ -77,17 +79,11 @@ function createKinds(target: ContextTarget, app: AppContext): ContextMenuItem[] 
       run(_target: ContextTarget, app: AppContext) {
         if (node) return inside ? makeInside(app, node, kind) : makeBeside(app, node, kind);
         // A folder has no page; it is named in its row instead.
-        if (kind === "folder") editingId.set(createNode(app.doc, "folder", ROOT));
+        if (kind === "folder") editingId.set(addPage(app.doc, "folder"));
         else app.create(kind);
       },
     }));
 }
-
-const copy = (app: AppContext, text: string, what: string) =>
-  navigator.clipboard.writeText(text).then(
-    () => app.notify(`Copied ${what}`),
-    () => app.notify("Could not reach the clipboard"),
-  );
 
 /** What a right click on a page in a list, or empty space in the sidebar, offers. */
 export const SORT_CHOICES: { value: SortOrder | null; title: string }[] = [
@@ -189,7 +185,7 @@ export const PAGE_MENU: ContextMenuItem[] = [
     group: "edit",
     icon: "copy",
     targets: ["page"],
-    run: (target, app) => void copy(app, nodeOf(target)!.title || "Untitled", "the title"),
+    run: (target, app) => void copyText(nodeOf(target)!.title || "Untitled", "the title"),
   },
   {
     // A link that opens the page in this browser. The desktop app has no address to share.
@@ -200,7 +196,7 @@ export const PAGE_MENU: ContextMenuItem[] = [
     icon: "link",
     targets: ["page"],
     when: (target) => isPage(target) && !isDesktop,
-    run: (target, app) => void copy(app, `${location.origin}${location.pathname}#${encodeURIComponent(nodeOf(target)!.id)}`, "the link"),
+    run: (target, app) => void copyText(`${location.origin}${location.pathname}#${encodeURIComponent(nodeOf(target)!.id)}`, "the link"),
   },
   {
     id: "page.trash",

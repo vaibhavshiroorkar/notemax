@@ -3,6 +3,7 @@ import { syncIsOn, keepPagesHere, stopKeepingPages } from "@/features/sync/runti
 import { onlineMode } from "@/platform/mode";
 import { memoryOnly } from "@/platform/platform";
 import { ConfirmDialog } from "@/ui/Dialog";
+import { messageOf } from "@/ui/format";
 
 /**
  * Settings, Setup: whether this device keeps a copy of the pages. Off, they
@@ -22,7 +23,7 @@ export function KeepPagesRow() {
       await change();
       location.reload();
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : String(failure));
+      setError(messageOf(failure));
       setBusy(false);
     }
   };

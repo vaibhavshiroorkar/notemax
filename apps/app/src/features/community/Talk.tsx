@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Icon } from "@/ui/Icon";
 import type { Profile } from "./api";
-import { Avatar, messageOf, nameOf, Status, useLoad, whenSent, type Place } from "./bits";
+import { Avatar, nameOf, Status, useLoad, whenSent, type Place } from "./bits";
+import { messageOf } from "@/ui/format";
 import {
   addComment,
   commentsOn,

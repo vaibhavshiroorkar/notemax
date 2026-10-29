@@ -3,8 +3,8 @@ import { hasDriveAccess } from "./google";
 import { liveOn, liveState, type LiveState } from "./live";
 import { folderState, syncIsOn, syncNow, syncView, turnOffSync, turnOnSync, type SyncView } from "./runtime";
 import "./sync.css";
+import { messageOf } from "@/ui/format";
 
-const messageOf = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 /** "just now", "5 minutes ago", and so on. */
 export function ago(time: number | null): string {

@@ -5,6 +5,7 @@
 // first time it runs, and kept by the browser after that.
 
 import type { Language } from "./languages";
+import { messageOf } from "@/ui/format";
 
 export type Line =
   | { kind: "out" | "err" | "info"; text: string }
@@ -147,7 +148,7 @@ function runJava(code: string, onLine: (line: Line) => void): Run {
       runner.postMessage({ script: result.script });
     } catch (error) {
       clearTimeout(loading);
-      onLine({ kind: "err", text: `Java is not available here: ${error instanceof Error ? error.message : String(error)}` });
+      onLine({ kind: "err", text: `Java is not available here: ${messageOf(error)}` });
       java = null;
       finish();
     }

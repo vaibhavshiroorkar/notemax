@@ -7,6 +7,7 @@ import { saveImage } from "@/features/images/store";
 import { fileToBody, splitFront } from "@/features/markdown-files/convert";
 import { docChannelFor, storeFor } from "@/platform/platform";
 import type { AppContext } from "@/plugins/types";
+import { messageOf } from "@/ui/format";
 
 // Files from the computer, opened as pages: Markdown, text, Word and web
 // pages as notes, code files as code pages in their language, pictures as
@@ -139,7 +140,7 @@ export async function openFiles(app: AppContext, files: File[], near: TreeNode |
       if (id) last = id;
       else skipped.push(file.name);
     } catch (error) {
-      app.notify(`Could not open ${file.name}: ${error instanceof Error ? error.message : String(error)}`);
+      app.notify(`Could not open ${file.name}: ${messageOf(error)}`);
     }
   }
   if (skipped.length) app.notify(`Notemax cannot open ${skipped.join(", ")}`);

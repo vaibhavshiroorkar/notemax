@@ -9,8 +9,8 @@ import { getStore } from "@/platform/platform";
 import { savedStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
-import { Icon } from "@/ui/Icon";
 import { Segmented } from "@/ui/Segmented";
+import { messageOf } from "@/ui/format";
 
 /**
  * A note changed on two devices before they synced. Both changes are already
@@ -82,7 +82,7 @@ export function ConflictDialog({ app, options, onClose }: { app: AppContext; opt
     try {
       if (conflict) await settleAs(conflict, which, app);
     } catch (err) {
-      app.notify(`Could not keep that side: ${err instanceof Error ? err.message : String(err)}`);
+      app.notify(`Could not keep that side: ${messageOf(err)}`);
       return;
     }
     onClose();

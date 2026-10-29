@@ -35,6 +35,7 @@ import { recordConflict } from "./conflicts";
 import { liveOn, liveState, noteRemoteEdit, startLive, type LiveLink } from "./live";
 import { driveRemote, findFolder, folderHasDocs, readKeyCheck, writeKeyCheck } from "./drive";
 import { NeedsSignIn } from "./google";
+import { messageOf } from "@/ui/format";
 
 // Runs sync in this window: reads what other devices wrote, sends this device's
 // edits, and says how it is going. The engine itself is in @notemax/core.
@@ -273,7 +274,7 @@ export function startSync() {
   const body = () => runEngine(controller.signal);
   // Stopping on purpose aborts the wait; anything else is shown, not left as "another tab is syncing".
   const failed = (err: unknown) => {
-    if (!controller.signal.aborted) syncView.set({ state: "error", lastSynced: null, message: err instanceof Error ? err.message : String(err) });
+    if (!controller.signal.aborted) syncView.set({ state: "error", lastSynced: null, message: messageOf(err) });
   };
   if (navigator.locks) {
     syncView.set({ state: "elsewhere" });

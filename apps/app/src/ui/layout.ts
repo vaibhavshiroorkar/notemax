@@ -1,4 +1,23 @@
+import { useSyncExternalStore } from "react";
 import { savedStore } from "@/platform/store";
+
+/** A screen too small for sidebars beside the page: a phone, or a very narrow window. The CSS uses the same 700px. */
+export const NARROW_QUERY = "(max-width: 700px)";
+export const isNarrow = () => matchMedia(NARROW_QUERY).matches;
+
+const onNarrowChange = (listener: () => void) => {
+  const query = matchMedia(NARROW_QUERY);
+  query.addEventListener("change", listener);
+  return () => query.removeEventListener("change", listener);
+};
+/** isNarrow, redrawn when the window crosses the line. */
+export const useNarrow = () => useSyncExternalStore(onNarrowChange, isNarrow);
+
+/**
+ * The main pointer is a finger, as on a phone or tablet: no hover, no right
+ * click, and the phone's own long press. A touch screen laptop with a mouse is not.
+ */
+export const touchFirst = () => matchMedia("(pointer: coarse)").matches;
 
 export interface PaneSize {
   default: number;

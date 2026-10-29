@@ -4,6 +4,7 @@ import { showToast } from "@/ui/toast";
 import { pluginApi } from "./api";
 import { registerPlugin, registry, unregisterPlugin } from "./registry";
 import type { Plugin } from "./types";
+import { messageOf } from "@/ui/format";
 
 /**
  * Community plugins: JavaScript files people write and share. They are kept on
@@ -47,7 +48,6 @@ const setError = (id: string, error: string | null) => {
   loadErrors.set(next);
 };
 
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 /** `?safe` in the address starts the app with no community plugins, for when one breaks it. */
 export const safeMode = new URLSearchParams(location.search).has("safe");
@@ -82,7 +82,7 @@ async function start(entry: Installed) {
     registerPlugin(plugin);
     setError(entry.id, null);
   } catch (error) {
-    setError(entry.id, message(error));
+    setError(entry.id, messageOf(error));
   }
 }
 

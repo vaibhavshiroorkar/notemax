@@ -3,6 +3,7 @@ import { isDesktop } from "@/platform/platform";
 import { beforeQuit, runQuitHooks } from "@/platform/quit";
 import { autoUpdate } from "@/platform/behavior";
 import { createStore } from "@/platform/store";
+import { messageOf } from "@/ui/format";
 
 export type UpdateState =
   | { state: "idle" }
@@ -17,7 +18,6 @@ export const updateState = createStore<UpdateState>({ state: "idle" });
 // The desktop's downloaded update, waiting to be installed.
 let pending: Update | null = null;
 
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 /** A new version of the website waiting to take over, if any. */
 async function waitingWorker(): Promise<ServiceWorker | null> {
@@ -56,7 +56,7 @@ export async function checkForUpdate(): Promise<void> {
     pending = update;
     updateState.set({ state: "ready", version: update.version });
   } catch (error) {
-    updateState.set({ state: "error", message: message(error) });
+    updateState.set({ state: "error", message: messageOf(error) });
   }
 }
 
@@ -77,7 +77,7 @@ export async function installUpdate(): Promise<void> {
     const { relaunch } = await import("@tauri-apps/plugin-process");
     await relaunch();
   } catch (error) {
-    updateState.set({ state: "error", message: message(error) });
+    updateState.set({ state: "error", message: messageOf(error) });
   }
 }
 

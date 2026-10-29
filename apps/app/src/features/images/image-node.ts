@@ -5,6 +5,7 @@ import { workspaceOf } from "@/data/scope";
 import { showToast } from "@/ui/toast";
 import { ImageView } from "./ImageView";
 import { isImage, saveImage } from "./store";
+import { messageOf } from "@/ui/format";
 
 export type Align = "left" | "center" | "right";
 
@@ -61,7 +62,7 @@ export async function insertImages(editor: Editor, files: File[], pos?: number) 
       // The next one goes after this one.
       at = editor.state.selection.to;
     } catch (error) {
-      showToast(`Could not add ${file.name || "the picture"}: ${error instanceof Error ? error.message : String(error)}`);
+      showToast(`Could not add ${file.name || "the picture"}: ${messageOf(error)}`);
     }
   }
 }

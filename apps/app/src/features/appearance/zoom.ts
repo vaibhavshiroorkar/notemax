@@ -1,6 +1,7 @@
 import { isDesktop } from "@/platform/platform";
 import { replaceToast } from "@/ui/toast";
 import { savedStore } from "@/platform/store";
+import { modPressed } from "@/plugins/shortcuts";
 
 // Zoom scales the whole app, apart from text size, which is only the note's
 // text. A browser has its own zoom (Ctrl and the mouse wheel) for this. The
@@ -47,7 +48,7 @@ export function startZoom() {
   say = (percent) => replaceToast("zoom", `Zoom ${percent}%`);
   zoom.subscribe(() => void applyZoom().catch(() => {}));
   window.addEventListener("keydown", (event) => {
-    if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.altKey) return;
+    if (event.defaultPrevented || !modPressed(event) || event.altKey) return;
     if (event.code === "NumpadAdd" || (event.code === "Equal" && event.shiftKey)) {
       event.preventDefault();
       zoomBy(1);

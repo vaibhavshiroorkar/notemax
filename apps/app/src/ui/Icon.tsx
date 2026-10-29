@@ -23,6 +23,8 @@ const paths = {
   folder: "M2 4.5V12.5h12V6H7.5L6 4.5z",
   book: "M3.5 12.5v-9a1 1 0 0 1 1-1h8v9h-8a1 1 0 0 0 0 2h8",
   close: "M4 4l8 8M12 4l-8 8",
+  // A T with a small x: formatting taken off, not a window closed.
+  "clear-format": "M2.5 3h8M6.5 3v10M10.5 10l3 3M13.5 10l-3 3",
   command: "M3.5 5l3 3-3 3M8 11.5h4.5",
   search: "M7 3a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM10 10l3.5 3.5",
   contrast: "M8 2.5a5.5 5.5 0 1 0 0 11a5.5 5.5 0 1 0 0-11zM8 2.5v11",

@@ -3,21 +3,19 @@ import type { Editor } from "@tiptap/react";
 import { canListen, listening, startVoice, stopVoice } from "@/features/voice/voice";
 import { SIZES, sizeOf } from "@/features/format/styles";
 import { Icon, type IconName } from "@/ui/Icon";
+import { touchFirst } from "@/ui/layout";
 import { activeEditor } from "./active";
 import "./keyboard-bar.css";
+import { clearFormatting, stepIndent } from "./writing";
 
 // Phones have no shortcuts and no right click for formatting, so a bar of
 // formatting buttons sits below chapter navigation while a note is open.
 // It acts on the note being written in, a subtopic's too, and scrolls
 // sideways when it does not fit.
 
-const touchScreen = () => window.matchMedia("(pointer: coarse)").matches;
 
-function listType(editor: Editor) {
-  return editor.isActive("taskItem") ? "taskItem" : "listItem";
-}
 
-const ALIGNS = ["left", "center", "right"] as const;
+const ALIGNS = ["left", "center", "right", "justify"] as const;
 
 /** The bar itself. App draws it once, under the tabs, where it takes its own room. */
 export function KeyboardBar() {
@@ -25,7 +23,7 @@ export function KeyboardBar() {
   const hearing = listening.use();
   // Redraw on every change, so the buttons show what is on.
   const [, setTick] = useState(0);
-  const touch = touchScreen();
+  const touch = touchFirst();
 
   useEffect(() => {
     if (!editor) return;
@@ -46,7 +44,6 @@ export function KeyboardBar() {
 
   const run = (action: (chain: ReturnType<Editor["chain"]>) => ReturnType<Editor["chain"]>) => action(editor.chain().focus()).run();
   const level = ([1, 2, 3] as const).find((n) => editor.isActive("heading", { level: n }));
-  const inList = editor.isActive("listItem") || editor.isActive("taskItem");
   const align = ALIGNS.find((a) => editor.isActive({ textAlign: a })) ?? "left";
   const size = sizeOf(editor.getAttributes("textStyle").fontSize as string | undefined);
   const stepSize = (by: 1 | -1) => {
@@ -104,15 +101,15 @@ export function KeyboardBar() {
       {button("Bulleted list", icon("list-bullet"), () => run((c) => c.toggleBulletList()), editor.isActive("bulletList"))}
       {button("Numbered list", icon("list-number"), () => run((c) => c.toggleOrderedList()), editor.isActive("orderedList"))}
       {button("To-do list", icon("list-check"), () => run((c) => c.toggleTaskList()), editor.isActive("taskList"))}
-      {button("Outdent", icon("outdent"), () => run((c) => c.liftListItem(listType(editor))), false, !inList)}
-      {button("Indent", icon("indent"), () => run((c) => c.sinkListItem(listType(editor))), false, !inList)}
+      {button("Outdent", icon("outdent"), () => stepIndent(editor, -1))}
+      {button("Indent", icon("indent"), () => stepIndent(editor, 1))}
       {line}
       {button(`Align ${align}, tap for the next`, icon(`align-${align}`), () => run((c) => c.setTextAlign(ALIGNS[(ALIGNS.indexOf(align) + 1) % ALIGNS.length])), align !== "left")}
       {button("Quote", icon("quote"), () => run((c) => c.toggleBlockquote()), editor.isActive("blockquote"))}
       {button("Code block", icon("code"), () => run((c) => c.toggleCodeBlock()), editor.isActive("codeBlock"))}
       {button("Link to a page", "[[", () => run((c) => c.insertContent("[[")))}
       {button("Insert a block", "/", () => run((c) => c.insertContent(editor.state.selection.$from.parent.textContent ? " /" : "/")))}
-      {button("Clear formatting", icon("close"), () => run((c) => c.unsetAllMarks().unsetFontSize().unsetFontFamily()))}
+      {button("Clear formatting", icon("clear-format"), () => clearFormatting(editor))}
       {editor.isFocused && button("Hide the keyboard", icon("chevron-down"), () => editor.commands.blur())}
     </div>
   );

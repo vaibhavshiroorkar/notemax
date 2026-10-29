@@ -6,7 +6,7 @@ import { onlineMode } from "@/platform/mode";
 import { savedStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
-import { isTemporary, keep, temporaryItems } from "./temporary";
+import { keep, temporaryItems } from "./temporary";
 
 /** "Not now" on the notice. Remembered, since the marks on the rows still say it. */
 const hidden = savedStore<boolean>("temporaryNoticeHidden", false);

@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import { messageOf } from "@/ui/format";
 
 /**
  * Wraps what a plugin draws. If it throws while drawing, only its own spot
@@ -9,7 +10,7 @@ export class Safe extends Component<{ name: string; children: ReactNode }, { err
   state = { error: null as string | null };
 
   static getDerivedStateFromError(error: unknown) {
-    return { error: error instanceof Error ? error.message : String(error) };
+    return { error: messageOf(error) };
   }
 
   componentDidCatch(error: unknown) {

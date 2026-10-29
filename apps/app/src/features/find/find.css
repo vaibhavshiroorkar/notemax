@@ -11,7 +11,7 @@
 .find-bar {
   position: fixed;
   top: 46px;
-  right: calc(var(--side-panel-width, 0px) + 16px);
+  right: calc(var(--right-room, 0px) + 16px);
   z-index: 30;
   display: flex;
   flex-direction: column;

@@ -4,6 +4,7 @@ import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { askText } from "@/ui/Prompt";
 import { createWorkspace, nameOf, openList, rename, switchTo, workspaceList } from "./list";
+import { useDismiss } from "@/ui/useDismiss";
 
 /** A dot in the workspace's color, or an outline when it has none. */
 export function Dot({ color }: { color: string }) {
@@ -40,17 +41,7 @@ export function Switcher({ app }: { app: AppContext }) {
   const [renaming, setRenaming] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   useEffect(() => void openList(), []);
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: PointerEvent) => !wrapper.current?.contains(event.target as Node) && setOpen(false);
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useDismiss(open, () => setOpen(false), wrapper);
 
   const current = list.find((w) => w.id === app.workspace);
   const startNew = async () => {

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, type DragEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { ROOT, canMove, childrenOf, createNode, moveNode, moveNodes, renameNode, type Tree } from "@notemax/core";
-import { newPagesAt, sidebarOpens } from "@/platform/behavior";
+import { ROOT, canMove, childrenOf, moveNodes, renameNode, type Tree } from "@notemax/core";
+import { sidebarOpens } from "@/platform/behavior";
 import { registry } from "@/plugins/registry";
 import { formatShortcut, shortcutFor, shortcutOverrides } from "@/plugins/shortcuts";
 import type { AppContext } from "@/plugins/types";
@@ -31,6 +31,8 @@ import { Rows, type RowContext } from "./TreeRows";
 import { FilterMenu } from "./FilterMenu";
 import { TrashBox } from "./TrashBox";
 import "./sidebar.css";
+import { isTypingTarget } from "@/ui/typing";
+import { addPage } from "@/data/addPage";
 
 /**
  * Arrow keys between rows, as in a file explorer: up and down, Right opens a
@@ -117,8 +119,7 @@ export function Sidebar({ app }: { app: AppContext }) {
         return true;
       },
       add(kind, parentId) {
-        const id = createNode(doc, kind, parentId);
-        if (newPagesAt.get() === "top") moveNode(doc, id, parentId, 0);
+        const id = addPage(doc, kind, parentId);
         expand(parentId);
         // A note or book opens so its title can be typed. A folder has no page,
         // so its name is typed in the sidebar row instead.
@@ -160,7 +161,7 @@ export function Sidebar({ app }: { app: AppContext }) {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Delete" || event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return;
       const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable=true], .ProseMirror, .cm-content")) return;
+      if (isTypingTarget(target)) return;
       const picked = [...selection.get()];
       const row = target?.closest<HTMLElement>(".sidebar .row[data-id]")?.dataset.id;
       const ids = picked.length ? picked : row ? [row] : [];

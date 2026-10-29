@@ -4,7 +4,8 @@ import { savedStore } from "@/platform/store";
 import { Icon } from "@/ui/Icon";
 import { phoneBar } from "@/ui/phoneBar";
 import type { Post } from "./api";
-import { messageOf, plural, useLoad } from "./bits";
+import { useLoad } from "./bits";
+import { messageOf, plural } from "@/ui/format";
 import { MAX_NOTE, MAX_QUOTE, NOTES_NOT_SET_UP, notesOn, removeNote, sendNote, type ReaderNote } from "./notes";
 
 // Reading someone's post: comfortable text, where you are in it, and ways to

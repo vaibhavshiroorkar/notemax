@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { GROUPS, pickFiles } from "@/features/open-files/open";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
+import { useDismiss } from "@/ui/useDismiss";
 
 /**
  * Open, beside Create at the top: files from the computer, by kind. Each
@@ -12,18 +13,8 @@ export function OpenMenu({ app }: { app: AppContext }) {
   const wrapper = useRef<HTMLDivElement>(null);
   const first = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    first.current?.focus();
-    const onPointer = (event: PointerEvent) => !wrapper.current?.contains(event.target as Node) && setOpen(false);
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useEffect(() => void (open && first.current?.focus()), [open]);
+  useDismiss(open, () => setOpen(false), wrapper);
 
   return (
     <div className="open-menu" ref={wrapper}>

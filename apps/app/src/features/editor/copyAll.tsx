@@ -5,6 +5,7 @@ import { toHtml, toPlainText } from "@/features/export/serialize";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { registry } from "@/plugins/registry";
+import { messageOf } from "@/ui/format";
 
 /**
  * Puts a whole note on the clipboard: as formatted text for apps that take it,
@@ -26,7 +27,7 @@ export async function copyAll(app: AppContext, id: string) {
     } else await navigator.clipboard.writeText(text);
     app.notify(`Copied all of "${node?.title || "Untitled"}"`);
   } catch (error) {
-    app.notify(`Could not copy: ${error instanceof Error ? error.message : String(error)}`);
+    app.notify(`Could not copy: ${messageOf(error)}`);
   }
 }
 

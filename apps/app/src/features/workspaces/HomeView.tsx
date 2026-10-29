@@ -15,8 +15,8 @@ import { HomeList, editedAgo } from "./HomeList";
 import { arranged, homeLayout, moveCard, type HomeLayout } from "./homeLayout";
 import { Dot } from "./Switcher";
 import { PageListView } from "./PageListView";
+import { plural } from "@/ui/format";
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 function Card({ workspace, app, count, onDragTo, onBack }: { workspace: WorkspaceInfo; app: AppContext; count: number | null; onDragTo(id: string): void; onBack(): void }) {
   const here = workspace.id === app.workspace;

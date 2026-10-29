@@ -8,7 +8,8 @@ import { formatShortcut } from "@/plugins/shortcuts";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
 import type { IconName } from "./Icon";
 import { Icon } from "./Icon";
-import { fromTouch, touchOnly } from "./longPress";
+import { touchFirst } from "./layout";
+import { fromTouch } from "./longPress";
 import "./context-menu.css";
 
 interface Open {
@@ -70,7 +71,7 @@ export const pageMenu = (node: TreeNode | undefined, inside?: boolean) => contex
  * the list around the row.
  */
 export const dragRowMenu = (handler: (event: ReactMouseEvent) => void) => (event: ReactMouseEvent) => {
-  if (!touchOnly()) return handler(event);
+  if (!touchFirst()) return handler(event);
   event.preventDefault();
   event.stopPropagation();
 };

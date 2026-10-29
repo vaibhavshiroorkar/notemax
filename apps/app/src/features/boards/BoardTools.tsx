@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { STICKY_COLORS, TEMPLATES, addFrame, addSticky, clearVotes, vote } from "./miro";
+import { useDismiss } from "@/ui/useDismiss";
 
 type Api = Parameters<typeof addSticky>[0];
 
@@ -9,12 +10,7 @@ export function BoardTools({ api }: { api: () => Api | null }) {
   const [said, setSaid] = useState("");
   const wrapper = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: PointerEvent) => !wrapper.current?.contains(event.target as Node) && setOpen(null);
-    document.addEventListener("pointerdown", onPointer);
-    return () => document.removeEventListener("pointerdown", onPointer);
-  }, [open]);
+  useDismiss(!!open, () => setOpen(null), wrapper);
   useEffect(() => {
     if (!said) return;
     const timer = setTimeout(() => setSaid(""), 2500);

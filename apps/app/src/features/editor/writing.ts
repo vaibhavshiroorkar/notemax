@@ -1,4 +1,4 @@
-import { Extension, wrappingInputRule, type CommandProps } from "@tiptap/core";
+import { Extension, wrappingInputRule, type CommandProps, type Editor } from "@tiptap/core";
 import { Plugin, PluginKey, type Transaction } from "@tiptap/pm/state";
 
 /** How many steps a paragraph can be pushed in. */
@@ -237,3 +237,25 @@ export const ShortcutUndo = Extension.create({
     };
   },
 });
+
+/** What Tab does, from a button: in a list, nest the item or take it out a step; elsewhere, indent the line. */
+export function stepIndent(editor: Editor, by: 1 | -1) {
+  const item = LIST_ITEMS.find((name) => editor.isActive(name));
+  const chain = editor.chain().focus();
+  if (item) (by > 0 ? chain.sinkListItem(item) : chain.liftListItem(item)).run();
+  else (by > 0 ? chain.indent() : chain.outdent()).run();
+}
+
+/**
+ * Back to plain text: bold and the other marks, size, font, alignment and
+ * line spacing. With nothing picked, the whole line the cursor is in, since
+ * clearing nothing would look like the button did not work.
+ */
+export function clearFormatting(editor: Editor) {
+  const { empty, $from } = editor.state.selection;
+  const chain = editor.chain().focus();
+  if (empty) chain.setTextSelection({ from: $from.start(), to: $from.end() });
+  chain.unsetAllMarks().unsetFontSize().unsetFontFamily().unsetTextAlign().setLineSpacing(null);
+  if (empty) chain.setTextSelection($from.pos);
+  chain.run();
+}
