@@ -3,7 +3,7 @@ import { clearSelection } from "@/features/sidebar/state";
 import { syncIsOn } from "@/features/sync/runtime";
 import { createStore } from "@/platform/store";
 import type { AppContext, ContextMenuItem, ContextTarget, Plugin } from "@/plugins/types";
-import { TemporaryLine, TemporaryNotice } from "./TemporaryNotice";
+import { TemporaryNotice } from "./TemporaryNotice";
 import { isTemporary, keep, startMarking, temporaryItems } from "./temporary";
 import "./temporary.css";
 
@@ -50,7 +50,6 @@ export const temporaryPlugin: Plugin = {
   required: true,
   rowMarks: [{ id: "temporary.mark", icon: "clock", label: "Temporary", when: isTemporary }],
   sidebarSections: [{ id: "temporary.notice", order: -20, component: TemporaryNotice }],
-  pageHeader: [{ id: "temporary.line", component: TemporaryLine }],
   sidebarFilterChoices: [{ id: "temporary.only", component: TemporaryOnlyChoice }],
   useSidebarFilter() {
     const on = temporaryOnly.use();

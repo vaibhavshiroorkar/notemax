@@ -3,17 +3,41 @@ import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { askText } from "@/ui/Prompt";
-import { createWorkspace, nameOf, openList, switchTo, workspaceList } from "./list";
+import { createWorkspace, nameOf, openList, rename, switchTo, workspaceList } from "./list";
 
 /** A dot in the workspace's color, or an outline when it has none. */
 export function Dot({ color }: { color: string }) {
   return <span className="workspace-dot" data-none={!color || undefined} style={color ? { background: color } : undefined} aria-hidden="true" />;
 }
 
-/** The workspace at the top left: Home beside it, its name, and a menu to switch or start another. */
+/** The workspace's name, typed over in place. Enter or leaving the box keeps it, Esc does not. */
+function NameBox({ name, onDone }: { name: string; onDone(name: string | null): void }) {
+  const [value, setValue] = useState(name);
+  return (
+    <input
+      className="workspace-rename"
+      aria-label="Workspace name"
+      autoFocus
+      value={value}
+      onFocus={(event) => event.target.select()}
+      onChange={(event) => setValue(event.target.value)}
+      onBlur={() => onDone(value.trim() || null)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") event.currentTarget.blur();
+        else if (event.key === "Escape") onDone(null);
+      }}
+    />
+  );
+}
+
+/**
+ * The workspace at the top left: Home beside it, its name (double-click to
+ * rename), a menu to switch or start another, and places like the community.
+ */
 export function Switcher({ app }: { app: AppContext }) {
   const list = workspaceList.use();
   const [open, setOpen] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   useEffect(() => void openList(), []);
   useEffect(() => {
@@ -40,11 +64,36 @@ export function Switcher({ app }: { app: AppContext }) {
       <button className="icon-button workspace-home" aria-label="Home" title="Home: all workspaces" onClick={() => app.openView("home")}>
         <Icon name="home" />
       </button>
-      <button className="workspace-current" aria-haspopup="menu" aria-expanded={open} title="Switch workspace" onClick={() => setOpen(!open)}>
-        <Dot color={current?.color ?? ""} />
-        <span className="workspace-name">{current ? nameOf(current) : "My notes"}</span>
-        <Icon name="chevron-down" />
-      </button>
+      {renaming ? (
+        <NameBox
+          name={current ? nameOf(current) : "My notes"}
+          onDone={(name) => {
+            setRenaming(false);
+            if (name && current && name !== nameOf(current)) void rename(current.id, name);
+          }}
+        />
+      ) : (
+        <button
+          className="workspace-current"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          title="Switch workspace. Double-click to rename"
+          onClick={() => setOpen(!open)}
+          onDoubleClick={() => {
+            setOpen(false);
+            setRenaming(true);
+          }}
+        >
+          <Dot color={current?.color ?? ""} />
+          <span className="workspace-name">{current ? nameOf(current) : "My notes"}</span>
+          <Icon name="chevron-down" />
+        </button>
+      )}
+      {registry.switcherButtons().map((button) => (
+        <button key={button.id} className="icon-button workspace-place" aria-label={button.label} title={button.label} onClick={() => button.run(app)}>
+          <Icon name={button.icon} />
+        </button>
+      ))}
       {open && (
         <div className="menu workspace-menu" role="menu" aria-label="Workspaces">
           {list.map((workspace) => (
@@ -55,6 +104,17 @@ export function Switcher({ app }: { app: AppContext }) {
             </button>
           ))}
           <hr />
+          <button
+            className="menu-item"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              setRenaming(true);
+            }}
+          >
+            <Icon name="pencil" />
+            Rename this workspace
+          </button>
           <button className="menu-item" role="menuitem" onClick={() => void startNew()}>
             <Icon name="plus" />
             New workspace

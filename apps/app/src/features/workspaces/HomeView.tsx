@@ -230,7 +230,7 @@ export function RecentView({ app }: { app: AppContext; options: Record<string, u
     .use()
     .map((id) => app.tree.items.get(id))
     .filter((item): item is NonNullable<typeof item> => !!item && item.kind !== "folder");
-  return <PageListView app={app} title="Recent pages" icon="clock" items={items} empty="Pages you open show up here." />;
+  return <PageListView app={app} title="Recent pages" icon="clock" items={items} empty="Nothing opened yet" />;
 }
 
 export function RecentSection({ app }: { app: AppContext }) {
@@ -239,7 +239,7 @@ export function RecentSection({ app }: { app: AppContext }) {
     .map((id) => app.tree.items.get(id))
     .filter((item): item is NonNullable<typeof item> => !!item && item.kind !== "folder")
     .slice(0, 8);
-  return <HomeList app={app} items={items} note={(item) => editedAgo(item.editedAt)} empty="Pages you open show up here." />;
+  return <HomeList app={app} items={items} note={(item) => editedAgo(item.editedAt)} empty="Nothing opened yet" />;
 }
 
 /** The panel that turns Home's cards on and off, orders them, and picks one or two columns. */
@@ -292,8 +292,6 @@ function Customize({ sections, onClose }: { sections: HomeSection[]; onClose(): 
   );
 }
 
-const greeting = (hour = new Date().getHours()) => (hour < 5 ? "Good night" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
-
 /**
  * Home: a page of cards that plugins fill, like ways to start, recent pages,
  * bookmarks, books, the journal and the workspaces. People choose which show,
@@ -313,7 +311,7 @@ export function HomeView({ app }: { app: AppContext; options: Record<string, unk
         <div>
           <h1>Home</h1>
           <p className="home-date">
-            {greeting()}. It is {today}.
+            {today}
           </p>
         </div>
         <button className="button" aria-expanded={customizing} onClick={() => setCustomizing(!customizing)}>

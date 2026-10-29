@@ -4,6 +4,7 @@ import { HomeView, QuickStart, RecentSection, RecentView, WorkspacesSection } fr
 import { nameOf, switchTo, workspaceList } from "./list";
 import { Switcher } from "./Switcher";
 import { copyToWorkspace } from "./transfer";
+import { WelcomeView, welcomeDue } from "./WelcomeView";
 import "./workspaces.css";
 
 /** The pages a menu acts on. A page picked along with a folder it sits in goes with that folder. */
@@ -58,7 +59,12 @@ export const workspacesPlugin: Plugin = {
   views: [
     { id: "home", title: "Home", icon: "home", component: HomeView },
     { id: "recent", title: "Recent pages", icon: "clock", component: RecentView },
+    { id: "welcome", title: "Welcome", icon: "home", component: WelcomeView },
   ],
+  // A workspace with nothing in it yet opens on Welcome, once on each device.
+  workspaceStart(app) {
+    if (welcomeDue(app)) app.openView("welcome");
+  },
   homeSections: [
     { id: "home.quick", title: "Quick start", order: 10, component: QuickStart },
     { id: "home.recent", title: "Recent pages", order: 20, open: (app) => app.openView("recent"), component: RecentSection },

@@ -609,7 +609,7 @@ export function App() {
         </Safe>
       ))}
       <Toasts />
-      <StatusBar app={app} workspaceStatus={workspace.status} words={activeNode?.kind === "note" ? activeNode.words : null} persistent={persistent} />
+      <StatusBar app={app} workspaceStatus={workspace.status} words={activeNode?.kind === "note" ? activeNode.words : null} />
     </div>
   );
 }

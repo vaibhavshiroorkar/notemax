@@ -2,6 +2,15 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.97.0 (2026-10-29)
+
+- A new workspace starts empty: no starter notes. It opens a Welcome tab once instead, which is not a page and leaves nothing in the sidebar.
+- The website starts online without asking. The desktop app still asks once.
+- Rename the workspace at the top left: double-click its name, or Rename in its menu.
+- The Community button is back at the top left, beside the workspace. Share has an icon of its own.
+- The chapter list in the right sidebar follows the book's view: in Previews and Full text it scrolls the book's page instead of leaving it, and in Full text it marks the chapter being read.
+- Less text on screen: shorter empty states, no storage warning in the status bar, no line under temporary pages, no greeting on Home.
+
 ## 0.96.0 (2026-10-29)
 
 - Back and Forward buttons beside the sidebar button, and Alt+Left and Alt+Right (the mouse's side buttons and Ctrl+[ and Ctrl+] already worked).

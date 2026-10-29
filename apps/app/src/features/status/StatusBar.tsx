@@ -38,13 +38,11 @@ export function StatusBar({
   app,
   workspaceStatus,
   words,
-  persistent,
 }: {
   app: AppContext;
   workspaceStatus: SaveStatus;
   /** In the open page, or null when it has none or they are not counted yet. */
   words: number | null;
-  persistent: boolean | undefined;
 }) {
   const status = worst(workspaceStatus, pageStatus.use());
   const showWords = useOption("notes", "statusWords");
@@ -82,7 +80,6 @@ export function StatusBar({
           <Item app={app} />
         </Safe>
       ))}
-      {persistent === false && <span className="warning">The browser may clear these notes if disk space runs low.</span>}
     </footer>
   );
 }

@@ -271,7 +271,7 @@ export function Sidebar({ app }: { app: AppContext }) {
               </Fragment>
             ))
           ) : (
-            <p className="empty">No notes yet. Use + to start one.</p>
+            <p className="empty">No notes yet</p>
           )}
           {endActive && <div className="drop-end" />}
         </section>

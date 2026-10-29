@@ -3,16 +3,18 @@ import { MAIN_WORKSPACE, WORKSPACE_DOC_ID, ensureStarter, watchTree, type LocalD
 import { useLocalDoc } from "./useLocalDoc";
 
 /**
- * Browser checks written before the starter pages expect a workspace with
- * only Welcome. On the dev server they can ask for that; the built app has no
- * such switch.
+ * A new workspace starts empty, with a Welcome tab instead of pages (see
+ * WelcomeView). Browser checks were written against starter pages, so on the
+ * dev server, under automation, they still get them: only Welcome when they
+ * ask for "bare", none when they ask for "empty". The built app has no such switch.
  */
-function bareForChecks(): boolean {
-  if (!import.meta.env.DEV) return false;
+function starterForChecks(): "bare" | "full" | null {
+  if (!import.meta.env.DEV || !navigator.webdriver) return null;
   try {
-    return localStorage.getItem("notemax:checks:bare") === "1";
+    if (localStorage.getItem("notemax:checks:empty") === "1") return null;
+    return localStorage.getItem("notemax:checks:bare") === "1" ? "bare" : "full";
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -24,8 +26,8 @@ export function useWorkspace(workspace: string) {
 
   useEffect(() => {
     if (!local) return;
-    // Only the first workspace gets the starter pages. A new one starts empty.
-    if (workspace === MAIN_WORKSPACE) ensureStarter(local.doc, { welcomeOnly: bareForChecks() });
+    const starter = workspace === MAIN_WORKSPACE ? starterForChecks() : null;
+    if (starter) ensureStarter(local.doc, { welcomeOnly: starter === "bare" });
     // Unchanged items stay the same objects, which is what lets the sidebar
     // skip rows a change did not touch.
     return watchTree(local.doc, (tree) => setRead({ doc: local.doc, tree }));

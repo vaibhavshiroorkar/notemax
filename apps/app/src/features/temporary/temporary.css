@@ -14,12 +14,6 @@
 }
 
 .temporary-notice svg,
-.temporary-line svg {
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-  margin-top: 1px;
-}
 
 .temporary-actions {
   display: flex;
@@ -33,12 +27,3 @@
   font-size: 12px;
 }
 
-.temporary-line {
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 4px 0;
-  font-size: 13px;
-  color: var(--muted);
-}

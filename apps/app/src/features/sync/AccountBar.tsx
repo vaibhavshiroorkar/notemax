@@ -43,7 +43,7 @@ export function AccountBar({ app }: { app: AppContext }) {
         </span>
         <span className="account-bar-text">
           <strong>{offline || !accountsEnabled ? "Account" : "Sign in"}</strong>
-          <span>{offline ? "Offline on this device" : "Account and device mode"}</span>
+          {offline && <span>Offline on this device</span>}
         </span>
       </button>
     );

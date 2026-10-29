@@ -9,8 +9,8 @@ import { Safe } from "@/ui/Safe";
 
 /**
  * The row of tools at the top of the right sidebar: search, the open page's
- * own tools (word count, star, copy all, share, links), places like the
- * community, the split layout and settings. They live here rather than over
+ * own tools (word count, star, copy all, share, links), the split layout
+ * and settings. They live here rather than over
  * the page, so the top bar stays clear.
  */
 export function SideTools({ app, node, split, quickOpen, onQuick, onCloseQuick }: { app: AppContext; node: TreeNode | undefined; split: boolean; quickOpen: boolean; onQuick(): void; onCloseQuick(): void }) {
@@ -29,11 +29,6 @@ export function SideTools({ app, node, split, quickOpen, onQuick, onCloseQuick }
               </PageWorkspace.Provider>
             </Safe>
           ))}
-      {registry.switcherButtons().map((button) => (
-        <button key={button.id} className="icon-button" aria-label={button.label} title={button.label} onClick={() => button.run(app)}>
-          <Icon name={button.icon} />
-        </button>
-      ))}
       <span className="side-tools-space" />
       {split && (
         <button className="icon-button layout-button" aria-label="Split view layout" aria-haspopup="menu" title="Split view: one to four panes" onClick={contextMenuHandler(() => ({ type: "layout" }))}>

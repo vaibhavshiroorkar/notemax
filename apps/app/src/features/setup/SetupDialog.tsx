@@ -1,5 +1,6 @@
 import { accountsEnabled } from "@/features/account/config";
 import { onlineMode } from "@/platform/mode";
+import { isDesktop } from "@/platform/platform";
 import { createStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
@@ -23,14 +24,22 @@ function quietForChecks(): boolean {
 export const setupLater = createStore(quietForChecks());
 
 /**
- * The first question on a first visit, over everything: offline on this
+ * The website is online by its nature, so it starts online without asking.
+ * Settings, Setup still turns it offline.
+ */
+export function startOnlineOnTheWeb() {
+  if (!isDesktop && onlineMode.get() === null) onlineMode.set("online");
+}
+
+/**
+ * The first question in the desktop app, over everything: offline on this
  * device, or online on all of them. It comes back at each start until it is
  * answered; Settings, Setup changes the answer later.
  */
 export function SetupDialog({ app }: { app: AppContext }) {
   const mode = onlineMode.use();
   const later = setupLater.use();
-  if (mode !== null || later) return null;
+  if (!isDesktop || mode !== null || later) return null;
   return (
     <Dialog label="How will you use Notemax?" className="setup-dialog" onClose={() => setupLater.set(true)}>
       <h2 className="dialog-title">How will you use Notemax?</h2>

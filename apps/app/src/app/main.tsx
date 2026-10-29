@@ -12,9 +12,11 @@ import { startOffline } from "@/platform/offline";
 import { startSettingsSync } from "@/platform/settingsSync";
 import { listenForQuit } from "@/platform/quit";
 import { loadCommunityPlugins } from "@/plugins/community";
+import { startOnlineOnTheWeb } from "@/features/setup/SetupDialog";
 import { App } from "./App";
 
 initAppearance();
+startOnlineOnTheWeb();
 startOffline();
 // When storage cannot open, the app says why on screen; settings just wait for the next start.
 startSettingsSync().catch(() => {});

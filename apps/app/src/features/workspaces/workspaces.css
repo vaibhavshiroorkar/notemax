@@ -18,6 +18,19 @@
   text-align: left;
 }
 
+.workspace-rename {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+}
+
 .workspace-current:hover,
 .workspace-current[aria-expanded="true"] {
   background: var(--hover);
@@ -392,4 +405,47 @@
 .page-list-action svg {
   color: var(--accent);
   fill: var(--accent);
+}
+
+.welcome-view {
+  max-width: 560px;
+  padding-top: 48px;
+}
+
+.welcome-title {
+  margin: 0 0 8px;
+  font-size: 1.75rem;
+}
+
+.welcome-lead {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+.welcome-view .home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.welcome-keys {
+  display: grid;
+  gap: 8px;
+  margin: 28px 0 0;
+  padding: 0;
+  color: var(--muted);
+  list-style: none;
+}
+
+.welcome-keys kbd {
+  display: inline-block;
+  min-width: 24px;
+  margin-right: 8px;
+  padding: 1px 6px;
+  color: var(--text);
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.8125rem;
 }

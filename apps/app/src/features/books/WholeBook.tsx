@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { renameNode, type TreeItem } from "@notemax/core";
 import { InlineNote } from "@/features/editor/InlineNote";
 import { LockedInline, useHidden } from "@/features/lock/LockedInline";
@@ -6,7 +6,7 @@ import type { PageProps } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { LazyMount } from "@/ui/LazyMount";
 import { BookItemMenu } from "./BookItemMenu";
-import { chapterStops, subtopicsOf } from "./reading";
+import { chapterStops, pieceInView, subtopicsOf } from "./reading";
 
 /** One piece of the book: its number, a title to edit in place, and its text. */
 function Piece({ item, label, depth, props }: { item: TreeItem; label: string; depth: number; props: PageProps }) {
@@ -16,7 +16,7 @@ function Piece({ item, label, depth, props }: { item: TreeItem; label: string; d
   const where = depth > 0 ? "in its chapter" : "on its own page";
   const hidden = useHidden(item);
   return (
-    <section className="whole-piece" style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || untitled}`}>
+    <section className="whole-piece" data-reveal={item.id} style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || untitled}`}>
       <header className="whole-title">
         <span className="chapter-number">{label}</span>
         <input value={item.title} placeholder={untitled} aria-label={`Title of ${label}`} onChange={(event) => renameNode(workspaceDoc, item.id, event.target.value)} />
@@ -47,8 +47,35 @@ function Piece({ item, label, depth, props }: { item: TreeItem; label: string; d
  * as they come near, so a long book opens fast.
  */
 export function WholeBook({ book, props }: { book: TreeItem; props: PageProps }) {
+  const own = useRef<HTMLDivElement>(null);
+  // Which piece is being read, for the chapters in the right sidebar to mark.
+  useEffect(() => {
+    const scroller = own.current?.closest(".page-scroll");
+    if (!scroller) return;
+    let frame = 0;
+    const look = () => {
+      frame = 0;
+      const top = scroller.getBoundingClientRect().top + 80;
+      let current: string | null = null;
+      for (const piece of own.current?.querySelectorAll<HTMLElement>(".whole-piece") ?? []) {
+        if (piece.getBoundingClientRect().top > top) break;
+        current = piece.dataset.reveal ?? null;
+      }
+      pieceInView.set(current ?? book.children[0]?.id ?? null);
+    };
+    const onScroll = () => {
+      frame ||= requestAnimationFrame(look);
+    };
+    look();
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      scroller.removeEventListener("scroll", onScroll);
+      pieceInView.set(null);
+    };
+  }, [book]);
   return (
-    <div className="whole-book">
+    <div className="whole-book" ref={own}>
       {chapterStops(book).map(({ item, label }) => [
         <Piece key={item.id} item={item} label={label} depth={0} props={props} />,
         ...subtopicsOf(item, label).map((sub) => <Piece key={sub.item.id} item={sub.item} label={sub.label} depth={sub.depth} props={props} />),

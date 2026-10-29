@@ -219,7 +219,6 @@ export function RightSidebar({ app, panels, all, open, tools }: { app: AppContex
           </div>
         ))}
         {moving && <Gap all={all} index={layout.slots.length} />}
-        {slots.length === 0 && <p className="panel-empty">Nothing here yet. Add a calendar, links, the graph and more from Sections below.</p>}
       </div>
       <Tray all={all} here={here} />
     </aside>

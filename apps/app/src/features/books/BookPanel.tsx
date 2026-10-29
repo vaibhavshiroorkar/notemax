@@ -5,7 +5,8 @@ import type { AppContext } from "@/plugins/types";
 import { dragRowMenu, pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { BookItemMenu } from "./BookItemMenu";
-import { bookOf, chapterOf, chapterStops, subtopicsOf } from "./reading";
+import { revealing } from "@/app/reveal";
+import { bookOf, bookViewOf, chapterOf, chapterStops, pieceInView, subtopicsOf } from "./reading";
 import "./books.css";
 
 const NONE: ReadonlySet<string> = new Set();
@@ -24,8 +25,15 @@ export function BookPanel({ app }: { app: AppContext }) {
   const dragging = useDragging();
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const bookTitle = book.title || "Untitled book";
+  // On the book's own page, shown as previews or in full, a chapter is
+  // already on the page: clicking one scrolls there instead of leaving.
+  const view = bookViewOf(book);
+  const onBookPage = activeId === book.id && view !== "titles";
+  const inView = pieceInView.use();
+  const here = onBookPage && view === "whole" ? inView : activeId;
+  const go = (id: string) => (onBookPage ? revealing.set(id) : onSelect(id));
   // Folds opened or closed by hand, kept until another chapter is read.
-  const reading = activeId ? (chapterOf(tree, activeId)?.id ?? null) : null;
+  const reading = here ? (chapterOf(tree, here)?.id ?? null) : null;
   const [flipped, setFlipped] = useState<{ reading: string | null; ids: ReadonlySet<string> }>({ reading, ids: NONE });
   const flips = flipped.reading === reading ? flipped.ids : NONE;
   const unfolded = (id: string) => (id === reading) !== flips.has(id);
@@ -86,7 +94,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                   draggable
                   data-drop={zone}
                   data-dragging={dragging?.id === chapter.id || undefined}
-                  aria-current={chapter.id === activeId ? "page" : undefined}
+                  aria-current={chapter.id === here ? "page" : undefined}
                   onDragStart={(event) => {
                     event.dataTransfer.setData("text/plain", chapter.id);
                     event.dataTransfer.effectAllowed = "move";
@@ -121,7 +129,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                   ) : (
                     <span className="chapter-fold" aria-hidden="true" />
                   )}
-                  <button className="row-title chapter-row" onClick={() => onSelect(chapter.id)}>
+                  <button className="row-title chapter-row" onClick={() => go(chapter.id)}>
                     <span className="chapter-number">{label}</span>
                     <span className="chapter-title">{title}</span>
                   </button>
@@ -135,10 +143,11 @@ export function BookPanel({ app }: { app: AppContext }) {
                     <li
                       key={sub.item.id}
                       className="row subtopic"
+                      aria-current={sub.item.id === here && onBookPage ? "page" : undefined}
                       style={{ "--depth": sub.depth } as CSSProperties}
                       onContextMenu={pageMenu(tree.byId.get(sub.item.id))}
                     >
-                      <button className="row-title chapter-row" onClick={() => onSelect(sub.item.id)}>
+                      <button className="row-title chapter-row" onClick={() => go(sub.item.id)}>
                         <span className="chapter-number">{sub.label}</span>
                         <span className="chapter-title">{sub.item.title || "Untitled"}</span>
                       </button>

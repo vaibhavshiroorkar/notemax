@@ -84,7 +84,6 @@ export function QuickOptions() {
 export function BasicsSection() {
   return (
     <>
-      <p>The settings most people change. Every category on the left has these and more.</p>
       <ThemeRow />
       <FontRow />
       <TextSizeSlider />

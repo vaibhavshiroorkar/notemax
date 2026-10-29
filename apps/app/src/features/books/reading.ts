@@ -1,4 +1,15 @@
-import type { Tree, TreeItem } from "@notemax/core";
+import type { Tree, TreeItem, TreeNode } from "@notemax/core";
+import { createStore } from "@/platform/store";
+
+// How much of each chapter the book's page shows: titles only (the first
+// choice), the first lines of each, or every chapter written out.
+export type BookView = "titles" | "previews" | "whole";
+
+/** A page setting, so the choice syncs with the book and each book keeps its own. */
+export const bookViewOf = (book: TreeNode | TreeItem): BookView => (book.props.bookView === "whole" ? "whole" : book.props.bookView === "previews" ? "previews" : "titles");
+
+/** The chapter or subtopic at the top of the screen while a book is read as one page (Full text). */
+export const pieceInView = createStore<string | null>(null);
 
 /** A book's chapters in reading order. The tree keeps folders and books out of a book. */
 const chaptersIn = (book: TreeItem): readonly TreeItem[] => book.children;

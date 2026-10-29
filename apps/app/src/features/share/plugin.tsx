@@ -25,7 +25,7 @@ function ShareButton({ node, app }: { node: TreeNode; app: AppContext }) {
   if (registry.hidesText(node)) return null;
   return (
     <button className="icon-button share-button" aria-label="Share" title="Share and write together" onClick={() => app.openOverlay("share", { pageId: node.id })}>
-      <Icon name="people" />
+      <Icon name="share" />
     </button>
   );
 }
