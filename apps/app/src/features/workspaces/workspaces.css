@@ -169,8 +169,16 @@
   }
 }
 
+/* Its icon sits on the same line as the page icons below: 16px in. */
 .workspace-home {
   flex-shrink: 0;
+  margin-left: 4px;
+}
+
+@media (pointer: coarse) {
+  .workspace-home {
+    margin-left: -2px;
+  }
 }
 
 /* Home: cards in one column or two, each with its heading. */

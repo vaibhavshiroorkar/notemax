@@ -293,6 +293,53 @@
   margin: 0;
 }
 
+.book-bar-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.book-bar-tools .icon-button[aria-expanded="true"] {
+  background: var(--active);
+  color: var(--accent);
+}
+
+/* What the book calls its chapters and how it numbers them, under the bar while open. */
+.book-style {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 24px;
+  margin: -4px 0 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.book-style-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.book-style-field input {
+  width: 12ch;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+/* The words of a chapter's place in its book, beside the book's name. */
+.note-book-where {
+  flex: none;
+  white-space: nowrap;
+}
+
 .book-description {
   margin-bottom: 24px;
 }

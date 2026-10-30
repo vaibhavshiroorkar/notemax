@@ -30,17 +30,18 @@ export const autoUpdate = savedStore<boolean>("autoUpdate", true);
 /** A Welcome tab for each new, empty workspace. */
 export const showWelcome = savedStore<boolean>("showWelcome", true);
 
-export type PinnedBars = 0 | 1 | 2 | 3;
+export type PinnedBars = 0 | "peek" | 1 | 2;
+/** The choices in the order the bars button steps through them, fewest bars first. */
+export const PINNED_ORDER: readonly PinnedBars[] = [0, "peek", 1, 2];
 /**
- * On a phone, how many of the three bars at the top stay on screen while a
- * page scrolls, counted from the bottom: the formatting bar (or a post's
- * reading tools), then the chapter bar above it, then the tabs. The rest
- * scroll away with the page.
+ * On a phone, how many of the bars at the top stay on screen while a page
+ * scrolls, counted from the bottom: the formatting bar (or a post's reading
+ * tools), then the tabs. The rest scroll away with the page. "peek" keeps the
+ * bottom bar only while scrolling back up, the way a phone's browser shows
+ * its address bar.
  */
 export const pinnedBars = savedStore<PinnedBars>("pinnedBars", 1, {
-  decode: (raw) => {
-    const n = Number(raw);
-    return n === 0 || n === 1 || n === 2 || n === 3 ? n : 1;
-  },
+  // 3 was all three bars, from when a chapter bar sat between them.
+  decode: (raw) => (raw === "3" ? 2 : (PINNED_ORDER.find((level) => String(level) === raw) ?? 1)),
   encode: String,
 });

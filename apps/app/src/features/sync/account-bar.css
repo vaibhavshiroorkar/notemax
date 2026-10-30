@@ -4,7 +4,8 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-  padding: 4px 6px;
+  /* The avatar's centre on the line of the page icons, 24px from the edge. */
+  padding: 4px 6px 4px 2px;
   border-radius: 6px;
   color: var(--text);
   text-align: left;
@@ -20,8 +21,8 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--hover);
   color: var(--muted);

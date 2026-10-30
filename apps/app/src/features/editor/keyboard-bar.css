@@ -47,7 +47,11 @@
   background: var(--border);
 }
 
-/* Redo is Undo's arrow, turned the other way. */
+/* Redo is Undo's arrow, turned the other way. A flex box, so the icon is not lifted onto a text line. */
+.keyboard-bar-flip {
+  display: flex;
+}
+
 .keyboard-bar-flip svg {
   transform: scaleX(-1);
 }

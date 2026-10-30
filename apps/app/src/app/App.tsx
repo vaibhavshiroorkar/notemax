@@ -27,8 +27,7 @@ import { PromptHost } from "@/ui/Prompt";
 import { Toasts } from "@/ui/Toasts";
 import { usePresence } from "@/ui/usePresence";
 import { useEdgeSwipe } from "./useEdgeSwipe";
-import { ChapterNav } from "@/features/books/ChapterNav";
-import { PhoneScroll, PinnedBarsButton } from "./PhoneBars";
+import { PhoneScroll } from "./PhoneBars";
 import { RightSidebar } from "./RightSidebar";
 import { Gated } from "./Gated";
 import { SideTools } from "./SideTools";
@@ -546,12 +545,6 @@ export function App() {
         {narrow ? (
           <PhoneScroll
             tabs={mainTop}
-            navigation={
-              <div className="mobile-navigation">
-                <PinnedBarsButton />
-                {sideNode?.kind === "note" && registry.isOn("books") && <ChapterNav tree={sideApp.tree} chapterId={sideNode.id} onOpen={sideApp.open} />}
-              </div>
-            }
             tools={<KeyboardBar />}
           >
             {activePage}

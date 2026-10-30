@@ -2,6 +2,14 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.105.0 (2026-10-30)
+
+- Phones: the chapter bar is gone. A chapter shows its book, its place and the arrows at the top of the page, as on a computer. Two bars are left: the tabs and the formatting bar.
+- Phones: a new choice for the bars, "Bottom, scrolling up". The formatting bar slides away while you scroll down and comes back as soon as you scroll up, or when you start writing. The page moving by itself as you type does not hide it.
+- Clear formatting with nothing picked is the way out of Bold, a bigger size and the rest: what you type next is plain, and the words already written keep their formatting.
+- Books choose what to call their chapters (Part, Lesson, or no word at all) and how to number them: 1 2 3, I II III, or none. The button is beside the book's views. Subtopics follow, as II.1 or unnumbered, and so do the Add button, the count and the line at the top of each chapter.
+- Icon buttons no longer squeeze their icons: a button's own padding had left a 16px icon 12px wide. The left sidebar's icons now sit on one line down each side, on a computer and a phone, and the phone's bars start their icons at the same place.
+
 ## 0.104.0 (2026-10-30)
 
 - Phones: the button that picks which bars stay while scrolling sits at the start of the formatting bar (or the reading tools). On a page with no tools bar, like a board, it stays in the bar above. A note outside a book no longer shows an empty bar there.

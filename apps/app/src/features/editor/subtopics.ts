@@ -15,7 +15,7 @@ export const showsSubtopics = (node: TreeNode) => node.kind === "note" && node.p
 export function noteSubtopics(tree: Tree, id: string): Subtopic[] {
   const item = tree.items.get(id);
   if (!item || !showsSubtopics(item) || bookOf(tree, id)) return [];
-  return subtopicsOf(item, "");
+  return subtopicsOf(item, undefined);
 }
 
 /**

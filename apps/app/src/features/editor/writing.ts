@@ -248,14 +248,17 @@ export function stepIndent(editor: Editor, by: 1 | -1) {
 
 /**
  * Back to plain text: bold and the other marks, size, font, alignment and
- * line spacing. With nothing picked, the whole line the cursor is in, since
- * clearing nothing would look like the button did not work.
+ * line spacing. With nothing picked it switches them off for what is typed
+ * next, the way out of Bold or a bigger size, and leaves the words already
+ * written as they are. Tiptap's own clearing does nothing without a selection.
  */
 export function clearFormatting(editor: Editor) {
-  const { empty, $from } = editor.state.selection;
   const chain = editor.chain().focus();
-  if (empty) chain.setTextSelection({ from: $from.start(), to: $from.end() });
-  chain.unsetAllMarks().unsetFontSize().unsetFontFamily().unsetTextAlign().setLineSpacing(null);
-  if (empty) chain.setTextSelection($from.pos);
+  if (editor.state.selection.empty) {
+    chain.command(({ tr }) => {
+      tr.setStoredMarks([]);
+      return true;
+    });
+  } else chain.unsetAllMarks().unsetFontSize().unsetFontFamily().unsetTextAlign().setLineSpacing(null);
   chain.run();
 }

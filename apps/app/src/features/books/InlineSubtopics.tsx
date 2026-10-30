@@ -41,10 +41,10 @@ export function InlineSubtopics({
   return (
     <div className="inline-subtopics">
       {subtopics.map(({ item, label, depth }) => (
-        <section key={item.id} className="inline-subtopic" data-reveal={item.id} style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || "Untitled"}`}>
+        <section key={item.id} className="inline-subtopic" data-reveal={item.id} style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || "Untitled"}`.trim()}>
           <header className="inline-subtopic-title">
-            <span className="chapter-number">{label}</span>
-            <input value={item.title} placeholder="Untitled" aria-label={`Title of ${label}`} onChange={(event) => renameNode(workspaceDoc, item.id, event.target.value)} />
+            {label && <span className="chapter-number">{label}</span>}
+            <input value={item.title} placeholder="Untitled" aria-label={label ? `Title of ${label}` : "Title"} onChange={(event) => renameNode(workspaceDoc, item.id, event.target.value)} />
             <BookItemMenu node={item} />
           </header>
           {item.kind === "note" ? (

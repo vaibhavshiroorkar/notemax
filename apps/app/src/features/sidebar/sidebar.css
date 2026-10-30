@@ -20,9 +20,11 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 6px 8px;
+  /* 4px on the right puts the cog's centre under the ... buttons above, which are narrower. */
+  padding: 6px 4px 6px 8px;
   border-top: 1px solid var(--border);
 }
+
 
 /* The square buttons at the right of the footer, like the trash and the Settings cog. */
 .sidebar-footer .footer-icon {
@@ -45,6 +47,18 @@
 
 .sidebar-footer .footer-icon:disabled {
   opacity: 0.6;
+}
+
+/* A finger's size, like the other icon buttons on a touch screen, and on their line. */
+@media (pointer: coarse) {
+  .sidebar-footer {
+    padding-right: 8px;
+  }
+
+  .sidebar-footer .footer-icon {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 .add-menu,
@@ -84,7 +98,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4px 4px 8px;
+  /* No right padding, so its buttons line up with each row's ... button. */
+  padding: 0 0 4px 8px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 600;

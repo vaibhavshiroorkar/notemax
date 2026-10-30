@@ -3,7 +3,7 @@ import { canMove, isContainer, type NodeKind, type Tree, type TreeItem } from "@
 import { prefetchDoc } from "@/data/docCache";
 import { useSelect } from "@/platform/store";
 import { registry } from "@/plugins/registry";
-import { subtopicsOf } from "@/features/books/reading";
+import { chapterNoun, subtopicsOf } from "@/features/books/reading";
 import { SubtopicList } from "@/features/editor/SubtopicList";
 import { BOX_FROM, showsSubtopics } from "@/features/editor/subtopics";
 import { dragRowMenu } from "@/ui/ContextMenu";
@@ -51,7 +51,7 @@ export function Rows({ items, depth, ctx }: { items: readonly TreeItem[]; depth:
  * subtopic on the note's page.
  */
 function Inside({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowContext }) {
-  const subtopics = showsSubtopics(item) ? subtopicsOf(item, "") : [];
+  const subtopics = showsSubtopics(item) ? subtopicsOf(item, undefined) : [];
   if (subtopics.length < BOX_FROM) return <Rows items={item.children} depth={depth + 1} ctx={ctx} />;
   return <SubtopicList list={subtopics} onOpen={(id) => ctx.select(id)} onMove={ctx.move} style={{ marginLeft: 4 + (depth + 1) * 14 }} />;
 }
@@ -239,8 +239,8 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
         {isContainer(item.kind) && (
           <button
             className="icon-button row-action"
-            aria-label={item.kind === "book" ? `Add chapter to ${title}` : `Add note inside ${title}`}
-            title={item.kind === "book" ? "Add chapter" : "Add note inside"}
+            aria-label={item.kind === "book" ? `Add ${chapterNoun(item)} to ${title}` : `Add note inside ${title}`}
+            title={item.kind === "book" ? `Add ${chapterNoun(item)}` : "Add note inside"}
             onClick={() => ctx.add("note", item.id)}
           >
             <Icon name="plus" />

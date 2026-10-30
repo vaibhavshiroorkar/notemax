@@ -84,7 +84,7 @@ export function SubtopicList({ list, onOpen, onMove, style }: { list: Subtopic[]
               }}
               onDragEnd={end}
             >
-              <span className="chapter-number">{label}</span>
+              {label && <span className="chapter-number">{label}</span>}
               <span className="subtopic-title">{item.title || "Untitled"}</span>
             </button>
           </li>

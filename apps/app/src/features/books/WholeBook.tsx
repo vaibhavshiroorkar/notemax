@@ -16,10 +16,10 @@ function Piece({ item, label, depth, props }: { item: TreeItem; label: string; d
   const where = depth > 0 ? "in its chapter" : "on its own page";
   const hidden = useHidden(item);
   return (
-    <section className="whole-piece" data-reveal={item.id} style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || untitled}`}>
+    <section className="whole-piece" data-reveal={item.id} style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || untitled}`.trim()}>
       <header className="whole-title">
-        <span className="chapter-number">{label}</span>
-        <input value={item.title} placeholder={untitled} aria-label={`Title of ${label}`} onChange={(event) => renameNode(workspaceDoc, item.id, event.target.value)} />
+        {label && <span className="chapter-number">{label}</span>}
+        <input value={item.title} placeholder={untitled} aria-label={label ? `Title of ${label}` : "Title"} onChange={(event) => renameNode(workspaceDoc, item.id, event.target.value)} />
         <button className="icon-button" aria-label={`Open ${item.title || untitled} ${where}`} title={`Open ${where}`} onClick={() => onSelect(item.id)}>
           <Icon name="arrow-right" />
         </button>

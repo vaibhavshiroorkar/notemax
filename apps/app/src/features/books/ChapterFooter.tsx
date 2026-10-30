@@ -24,7 +24,7 @@ export function ChapterFooter({ node, app }: { node: TreeNode; app: AppContext }
           <span className="chapter-step-text">
             <span className="chapter-step-hint">Previous</span>
             <span className="chapter-step-title">
-              <span className="chapter-number">{previous.label}</span> {name(previous)}
+              {previous.label && <span className="chapter-number">{previous.label}</span>} {name(previous)}
             </span>
           </span>
         </button>
@@ -36,7 +36,7 @@ export function ChapterFooter({ node, app }: { node: TreeNode; app: AppContext }
           <span className="chapter-step-text">
             <span className="chapter-step-hint">Next</span>
             <span className="chapter-step-title">
-              <span className="chapter-number">{next.label}</span> {name(next)}
+              {next.label && <span className="chapter-number">{next.label}</span>} {name(next)}
             </span>
           </span>
           <Icon name="arrow-right" />

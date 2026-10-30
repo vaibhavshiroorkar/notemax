@@ -428,6 +428,12 @@
   opacity: 0;
 }
 
+/* A small cross, quieter than the tab's name. */
+.tab-close svg {
+  width: 12px;
+  height: 12px;
+}
+
 .tab:hover .tab-close,
 .tab[aria-selected="true"] .tab-close,
 .tab-close:focus-visible {
@@ -890,11 +896,11 @@
 }
 
 /*
- * A phone: the three bars ride at the top of the page (PhoneBars.tsx). The
- * ones that stay are pulled up into view by a sticky box; sticky parts of a
- * page sit under them, and scrolling to a part leaves room for them.
+ * A phone: the tabs and the tools bar ride at the top of the page
+ * (PhoneBars.tsx). The ones that stay are pulled up into view by a sticky
+ * box; sticky parts of a page sit under them, and scrolling to a part leaves
+ * room for them.
  */
-.mobile-navigation { display: none; }
 .phone-scroll {
   scroll-padding-top: var(--pinned-height, 0px);
 }
@@ -902,6 +908,18 @@
   position: sticky;
   z-index: 6;
   background: var(--bg);
+}
+/* "Bottom, scrolling up": the stuck bar slides off while the page goes down. */
+.phone-bars[data-pinned="peek"] {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.phone-bars[data-hidden] {
+  transform: translateY(calc(-1 * var(--pinned-height, 0px)));
+}
+@media (prefers-reduced-motion: reduce) {
+  .phone-bars[data-pinned="peek"] {
+    transition: none;
+  }
 }
 .phone-page {
   position: relative;
@@ -917,9 +935,6 @@
 /* The bar of tools shows when a page has tools for it. The button that picks
    which bars stay sits at its start, and in the bar above when there is none. */
 .phone-tools:not(:has(> :not(.pinned-bars-button))) { display: none; }
-.phone-bars:has(.phone-tools > :not(.pinned-bars-button)) .mobile-navigation > .pinned-bars-button { display: none; }
-/* With its button gone below, the chapter bar shows only for a chapter of a book. */
-.phone-bars:has(.phone-tools > :not(.pinned-bars-button)) .mobile-navigation:not(:has(.note-book)) { display: none; }
 .phone-tools > .pinned-bars-button {
   position: sticky;
   left: 0;
@@ -935,25 +950,6 @@
   min-width: 0;
   border-bottom: 0;
 }
-@media (max-width: 700px) {
-  .mobile-navigation {
-    display: flex;
-    align-items: center;
-    flex: none;
-    min-height: 36px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
-  }
-  .mobile-navigation > .icon-button { flex: none; }
-  .mobile-navigation .note-book {
-    flex: 1;
-    min-width: 0;
-    margin: 0;
-    padding: 0 8px 0 0;
-  }
-  .note > .note-book { display: none; }
-}
-
 /* Marks the right sidebar's workspace for menus, without a box of its own in the grid. */
 .side-scope {
   display: contents;

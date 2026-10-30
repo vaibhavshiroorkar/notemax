@@ -6,7 +6,7 @@ import { dragRowMenu, pageMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { BookItemMenu } from "./BookItemMenu";
 import { revealing } from "@/app/reveal";
-import { bookOf, bookViewOf, chapterOf, chapterStops, pieceInView, subtopicsOf } from "./reading";
+import { bookOf, bookViewOf, chapterNoun, chapterOf, chapterStops, pieceInView, subtopicsOf } from "./reading";
 import "./books.css";
 
 const NONE: ReadonlySet<string> = new Set();
@@ -130,7 +130,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                     <span className="chapter-fold" aria-hidden="true" />
                   )}
                   <button className="row-title chapter-row" onClick={() => go(chapter.id)}>
-                    <span className="chapter-number">{label}</span>
+                    {label && <span className="chapter-number">{label}</span>}
                     <span className="chapter-title">{title}</span>
                   </button>
                   {/* The page menu, with Move to trash in it. On a phone it is the way to the menu, since a long press drags. */}
@@ -148,7 +148,7 @@ export function BookPanel({ app }: { app: AppContext }) {
                       onContextMenu={pageMenu(tree.byId.get(sub.item.id))}
                     >
                       <button className="row-title chapter-row" onClick={() => go(sub.item.id)}>
-                        <span className="chapter-number">{sub.label}</span>
+                        {sub.label && <span className="chapter-number">{sub.label}</span>}
                         <span className="chapter-title">{sub.item.title || "Untitled"}</span>
                       </button>
                       <BookItemMenu node={sub.item} className="row-action" />
@@ -159,12 +159,12 @@ export function BookPanel({ app }: { app: AppContext }) {
           })}
         </ol>
       ) : (
-        <p className="book-panel-empty">No chapters yet. Drag a note or board here, or add one.</p>
+        <p className="book-panel-empty">No {chapterNoun(book, true)} yet. Drag a note or board here, or add one.</p>
       )}
 
       <button className="footer-button" onClick={() => onSelect(createNode(doc, "note", book.id))}>
         <Icon name="plus" />
-        <span>Add chapter</span>
+        <span>Add {chapterNoun(book)}</span>
       </button>
     </div>
   );

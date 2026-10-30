@@ -22,7 +22,36 @@ export const pieceInView = createStore<string | null>(null);
 /** A book's chapters in reading order. The tree keeps folders and books out of a book. */
 const chaptersIn = (book: TreeItem): readonly TreeItem[] => book.children;
 
-/** A page inside a chapter, numbered after it: 6.1, and 6.1.1 one level further in. */
+/** How a book numbers its chapters. Subtopics follow: 6.1, or VI.1. */
+export type ChapterNumbers = "numbers" | "roman" | "none";
+
+/** A page setting, like the view, so each book keeps its own and it syncs with the book. */
+export const chapterNumbersOf = (book: TreeItem | TreeNode): ChapterNumbers => {
+  const kind = book.props.chapterNumbers;
+  return kind === "roman" || kind === "none" ? kind : "numbers";
+};
+
+/** What a book calls its chapters, like Part or Lesson. Empty shows no word at all. */
+export const chapterWordOf = (book: TreeItem | TreeNode): string => {
+  const word = book.props.chapterWord;
+  return typeof word === "string" ? word.trim() : "Chapter";
+};
+
+/** The word for more than one, for the book's buttons and counts: Part, parts. Plain chapters without a word. */
+export function chapterNoun(book: TreeItem | TreeNode, many = false): string {
+  const word = (chapterWordOf(book) || "Chapter").toLowerCase();
+  if (!many) return word;
+  if (/[^aeiou]y$/.test(word)) return `${word.slice(0, -1)}ies`;
+  return /(s|x|z|ch|sh)$/.test(word) ? `${word}es` : `${word}s`;
+}
+
+const ROMAN: [number, string][] = [[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+const roman = (n: number) => ROMAN.reduce((out, [value, letters]) => {
+  for (; n >= value; n -= value) out += letters;
+  return out;
+}, "");
+
+/** A page inside a chapter, numbered after it: 6.1, and 6.1.1 one level further in. Empty in a book without numbers. */
 export interface Subtopic {
   item: TreeItem;
   label: string;
@@ -32,27 +61,31 @@ export interface Subtopic {
 
 /**
  * A chapter's subtopics in reading order. Folders inside it are not subtopics.
- * With no label, as for a note outside any book, they number from 1.
+ * With no label, as for a note outside any book, they number from 1. An
+ * empty label is a chapter in a book without numbers, so they have none too.
  */
-export function subtopicsOf(chapter: TreeItem, label: string, depth = 1): Subtopic[] {
+export function subtopicsOf(chapter: TreeItem, label: string | undefined, depth = 1): Subtopic[] {
   const out: Subtopic[] = [];
   let n = 0;
   for (const item of chapter.children) {
     if (item.kind === "folder") continue;
-    const own = label ? `${label}.${++n}` : String(++n);
+    const own = label === undefined ? String(++n) : label && `${label}.${++n}`;
     out.push({ item, label: own, depth }, ...subtopicsOf(item, own, depth + 1));
   }
   return out;
 }
 
-/** A page to read in a book, with its number: a chapter like 6, or a subtopic like 6.1. */
+/** A page to read in a book, with its number: a chapter like 6, or a subtopic like 6.1. Empty in a book without numbers. */
 export interface Stop {
   item: TreeItem;
   label: string;
 }
 
 /** The chapters as Next and Previous walk them. Subtopics are read inside their chapter's page. */
-export const chapterStops = (book: TreeItem): Stop[] => chaptersIn(book).map((item, i) => ({ item, label: String(i + 1) }));
+export function chapterStops(book: TreeItem): Stop[] {
+  const numbers = chapterNumbersOf(book);
+  return chaptersIn(book).map((item, i) => ({ item, label: numbers === "none" ? "" : numbers === "roman" ? roman(i + 1) : String(i + 1) }));
+}
 
 /** Every chapter and subtopic of a book, in reading order. */
 export const allStops = (book: TreeItem): Stop[] => chapterStops(book).flatMap((stop) => [stop, ...subtopicsOf(stop.item, stop.label)]);
@@ -96,7 +129,7 @@ export function subtopicsIn(tree: Tree, chapterId: string): Subtopic[] {
   const chapter = chapterOf(tree, chapterId);
   if (chapter?.id !== chapterId) return [];
   const label = labelOf(tree, chapterId);
-  return label ? subtopicsOf(chapter, label) : [];
+  return label === undefined ? [] : subtopicsOf(chapter, label);
 }
 
 /** Words in a book's notes, subtopics included. Null until every note has been counted. Boards have none. */

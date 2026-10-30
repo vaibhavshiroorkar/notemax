@@ -9,7 +9,7 @@ import "./keyboard-bar.css";
 import { clearFormatting, stepIndent } from "./writing";
 
 // Phones have no shortcuts and no right click for formatting, so a bar of
-// formatting buttons sits below chapter navigation while a note is open.
+// formatting buttons sits under the tabs while a note is open.
 // It acts on the note being written in, a subtopic's too, and scrolls
 // sideways when it does not fit.
 
