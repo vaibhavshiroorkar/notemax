@@ -1,30 +1,31 @@
 import { useEffect } from "react";
 import * as Y from "yjs";
-import { countWords, listVersions, saveVersion } from "@notemax/core";
+import { authorsOf, countWords, listVersions, saveVersion, stampAuthor } from "@notemax/core";
 import { usePageWorkspace } from "@/data/scope";
 import { storeFor } from "@/platform/platform";
 import { workspaceNow } from "@/platform/prefs";
-import { createStore, savedStore } from "@/platform/store";
+import { savedStore } from "@/platform/store";
 import { registry } from "@/plugins/registry";
+import { markHistoryChanged, me, onHistory } from "./audit";
 
 /** Minutes of editing between versions. 0 turns versions off. */
 export const versionEvery = savedStore<number>("versionEvery", 10);
 export const versionLimit = savedStore<number>("versionLimit", 100);
 export const versionDays = savedStore<number>("versionDays", 0);
 
-/** Goes up whenever a version is saved, so lists of versions read them again. */
-export const versionsSaved = createStore(0);
-
-/** Saves a page's state as a version, with the words it had then. Returns its id. */
+/** Saves a page's state as a version, with the words it had then and whose edits are new in it. Returns its id. */
 export async function saveNow(pageId: string, state: Uint8Array, label: string | null = null, workspace = workspaceNow()): Promise<string> {
   const doc = new Y.Doc();
   Y.applyUpdate(doc, state);
   const words = countWords(doc.getXmlFragment("content"));
+  const authors = authorsOf(doc);
   doc.destroy();
-  const id = await saveVersion(await storeFor(workspace), pageId, state, {
-    words, label, retention: { maxCount: versionLimit.get(), maxAgeDays: versionDays.get() },
-  });
-  versionsSaved.set(versionsSaved.get() + 1);
+  const id = await onHistory(workspace, pageId, async () =>
+    saveVersion(await storeFor(workspace), pageId, state, {
+      words, label, authors, retention: { maxCount: versionLimit.get(), maxAgeDays: versionDays.get() },
+    }),
+  );
+  markHistoryChanged();
   return id;
 }
 
@@ -59,7 +60,14 @@ export function useVersions(body: Y.Doc | undefined, pageId: string) {
       last = Date.now();
       saveNow(pageId, state, null, workspace).catch((err) => console.warn("[notemax] could not save a version", pageId, err));
     };
-    const onUpdate = () => {
+    let stamped = false;
+    const onUpdate = (_update: Uint8Array, _origin: unknown, _doc: Y.Doc, transaction: Y.Transaction) => {
+      // The first edit made here says who made it, so versions can name them.
+      // After this update is done, as a change of its own.
+      if (!stamped && transaction.local) {
+        stamped = true;
+        queueMicrotask(() => body.transact(() => stampAuthor(body, me())));
+      }
       const every = versionEvery.get() * 60_000;
       if (!every || last === null) return;
       changed = true;

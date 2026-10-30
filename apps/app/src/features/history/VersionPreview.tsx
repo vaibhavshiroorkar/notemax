@@ -10,6 +10,7 @@ import { Dialog } from "@/ui/Dialog";
 import { Segmented } from "@/ui/Segmented";
 import { ChangesView } from "./ChangesView";
 import { useVersionHtml } from "./useVersionHtml";
+import { logPage, stampOf } from "./audit";
 import { saveNow } from "./versions";
 import { whenOf } from "./VersionsPanel";
 import { messageOf } from "@/ui/format";
@@ -41,6 +42,7 @@ export function VersionPreview({ app, options, onClose }: { app: AppContext; opt
       app.notify(`Could not restore this version: ${messageOf(err)}`);
       return;
     }
+    void logPage(pageId, "restored-version", stampOf(version.time), workspace);
     app.notify(`Restored the version from ${whenOf(version.time)}`);
     onClose();
   };

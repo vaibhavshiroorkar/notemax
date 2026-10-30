@@ -2,6 +2,13 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.106.0 (2026-10-30)
+
+- Who did what to a page. Each version says whose changes it holds ("by Ana", "by You"), including edits from people you share a page with. Under Versions, a new Activity list puts it all in order, newest first: who edited the page, and who renamed it (one entry, from the old title to the new), moved it, trashed it or took it out, restored a version, settled a conflict between devices, shared it or locked it. Each line has the time and the device.
+- A name shows when that person was signed in; otherwise the device does, like "Chrome on Android". Your own changes on this device say "You".
+- Boards, code and other pages have the Activity list too. Only notes have versions.
+- The log keeps the last 500 things done to each page, and it syncs and backs up with the page's versions. When old versions thin out, the names in them move to the next version kept, so nobody drops out of the record.
+
 ## 0.105.0 (2026-10-30)
 
 - Phones: the chapter bar is gone. A chapter shows its book, its place and the arrows at the top of the page, as on a computer. Two bars are left: the tabs and the formatting bar.

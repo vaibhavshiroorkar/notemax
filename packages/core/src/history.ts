@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { authorsFor, editorsSince, mergeAuthors, readAuthors, type Author } from "./audit";
 import { openLocalDoc } from "./local-doc";
 import type { DocStore } from "./store";
 
@@ -19,6 +20,8 @@ export interface Version {
   state: Uint8Array;
   /** Why it was kept, when not just from editing, like "On another device". */
   label: string | null;
+  /** Whose edits it holds that the version before it did not. Null for versions from before this was kept. */
+  by: Author[] | null;
 }
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -68,21 +71,33 @@ function toVersion(entry: Y.Map<unknown>): Version {
     words: (entry.get("words") as number | null | undefined) ?? null,
     state: entry.get("state") as Uint8Array,
     label: (entry.get("label") as string | undefined) ?? null,
+    by: readAuthors(entry.get("by")),
   };
 }
 
-/** Saves a page's state (Y.encodeStateAsUpdate of its doc) as a version, then thins out old ones. Returns its id. */
+/**
+ * Saves a page's state (Y.encodeStateAsUpdate of its doc) as a version, then
+ * thins out old ones. Returns its id. With `authors` (who each client id in
+ * the page is), the version notes whose edits are new since the one before.
+ */
 export async function saveVersion(
   store: DocStore,
   pageId: string,
   state: Uint8Array,
-  { words = null, time = Date.now(), label = null, retention }: { words?: number | null; time?: number; label?: string | null; retention?: VersionRetention } = {},
+  {
+    words = null,
+    time = Date.now(),
+    label = null,
+    retention,
+    authors,
+  }: { words?: number | null; time?: number; label?: string | null; retention?: VersionRetention; authors?: ReadonlyMap<number, Author> } = {},
 ): Promise<string> {
   const id = crypto.randomUUID();
   const local = await openLocalDoc(store, historyDocId(pageId));
   try {
     const versions = versionsOf(local.doc);
     local.doc.transact(() => {
+      const previous = versions.toArray().reduce<Y.Map<unknown> | null>((newest, v) => (!newest || (v.get("time") as number) > (newest.get("time") as number) ? v : newest), null);
       const entry = new Y.Map<unknown>();
       versions.push([entry]);
       entry.set("id", id);
@@ -90,9 +105,19 @@ export async function saveVersion(
       entry.set("time", time);
       entry.set("words", words);
       entry.set("state", state);
+      if (authors) entry.set("by", authorsFor(editorsSince((previous?.get("state") as Uint8Array | undefined) ?? null, state), authors));
       const ordinary = versions.toArray().map((v, index) => ({ v, index })).filter(({ v }) => !v.get("label"));
       const selected = versionsToKeep(ordinary.map(({ v }) => v.get("time") as number), time, retention);
       const keep = new Set([...selected].map((i) => ordinary[i].index));
+      const dropped = versions.toArray().filter((v, i) => !keep.has(i) && !v.get("label"));
+      // A version thinned out hands who made its edits to the next one kept, so nobody drops out of the record.
+      const kept = versions.toArray().filter((v) => !dropped.includes(v));
+      for (const gone of dropped) {
+        const by = readAuthors(gone.get("by"));
+        if (!by?.length) continue;
+        const after = kept.filter((v) => (v.get("time") as number) > (gone.get("time") as number)).sort((a, b) => (a.get("time") as number) - (b.get("time") as number))[0];
+        if (after) after.set("by", mergeAuthors(readAuthors(after.get("by")) ?? [], by));
+      }
       // From the end, so the indexes still to visit do not move.
       for (let i = versions.length - 1; i >= 0; i--) if (!keep.has(i) && !versions.get(i).get("label")) versions.delete(i, 1);
     });

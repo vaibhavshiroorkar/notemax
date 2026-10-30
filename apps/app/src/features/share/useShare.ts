@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type * as Y from "yjs";
-import { renameNode, type TreeNode } from "@notemax/core";
+import { UNTRACKED, renameNode, type TreeNode } from "@notemax/core";
 import { accountView } from "@/features/account/session";
 import { createStore } from "@/platform/store";
 import { joinRoom, type Person, type Room } from "./room";
@@ -64,7 +64,8 @@ export function useShare(body: Y.Doc | undefined, node: TreeNode, workspaceDoc: 
     const meta = body.getMap<string>("share");
     const follow = () => {
       const shared = meta.get("title");
-      if (typeof shared === "string" && shared && shared !== title.current) renameNode(workspaceDoc, node.id, shared);
+      // Someone else's rename, followed here: not one to undo, or to log as this device's.
+      if (typeof shared === "string" && shared && shared !== title.current) workspaceDoc.transact(() => renameNode(workspaceDoc, node.id, shared), UNTRACKED);
     };
     follow();
     meta.observe(follow);

@@ -5,6 +5,7 @@ import { withPageDoc } from "@/features/export/content";
 import { ChangesView } from "@/features/history/ChangesView";
 import { useVersionHtml } from "@/features/history/useVersionHtml";
 import { saveNow } from "@/features/history/versions";
+import { logPage, me } from "@/features/history/audit";
 import { getStore } from "@/platform/platform";
 import { savedStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
@@ -66,6 +67,8 @@ async function settleAs(conflict: Conflict, which: Choice, app: AppContext) {
   const side = which === "mine" ? "this device's" : "the other device's";
   if (which === "both") settle(conflict.pageId);
   else await keepOne(conflict.pageId, which === "mine" ? conflict.mine : conflict.theirs, side);
+  // Said so it reads right on every device, not only this one.
+  void logPage(conflict.pageId, "kept-conflict", which === "both" ? "both versions" : which === "mine" ? `the version from ${me().device}` : "the version from the other device");
   app.notify(which === "both" ? `Kept both changes to "${title}"` : `Kept ${side} "${title}"`);
 }
 

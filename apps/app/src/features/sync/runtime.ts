@@ -24,7 +24,8 @@ import {
 import * as Y from "yjs";
 import { starterSeeds } from "@/features/editor/welcome";
 import { markTemporary } from "@/features/temporary/temporary";
-import { WORKSPACES_CHANNEL, docChannelFor, eraseDiskStore, getRawStore, isDesktop, keepOnDisk, memoryOnly, onLocalWrite, otherTabsOpen, setMemoryFill } from "@/platform/platform";
+import { deviceId } from "@/platform/device";
+import { WORKSPACES_CHANNEL, docChannelFor, eraseDiskStore, getRawStore, keepOnDisk, memoryOnly, onLocalWrite, otherTabsOpen, setMemoryFill } from "@/platform/platform";
 import { workspaceNow } from "@/platform/prefs";
 import { beforeQuit, runQuitHooks } from "@/platform/quit";
 import { getPref, removePref, setPref } from "@/platform/prefs";
@@ -51,7 +52,7 @@ export type SyncView =
 
 export const syncView = createStore<SyncView>({ state: "off" });
 
-const PREFS = { on: "syncOn", key: "syncKey", folder: "syncFolder", state: "syncState", device: "deviceId", lastAt: "syncLastAt" };
+const PREFS = { on: "syncOn", key: "syncKey", folder: "syncFolder", state: "syncState", lastAt: "syncLastAt" };
 
 /** How far before the last good sync an edit still counts as maybe unsent: edit times are kept to the minute. */
 const EDIT_MARGIN_MS = 10 * 60_000;
@@ -71,16 +72,6 @@ async function maybeUnsent(store: DocStore): Promise<string[]> {
     await local.close();
   }
   return ids;
-}
-
-/** This device's id in file names. Made once and kept. */
-function deviceId(): string {
-  let id = getPref(PREFS.device);
-  if (!id) {
-    id = `${isDesktop ? "desktop" : "web"}-${Math.random().toString(36).slice(2, 10)}`;
-    setPref(PREFS.device, id);
-  }
-  return id;
 }
 
 export const syncIsOn = () => getPref(PREFS.on) === "1" && getPref(PREFS.key) !== null && getPref(PREFS.folder) !== null;

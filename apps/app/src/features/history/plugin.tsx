@@ -1,4 +1,5 @@
 import type { AppContext, Plugin } from "@/plugins/types";
+import { watchTree } from "./audit";
 import { VersionPreview } from "./VersionPreview";
 import { VersionsPanel } from "./VersionsPanel";
 import { versionDays, versionEvery, versionLimit } from "./versions";
@@ -19,6 +20,7 @@ function HistorySection() {
   return (
     <>
       <p>Notemax keeps earlier versions of each note: how it was before you started editing, then one every few minutes, then how you left it. Older ones thin out to one a day, then one a week. They sync and back up with your notes.</p>
+      <p>Each version says who made its changes, and each page keeps a log of what was done to it: renamed, moved, trashed, restored, shared. Find it under Versions, Activity. A name shows when that person was signed in; otherwise the device does.</p>
       <label className="settings-row">
         <span>
           Save a version
@@ -50,12 +52,20 @@ function HistorySection() {
 }
 
 const onNote = (app: AppContext) => !!app.activeId && app.tree.byId.get(app.activeId)?.kind === "note";
+/** Any page has a log of what was done to it; only notes have versions. Folders are only for sorting. */
+const onPage = (app: AppContext) => {
+  const kind = app.activeId ? app.tree.byId.get(app.activeId)?.kind : undefined;
+  return !!kind && kind !== "folder";
+};
 
 export const historyPlugin: Plugin = {
   id: "history",
   name: "Version history",
-  description: "Earlier versions of each note, to look at or restore",
-  sidePanels: [{ id: "history.versions", title: "Versions", order: 40, when: onNote, component: VersionsPanel }],
+  description: "Earlier versions of each note, to look at or restore, and who did what to each page",
+  sidePanels: [{ id: "history.versions", title: "Versions", order: 40, when: onPage, component: VersionsPanel }],
+  workspaceStart(app) {
+    watchTree(app.doc, app.workspace);
+  },
   overlays: [{ id: "history.preview", component: VersionPreview }],
   settings: [{ id: "history", order: 52, group: "Your data", title: "History", icon: "history", keywords: ["versions", "backup", "restore", "undo", "snapshot"], component: HistorySection }],
   commands: [

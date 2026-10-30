@@ -68,3 +68,57 @@
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+
+.versions > .segmented {
+  align-self: stretch;
+  margin: 0 0 6px;
+}
+
+.versions > .segmented button {
+  flex: 1;
+}
+
+/* Who made a version's changes, under its time. */
+.version-by {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Who did what to the page, newest first. Taller than the versions: each line is short. */
+.versions > .activity {
+  max-height: 360px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.activity-line {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-line:last-child {
+  border-bottom: 0;
+}
+
+.activity-what b {
+  font-weight: 600;
+}
+
+.activity-when {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.activity-link {
+  padding: 0;
+  color: var(--accent);
+  font-size: inherit;
+}
+
+.activity-link:hover {
+  text-decoration: underline;
+}
