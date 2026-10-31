@@ -11,6 +11,7 @@ import { linksPlugin } from "@/features/links/plugin";
 import { findPlugin } from "@/features/find/plugin";
 import { helpPlugin } from "@/features/help/plugin";
 import { updatesPlugin } from "@/features/updates/plugin";
+import { getAppPlugin } from "@/features/get-app/plugin";
 import { navigationPlugin } from "@/features/navigation/plugin";
 import { pageInfoPlugin } from "@/features/page-info/plugin";
 import { palettePlugin } from "@/features/palette/plugin";
@@ -86,6 +87,7 @@ import { registerPlugin } from "./registry";
   findPlugin,
   helpPlugin,
   updatesPlugin,
+  getAppPlugin,
   appearancePlugin,
   settingsPlugin,
   shortcutsPlugin,

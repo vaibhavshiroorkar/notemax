@@ -2,6 +2,12 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.107.0 (2026-11-01)
+
+- The browser version offers the app. On Windows and Android, a card in the corner says so once, after a short wait. "See the downloads" opens a new page; "Not now" or the close button puts it away for good.
+- The new page, /download, has the Windows installer (always the newest, with its version and size) and the steps to install Notemax on an Android phone. Chrome on Android gets a one-tap Install button there. An APK is still to come.
+- The palette has "Get the Windows or Android app" for later.
+
 ## 0.106.0 (2026-10-30)
 
 - Who did what to a page. Each version says whose changes it holds ("by Ana", "by You"), including edits from people you share a page with. Under Versions, a new Activity list puts it all in order, newest first: who edited the page, and who renamed it (one entry, from the old title to the new), moved it, trashed it or took it out, restored a version, settled a conflict between devices, shared it or locked it. Each line has the time and the device.
