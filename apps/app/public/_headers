@@ -19,6 +19,14 @@
 /index.html
   Cache-Control: no-cache
 
-# The desktop app asks for this to learn of new versions, so it must be fresh.
+# The desktop app asks for these to learn of new versions, so they must be fresh.
 /desktop/latest.json
   Cache-Control: no-cache
+/android/latest.json
+  Cache-Control: no-cache
+
+# The desktop app's Get the app tab reads the downloads from this site.
+/desktop/*
+  Access-Control-Allow-Origin: *
+/android/*
+  Access-Control-Allow-Origin: *

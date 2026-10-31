@@ -32,8 +32,8 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== location.origin) return;
-  // The desktop installer and its update file always come fresh from the network.
-  if (url.pathname.startsWith("/desktop/")) return;
+  // The installers and their version files always come fresh from the network.
+  if (url.pathname.startsWith("/desktop/") || url.pathname.startsWith("/android/")) return;
 
   // The page: the network first, so a new version shows; the kept copy when offline.
   if (request.mode === "navigate") {

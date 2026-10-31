@@ -2,6 +2,13 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.108.0 (2026-11-01)
+
+- The downloads are now a tab inside Notemax, Get the app, instead of a separate web page. The corner card, the palette and notemax.pages.dev/download all open it.
+- Home has a Get the app card with a Download button.
+- In the tab, the card for your own device comes first. Windows gets the newest installer with its version and size. Android gets the app file once it is out, and the browser install steps meanwhile.
+- The desktop app has the tab too, for getting Notemax on your phone.
+
 ## 0.107.0 (2026-11-01)
 
 - The browser version offers the app. On Windows and Android, a card in the corner says so once, after a short wait. "See the downloads" opens a new page; "Not now" or the close button puts it away for good.
