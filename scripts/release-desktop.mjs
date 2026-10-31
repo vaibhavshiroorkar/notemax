@@ -7,7 +7,7 @@
 // (made with `tauri signer generate`). Its public half is in tauri.conf.json.
 // Without the key no app will accept an update, so keep a copy of it safe.
 import { execSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,12 +24,20 @@ const notes = process.argv.slice(2).join(" ") || `Notemax ${version}`;
 const out = join(root, "apps/app/public/desktop");
 rmSync(out, { recursive: true, force: true });
 
-// A fixed command with nothing from outside in it. pnpm is a .cmd file on Windows, which needs a shell.
-execSync("pnpm --filter ./apps/desktop exec tauri build --bundles nsis", {
-  cwd: root,
-  stdio: "inherit",
-  env: { ...process.env, TAURI_SIGNING_PRIVATE_KEY: readFileSync(key, "utf8").trim(), TAURI_SIGNING_PRIVATE_KEY_PASSWORD: "" },
-});
+// The Android app has no place inside the Windows one, so it waits outside public/ during the build.
+const android = join(root, "apps/app/public/android");
+const androidAside = join(root, "apps/app/android-aside");
+if (existsSync(android)) renameSync(android, androidAside);
+try {
+  // A fixed command with nothing from outside in it. pnpm is a .cmd file on Windows, which needs a shell.
+  execSync("pnpm --filter ./apps/desktop exec tauri build --bundles nsis", {
+    cwd: root,
+    stdio: "inherit",
+    env: { ...process.env, TAURI_SIGNING_PRIVATE_KEY: readFileSync(key, "utf8").trim(), TAURI_SIGNING_PRIVATE_KEY_PASSWORD: "" },
+  });
+} finally {
+  if (existsSync(androidAside)) renameSync(androidAside, android);
+}
 
 const bundle = join(root, "apps/desktop/src-tauri/target/release/bundle/nsis");
 const installer = `Notemax_${version}_x64-setup.exe`;

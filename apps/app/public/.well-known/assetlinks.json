@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "dev.pages.notemax.twa",
+      "sha256_cert_fingerprints": [
+        "93:76:F4:16:D6:91:E1:10:FA:17:BB:F5:74:C1:A2:3A:31:C1:FB:35:56:13:15:57:04:DC:82:F9:9A:20:00:13"
+      ]
+    }
+  }
+]

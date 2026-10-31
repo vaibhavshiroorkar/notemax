@@ -2,6 +2,11 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.109.0 (2026-11-01)
+
+- Notemax for Android. Get the app now has a Download for Android button with an APK (about 1 MB, Android 7 or newer, with Chrome). It opens Notemax full screen, with sign-in, sync, offline pages and reminders working as they do on the website, and it gets each new version of the site without a reinstall.
+- `pnpm android:release` builds and signs the APK. The site now carries /.well-known/assetlinks.json, which lets Chrome show the app without an address bar.
+
 ## 0.108.0 (2026-11-01)
 
 - The downloads are now a tab inside Notemax, Get the app, instead of a separate web page. The corner card, the palette and notemax.pages.dev/download all open it.

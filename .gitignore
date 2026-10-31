@@ -29,6 +29,7 @@ apps/app/public/runtimes/
 apps/app/public/desktop/
 # The signed Android app and its latest.json, made by scripts/release-android.mjs
 apps/app/public/android/
+apps/app/android-aside/
 # Bubblewrap makes the Android project from twa-manifest.json, so only that is kept.
 apps/android/*
 !apps/android/twa-manifest.json
