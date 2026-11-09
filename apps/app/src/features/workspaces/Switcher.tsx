@@ -7,6 +7,7 @@ import { unlocked } from "@/features/lock/lock";
 import { DeleteWorkspaceDialog, canDelete, setLock } from "./actions";
 import { createWorkspace, nameOf, openList, rename, switchTo, workspaceList } from "./list";
 import { useDismiss } from "@/ui/useDismiss";
+import { isViewOnly, spaceViews } from "@/features/spaces/runtime";
 
 /** A dot in the workspace's color, or an outline when it has none. */
 export function Dot({ color }: { color: string }) {
@@ -44,6 +45,7 @@ export function Switcher({ app }: { app: AppContext }) {
   const [deleting, setDeleting] = useState(false);
   // The lock comes off only while it is open: the password proves it is yours.
   const opened = unlocked.use();
+  spaceViews.use();
   const wrapper = useRef<HTMLDivElement>(null);
   useEffect(() => void openList(), []);
   useDismiss(open, () => setOpen(false), wrapper);
@@ -87,6 +89,12 @@ export function Switcher({ app }: { app: AppContext }) {
               <Icon name="lock" />
             </span>
           )}
+          {current?.shared && (
+            <span className="workspace-lock" title={isViewOnly(current.id) ? "Shared with you to view" : "Shared"}>
+              <Icon name="people" />
+            </span>
+          )}
+          {current && isViewOnly(current.id) && <span className="workspace-view-only">View only</span>}
           <Icon name="chevron-down" />
         </button>
       )}
@@ -104,6 +112,11 @@ export function Switcher({ app }: { app: AppContext }) {
               {workspace.locked && (
                 <span className="workspace-lock" title="Locked">
                   <Icon name="lock" />
+                </span>
+              )}
+              {workspace.shared && (
+                <span className="workspace-lock" title="Shared">
+                  <Icon name="people" />
                 </span>
               )}
               {workspace.id === app.workspace && <span className="workspace-here">open</span>}
@@ -132,6 +145,19 @@ export function Switcher({ app }: { app: AppContext }) {
             >
               <Icon name="lock" />
               {current.locked ? "Remove the lock" : "Lock this workspace"}
+            </button>
+          )}
+          {current && registry.overlay("workspace-share") && (
+            <button
+              className="menu-item"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                app.openOverlay("workspace-share", { workspace: current.id });
+              }}
+            >
+              <Icon name="people" />
+              {current.shared ? "Sharing and people..." : "Share this workspace..."}
             </button>
           )}
           <button className="menu-item" role="menuitem" onClick={() => void startNew()}>

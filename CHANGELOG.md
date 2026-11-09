@@ -2,6 +2,15 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.112.0 (2026-11-09)
+
+- Share a whole workspace. From the workspace menu, Share this workspace. Invite people by email as Viewer, Editor or Admin. Admins invite and remove people too; only the owner adds admins or stops sharing.
+- Anyone with the link: Off, Can view (no account needed) or Can edit (signed in). Make a new link to stop the old one working.
+- People you invite find the workspace on Home, under Shared with you, once they sign in with that email.
+- Changes reach everyone within moments. The shared copy is kept on the Notemax server, encrypted, so it opens while the owner is offline. Files over 6 MB, like long videos, stay on your devices.
+- Viewers see View only next to the workspace name. Its pages and boards take no edits, and anything changed anyway is put back.
+- Needs the new database migration, supabase/migrations/20261109000000_shared_workspaces.sql.
+
 ## 0.111.0 (2026-11-09)
 
 - Drawings inside notes. Type `/drawing` (or `/draw`, `/sketch`) in any note, chapter or journal entry for a small Excalidraw board right in the page. It opens ready to draw; Done or a click elsewhere puts it down, and it then shows as a picture that scrolls like text. S, M and L set its height, and Full screen gives it the whole window.

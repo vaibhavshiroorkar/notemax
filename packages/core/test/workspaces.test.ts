@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { addWorkspace, moveWorkspace, openIdbStore, readWorkspaces, removeWorkspace, renameWorkspace, scopedId, scopedStore, setWorkspaceLocked, splitScoped } from "../src";
+import { addWorkspace, moveWorkspace, openIdbStore, readWorkspaces, removeWorkspace, renameWorkspace, scopedId, scopedStore, setWorkspaceLocked, setWorkspaceShared, splitScoped } from "../src";
 
 describe("workspaces", () => {
   it("keeps the first workspace's ids as they were and prefixes the others", () => {
@@ -23,6 +23,20 @@ describe("workspaces", () => {
     expect((await other.load("note")).updates).toEqual([new Uint8Array([2])]);
     expect(await other.list()).toEqual(["note"]);
     expect((await store.list()).sort()).toEqual(["note", "ws:w2:note"]);
+  });
+
+  it("marks a workspace as shared, with or without a link secret, and back", () => {
+    const doc = new Y.Doc();
+    const id = addWorkspace(doc, "Team");
+    expect(readWorkspaces(doc).find((w) => w.id === id)?.shared).toBeNull();
+    setWorkspaceShared(doc, id, { space: "s1", token: "t1" });
+    expect(readWorkspaces(doc).find((w) => w.id === id)?.shared).toEqual({ space: "s1", token: "t1" });
+    setWorkspaceShared(doc, id, { space: "s1", token: null });
+    expect(readWorkspaces(doc).find((w) => w.id === id)?.shared).toEqual({ space: "s1", token: null });
+    setWorkspaceShared(doc, "main", { space: "s2", token: null });
+    expect(readWorkspaces(doc).find((w) => w.id === "main")?.shared).toEqual({ space: "s2", token: null });
+    setWorkspaceShared(doc, id, null);
+    expect(readWorkspaces(doc).find((w) => w.id === id)?.shared).toBeNull();
   });
 
   it("lists, names, arranges and removes workspaces, with main always there", () => {

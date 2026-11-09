@@ -40,8 +40,12 @@ export interface Plugin {
    * marked with data-reveal set to the page's id.
    */
   hostOf?(tree: Tree, id: string): string | undefined;
-  /** Why a page takes no edits, like a page shared with you to read. The page shows its text but cannot be changed. */
-  lockPage?(node: TreeNode): string | undefined;
+  /**
+   * Why a page takes no edits, like a page shared with you to read. The page
+   * shows its text but cannot be changed. A plugin whose answer can change
+   * without the page changing calls `locksChanged` so open pages ask again.
+   */
+  lockPage?(node: TreeNode, workspace: string): string | undefined;
   sidePanels?: SidePanel[];
   /** Shown under the title of a note or book page, like its tags. */
   pageHeader?: PageAddon[];
@@ -111,6 +115,8 @@ export interface HomeSection {
   wide?: boolean;
   /** Opens the card's full view, like every task for Today. The card's title becomes a link to it. */
   open?(app: AppContext): void;
+  /** Whether the card shows at all now, like one that only means something signed in. */
+  when?(): boolean;
   component: ComponentType<{ app: AppContext }>;
 }
 

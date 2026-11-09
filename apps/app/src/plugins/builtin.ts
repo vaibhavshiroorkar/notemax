@@ -33,6 +33,7 @@ import { specialPlugin } from "@/features/special/plugin";
 import { searchPlugin } from "@/features/search/plugin";
 import { voicePlugin } from "@/features/voice/plugin";
 import { videoPlugin } from "@/features/video/plugin";
+import { spacesPlugin } from "@/features/spaces/plugin";
 import { codePlugin } from "@/features/code/plugin";
 import { browserPlugin } from "@/features/browser/plugin";
 import { openFilesPlugin } from "@/features/open-files/plugin";
@@ -58,6 +59,7 @@ import { registerPlugin } from "./registry";
   workspacesPlugin,
   setupPlugin,
   sharePlugin,
+  spacesPlugin,
   communityPlugin,
   markdownFilesPlugin,
   datesPlugin,

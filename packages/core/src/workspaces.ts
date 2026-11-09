@@ -54,6 +54,13 @@ export interface WorkspaceInfo {
   createdAt: number;
   /** Behind the lock password: its pages and its list stay hidden until it is typed. */
   locked: boolean;
+  /** Shared through Notemax: the shared copy's id, and the link secret when it was opened from a link. */
+  shared: SharedSpace | null;
+}
+
+export interface SharedSpace {
+  space: string;
+  token: string | null;
 }
 
 const listOf = (doc: Y.Doc) => doc.getMap<Y.Map<unknown>>("workspaces");
@@ -70,9 +77,10 @@ export function readWorkspaces(doc: Y.Doc): WorkspaceInfo[] {
       position: (fields.get("position") as string | undefined) ?? "a0",
       createdAt: (fields.get("createdAt") as number | undefined) ?? 0,
       locked: fields.get("locked") === true,
+      shared: typeof fields.get("space") === "string" ? { space: fields.get("space") as string, token: (fields.get("spaceToken") as string | undefined) ?? null } : null,
     });
   });
-  if (!out.some((w) => w.id === MAIN_WORKSPACE)) out.push({ id: MAIN_WORKSPACE, name: "", color: "", position: "a0", createdAt: 0, locked: false });
+  if (!out.some((w) => w.id === MAIN_WORKSPACE)) out.push({ id: MAIN_WORKSPACE, name: "", color: "", position: "a0", createdAt: 0, locked: false, shared: null });
   return out.sort((a, b) => (a.position < b.position ? -1 : a.position > b.position ? 1 : a.id < b.id ? -1 : 1));
 }
 
@@ -90,6 +98,8 @@ export function addWorkspace(doc: Y.Doc, name: string, color = "", id: string = 
   const last = readWorkspaces(doc).at(-1)?.position ?? null;
   doc.transact(() => {
     const fields = fieldsFor(doc, id);
+    // An id can come back, like a shared workspace joined again after leaving it.
+    fields.delete("deleted");
     fields.set("name", name);
     fields.set("color", color);
     fields.set("position", generateKeyBetween(last, null));
@@ -120,6 +130,22 @@ export function setWorkspaceLocked(doc: Y.Doc, id: string, locked: boolean) {
     if (!fields.has("position")) fields.set("position", "a0");
     if (locked) fields.set("locked", true);
     else fields.delete("locked");
+  });
+}
+
+/** Marks a workspace as shared, or not any more. */
+export function setWorkspaceShared(doc: Y.Doc, id: string, shared: SharedSpace | null) {
+  doc.transact(() => {
+    const fields = fieldsFor(doc, id);
+    if (!fields.has("position")) fields.set("position", "a0");
+    if (shared) {
+      fields.set("space", shared.space);
+      if (shared.token) fields.set("spaceToken", shared.token);
+      else fields.delete("spaceToken");
+    } else {
+      fields.delete("space");
+      fields.delete("spaceToken");
+    }
   });
 }
 

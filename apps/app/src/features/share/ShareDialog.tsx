@@ -10,7 +10,7 @@ import { joinedRooms, roomPeople } from "./useShare";
 const namesOf = (names: string[]) => (names.length <= 2 ? names.join(" and ") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`);
 
 /** One link with what it lets people do, and a button that copies it. */
-function LinkRow({ label, hint, link }: { label: string; hint: string; link: string }) {
+export function LinkRow({ label, hint, link }: { label: string; hint: string; link: string }) {
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
   const field = useRef<HTMLInputElement>(null);

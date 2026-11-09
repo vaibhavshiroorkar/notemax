@@ -10,7 +10,7 @@ import { useShare } from "@/features/share/useShare";
 import { activeEditor } from "./active";
 import { useOption } from "@/plugins/options";
 import { PageFooter, PageHeader } from "@/plugins/PageHeader";
-import { registry } from "@/plugins/registry";
+import { locksVersion, registry } from "@/plugins/registry";
 import type { PageProps } from "@/plugins/types";
 import { Editor } from "./Editor";
 import { InlineNote } from "./InlineNote";
@@ -51,6 +51,8 @@ function useRoomForSheets() {
 export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady }: PageProps) {
   const { local, status, openError } = useLocalDoc(node.id);
   const pagesByDefault = useOption("notes", "pages");
+  // Asked again when a lock changes elsewhere, like losing edit access to a shared workspace.
+  locksVersion.use();
   const roomForSheets = useRoomForSheets();
   // The note's own choice wins over the setting. A window too narrow for a sheet shows one long page.
   const chosen = node.props.layout === "pages" || node.props.layout === "infinite" ? node.props.layout : pagesByDefault ? "pages" : "infinite";
@@ -86,7 +88,7 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
 
   const inBook = !!bookOf(tree, node.id);
   // Like a page shared with you to read: its text shows, but nothing in it changes.
-  const locked = registry.lockOf(node);
+  const locked = registry.lockOf(node, app.workspace);
 
   return (
     <article

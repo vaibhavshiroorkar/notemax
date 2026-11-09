@@ -16,6 +16,7 @@ import { arranged, homeLayout, moveCard, type HomeLayout } from "./homeLayout";
 import { Dot } from "./Switcher";
 import { PageListView } from "./PageListView";
 import { plural } from "@/ui/format";
+import { accountView } from "@/features/account/session";
 
 
 function Card({ workspace, app, count, onDragTo, onBack }: { workspace: WorkspaceInfo; app: AppContext; count: number | null; onDragTo(id: string): void; onBack(): void }) {
@@ -300,7 +301,9 @@ const WORKSPACES_CARD = "home.workspaces";
 export function HomeView({ app }: { app: AppContext; options: Record<string, unknown> }) {
   const layout = homeLayout.use();
   const [customizing, setCustomizing] = useState(false);
-  const sections = registry.homeSections();
+  // Some cards show only signed in, like Shared with you.
+  accountView.use();
+  const sections = registry.homeSections().filter((section) => section.when?.() ?? true);
   // A locked workspace keeps its pages off Home too, leaving only the workspaces.
   const lockedOut = useLockedOut(app.workspace);
   const shown = arranged(sections, layout).filter((section) => !layout.off.includes(section.id) && (!lockedOut || section.id === WORKSPACES_CARD));

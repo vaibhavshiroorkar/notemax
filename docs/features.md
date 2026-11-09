@@ -80,6 +80,7 @@ What may sit inside what is one rule in `packages/core/src/workspace.ts` (`holds
 ## Sharing and community
 
 - Share any note by link: Can edit to write together live, Can view to read it as it changes.
+- Share a whole workspace from the workspace menu. Invite people by email as Viewer, Editor or Admin, and set what anyone with the link can do: nothing, view without an account, or edit once signed in. People you invite find it on Home, under Shared with you. The shared copy lives on the Notemax server, encrypted, so it opens while you are offline.
 - The community: post notes and books, follow writers, search, comment, direct messages and rooms, and private reader notes on chosen lines.
 
 ## Making it yours

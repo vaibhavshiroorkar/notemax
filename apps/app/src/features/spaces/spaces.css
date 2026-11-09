@@ -1,0 +1,86 @@
+.space-section {
+  margin: 16px 0;
+}
+
+.space-section h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.space-section .segmented {
+  margin-bottom: 6px;
+}
+
+.space-invite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.space-invite input {
+  flex: 1;
+  min-width: 180px;
+}
+
+.space-invite input,
+.space-people select,
+.space-invite select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.space-people {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.space-people li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.space-email {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.space-role {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.space-shared-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.space-shared-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.space-shared-list li:first-child {
+  border-top: none;
+}
+
+.space-shared-name {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}

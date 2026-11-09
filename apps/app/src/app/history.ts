@@ -10,8 +10,8 @@ import { isTypingTarget } from "@/ui/typing";
 /** The page named in the address, as left by a reload or a bookmark. */
 export function pageInAddress(): string | null {
   const hash = decodeURIComponent(location.hash.slice(1));
-  // A shared page's link, which the share feature reads instead.
-  return hash && !hash.startsWith("share=") ? hash : null;
+  // A shared page's or workspace's link, which their features read instead.
+  return hash && !hash.startsWith("share=") && !hash.startsWith("space=") ? hash : null;
 }
 
 /** The page the window was opened on, read before the app writes its own page into the address. */

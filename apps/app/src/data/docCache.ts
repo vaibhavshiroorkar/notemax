@@ -46,6 +46,16 @@ function recount() {
   if (worst.state !== now.state || (worst.state === "error" && now.state === "error" && worst.message !== now.message)) openDocsStatus.set(worst);
 }
 
+type OpenHook = (workspace: string, docId: string, doc: LocalDoc) => void;
+const openHooks = new Set<OpenHook>();
+
+/** Calls `hook` for every doc open now and every doc opened from now on, until the returned function is called. */
+export function onDocOpen(hook: OpenHook): () => void {
+  openHooks.add(hook);
+  for (const entry of entries.values()) if (entry.doc) hook(entry.workspace, entry.docId, entry.doc);
+  return () => openHooks.delete(hook);
+}
+
 const keyOf = (docId: string, workspace: string) => `${workspace}
 ${docId}`;
 
@@ -61,6 +71,7 @@ function open(docId: string, workspace: string): Entry {
     (doc) => {
       entry.doc = doc;
       doc.onStatus(recount);
+      openHooks.forEach((hook) => hook(workspace, docId, doc));
     },
     // A failed open is not kept, so the next try reads storage again.
     () => entries.get(key) === entry && entries.delete(key),

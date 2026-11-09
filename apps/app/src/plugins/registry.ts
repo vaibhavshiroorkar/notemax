@@ -60,6 +60,10 @@ switchedOff.subscribe(() => {
  */
 export const sidePanelsChanged = createStore(0);
 
+/** Goes up when a page lock may have changed without its page changing, like access to a shared workspace. */
+export const locksVersion = createStore(0);
+export const locksChanged = () => locksVersion.set(locksVersion.get() + 1);
+
 let active: Plugin[] | null = null;
 const changed = () => {
   active = null;
@@ -112,9 +116,9 @@ export const registry = {
   /** The icon a kind shows in lists. Taken from plugins that are off too, since their pages still show. */
   iconOf: (kind: NodeKind): IconName => plugins.flatMap((p) => p.kinds ?? []).find((info) => info.kind === kind && !info.id)?.icon ?? "note",
   /** Why a page takes no edits, if a plugin says it takes none. */
-  lockOf(node: TreeNode): string | undefined {
+  lockOf(node: TreeNode, workspace: string): string | undefined {
     for (const plugin of on()) {
-      const reason = plugin.lockPage?.(node);
+      const reason = plugin.lockPage?.(node, workspace);
       if (reason) return reason;
     }
     return undefined;

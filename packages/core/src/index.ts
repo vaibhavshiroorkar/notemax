@@ -71,8 +71,10 @@ export {
   scopedStore,
   setWorkspaceColor,
   setWorkspaceLocked,
+  setWorkspaceShared,
   splitScoped,
   type WorkspaceInfo,
+  type SharedSpace,
 } from "./workspaces";
 export { parseWhen, nextDue, type When, type Repeat } from "./when";
 export { tasksIn, finishTask, remindAt, type Task } from "./tasks";
