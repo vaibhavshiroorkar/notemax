@@ -16,7 +16,7 @@ function forReaders(node: DocNode, r: Resolve): DocNode | null {
     const label = typeof node.attrs?.label === "string" ? node.attrs.label : "";
     return { type: "text", text: r.title(id) ?? (label || "a page") };
   }
-  if (node.type === "video") return null;
+  if (node.type === "video" || node.type === "drawing") return null;
   if (node.type === "image" && !(typeof node.attrs?.src === "string" && node.attrs.src.startsWith("https://"))) return null;
   if (!node.content) return node;
   return { ...node, content: node.content.map((child) => forReaders(child, r)).filter((child): child is DocNode => child !== null) };

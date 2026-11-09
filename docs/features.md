@@ -12,7 +12,7 @@ A workspace holds pages of these kinds:
 | Folder | Only for sorting. It has no page of its own. |
 | Book | A description and chapters in reading order, with word counts. |
 | Journal | A note with one entry per day, newest first. Made from Create, Others. |
-| Board | A drawing canvas (Excalidraw) with sticky notes, frames and templates. |
+| Board | A drawing canvas (Excalidraw). A smaller one also fits inside any note, from the `/` menu. |
 | Code | Code that runs: Python, JavaScript, TypeScript, SQL, C++ and Java. |
 | Browser | A web page inside a page. A real web view in the desktop app. |
 

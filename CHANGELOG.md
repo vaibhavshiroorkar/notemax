@@ -2,6 +2,12 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.111.0 (2026-11-09)
+
+- Drawings inside notes. Type `/drawing` (or `/draw`, `/sketch`) in any note, chapter or journal entry for a small Excalidraw board right in the page. It opens ready to draw; Done or a click elsewhere puts it down, and it then shows as a picture that scrolls like text. S, M and L set its height, and Full screen gives it the whole window.
+- The drawing is kept in the note itself, so copying the block, duplicating the note, templates, version history and the Markdown folder all carry it.
+- Boards are plain Excalidraw again: the sticky note, frame, template and vote buttons are gone. Shapes already made with them stay on the board as ordinary shapes.
+
 ## 0.110.0 (2026-11-09)
 
 - Journals. Create, Others, New journal makes a page that holds one entry per day, newest first and without numbers. Instead of Add subtopic it has Next date, the day after the latest entry (or today when there is none), and Choose date. A day that already has an entry opens instead of being made twice. The Journal for daily notes works the same way.

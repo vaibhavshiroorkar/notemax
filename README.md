@@ -38,7 +38,7 @@
 - `[[Links]]` between notes. Renaming a note never breaks them, and each page lists what links to it.
 - Voice typing: speak and the words appear as you go.
 - Show a note as one long page, or as A4 or Letter sheets with page numbers.
-- Boards for sketching and diagrams, powered by Excalidraw, with sticky notes, frames, templates and dot votes.
+- Boards for sketching and diagrams, powered by Excalidraw. Type `/drawing` for a small one inside any note.
 - Code pages: Python or JavaScript that runs right in the app, with its output below.
 
 **Organize**

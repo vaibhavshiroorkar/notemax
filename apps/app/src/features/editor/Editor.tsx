@@ -136,7 +136,11 @@ export function Editor({
   useEffect(() => {
     if (!editor) return;
     const dom = editor.view.dom;
-    const onMenu = (event: MouseEvent) => openEditorMenu(editor, noteId, event);
+    const onMenu = (event: MouseEvent) => {
+      // A drawing being drawn on keeps Excalidraw's own menu.
+      if (event.target instanceof Element && event.target.closest(".drawing-live")) return;
+      openEditorMenu(editor, noteId, event);
+    };
     dom.addEventListener("contextmenu", onMenu);
     return () => dom.removeEventListener("contextmenu", onMenu);
   }, [editor, noteId]);

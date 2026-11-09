@@ -19,7 +19,7 @@ interface Leaf {
 }
 
 const LISTS: Record<string, string> = { bulletList: "bullet", orderedList: "number", taskList: "task" };
-const LEAVES = new Set(["paragraph", "heading", "codeBlock", "horizontalRule", "image", "video"]);
+const LEAVES = new Set(["paragraph", "heading", "codeBlock", "horizontalRule", "image", "video", "drawing"]);
 
 function leavesOf(nodes: DocNode[], r: Resolve, list?: string, depth = 0, out: Leaf[] = []): Leaf[] {
   for (const node of nodes) {

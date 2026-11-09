@@ -91,6 +91,9 @@ function textBlocks(nodes: DocNode[], r: Resolve, indent: string): string[] {
       case "video":
         out.push(`${indent}[Video: ${str(node.attrs?.name) || "video"}]`);
         break;
+      case "drawing":
+        out.push(`${indent}[Drawing]`);
+        break;
       default:
         if (node.content?.some((c) => c.type === "paragraph" || c.type === "heading")) out.push(...textBlocks(kids(node), r, indent));
         else out.push(indent + inlineText(node, r));
@@ -180,6 +183,12 @@ function mdBlocks(nodes: DocNode[], r: Resolve): string[] {
       case "video":
         out.push(`<video data-asset="${escapeHtml(str(node.attrs?.asset))}" data-name="${escapeHtml(str(node.attrs?.name))}" controls></video>`);
         break;
+      // The shapes ride along as HTML too, so the mirror reads the drawing back.
+      case "drawing": {
+        const height = Number(node.attrs?.height) ? ` data-height="${Number(node.attrs?.height)}"` : "";
+        out.push(`<div data-drawing data-elements="${escapeHtml(str(node.attrs?.elements) || "[]")}" data-files="${escapeHtml(str(node.attrs?.files) || "{}")}"${height}></div>`);
+        break;
+      }
       default:
         out.push(...mdBlocks(kids(node), r));
     }
@@ -258,6 +267,8 @@ export function toHtml(nodes: DocNode[], r: Resolve): string {
         }
         case "video":
           return `<p>[Video: ${escapeHtml(str(node.attrs?.name) || "video")}]</p>`;
+        case "drawing":
+          return "<p>[Drawing]</p>";
         default:
           return toHtml(kids(node), r);
       }

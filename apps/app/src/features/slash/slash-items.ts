@@ -29,6 +29,14 @@ function rank(item: SlashItem, q: string): number | null {
   return at === q.length ? 4 : null;
 }
 
+// Groups show in this order whichever plugin registered first; others follow.
+// Inside a group, the text blocks above come before what plugins add.
+const GROUPS = ["Basic", "Lists", "Blocks", "Media"];
+const groupRank = (item: SlashItem) => {
+  const at = GROUPS.indexOf(item.group ?? "");
+  return (at < 0 ? GROUPS.length : at) * 2 + (BLOCK_ITEMS.includes(item) ? 0 : 1);
+};
+
 /**
  * The items for what was typed after /, best first. "list" finds all three
  * lists, "h2" the second heading, and "bl" the bulleted list. Equal matches
@@ -36,7 +44,7 @@ function rank(item: SlashItem, q: string): number | null {
  */
 export function filterSlashItems(items: SlashItem[], query: string): SlashItem[] {
   const q = query.trim().toLowerCase();
-  if (!q) return items;
+  if (!q) return items.map((item, i) => ({ item, i })).sort((a, b) => groupRank(a.item) - groupRank(b.item) || a.i - b.i).map((entry) => entry.item);
   return items
     .map((item, i) => ({ item, i, score: rank(item, q) }))
     .filter((entry) => entry.score !== null)
