@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { NodeKind } from "@notemax/core";
 import { registry } from "@/plugins/registry";
+import type { KindInfo, PageSetup } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { isNarrow } from "@/ui/layout";
 import { useDismiss } from "@/ui/useDismiss";
@@ -14,7 +15,7 @@ import { useDismiss } from "@/ui/useDismiss";
  * off, so it is drawn as a popover above everything. A phone shows it inside
  * the menu instead.
  */
-export function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
+export function AddMenu({ onAdd }: { onAdd(kind: NodeKind, setup?: PageSetup): void }) {
   const [open, setOpen] = useState(false);
   const [others, setOthers] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
@@ -47,9 +48,9 @@ export function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
     if (document.activeElement === button) el.querySelector<HTMLElement>("[role=menuitem]")?.focus();
   }, [others, narrow]);
 
-  const pick = (kind: NodeKind) => {
+  const pick = ({ kind, setup }: KindInfo) => {
     setOpen(false);
-    onAdd(kind);
+    onAdd(kind, setup);
   };
   const kinds = registry.kinds();
   const main = kinds.filter((info) => !info.other);
@@ -62,10 +63,10 @@ export function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
       </button>
       {open && (
         <div className="menu" role="menu">
-          {main.map(({ kind, label, icon }, i) => (
-            <button key={kind} ref={i === 0 ? first : undefined} role="menuitem" className="menu-item" onClick={() => pick(kind)} onMouseEnter={() => setOthers(false)}>
-              <Icon name={icon} />
-              <span>{label}</span>
+          {main.map((info, i) => (
+            <button key={info.id ?? info.kind} ref={i === 0 ? first : undefined} role="menuitem" className="menu-item" onClick={() => pick(info)} onMouseEnter={() => setOthers(false)}>
+              <Icon name={info.icon} />
+              <span>{info.label}</span>
             </button>
           ))}
           {rest.length > 0 && (
@@ -100,10 +101,10 @@ export function AddMenu({ onAdd }: { onAdd(kind: NodeKind): void }) {
                         othersButton.current?.focus();
                       }}
                     >
-                      {rest.map(({ kind, label, icon }) => (
-                        <button key={kind} role="menuitem" className="menu-item" onClick={() => pick(kind)}>
-                          <Icon name={icon} />
-                          <span>{label}</span>
+                      {rest.map((info) => (
+                        <button key={info.id ?? info.kind} role="menuitem" className="menu-item" onClick={() => pick(info)}>
+                          <Icon name={info.icon} />
+                          <span>{info.label}</span>
                         </button>
                       ))}
                     </div>

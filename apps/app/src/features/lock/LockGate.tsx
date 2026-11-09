@@ -2,13 +2,16 @@ import type { ReactNode } from "react";
 import type { TreeNode } from "@notemax/core";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
+import { nameOf, workspaceList } from "@/features/workspaces/list";
 import { isLocked, relock, unlocked } from "./lock";
 import { LockScreen } from "./LockScreen";
 
-/** A locked page shows the lock screen until the password is typed. */
+/** A locked page, or any page of a locked workspace, shows the lock screen until the password is typed. */
 export function LockGate({ node, app, children }: { node: TreeNode; app: AppContext; children: ReactNode }) {
   const open = unlocked.use();
-  return open ? children : <LockScreen node={node} app={app} />;
+  const workspace = workspaceList.use().find((w) => w.id === app.workspace);
+  if (open || (!isLocked(node) && !workspace?.locked)) return children;
+  return <LockScreen title={isLocked(node) ? node.title || "Untitled" : workspace ? nameOf(workspace) : "This workspace"} app={app} />;
 }
 
 /** Under the title of a locked page that is open: a way to lock it again at once. */

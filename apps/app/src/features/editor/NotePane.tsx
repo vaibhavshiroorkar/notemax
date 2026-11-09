@@ -17,7 +17,9 @@ import { InlineNote } from "./InlineNote";
 import { PAGE_GAP, PAGE_MARGIN, PAPER, paperSize } from "./pages";
 import { useBodyIndex } from "./useBodyIndex";
 import { useRememberPosition } from "./usePosition";
-import { noteSubtopics, showsSubtopics } from "./subtopics";
+import { newestFirst, noteSubtopics, showsSubtopics } from "./subtopics";
+import { isJournal } from "@/features/dates/journal";
+import { JournalAdder } from "@/features/dates/JournalAdder";
 import { starterContent } from "./welcome";
 import "./editor.css";
 import { isTypingTarget } from "@/ui/typing";
@@ -156,6 +158,8 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
           workspaceDoc={workspaceDoc}
           onOpen={(id) => hub.open(id)}
           renderNote={(id) => <InlineNote id={id} hub={hub} workspaceDoc={workspaceDoc} />}
+          adder={inline && isJournal(node) ? <JournalAdder app={app} journalId={node.id} onOpen={(id) => hub.open(id)} /> : undefined}
+          addFirst={inline && newestFirst(node)}
         />
       )}
       {local && <PageFooter node={node} app={app} />}

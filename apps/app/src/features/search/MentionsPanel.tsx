@@ -9,7 +9,7 @@ export function MentionsPanel({ app }: { app: AppContext }) {
   const id = app.activeId!;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const found = useMemo(() => mentionsOf(app.tree, id), [app.tree, id, version]);
-  if (!found.length) return <p className="mentions-empty">No other page names this one without linking to it.</p>;
+  if (!found.length) return <p className="mentions-empty">No unlinked mentions.</p>;
   return (
     <ul className="mentions">
       {found.map((match) => (

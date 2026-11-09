@@ -159,7 +159,7 @@ export function BookPanel({ app }: { app: AppContext }) {
           })}
         </ol>
       ) : (
-        <p className="book-panel-empty">No {chapterNoun(book, true)} yet. Drag a note or board here, or add one.</p>
+        <p className="book-panel-empty">No {chapterNoun(book, true)} yet.</p>
       )}
 
       <button className="footer-button" onClick={() => onSelect(createNode(doc, "note", book.id))}>

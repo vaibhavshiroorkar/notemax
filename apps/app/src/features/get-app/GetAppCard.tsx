@@ -56,7 +56,7 @@ export function GetAppCard({ app }: { app: AppContext }) {
 export function GetAppHome({ app }: { app: AppContext }) {
   return (
     <>
-      <p className="home-intro">Notemax for Windows and Android: opens on its own, works offline, and syncs with this one.</p>
+      <p className="home-intro">For Windows and Android. Works offline.</p>
       <button className="button get-app-home-button" onClick={() => app.openView(DOWNLOAD_VIEW)}>
         <Icon name="download" />
         Download

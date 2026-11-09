@@ -110,7 +110,7 @@ export const registry = {
   slashItems: (): SlashItem[] => all((p) => p.slashItems),
   kinds: (): KindInfo[] => all((p) => p.kinds),
   /** The icon a kind shows in lists. Taken from plugins that are off too, since their pages still show. */
-  iconOf: (kind: NodeKind): IconName => plugins.flatMap((p) => p.kinds ?? []).find((info) => info.kind === kind)?.icon ?? "note",
+  iconOf: (kind: NodeKind): IconName => plugins.flatMap((p) => p.kinds ?? []).find((info) => info.kind === kind && !info.id)?.icon ?? "note",
   /** Why a page takes no edits, if a plugin says it takes none. */
   lockOf(node: TreeNode): string | undefined {
     for (const plugin of on()) {
@@ -152,7 +152,7 @@ export const registry = {
   overlay: (id: string): Overlay | undefined => all((p) => p.overlays).find((overlay) => overlay.id === id),
   floating: (): Floating[] => all((p) => p.floating),
   /** The gates this page must get past, outermost first. */
-  gatesFor: (node: TreeNode): PageGate[] => all((p) => p.pageGates).filter((gate) => gate.applies(node)),
+  gatesFor: (node: TreeNode, app: AppContext): PageGate[] => all((p) => p.pageGates).filter((gate) => gate.applies(node, app)),
   view: (id: string): View | undefined => all((p) => p.views).find((view) => view.id === id),
   statusItems: (): StatusItem[] => all((p) => p.statusItems),
   sidebarFooter: (): SidebarFooterItem[] => all((p) => p.sidebarFooter),
@@ -161,6 +161,7 @@ export const registry = {
   starters: () => all((p) => (p.start ? [p.start.bind(p)] : [])),
   workspaceStarters: () => all((p) => (p.workspaceStart ? [p.workspaceStart.bind(p)] : [])),
   pageCorner: (kind: NodeKind): PageAddon[] => all((p) => p.pageCorner).filter((addon) => addon.kinds?.includes(kind) ?? true),
+  sideFooter: (kind: NodeKind): PageAddon[] => all((p) => p.sideFooter).filter((addon) => addon.kinds?.includes(kind) ?? true),
   pageSettings: (kind: NodeKind): PageAddon[] => all((p) => p.pageSettings).filter((addon) => addon.kinds?.includes(kind) ?? true),
   /** Every option of the plugins that are on, with its plugin, in plugin order. */
   options: (): { plugin: Plugin; option: PluginOption }[] => on().flatMap((plugin) => (plugin.options ?? []).map((option) => ({ plugin, option }))),

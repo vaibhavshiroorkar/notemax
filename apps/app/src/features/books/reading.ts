@@ -63,15 +63,17 @@ export interface Subtopic {
  * A chapter's subtopics in reading order. Folders inside it are not subtopics.
  * With no label, as for a note outside any book, they number from 1. An
  * empty label is a chapter in a book without numbers, so they have none too.
+ * Counting down, as a note set to newest first does, each keeps its number
+ * when a new one arrives on top.
  */
-export function subtopicsOf(chapter: TreeItem, label: string | undefined, depth = 1): Subtopic[] {
+export function subtopicsOf(chapter: TreeItem, label: string | undefined, depth = 1, down = false): Subtopic[] {
   const out: Subtopic[] = [];
-  let n = 0;
-  for (const item of chapter.children) {
-    if (item.kind === "folder") continue;
-    const own = label === undefined ? String(++n) : label && `${label}.${++n}`;
+  const items = chapter.children.filter((item) => item.kind !== "folder");
+  items.forEach((item, i) => {
+    const n = down ? items.length - i : i + 1;
+    const own = label === undefined ? String(n) : label && `${label}.${n}`;
     out.push({ item, label: own, depth }, ...subtopicsOf(item, own, depth + 1));
-  }
+  });
   return out;
 }
 
@@ -81,10 +83,18 @@ export interface Stop {
   label: string;
 }
 
+/** A page in a book left without a number, like a prologue or an interlude. The chapters around it count on as if it were not there. */
+export const isUnnumbered = (item: TreeItem | TreeNode) => item.props.unnumbered === true;
+
 /** The chapters as Next and Previous walk them. Subtopics are read inside their chapter's page. */
 export function chapterStops(book: TreeItem): Stop[] {
   const numbers = chapterNumbersOf(book);
-  return chaptersIn(book).map((item, i) => ({ item, label: numbers === "none" ? "" : numbers === "roman" ? roman(i + 1) : String(i + 1) }));
+  let n = 0;
+  return chaptersIn(book).map((item) => {
+    if (numbers === "none" || isUnnumbered(item)) return { item, label: "" };
+    n++;
+    return { item, label: numbers === "roman" ? roman(n) : String(n) };
+  });
 }
 
 /** Every chapter and subtopic of a book, in reading order. */

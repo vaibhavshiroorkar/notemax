@@ -2,6 +2,21 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.110.0 (2026-11-09)
+
+- Journals. Create, Others, New journal makes a page that holds one entry per day, newest first and without numbers. Instead of Add subtopic it has Next date, the day after the latest entry (or today when there is none), and Choose date. A day that already has an entry opens instead of being made twice. The Journal for daily notes works the same way.
+- Any note can put its newest subtopics on top: This page, Order, Newest on top, or Page options. Numbers count down, so each subtopic keeps its number, and Add subtopic moves above them.
+- A page in a book can go without a number, like a prologue or an interlude, anywhere in the book: Leave without a number in its menu. The chapters around it count on as if it were not there.
+- Workspaces are on Home, in place of Quick start. Each card can lock its workspace or delete it.
+- Lock a whole workspace from the top-left menu. Its list, pages and Home cards stay hidden until the lock password is typed, the same password as locked pages.
+- Delete a workspace from the top-left menu too. You type its name first, and the open one makes way for another. The first workspace stays.
+- Find and replace has a button in the right sidebar's tools.
+- The word count sits at the bottom right of the right sidebar, for every note and book, with the reading time when you point at it. The status bar no longer repeats it.
+- Sections has its own icon. Sidebar rows keep their marks in one column at the right, and their buttons take the marks' place while pointed at. The Temporary clock shows only once sync is on.
+- Sync is quicker: edits go out about a second after typing stops, and while the window is on screen it checks for other devices' edits every 10 seconds. At start it syncs before its slower search for edits that were never sent.
+- Every button lines up its icon and words the same way, and many empty and intro texts are shorter.
+- New docs in the docs folder: an overview, the project's history, every feature, how data and sync work, development and releases, and the decisions behind it all.
+
 ## 0.109.0 (2026-11-01)
 
 - Notemax for Android. Get the app now has a Download for Android button with an APK (about 1 MB, Android 7 or newer, with Chrome). It opens Notemax full screen, with sign-in, sync, offline pages and reminders working as they do on the website, and it gets each new version of the site without a reinstall.

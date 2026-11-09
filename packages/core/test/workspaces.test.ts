@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { addWorkspace, moveWorkspace, openIdbStore, readWorkspaces, removeWorkspace, renameWorkspace, scopedId, scopedStore, splitScoped } from "../src";
+import { addWorkspace, moveWorkspace, openIdbStore, readWorkspaces, removeWorkspace, renameWorkspace, scopedId, scopedStore, setWorkspaceLocked, splitScoped } from "../src";
 
 describe("workspaces", () => {
   it("keeps the first workspace's ids as they were and prefixes the others", () => {
@@ -37,5 +37,16 @@ describe("workspaces", () => {
     removeWorkspace(doc, work);
     expect(readWorkspaces(doc).map((w) => w.id)).toEqual(["home", "main"]);
     expect(() => removeWorkspace(doc, "main")).toThrow();
+  });
+
+  it("locks and unlocks a workspace, main included, and old lists read unlocked", () => {
+    const doc = new Y.Doc();
+    addWorkspace(doc, "Diary", "", "diary");
+    expect(readWorkspaces(doc).every((w) => !w.locked)).toBe(true);
+    setWorkspaceLocked(doc, "diary", true);
+    setWorkspaceLocked(doc, "main", true);
+    expect(readWorkspaces(doc).filter((w) => w.locked).map((w) => w.id).sort()).toEqual(["diary", "main"]);
+    setWorkspaceLocked(doc, "diary", false);
+    expect(readWorkspaces(doc).find((w) => w.id === "diary")!.locked).toBe(false);
   });
 });

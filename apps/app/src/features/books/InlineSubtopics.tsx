@@ -27,6 +27,8 @@ export function InlineSubtopics({
   workspaceDoc,
   renderNote,
   onOpen,
+  adder,
+  addFirst,
 }: {
   subtopics: Subtopic[];
   /** The chapter or note whose page this is. */
@@ -35,11 +37,22 @@ export function InlineSubtopics({
   /** The editor for a subtopic's text, given by the note page that holds this. */
   renderNote(id: string): ReactNode;
   onOpen(id: string): void;
+  /** In place of Add subtopic, like a journal's Next date. */
+  adder?: ReactNode;
+  /** Above the subtopics, where the newest ones are. */
+  addFirst?: boolean;
 }) {
   // A few open at once. Past that each editor loads as it comes near, so a long chapter opens fast.
   const lazy = subtopics.length > LOAD_AT_ONCE;
+  const add = adder ?? (
+    <button className="button add-subtopic" onClick={() => onOpen(createNode(workspaceDoc, "note", hostId))}>
+      <Icon name="plus" />
+      <span>Add subtopic</span>
+    </button>
+  );
   return (
     <div className="inline-subtopics">
+      {addFirst && add}
       {subtopics.map(({ item, label, depth }) => (
         <section key={item.id} className="inline-subtopic" data-reveal={item.id} style={{ "--depth": depth } as CSSProperties} aria-label={`${label} ${item.title || "Untitled"}`.trim()}>
           <header className="inline-subtopic-title">
@@ -56,10 +69,7 @@ export function InlineSubtopics({
           )}
         </section>
       ))}
-      <button className="button add-subtopic" onClick={() => onOpen(createNode(workspaceDoc, "note", hostId))}>
-        <Icon name="plus" />
-        <span>Add subtopic</span>
-      </button>
+      {!addFirst && add}
     </div>
   );
 }

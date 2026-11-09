@@ -34,7 +34,7 @@ export function TasksView({ app }: { app: AppContext }) {
         <Icon name="list-check" /> Tasks
       </h1>
       {!open && !groups.done.length ? (
-        <p className="tasks-empty">No to-dos yet. Make a to-do list in any note (type [ ] and a space), and write a day after it, like "call mum tomorrow 5pm". Each one shows up here.</p>
+        <p className="tasks-empty">No to-dos yet. Type [ ] and a space in any note, then a day, like "call mum tomorrow 5pm".</p>
       ) : !open ? (
         <p className="tasks-empty">Everything is done.</p>
       ) : null}

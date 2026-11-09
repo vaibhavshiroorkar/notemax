@@ -53,7 +53,6 @@ export const notesPlugin: Plugin = {
       quick: true,
       default: false,
     },
-    { id: "statusWords", label: "Show the word count in the status bar", description: "Words and reading time of the open note", section: "editor", quick: true, default: true },
   ],
   // Keys the editor itself handles (Tiptap's defaults), listed with the command shortcuts.
   shortcutHints: [

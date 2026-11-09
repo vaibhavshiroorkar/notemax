@@ -3,6 +3,8 @@ import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { askText } from "@/ui/Prompt";
+import { unlocked } from "@/features/lock/lock";
+import { DeleteWorkspaceDialog, canDelete, setLock } from "./actions";
 import { createWorkspace, nameOf, openList, rename, switchTo, workspaceList } from "./list";
 import { useDismiss } from "@/ui/useDismiss";
 
@@ -39,6 +41,9 @@ export function Switcher({ app }: { app: AppContext }) {
   const list = workspaceList.use();
   const [open, setOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  // The lock comes off only while it is open: the password proves it is yours.
+  const opened = unlocked.use();
   const wrapper = useRef<HTMLDivElement>(null);
   useEffect(() => void openList(), []);
   useDismiss(open, () => setOpen(false), wrapper);
@@ -77,6 +82,11 @@ export function Switcher({ app }: { app: AppContext }) {
         >
           <Dot color={current?.color ?? ""} />
           <span className="workspace-name">{current ? nameOf(current) : "My notes"}</span>
+          {current?.locked && (
+            <span className="workspace-lock" title="Locked">
+              <Icon name="lock" />
+            </span>
+          )}
           <Icon name="chevron-down" />
         </button>
       )}
@@ -91,6 +101,11 @@ export function Switcher({ app }: { app: AppContext }) {
             <button key={workspace.id} className="menu-item" role="menuitemradio" aria-checked={workspace.id === app.workspace} onClick={() => switchTo(workspace.id)}>
               <Dot color={workspace.color} />
               <span className="workspace-name">{nameOf(workspace)}</span>
+              {workspace.locked && (
+                <span className="workspace-lock" title="Locked">
+                  <Icon name="lock" />
+                </span>
+              )}
               {workspace.id === app.workspace && <span className="workspace-here">open</span>}
             </button>
           ))}
@@ -106,12 +121,39 @@ export function Switcher({ app }: { app: AppContext }) {
             <Icon name="pencil" />
             Rename this workspace
           </button>
+          {current && (!current.locked || opened) && (
+            <button
+              className="menu-item"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                void setLock(app, current, !current.locked);
+              }}
+            >
+              <Icon name="lock" />
+              {current.locked ? "Remove the lock" : "Lock this workspace"}
+            </button>
+          )}
           <button className="menu-item" role="menuitem" onClick={() => void startNew()}>
             <Icon name="plus" />
             New workspace
           </button>
+          {current && canDelete(current) && (
+            <button
+              className="menu-item danger"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                setDeleting(true);
+              }}
+            >
+              <Icon name="trash" />
+              Delete this workspace...
+            </button>
+          )}
         </div>
       )}
+      {deleting && current && <DeleteWorkspaceDialog workspace={current} app={app} count={app.tree.visible.size} onClose={() => setDeleting(false)} />}
     </div>
   );
 }

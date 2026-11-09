@@ -166,9 +166,56 @@
   }
 }
 
+/* Marks, then the count, against the right edge. */
+.row-end {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin-right: 6px;
+}
+
+.row-end:empty {
+  display: none;
+}
+
+/* With a pointer, the row's buttons take the place of its marks while pointed at. */
+.row-actions {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: inline-flex;
+  visibility: hidden;
+  align-items: center;
+  gap: 2px;
+  transform: translateY(-50%);
+}
+
+.row:hover > .row-actions,
+.row:focus-within > .row-actions {
+  visibility: visible;
+}
+
+@media (hover: hover) {
+  .row:hover > .row-end,
+  .row:focus-within > .row-end {
+    visibility: hidden;
+  }
+}
+
+/* No hover on touch screens: the buttons stay in the row. */
+@media (hover: none) {
+  .row-actions {
+    position: static;
+    visibility: visible;
+    transform: none;
+  }
+}
+
 .row-count {
   flex-shrink: 0;
-  padding: 0 6px;
+  min-width: 16px;
+  padding: 0 2px;
+  text-align: right;
   color: var(--muted);
   font-size: 12px;
   font-variant-numeric: tabular-nums;

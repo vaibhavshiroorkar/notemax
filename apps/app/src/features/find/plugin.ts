@@ -1,4 +1,5 @@
 import type { Plugin } from "@/plugins/types";
+import { FindButton } from "./FindButton";
 import { FindHighlight } from "./find";
 import { FindBar, finding, noteToSearch } from "./FindBar";
 import "./find.css";
@@ -13,6 +14,7 @@ export const findPlugin: Plugin = {
   description: "Ctrl+F finds words in the open note, Ctrl+H replaces them",
   editorExtensions: () => [FindHighlight],
   floating: [{ id: "find.bar", component: FindBar }],
+  pageCorner: [{ id: "find.button", kinds: ["note"], component: FindButton }],
   commands: [
     { id: "find.open", title: "Find in this note", keywords: ["search", "find", "look"], shortcut: "Mod+F", when: hasNote, run: () => finding.set({ replace: false }) },
     { id: "find.replace", title: "Find and replace", keywords: ["replace", "change", "swap"], shortcut: "Mod+H", when: hasNote, run: () => finding.set({ replace: true }) },

@@ -113,9 +113,13 @@ let engine: SyncEngine | null = null;
 let stopRunning: (() => void) | null = null;
 
 /** How long after an edit to send it, so a burst of typing is sent once. Sooner when Drive holds the only copy. */
-const SEND_AFTER_MS = memoryOnly ? 800 : 3000;
-/** How often to look for other devices' edits while the app is open. */
-const POLL_MS = 30_000;
+const SEND_AFTER_MS = memoryOnly ? 500 : 1200;
+/**
+ * How often to look for other devices' edits while the window is on screen.
+ * One small Drive request when nothing changed. A hidden window does not
+ * look; it looks again the moment it shows.
+ */
+const POLL_MS = 10_000;
 
 async function runEngine(signal: AbortSignal) {
   const key = await importKey(getPref(PREFS.key)!);
@@ -215,7 +219,7 @@ async function runEngine(signal: AbortSignal) {
     changed(docId);
     if (update && link.live && goesLive(docId)) link.live.send(docId, update);
   });
-  const poll = setInterval(run, POLL_MS);
+  const poll = setInterval(() => document.visibilityState === "visible" && run(), POLL_MS);
   // Hidden, the window may never come back (a phone closes it, a laptop sleeps), so edits go out now.
   const sendWaiting = () => loadState().dirty.length > 0 && run();
   const onWake = () => (document.visibilityState === "visible" ? run() : sendWaiting());
@@ -234,12 +238,13 @@ async function runEngine(signal: AbortSignal) {
   window.addEventListener("focus", run);
   document.addEventListener("visibilitychange", onWake);
   // A device that keeps pages may have lost marks in a forced close. One that keeps none started empty, so it has nothing to find.
-  if (memoryOnly) run();
-  else
+  // Sync at once; finding lost marks lists every file this device sent, which takes longer, so it follows.
+  run();
+  if (!memoryOnly)
     void maybeUnsent(raw)
       .then((ids) => current.catchUp(ids))
-      .catch(() => {})
-      .finally(run);
+      .then(() => loadState().dirty.length > 0 && run())
+      .catch(() => {});
 
   await new Promise<void>((resolve) => signal.addEventListener("abort", () => resolve(), { once: true }));
   stopWrites();

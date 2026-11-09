@@ -13,6 +13,10 @@ const paths = {
   trash: "M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.5 8.5h6l.5-8.5",
   sidebar: "M2.5 3h11v10h-11zM6 3v10",
   "side-panel": "M2.5 3h11v10h-11zM10 3v10",
+  // Boxes stacked down the right sidebar.
+  sections: "M2.5 2.5h11v4.5h-11zM2.5 9.5h11v4h-11z",
+  // Lines of text with a small lens: find in this note, not search everything.
+  "find-text": "M2.5 4h7M2.5 7.5h4M2.5 11h3M11 7a2.25 2.25 0 1 0 0 4.5a2.25 2.25 0 1 0 0-4.5zM12.7 11.2l1.8 1.8",
   restore: "M3.5 6.5A5 5 0 1 1 3 9M3.5 3v3.5H7",
   settings: "M2.5 4.5h11M2.5 11.5h11M6 3v3M10 10v3",
   gear: "M12.43 6.77L14.23 7.06L14.23 8.94L12.43 9.23L12 10.27L13.07 11.74L11.74 13.07L10.27 12L9.23 12.43L8.94 14.23L7.06 14.23L6.77 12.43L5.73 12L4.26 13.07L2.93 11.74L4 10.27L3.57 9.23L1.77 8.94L1.77 7.06L3.57 6.77L4 5.73L2.93 4.26L4.26 2.93L5.73 4L6.77 3.57L7.06 1.77L8.94 1.77L9.23 3.57L10.27 4L11.74 2.93L13.07 4.26L12 5.73zM8 6a2 2 0 1 0 0 4a2 2 0 1 0 0-4z",

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "rea
 import { listedOnRight } from "@/features/sidebar/state";
 import { workspaceNow } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
+import type { TreeNode } from "@notemax/core";
+import { registry } from "@/plugins/registry";
 import type { AppContext, SidePanel } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { Safe } from "@/ui/Safe";
@@ -120,7 +122,7 @@ function Box({ app, all, index, shown, active }: { app: AppContext; all: SidePan
 }
 
 /** The tray at the bottom: every section, to add with a click or drag into place, and starting over. */
-function Tray({ all, here }: { all: SidePanel[]; here: Set<string> }) {
+function Tray({ app, node, all, here }: { app: AppContext; node: TreeNode | undefined; all: SidePanel[]; here: Set<string> }) {
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   const layout = panelLayout.use();
@@ -129,13 +131,22 @@ function Tray({ all, here }: { all: SidePanel[]; here: Set<string> }) {
   return (
     <div className="side-panel-bottom" ref={wrapper}>
       <button className="footer-button" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <Icon name="side-panel" />
+        <Icon name="sections" />
         <span>Sections</span>
       </button>
+      {node && (
+        <span className="side-panel-footer">
+          {registry.sideFooter(node.kind).map(({ id, component: Item }) => (
+            <Safe key={id} name={id}>
+              <Item node={node} app={app} />
+            </Safe>
+          ))}
+        </span>
+      )}
       {/* Out of the way while a section is dragged from it, so the boxes above can take the drop. */}
       {open && (
         <div className="menu panels-tray" role="dialog" aria-label="Sections" data-moving={moving || undefined}>
-          <p className="panels-tray-hint">Click to add or hide. Drag one onto a box to make tabs, or between boxes for a box of its own.</p>
+          <p className="panels-tray-hint">Click to add or hide. Drag onto a box to make tabs.</p>
           <div className="panels-tray-chips">
             {[...all]
               .sort((a, b) => a.order - b.order)
@@ -177,7 +188,7 @@ function Tray({ all, here }: { all: SidePanel[]; here: Set<string> }) {
 /** The right sidebar panel that lists a note's subtopics. */
 const SUBTOPICS_PANEL = "notes.subtopics";
 
-export function RightSidebar({ app, panels, all, open, tools }: { app: AppContext; panels: SidePanel[]; all: SidePanel[]; open: boolean; tools?: ReactNode }) {
+export function RightSidebar({ app, node, panels, all, open, tools }: { app: AppContext; node: TreeNode | undefined; panels: SidePanel[]; all: SidePanel[]; open: boolean; tools?: ReactNode }) {
   const mounted = usePresence(open);
   const layout = placed(panelLayout.use(), all.map((p) => p.id));
   const moving = dragging.use();
@@ -211,7 +222,7 @@ export function RightSidebar({ app, panels, all, open, tools }: { app: AppContex
         ))}
         {moving && <Gap all={all} index={layout.slots.length} />}
       </div>
-      <Tray all={all} here={here} />
+      <Tray app={app} node={node} all={all} here={here} />
     </aside>
   );
 }

@@ -3,9 +3,11 @@ import { canMove, isContainer, type NodeKind, type Tree, type TreeItem } from "@
 import { prefetchDoc } from "@/data/docCache";
 import { useSelect } from "@/platform/store";
 import { registry } from "@/plugins/registry";
-import { chapterNoun, subtopicsOf } from "@/features/books/reading";
+import type { PageSetup } from "@/plugins/types";
+import { chapterNoun } from "@/features/books/reading";
 import { SubtopicList } from "@/features/editor/SubtopicList";
-import { BOX_FROM, showsSubtopics } from "@/features/editor/subtopics";
+import { BOX_FROM, numbered, showsSubtopics } from "@/features/editor/subtopics";
+import { isJournal } from "@/features/dates/journal";
 import { dragRowMenu } from "@/ui/ContextMenu";
 import { Icon } from "@/ui/Icon";
 import { dragged, endDrag, placementFor, startDrag, zoneFor, type Placement, type Zone } from "./drag";
@@ -22,7 +24,7 @@ export interface RowContext {
   select(id: string, newTab?: boolean): void;
   /** Ctrl+click and Shift+click pick rows. Returns true when the click did that, so it opens nothing. */
   pick(item: TreeItem, event: MouseEvent): boolean;
-  add(kind: NodeKind, parentId: string): void;
+  add(kind: NodeKind, parentId: string, setup?: PageSetup): void;
   drop(placement: Placement): void;
   /** Moves a page into `parentId`, before `nextId` or at the end, as dragging a subtopic does. */
   move(id: string, parentId: string, nextId: string | null): void;
@@ -51,7 +53,7 @@ export function Rows({ items, depth, ctx }: { items: readonly TreeItem[]; depth:
  * subtopic on the note's page.
  */
 function Inside({ item, depth, ctx }: { item: TreeItem; depth: number; ctx: RowContext }) {
-  const subtopics = showsSubtopics(item) ? subtopicsOf(item, undefined) : [];
+  const subtopics = showsSubtopics(item) ? numbered(item) : [];
   if (subtopics.length < BOX_FROM) return <Rows items={item.children} depth={depth + 1} ctx={ctx} />;
   return <SubtopicList list={subtopics} onOpen={(id) => ctx.select(id)} onMove={ctx.move} style={{ marginLeft: 4 + (depth + 1) * 14 }} />;
 }
@@ -183,13 +185,13 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
             onClick={() => toggleCollapsed(item.id)}
           >
             {/* A page with pages inside keeps its icon, and shows the arrow while pointed at. */}
-            {item.kind !== "folder" && <Icon name={item.kind === "note" ? "note" : registry.iconOf(item.kind)} />}
+            {item.kind !== "folder" && <Icon name={isJournal(item) ? "calendar" : item.kind === "note" ? "note" : registry.iconOf(item.kind)} />}
             <Icon name={open ? "chevron-down" : "chevron-right"} />
           </button>
         ) : (
           // The icon sits where a folder has its arrow, so every title starts at the same place.
           <span className="row-icon" aria-hidden="true">
-            <Icon name={item.kind === "note" ? "note" : registry.iconOf(item.kind)} />
+            <Icon name={isJournal(item) ? "calendar" : item.kind === "note" ? "note" : registry.iconOf(item.kind)} />
           </span>
         )}
         {editing ? (
@@ -220,36 +222,42 @@ const Row = memo(function Row({ item, depth, ctx }: { item: TreeItem; depth: num
             <span>{title}</span>
           </button>
         )}
-        {registry
-          .rowMarks()
-          .filter((mark) => mark.when(item))
-          .map((mark) => {
-            const label = typeof mark.label === "string" ? mark.label : mark.label(item);
-            return (
-              <span key={mark.id} className="row-mark" data-mark={mark.id} role="img" title={label} aria-label={label}>
-                <Icon name={mark.icon} />
-              </span>
-            );
-          })}
-        {item.kind === "book" && item.children.length > 0 && (
-          <span className="row-count" title={`${item.children.length} ${item.children.length === 1 ? "chapter" : "chapters"}`}>
-            {item.children.length}
-          </span>
-        )}
-        {isContainer(item.kind) && (
-          <button
-            className="icon-button row-action"
-            aria-label={item.kind === "book" ? `Add ${chapterNoun(item)} to ${title}` : `Add note inside ${title}`}
-            title={item.kind === "book" ? `Add ${chapterNoun(item)}` : "Add note inside"}
-            onClick={() => ctx.add("note", item.id)}
-          >
-            <Icon name="plus" />
+        {/* Marks and the chapter count end at the same place on every row. */}
+        <span className="row-end">
+          {registry
+            .rowMarks()
+            .filter((mark) => mark.when(item))
+            .map((mark) => {
+              const label = typeof mark.label === "string" ? mark.label : mark.label(item);
+              return (
+                <span key={mark.id} className="row-mark" data-mark={mark.id} role="img" title={label} aria-label={label}>
+                  <Icon name={mark.icon} />
+                </span>
+              );
+            })}
+          {item.kind === "book" && item.children.length > 0 && (
+            <span className="row-count" title={`${item.children.length} ${item.children.length === 1 ? "chapter" : "chapters"}`}>
+              {item.children.length}
+            </span>
+          )}
+        </span>
+        {/* Over the marks while pointed at, so a row with more buttons does not push its marks left. */}
+        <span className="row-actions">
+          {isContainer(item.kind) && (
+            <button
+              className="icon-button row-action"
+              aria-label={item.kind === "book" ? `Add ${chapterNoun(item)} to ${title}` : `Add note inside ${title}`}
+              title={item.kind === "book" ? `Add ${chapterNoun(item)}` : "Add note inside"}
+              onClick={() => ctx.add("note", item.id)}
+            >
+              <Icon name="plus" />
+            </button>
+          )}
+          {/* The page menu, with Move to trash in it. On a phone it is the way to the menu, since a long press drags. */}
+          <button className="icon-button row-action" aria-label={`More for ${title}`} aria-haspopup="menu" title="More" onClick={(event) => ctx.menu(item.id, event, true)}>
+            <Icon name="more" />
           </button>
-        )}
-        {/* The page menu, with Move to trash in it. On a phone it is the way to the menu, since a long press drags. */}
-        <button className="icon-button row-action" aria-label={`More for ${title}`} aria-haspopup="menu" title="More" onClick={(event) => ctx.menu(item.id, event, true)}>
-          <Icon name="more" />
-        </button>
+        </span>
       </div>
       {hasChildren && open && <Inside item={item} depth={depth} ctx={ctx} />}
     </li>

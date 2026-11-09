@@ -70,6 +70,7 @@ export {
   scopedId,
   scopedStore,
   setWorkspaceColor,
+  setWorkspaceLocked,
   splitScoped,
   type WorkspaceInfo,
 } from "./workspaces";

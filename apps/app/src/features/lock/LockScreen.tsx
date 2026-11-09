@@ -1,12 +1,11 @@
 import { useState, type FormEvent } from "react";
-import type { TreeNode } from "@notemax/core";
 import { nameOf, workspaceList } from "@/features/workspaces/list";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { forgetPassword, hasPassword, setPassword, unlock } from "./lock";
 
-/** What a locked page shows in place of itself until the password is typed. */
-export function LockScreen({ node, app }: { node: TreeNode; app: AppContext }) {
+/** What a locked page or workspace shows in place of itself until the password is typed. */
+export function LockScreen({ title, app, compact }: { title: string; app: AppContext; compact?: boolean }) {
   const set = hasPassword.use();
   const [password, setValue] = useState("");
   const [again, setAgain] = useState("");
@@ -65,10 +64,10 @@ export function LockScreen({ node, app }: { node: TreeNode; app: AppContext }) {
     );
 
   return (
-    <form className="lock-screen" onSubmit={(event) => void submit(event)}>
+    <form className="lock-screen" data-compact={compact || undefined} onSubmit={(event) => void submit(event)}>
       <Icon name="lock" />
-      <h2>{node.title || "Untitled"} is locked</h2>
-      <p>{set ? "Type the lock password to open it." : "Set a lock password. The same one opens every locked page, on all your devices."}</p>
+      <h2>{title} is locked</h2>
+      <p>{set ? "Type the lock password to open it." : "Set a lock password. The same one opens every locked page and workspace, on all your devices."}</p>
       <input className="lock-input" type="password" value={password} aria-label="Lock password" placeholder="Password" autoFocus onChange={(event) => setValue(event.target.value)} />
       {!set && <input className="lock-input" type="password" value={again} aria-label="Password again" placeholder="Password again" onChange={(event) => setAgain(event.target.value)} />}
       {error && (
@@ -86,7 +85,7 @@ export function LockScreen({ node, app }: { node: TreeNode; app: AppContext }) {
           {set ? "Open" : "Set and open"}
         </button>
       </div>
-      <p className="lock-note">This lock keeps out casual eyes. It is not encryption: the text is still on this device as it was.</p>
+      {!compact && <p className="lock-note">This lock keeps out casual eyes. It is not encryption: the text is still on this device as it was.</p>}
     </form>
   );
 }

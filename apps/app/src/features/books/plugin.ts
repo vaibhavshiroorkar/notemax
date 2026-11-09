@@ -1,10 +1,10 @@
-import { ROOT, childrenOf, moveNode } from "@notemax/core";
+import { ROOT, childrenOf, moveNode, setProp } from "@notemax/core";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { BookPane } from "./BookPane";
 import { BookPanel } from "./BookPanel";
 import { ChapterFooter } from "./ChapterFooter";
-import { bookOf, chapterOf, chapterStops, hostChapter } from "./reading";
-import { BookWordCount } from "./WordCount";
+import { bookOf, chapterNumbersOf, chapterOf, chapterStops, hostChapter, isUnnumbered } from "./reading";
+import { PageWordCount } from "./WordCount";
 
 /** The chapter one step on (or back) from the open page. From the book's own page, on is its first chapter. */
 function stepFrom(app: AppContext, by: 1 | -1): string | undefined {
@@ -23,12 +23,35 @@ export const booksPlugin: Plugin = {
   kinds: [{ kind: "book", label: "New book", icon: "book" }],
   pageViews: [{ kind: "book", component: BookPane }],
   sidePanels: [{ id: "books.chapters", title: "Chapters", order: 10, when: (app) => !!bookOf(app.tree, app.activeId), component: BookPanel }],
-  pageCorner: [{ id: "books.words", kinds: ["book", "note"], component: BookWordCount }],
+  sideFooter: [{ id: "books.words", kinds: ["book", "note"], component: PageWordCount }],
   pageFooter: [{ id: "books.steps", kinds: ["note"], component: ChapterFooter }],
   // A subtopic is read inside its chapter's page, so opening one opens the chapter there.
   hostOf: hostChapter,
   settings: [{ id: "books", order: 30, group: "Writing", title: "Books", icon: "book", keywords: ["chapters", "writing"] }],
   contextMenu: [
+    {
+      id: "books.unnumbered",
+      title: "Leave without a number",
+      group: "layout",
+      icon: "list-number",
+      targets: ["page"],
+      // A chapter of a book that numbers its chapters: a prologue or an interlude can go without.
+      when(target, app) {
+        if (target.type !== "page" || isUnnumbered(target.node)) return false;
+        const parent = app.tree.items.get(target.node.parentId);
+        return parent?.kind === "book" && chapterNumbersOf(parent) !== "none";
+      },
+      run: (target, app) => target.type === "page" && setProp(app.doc, target.node.id, "unnumbered", true),
+    },
+    {
+      id: "books.numbered",
+      title: "Give it a number",
+      group: "layout",
+      icon: "list-number",
+      targets: ["page"],
+      when: (target, app) => target.type === "page" && isUnnumbered(target.node) && app.tree.items.get(target.node.parentId)?.kind === "book",
+      run: (target, app) => target.type === "page" && setProp(app.doc, target.node.id, "unnumbered", null),
+    },
     {
       id: "books.to-chapter",
       title: "Make it a chapter",
@@ -71,8 +94,8 @@ export const booksPlugin: Plugin = {
   options: [
     {
       id: "wordCount",
-      label: "Show the word count at the top right",
-      description: "On a book, and on each chapter as its share of the book",
+      label: "Show the word count",
+      description: "At the bottom right of the right sidebar. A chapter shows its share of the book.",
       section: "books",
       quick: true,
       default: true,

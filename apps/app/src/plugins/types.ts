@@ -62,8 +62,10 @@ export interface Plugin {
   sidebarFilterChoices?: SidebarFilterChoice[];
   /** Shown at the end of a page, like the notes that link to it. */
   pageFooter?: PageAddon[];
-  /** Small things at the top right of a page, like a book's word count. */
+  /** Small buttons for the open page in the right sidebar's tool row, like the star. */
   pageCorner?: PageAddon[];
+  /** Small things at the bottom right of the right sidebar, like the word count. */
+  sideFooter?: PageAddon[];
   /** Rows in the right sidebar's "This page" section, like a note's layout. */
   pageSettings?: PageAddon[];
   settings?: SettingsSection[];
@@ -133,8 +135,8 @@ export interface View {
 
 export interface PageGate {
   id: string;
-  /** Whether this page goes through the gate at all. Cheap: it runs on every draw. */
-  applies(node: TreeNode): boolean;
+  /** Whether this page goes through the gate at all. Cheap: it runs on every draw. `app` is the page's own workspace. */
+  applies(node: TreeNode, app: AppContext): boolean;
   /** Draws `children` (the page) when it may show, or what to show instead. */
   component: ComponentType<{ node: TreeNode; app: AppContext; children: ReactNode }>;
 }
@@ -171,7 +173,7 @@ export interface AppContext {
   /** Opens a plugin's view, like the graph, as a page. */
   openView(id: string, options?: Record<string, unknown>, where?: { newTab?: boolean }): void;
   /** Adds a note, book or folder at the top level and opens it. */
-  create(kind: NodeKind): void;
+  create(kind: NodeKind, setup?: PageSetup): void;
   /** Moves one item or several to the trash and offers Undo for a few seconds. */
   trash(ids: string | readonly string[]): void;
   /** A short message at the bottom of the window, with an optional button. */
@@ -241,10 +243,17 @@ export interface EditorContext {
 }
 
 /** How a kind shows up in the + menu. */
+/** Sets up a page just made, like a journal's settings on a new note. */
+export type PageSetup = (doc: Y.Doc, id: string) => void;
+
 export interface KindInfo {
+  /** Tells apart two entries of one kind, like Journal, a note set up as one. The kind when left out. */
+  id?: string;
   kind: NodeKind;
   label: string;
   icon: IconName;
+  /** Settings for the new page, made in the same change, so it is never seen without them. */
+  setup?: PageSetup;
   /** Listed under Others in the + menu, so the everyday kinds stay up front. */
   other?: boolean;
 }

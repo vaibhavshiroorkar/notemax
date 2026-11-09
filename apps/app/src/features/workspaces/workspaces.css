@@ -36,9 +36,24 @@
   background: var(--hover);
 }
 
-.workspace-current svg {
+.workspace-current > svg {
   margin-left: auto;
   color: var(--muted);
+}
+
+.workspace-lock {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.workspace-lock svg {
+  width: 12px;
+  height: 12px;
+}
+
+.workspace-menu .menu-item.danger {
+  color: var(--danger);
 }
 
 .workspace-name {
@@ -336,7 +351,6 @@
   }
 }
 
-.home-top .button,
 .home-card-action {
   display: inline-flex;
   align-items: center;

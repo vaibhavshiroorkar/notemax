@@ -6,19 +6,20 @@ Each note is a [Yjs](https://yjs.dev) document, saved as an append-only log of c
 
 In the browser, notes are stored in IndexedDB. The desktop app keeps them in one SQLite file, `notemax.db`, in the app's config folder. Both sit behind the same `DocStore` interface in `packages/core`, so the rest of the app does not care which one it gets.
 
-Sync is optional. Each device writes its changes as encrypted files to a folder in the user's own Google Drive and reads the files of the other devices. The engine lives in `packages/core/src/sync.ts`.
+Sync is optional. Each device writes its changes as encrypted files to a folder in the user's own Google Drive and reads the files of the other devices. The engine lives in `packages/core/src/sync.ts`. [data-and-sync.md](data-and-sync.md) explains storage, sync, versions and locks in full.
 
 ## Layout
 
 ```
 apps/
   app/       The editor (Vite, React, Tiptap). Runs in the browser and inside the desktop shell.
-  desktop/   Tauri v2 shell: SQLite storage, tray icon, global shortcut, capture window.
+  desktop/   Tauri v2 shell: SQLite storage, tray icon, global shortcut, capture window, updates.
+  android/   The Android app's manifest. Bubblewrap generates the rest.
 packages/
-  core/      Storage, the workspace tree, sync, links and word counts. No UI code, and covered by tests.
-supabase/    The one server function: it trades a Google sign-in for a Drive token.
+  core/      Storage, the workspace tree, sync, history, links and word counts. No UI code, and covered by tests.
+supabase/    Database migrations for shared pages and the community, and the function that trades a Google sign-in for a Drive token.
 examples/    A sample plugin.
-scripts/     Small repo tools, like setting the version number.
+scripts/     Repo tools: setting the version, releasing the desktop and Android apps.
 ```
 
 Inside `apps/app/src`, each feature has its own folder with its components and styles:
@@ -42,4 +43,4 @@ Plugins written by other people use the same API, described in [plugins.md](plug
 
 ## Versions
 
-Each finished step gets a version number, set everywhere at once with `pnpm version:set 0.N.0` and listed in [CHANGELOG.md](../CHANGELOG.md).
+Each finished step gets a version number, set everywhere at once with `pnpm version:set 0.N.0` and listed in [CHANGELOG.md](../CHANGELOG.md). [development.md](development.md) covers checks and releases.

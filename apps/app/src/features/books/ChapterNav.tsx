@@ -12,7 +12,8 @@ export function ChapterNav({ tree, chapterId: id, onOpen }: { tree: Tree; chapte
   const previous = stops[here - 1];
   const next = stops[here + 1];
   // "Chapter 3 of 9", or the book's own word, or "3 of 9" with none. A book without numbers shows no count.
-  const where = stops[here].label && [chapterWordOf(book), stops[here].label, "of", stops.length].filter(Boolean).join(" ");
+  // Pages without a number, like a prologue, are not counted.
+  const where = stops[here].label && [chapterWordOf(book), stops[here].label, "of", stops.filter((stop) => stop.label).length].filter(Boolean).join(" ");
   const named = (stop: (typeof stops)[number]) => [stop.label, stop.item.title || "Untitled"].filter(Boolean).join(" ");
   return (
     <nav className="note-book" aria-label="Book">

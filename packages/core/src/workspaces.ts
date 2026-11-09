@@ -52,6 +52,8 @@ export interface WorkspaceInfo {
   color: string;
   position: string;
   createdAt: number;
+  /** Behind the lock password: its pages and its list stay hidden until it is typed. */
+  locked: boolean;
 }
 
 const listOf = (doc: Y.Doc) => doc.getMap<Y.Map<unknown>>("workspaces");
@@ -67,9 +69,10 @@ export function readWorkspaces(doc: Y.Doc): WorkspaceInfo[] {
       color: (fields.get("color") as string | undefined) ?? "",
       position: (fields.get("position") as string | undefined) ?? "a0",
       createdAt: (fields.get("createdAt") as number | undefined) ?? 0,
+      locked: fields.get("locked") === true,
     });
   });
-  if (!out.some((w) => w.id === MAIN_WORKSPACE)) out.push({ id: MAIN_WORKSPACE, name: "", color: "", position: "a0", createdAt: 0 });
+  if (!out.some((w) => w.id === MAIN_WORKSPACE)) out.push({ id: MAIN_WORKSPACE, name: "", color: "", position: "a0", createdAt: 0, locked: false });
   return out.sort((a, b) => (a.position < b.position ? -1 : a.position > b.position ? 1 : a.id < b.id ? -1 : 1));
 }
 
@@ -108,6 +111,15 @@ export function setWorkspaceColor(doc: Y.Doc, id: string, color: string) {
     const fields = fieldsFor(doc, id);
     if (!fields.has("position")) fields.set("position", "a0");
     fields.set("color", color);
+  });
+}
+
+export function setWorkspaceLocked(doc: Y.Doc, id: string, locked: boolean) {
+  doc.transact(() => {
+    const fields = fieldsFor(doc, id);
+    if (!fields.has("position")) fields.set("position", "a0");
+    if (locked) fields.set("locked", true);
+    else fields.delete("locked");
   });
 }
 

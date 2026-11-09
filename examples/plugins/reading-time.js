@@ -1,7 +1,7 @@
 // An example community plugin. In Notemax: Settings, Plugins, Allow community
 // plugins, then Install from a file and pick this file.
 //
-// It shows "4 min read" at the top right of a note, adds "Today's date" to the
+// It shows "4 min read" in the note's tools in the right sidebar, adds "Today's date" to the
 // / menu, and adds a command to Ctrl+K.
 
 const ID = "example.reading-time";
@@ -21,7 +21,7 @@ export default function plugin(api) {
     name: "Reading time",
     version: "1.0.0",
     author: "Notemax",
-    description: "Reading time at the top right of a note, and today's date in the / menu",
+    description: "Reading time in the note's tools, and today's date in the / menu",
     pageCorner: [{ id: "reading-time", kinds: ["note"], component: ReadingTime }],
     slashItems: [
       {

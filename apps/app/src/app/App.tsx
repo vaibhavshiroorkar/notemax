@@ -331,8 +331,8 @@ export function App() {
     hub,
     activeId,
     open: select,
-    create(kind: NodeKind) {
-      const id = addPage(doc, kind);
+    create(kind: NodeKind, setup) {
+      const id = addPage(doc, kind, undefined, "", setup);
       // A folder has no page; it is named in its sidebar row instead.
       if (kind !== "folder") select(id);
     },
@@ -435,7 +435,7 @@ export function App() {
         <HomePage app={app} options={{}} />
       </Safe>
     ) : (
-      <p className="empty">No notes. Use + in the sidebar to create one.</p>
+      <p className="empty">Nothing here yet.</p>
     );
 
   // Split view: each pane shows its own tab. The active pane is the one above;
@@ -562,6 +562,7 @@ export function App() {
         <PageWorkspace.Provider value={sideApp.workspace}>
           <RightSidebar
             app={sideApp}
+            node={sideNode}
             panels={panels}
             all={registry.allSidePanels()}
             open={showRight}
@@ -614,7 +615,7 @@ export function App() {
         </Safe>
       ))}
       <Toasts />
-      <StatusBar app={app} workspaceStatus={workspace.status} words={activeNode?.kind === "note" ? activeNode.words : null} />
+      <StatusBar app={app} workspaceStatus={workspace.status} />
     </div>
   );
 }

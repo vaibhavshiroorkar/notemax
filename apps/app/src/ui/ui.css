@@ -143,13 +143,22 @@ ul {
   color: var(--text);
 }
 
+.dialog-retype strong {
+  color: var(--text);
+}
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
 
+/* An icon and its words, the same gap on every button. */
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 6px 14px;
   border: 1px solid var(--border);
   border-radius: 6px;

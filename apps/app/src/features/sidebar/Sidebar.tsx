@@ -28,6 +28,9 @@ import {
   topGroups,
 } from "./state";
 import { Rows, type RowContext } from "./TreeRows";
+import { useLockedOut } from "@/features/lock/lock";
+import { LockScreen } from "@/features/lock/LockScreen";
+import { nameOf, workspaceList } from "@/features/workspaces/list";
 import { FilterMenu } from "./FilterMenu";
 import { TrashBox } from "./TrashBox";
 import "./sidebar.css";
@@ -118,8 +121,8 @@ export function Sidebar({ app }: { app: AppContext }) {
         }
         return true;
       },
-      add(kind, parentId) {
-        const id = addPage(doc, kind, parentId);
+      add(kind, parentId, setup) {
+        const id = addPage(doc, kind, parentId, "", setup);
         expand(parentId);
         // A note or book opens so its title can be typed. A folder has no page,
         // so its name is typed in the sidebar row instead.
@@ -222,6 +225,8 @@ export function Sidebar({ app }: { app: AppContext }) {
   });
   const headerDrop = endDrop("inside");
   const spaceDrop = endDrop("after");
+  const lockedOut = useLockedOut(app.workspace);
+  const workspace = workspaceList.use().find((w) => w.id === app.workspace);
 
   return (
     <aside className="sidebar">
@@ -231,58 +236,64 @@ export function Sidebar({ app }: { app: AppContext }) {
           .map(({ id, component: Section }) => (
             <Section key={id} app={app} />
           ))}
-        <section className="section">
-          <header className="section-header" data-drop={headerActive ? "inside" : undefined} onDragOver={headerDrop.onDragOver} onDrop={headerDrop.onDrop}>
-            <span>Notes</span>
-            <div className="section-actions">
-              <button
-                className="icon-button"
-                aria-label="Search titles"
-                aria-pressed={query !== null}
-                title="Search titles"
-                onClick={() => titleQuery.set(query === null ? "" : null)}
-              >
-                <Icon name="search" />
-              </button>
-              {/* The title search counts as a filter too, but it shows its own box, so it does not light the funnel. */}
-              <FilterMenu app={app} filtered={filters.length > (query?.trim() ? 1 : 0)} />
-              <OpenMenu app={app} />
-              <AddMenu onAdd={(kind) => ctx.add(kind, ROOT)} />
-            </div>
-          </header>
-          {query !== null && (
-            <label className="settings-search sidebar-search">
-              <Icon name="search" />
-              <input
-                type="search"
-                placeholder="Search titles"
-                aria-label="Search titles"
-                autoFocus
-                value={query}
-                onChange={(event) => titleQuery.set(event.target.value)}
-                onKeyDown={(event) => event.key === "Escape" && titleQuery.set(null)}
-              />
-            </label>
-          )}
-          {filters.length ? (
-            <FilteredList tree={tree} filters={filters} activeId={activeId} onSelect={app.open} onMenu={(id, event) => pageMenu(tree.byId.get(id))(event)} />
-          ) : tree.top.length ? (
-            topGroups(tree).map((group) => (
-              <Fragment key={group.label ?? "all"}>
-                {group.label && <p className="group-label">{group.label}</p>}
-                <Rows items={group.items} depth={0} ctx={ctx} />
-              </Fragment>
-            ))
-          ) : (
-            <p className="empty">No notes yet</p>
-          )}
-          {endActive && <div className="drop-end" />}
-        </section>
-        {sections
-          .filter((section) => section.order >= 0)
-          .map(({ id, component: Section }) => (
-            <Section key={id} app={app} />
-          ))}
+        {lockedOut ? (
+          <LockScreen title={workspace ? nameOf(workspace) : "This workspace"} app={app} compact />
+        ) : (
+          <>
+            <section className="section">
+              <header className="section-header" data-drop={headerActive ? "inside" : undefined} onDragOver={headerDrop.onDragOver} onDrop={headerDrop.onDrop}>
+                <span>Notes</span>
+                <div className="section-actions">
+                  <button
+                    className="icon-button"
+                    aria-label="Search titles"
+                    aria-pressed={query !== null}
+                    title="Search titles"
+                    onClick={() => titleQuery.set(query === null ? "" : null)}
+                  >
+                    <Icon name="search" />
+                  </button>
+                  {/* The title search counts as a filter too, but it shows its own box, so it does not light the funnel. */}
+                  <FilterMenu app={app} filtered={filters.length > (query?.trim() ? 1 : 0)} />
+                  <OpenMenu app={app} />
+                  <AddMenu onAdd={(kind, setup) => ctx.add(kind, ROOT, setup)} />
+                </div>
+              </header>
+              {query !== null && (
+                <label className="settings-search sidebar-search">
+                  <Icon name="search" />
+                  <input
+                    type="search"
+                    placeholder="Search titles"
+                    aria-label="Search titles"
+                    autoFocus
+                    value={query}
+                    onChange={(event) => titleQuery.set(event.target.value)}
+                    onKeyDown={(event) => event.key === "Escape" && titleQuery.set(null)}
+                  />
+                </label>
+              )}
+              {filters.length ? (
+                <FilteredList tree={tree} filters={filters} activeId={activeId} onSelect={app.open} onMenu={(id, event) => pageMenu(tree.byId.get(id))(event)} />
+              ) : tree.top.length ? (
+                topGroups(tree).map((group) => (
+                  <Fragment key={group.label ?? "all"}>
+                    {group.label && <p className="group-label">{group.label}</p>}
+                    <Rows items={group.items} depth={0} ctx={ctx} />
+                  </Fragment>
+                ))
+              ) : (
+                <p className="empty">No notes yet</p>
+              )}
+              {endActive && <div className="drop-end" />}
+            </section>
+            {sections
+              .filter((section) => section.order >= 0)
+              .map(({ id, component: Section }) => (
+                <Section key={id} app={app} />
+              ))}
+          </>
+        )}
       </div>
       <footer className="sidebar-footer">
         {footerItems.length ? (

@@ -43,7 +43,6 @@
     font-size: 11px;
   }
 
-  .status-words,
   .status-bar[data-state="saved"] .status-save {
     display: none;
   }

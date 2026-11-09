@@ -1,6 +1,7 @@
 import { newKey, setProp, unlockKey, type KeyCheck, type TreeNode } from "@notemax/core";
 import { forgetDoc } from "@/data/docCache";
-import { getPref, onPrefChangedElsewhere, removePref, setPref } from "@/platform/prefs";
+import { workspaceList } from "@/features/workspaces/list";
+import { getPref, onPrefChangedElsewhere, removePref, setPref, workspaceNow } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
 
@@ -15,8 +16,25 @@ export const IDLE_MS = 5 * 60 * 1000;
 
 export const isLocked = (node: TreeNode | undefined) => node?.props.locked === true;
 
-/** Locked and not opened with the password: its text must not show anywhere, in lists, search or previews. */
-export const isHidden = (node: TreeNode | undefined) => isLocked(node) && !unlocked.get();
+/** A whole workspace behind the password. The same password opens it and every locked page. */
+export const workspaceLocked = (id: string) => workspaceList.get().some((w) => w.id === id && w.locked);
+
+/** A locked workspace not opened yet: its list, pages and Home cards stay hidden. */
+export const lockedOut = (id: string) => workspaceLocked(id) && !unlocked.get();
+
+/** Watches lockedOut for one workspace. */
+export function useLockedOut(id: string): boolean {
+  const open = unlocked.use();
+  const list = workspaceList.use();
+  return !open && list.some((w) => w.id === id && w.locked);
+}
+
+/**
+ * Locked and not opened with the password: its text must not show anywhere, in
+ * lists, search or previews. Every page of the shown workspace counts while
+ * that workspace is locked.
+ */
+export const isHidden = (node: TreeNode | undefined) => !!node && (isLocked(node) || workspaceLocked(workspaceNow())) && !unlocked.get();
 
 function readCheck(): KeyCheck | null {
   try {
@@ -55,7 +73,8 @@ export function relock(app: AppContext) {
   unlocked.set(false);
   // After the pages have swapped their editors for the lock screen, so the last keystrokes are saved first.
   setTimeout(() => {
-    for (const node of app.tree.byId.values()) if (isLocked(node)) void forgetDoc(node.id, app.workspace);
+    const all = workspaceLocked(app.workspace);
+    for (const node of app.tree.byId.values()) if (all || isLocked(node)) void forgetDoc(node.id, app.workspace);
   }, 0);
 }
 

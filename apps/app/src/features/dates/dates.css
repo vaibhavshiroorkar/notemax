@@ -335,3 +335,33 @@
   color: var(--muted);
   font-size: 11px;
 }
+
+/* A journal's Next date and Choose date, where a note has Add subtopic. */
+.journal-adder {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.journal-adder[data-compact] {
+  flex-direction: column;
+  gap: 0;
+}
+
+
+.journal-adder-day {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Only its picker shows, opened by Choose date. */
+.journal-adder-picker {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

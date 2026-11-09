@@ -30,7 +30,7 @@ The id must be lowercase letters, digits, dots or dashes. Start it with your
 name so it never clashes with someone else's.
 
 `examples/plugins/reading-time.js` is a full example that adds something to
-the top right of a page, the / menu, Ctrl+K, and the plugin's own setting.
+the page's tools in the right sidebar, the / menu, Ctrl+K, and the plugin's own setting.
 
 ## Drawing
 
@@ -72,7 +72,8 @@ Every field is optional.
 | `editorExtensions(ctx)` | Tiptap extensions for the note editor: menus, keys, input rules. |
 | `contentExtensions(ctx)` | Node and mark types a note can hold. These load even while the plugin is switched off, so switching it off never drops content. `ctx.on` says whether it is on. |
 | `sidePanels` | A section of the right sidebar, with `order` and `when(app)`. |
-| `pageCorner` | The top right of a page. |
+| `pageCorner` | A small button in the right sidebar's tool row, for the open page. |
+| `sideFooter` | The bottom right of the right sidebar, like the word count. |
 | `pageHeader` | Under a page's title. |
 | `pageSettings` | A row in the right sidebar's "This page" section, like a note's layout. |
 | `pageFooter` | At the end of a page. |
@@ -106,7 +107,7 @@ Each item names the `targets` it shows on:
 - `pages`: several rows picked with Ctrl+click or Shift+click. Read `target.nodes`, in the order the sidebar shows them.
 - `editor`: inside a note. Read `target.editor` for the selection.
 - `sidebar`: empty space in the left sidebar.
-- `download`: the download button at the top right of a page.
+- `download`: the download button among the page's tools.
 - `tab`: a tab above the page.
 
 Items with the same `group` sit together, with a line between groups. Built-in groups keep a fixed order (open, clipboard, create, edit, duplicate, format, block, insert, link, image, tags, layout, share, select, danger). New groups go after them. `when` hides an item, `disabled` greys it out, `submenu` opens a small menu to the side, and `danger` draws it in red. `inside` puts an item in one of the shared flyouts, `"open"`, `"new"`, `"new-inside"`, `"copy"`, `"options"`, `"share"` or `"download"`, so a long menu stays short. A flyout with only one item shows that item itself.

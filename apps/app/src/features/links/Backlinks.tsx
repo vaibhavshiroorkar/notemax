@@ -8,7 +8,7 @@ export function BacklinksPanel({ app }: { app: AppContext }) {
   return (
     <div className="backlinks" aria-label="Backlinks">
       {sources.length === 0 ? (
-        <p className="backlinks-empty">No pages link here yet. Type [[ in another note to link to this one.</p>
+        <p className="backlinks-empty">No links here yet. Type [[ in a note to link one.</p>
       ) : (
         <ul className="backlinks-list">
           {sources.map((source) => (

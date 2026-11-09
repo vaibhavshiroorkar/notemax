@@ -129,7 +129,7 @@ export function DownloadView(_: { app: AppContext; options: Record<string, unkno
       <h1 className="get-app-title">
         <Icon name="download" /> Get the app
       </h1>
-      <p className="get-app-intro">Notemax works in your browser. It also comes as an app, so it opens on its own and keeps working with no internet. Your pages sync between them when you sign in.</p>
+      <p className="get-app-intro">The app opens on its own and works offline. Sign in to sync your pages.</p>
       <div className="get-app-cards">{cards}</div>
     </article>
   );

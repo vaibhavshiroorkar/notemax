@@ -105,3 +105,17 @@
   width: 180px;
   padding: 4px 8px;
 }
+
+/* In the sidebar, where a locked workspace's list would be. */
+.lock-screen[data-compact] {
+  gap: 8px;
+  margin: 24px auto 0;
+}
+
+.lock-screen[data-compact] h2 {
+  font-size: 15px;
+}
+
+.lock-screen[data-compact] .lock-actions {
+  flex-wrap: wrap;
+}

@@ -48,7 +48,8 @@ export const temporaryPlugin: Plugin = {
   name: "Temporary pages",
   description: "Marks pages made in a browser before signing in, since only that browser has them",
   required: true,
-  rowMarks: [{ id: "temporary.mark", icon: "clock", label: "Temporary", when: isTemporary }],
+  // Only once sync is on: before that every page is temporary, and the notice above the list says so.
+  rowMarks: [{ id: "temporary.mark", icon: "clock", label: "Temporary", when: (node) => syncIsOn() && isTemporary(node) }],
   sidebarSections: [{ id: "temporary.notice", order: -20, component: TemporaryNotice }],
   sidebarFilterChoices: [{ id: "temporary.only", component: TemporaryOnlyChoice }],
   useSidebarFilter() {

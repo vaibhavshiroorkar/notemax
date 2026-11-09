@@ -93,12 +93,6 @@
   gap: 8px;
 }
 
-.add-chapter {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .book-panel {
   display: flex;
   flex-direction: column;

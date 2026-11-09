@@ -1,3 +1,4 @@
+import { isJournal } from "@/features/dates/journal";
 import { titleMatches } from "@notemax/core";
 import type { Plugin } from "@/plugins/types";
 import { SIDEBAR, SIDE_PANEL, sidePanelWidth, sidebarWidth } from "@/ui/layout";
@@ -15,7 +16,8 @@ export const sidebarPlugin: Plugin = {
       id: "sidebar.sorted",
       icon: "sort",
       label: (node) => `Sorted: ${SORT_CHOICES.find((choice) => choice.value === node.props.sort)?.title ?? "by hand"}. Change it from Sort by in its menu.`,
-      when: (node) => node.kind !== "book" && SORT_CHOICES.some((choice) => choice.value !== null && choice.value === node.props.sort),
+      // A journal is newest day first by nature, so it needs no mark for it.
+      when: (node) => node.kind !== "book" && !isJournal(node) && SORT_CHOICES.some((choice) => choice.value !== null && choice.value === node.props.sort),
     },
   ],
   contextMenu: PAGE_MENU,

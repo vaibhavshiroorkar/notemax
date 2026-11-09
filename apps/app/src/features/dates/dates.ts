@@ -47,6 +47,7 @@ function dailyPlace(app: AppContext): string {
   if (chosen) return chosen.id;
   const id = createNode(app.doc, "note", ROOT, "Journal", app.tree.byId.has(STARTER.journal) ? crypto.randomUUID() : STARTER.journal);
   setRole(app.doc, app.tree, "dailyFolder", id);
+  setProp(app.doc, id, "journal", true);
   setProp(app.doc, id, "subtopics", "inline");
   setProp(app.doc, id, "sort", "days");
   return id;
@@ -54,13 +55,16 @@ function dailyPlace(app: AppContext): string {
 
 /**
  * Makes the note for a day, as a copy of the template when there is one, and
- * returns its id. The id comes from the day, so two devices that both start
+ * returns its id. It goes in the place for daily notes, or in `journalId`
+ * when given. The id comes from the day, so two devices that both start
  * today's note end up with one note once they sync, not two.
  */
-export async function makeDay(app: AppContext, key: string): Promise<string> {
-  const found = dailyNote(app.tree, key);
+export async function makeDay(app: AppContext, key: string, journalId?: string): Promise<string> {
+  const found = journalId ? app.tree.items.get(journalId)?.children.find((item) => item.props[DAILY] === key) : dailyNote(app.tree, key);
   if (found) return found.id;
-  const id = app.tree.byId.has(`day-${key}`) ? crypto.randomUUID() : `day-${key}`;
+  const journal = journalId ? app.tree.byId.get(journalId) : undefined;
+  const base = !journal || journal.props.dailyFolder === true ? `day-${key}` : `${journal.id}-day-${key}`;
+  const id = app.tree.byId.has(base) ? crypto.randomUUID() : base;
   const template = holder(app.tree, "dailyTemplate");
   if (template) {
     // The body goes first, so the note never opens empty. Open templates give their last keystrokes too.
@@ -69,8 +73,10 @@ export async function makeDay(app: AppContext, key: string): Promise<string> {
     const { updates } = await store.load(template.id);
     if (updates.length) await store.append(id, Y.mergeUpdates(updates));
   }
-  createNode(app.doc, "note", dailyPlace(app), titleFor(dayOf(key)), id);
-  setProp(app.doc, id, DAILY, key);
+  app.doc.transact(() => {
+    createNode(app.doc, "note", journalId ?? dailyPlace(app), titleFor(dayOf(key)), id);
+    setProp(app.doc, id, DAILY, key);
+  });
   return id;
 }
 

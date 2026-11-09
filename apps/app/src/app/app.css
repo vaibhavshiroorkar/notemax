@@ -497,12 +497,6 @@
   gap: 8px;
 }
 
-.home-actions .button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .home-list {
   margin: 0;
   padding: 0;
@@ -548,13 +542,16 @@
   flex: 1;
 }
 
-/* Search first, then the word count, left of the star and the other page tools. */
 .side-tools > .side-tools-search {
-  order: -2;
+  order: -1;
 }
 
-.side-tools > .page-words {
-  order: -1;
+/* The open page's word count, at the far right of the bar under the sections. */
+.side-panel-footer {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* Quick settings opens under the row, as wide as the sidebar allows. */
@@ -574,7 +571,7 @@
 }
 
 .page-words {
-  padding: 0 6px;
+  padding: 0 4px;
   color: var(--muted);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
@@ -790,6 +787,9 @@
 
 .side-panel-bottom {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
   padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);

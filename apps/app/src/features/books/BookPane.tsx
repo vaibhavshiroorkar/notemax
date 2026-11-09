@@ -144,7 +144,7 @@ export function BookPane(props: PageProps) {
           ])}
         </ol>
       ) : (
-        <p className="book-empty">No {chapterNoun(node, true)} yet. Drag notes or boards onto the book in the sidebar, or add a new one.</p>
+        <p className="book-empty">No {chapterNoun(node, true)} yet.</p>
       )}
 
       <div className="book-actions">

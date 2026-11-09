@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import type { SaveStatus } from "@notemax/core";
 import { openDocsStatus } from "@/data/docCache";
 import { createStore } from "@/platform/store";
-import { useOption } from "@/plugins/options";
 import { registry } from "@/plugins/registry";
 import type { AppContext } from "@/plugins/types";
 import { Safe } from "@/ui/Safe";
@@ -27,26 +26,8 @@ const worst = (a: SaveStatus, b: SaveStatus) => (severity[b.state] > severity[a.
 /** How long the bar stays after its text last changed. */
 const SHOW_MS = 3000;
 
-// A common estimate for silent reading of prose.
-const WORDS_PER_MINUTE = 230;
-
-function wordsLabel(words: number): string {
-  const minutes = Math.max(1, Math.round(words / WORDS_PER_MINUTE));
-  return `${words.toLocaleString()} ${words === 1 ? "word" : "words"}, ${minutes} min read`;
-}
-
-export function StatusBar({
-  app,
-  workspaceStatus,
-  words,
-}: {
-  app: AppContext;
-  workspaceStatus: SaveStatus;
-  /** In the open page, or null when it has none or they are not counted yet. */
-  words: number | null;
-}) {
+export function StatusBar({ app, workspaceStatus }: { app: AppContext; workspaceStatus: SaveStatus }) {
   const status = worst(worst(workspaceStatus, pageStatus.use()), openDocsStatus.use());
-  const showWords = useOption("notes", "statusWords");
   const bar = useRef<HTMLElement>(null);
   const [quiet, setQuiet] = useState(false);
 
@@ -71,7 +52,6 @@ export function StatusBar({
   return (
     // Trouble saving stays until it is fixed.
     <footer ref={bar} className="status-bar" data-state={status.state} data-quiet={(quiet && status.state !== "error") || undefined} role="status">
-      {showWords && !!words && <span className="status-words">{wordsLabel(words)}</span>}
       <span className="status-save">
         {labels[status.state]}
         {status.state === "error" && `: ${status.message}. Retrying, keep this tab open.`}

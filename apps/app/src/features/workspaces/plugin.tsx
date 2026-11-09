@@ -1,6 +1,6 @@
 import { isInside, trashNode, type TreeNode } from "@notemax/core";
 import type { AppContext, ContextMenuItem, ContextTarget, Plugin } from "@/plugins/types";
-import { HomeView, QuickStart, RecentSection, RecentView, WorkspacesSection } from "./HomeView";
+import { HomeView, RecentSection, RecentView, WorkspacesSection } from "./HomeView";
 import { nameOf, switchTo, workspaceList } from "./list";
 import { Switcher } from "./Switcher";
 import { copyToWorkspace } from "./transfer";
@@ -55,7 +55,6 @@ export const workspacesPlugin: Plugin = {
   required: true,
   // Above everything else in the left sidebar.
   sidebarSections: [{ id: "workspaces.switch", order: -30, component: Switcher }],
-  // Renaming, coloring, ordering and deleting workspaces, here since Home no longer has their cards.
   settings: [{ id: "workspaces", order: 8, group: "General", title: "Workspaces", icon: "layout", keywords: ["workspace", "rename", "color", "delete", "folder"], component: ({ app }) => <WorkspacesSection app={app} /> }],
   views: [
     { id: "home", title: "Home", icon: "home", component: HomeView },
@@ -67,7 +66,7 @@ export const workspacesPlugin: Plugin = {
     if (welcomeDue(app)) app.openView("welcome");
   },
   homeSections: [
-    { id: "home.quick", title: "Quick start", order: 10, component: QuickStart },
+    { id: "home.workspaces", title: "Workspaces", order: 10, wide: true, component: ({ app }) => <WorkspacesSection app={app} home /> },
     { id: "home.recent", title: "Recent pages", order: 20, open: (app) => app.openView("recent"), component: RecentSection },
   ],
   contextMenu: [sendItem(false), sendItem(true)],

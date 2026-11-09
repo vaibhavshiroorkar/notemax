@@ -8,9 +8,10 @@ const nodeOf = (target: ContextTarget) => (target.type === "page" && target.node
 
 export const lockPlugin: Plugin = {
   id: "lock",
-  name: "Page lock",
-  description: "A password before chosen pages show",
-  pageGates: [{ id: "lock.gate", applies: isLocked, component: LockGate }],
+  name: "Lock",
+  description: "A password before chosen pages or workspaces show",
+  // Every page goes through, since locking a workspace must close pages already open; the gate decides as it draws.
+  pageGates: [{ id: "lock.gate", applies: () => true, component: LockGate }],
   hidesText: isHidden,
   pageHeader: [{ id: "lock.line", component: LockLine }],
   rowMarks: [{ id: "lock.locked", icon: "lock", label: "Locked", when: isLocked }],
@@ -38,6 +39,6 @@ export const lockPlugin: Plugin = {
       run: (target, app) => setLocked(app, nodeOf(target)!.id, false),
     },
   ],
-  commands: [{ id: "lock.now", title: "Lock pages now", keywords: ["lock", "hide", "private", "password"], when: () => unlocked.get(), run: (app) => relock(app) }],
+  commands: [{ id: "lock.now", title: "Lock now", keywords: ["lock", "hide", "private", "password", "workspace"], when: () => unlocked.get(), run: (app) => relock(app) }],
   start: (app) => void watchIdle(app),
 };

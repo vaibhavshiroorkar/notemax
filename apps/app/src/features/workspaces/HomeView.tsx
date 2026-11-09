@@ -1,16 +1,16 @@
 import { useEffect, useState, type DragEvent } from "react";
 import type { WorkspaceInfo } from "@notemax/core";
-import { MAIN_WORKSPACE } from "@notemax/core";
 import { recentPages } from "@/data/recent";
 import { registry } from "@/plugins/registry";
 import type { AppContext, HomeSection } from "@/plugins/types";
-import { ConfirmDialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
 import { askText } from "@/ui/Prompt";
 import { Safe } from "@/ui/Safe";
 import { Segmented } from "@/ui/Segmented";
 import { keepFolderFor, pickFolder } from "@/features/markdown-files/mirror";
-import { WORKSPACE_COLORS, createWorkspace, deleteWorkspace, move, nameOf, openList, pageCount, recolor, rename, switchTo, workspaceList } from "./list";
+import { unlocked, useLockedOut } from "@/features/lock/lock";
+import { DeleteWorkspaceDialog, canDelete, setLock } from "./actions";
+import { WORKSPACE_COLORS, createWorkspace, move, nameOf, openList, pageCount, recolor, rename, switchTo, workspaceList } from "./list";
 import { HomeList, editedAgo } from "./HomeList";
 import { arranged, homeLayout, moveCard, type HomeLayout } from "./homeLayout";
 import { Dot } from "./Switcher";
@@ -23,6 +23,7 @@ function Card({ workspace, app, count, onDragTo, onBack }: { workspace: Workspac
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [dropping, setDropping] = useState(false);
+  const opened = unlocked.use();
   const name = nameOf(workspace);
 
   return (
@@ -52,6 +53,11 @@ function Card({ workspace, app, count, onDragTo, onBack }: { workspace: Workspac
         <span className="workspace-card-title">
           <Dot color={workspace.color} />
           <strong>{name}</strong>
+          {workspace.locked && (
+            <span className="workspace-lock" title="Locked">
+              <Icon name="lock" />
+            </span>
+          )}
         </span>
         <span className="workspace-card-meta">
           {count === null ? "" : plural(count, "page")}
@@ -88,35 +94,26 @@ function Card({ workspace, app, count, onDragTo, onBack }: { workspace: Workspac
               />
             ))}
           </div>
-          {workspace.id !== MAIN_WORKSPACE && !here && (
+          {(!workspace.locked || opened) && (
+            <button className="button" onClick={() => void setLock(app, workspace, !workspace.locked)}>
+              <Icon name="lock" />
+              {workspace.locked ? "Remove the lock" : "Lock"}
+            </button>
+          )}
+          {canDelete(workspace) && (
             <button className="link-button danger" onClick={() => setDeleting(true)}>
               Delete workspace
             </button>
           )}
         </div>
       )}
-      {deleting && (
-        <ConfirmDialog
-          title="Delete this workspace?"
-          message={
-            <>
-              <strong>{name}</strong> and its {count === null ? "pages" : plural(count, "page")} will be erased from this device and, through sync, from your other devices. This cannot be undone.
-            </>
-          }
-          confirmLabel="Delete workspace"
-          onConfirm={() => {
-            setDeleting(false);
-            void deleteWorkspace(workspace.id).then(() => app.notify(`Deleted "${name}"`));
-          }}
-          onCancel={() => setDeleting(false)}
-        />
-      )}
+      {deleting && <DeleteWorkspaceDialog workspace={workspace} app={app} count={count} onClose={() => setDeleting(false)} />}
     </li>
   );
 }
 
-/** The workspaces as cards to open, rename, color, delete or drag into order. */
-export function WorkspacesSection({ app }: { app: AppContext }) {
+/** The workspaces as cards to open, rename, color, lock, delete or drag into order. On Home it goes without the intro. */
+export function WorkspacesSection({ app, home }: { app: AppContext; home?: boolean }) {
   const list = workspaceList.use();
   const [counts, setCounts] = useState<Record<string, number>>({});
   useEffect(() => void openList(), []);
@@ -160,7 +157,7 @@ export function WorkspacesSection({ app }: { app: AppContext }) {
 
   return (
     <>
-      <p className="home-intro">Each workspace keeps its own pages, tabs and trash. Drag the cards to arrange them.</p>
+      {!home && <p className="home-intro">Each workspace keeps its own pages, tabs and trash. Drag the cards to arrange them.</p>}
       <ul className="workspace-grid" aria-label="Workspaces">
         {list.map((workspace) => (
           <Card
@@ -204,7 +201,7 @@ export function QuickStart({ app }: { app: AppContext }) {
   return (
     <div className="home-actions">
       {kinds.map((kind) => (
-        <button key={kind.kind} className="button" onClick={() => app.create(kind.kind)}>
+        <button key={kind.id ?? kind.kind} className="button" onClick={() => app.create(kind.kind, kind.setup)}>
           <Icon name={kind.icon} />
           {kind.label}
         </button>
@@ -298,11 +295,15 @@ function Customize({ sections, onClose }: { sections: HomeSection[]; onClose(): 
  * in what order, in one column or two. It is a page of its own, and what a
  * tab shows when it has nothing open.
  */
+const WORKSPACES_CARD = "home.workspaces";
+
 export function HomeView({ app }: { app: AppContext; options: Record<string, unknown> }) {
   const layout = homeLayout.use();
   const [customizing, setCustomizing] = useState(false);
   const sections = registry.homeSections();
-  const shown = arranged(sections, layout).filter((section) => !layout.off.includes(section.id));
+  // A locked workspace keeps its pages off Home too, leaving only the workspaces.
+  const lockedOut = useLockedOut(app.workspace);
+  const shown = arranged(sections, layout).filter((section) => !layout.off.includes(section.id) && (!lockedOut || section.id === WORKSPACES_CARD));
   const today = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
 
   return (

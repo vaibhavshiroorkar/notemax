@@ -1,5 +1,6 @@
 import { setKind, setProp, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
 import { bookOf, subtopicsOf, type Subtopic } from "@/features/books/reading";
+import { isJournal } from "@/features/dates/journal";
 import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
 
 // Any note can show the pages inside it on its own page, as numbered
@@ -11,12 +12,25 @@ const PROP = "subtopics";
 /** A note set to show the pages inside it as subtopics. Chapters do it in their book whatever this says. */
 export const showsSubtopics = (node: TreeNode) => node.kind === "note" && node.props[PROP] === "inline";
 
-/** The subtopics a note shows, numbered from 1. None for a note in a book: its chapter shows them. */
+/** Whether a note lists its newest subtopic on top, as a journal does its newest day. */
+export const newestFirst = (node: TreeNode) => node.props.sort === "newest" || node.props.sort === "days";
+
+/** Newest on top, or the order they were made or dragged in. */
+export const setNewestFirst = (app: AppContext, id: string, on: boolean) => setProp(app.doc, id, "sort", on ? "newest" : null);
+
+/**
+ * The subtopics a note shows, numbered from 1, or counting down when the
+ * newest is on top. A journal's days need no numbers. None for a note in a
+ * book: its chapter shows them.
+ */
 export function noteSubtopics(tree: Tree, id: string): Subtopic[] {
   const item = tree.items.get(id);
   if (!item || !showsSubtopics(item) || bookOf(tree, id)) return [];
-  return subtopicsOf(item, undefined);
+  return numbered(item);
 }
+
+/** A note's subtopics with their numbers, wherever they are listed. */
+export const numbered = (item: TreeItem): Subtopic[] => (isJournal(item) ? subtopicsOf(item, "") : subtopicsOf(item, undefined, 1, newestFirst(item)));
 
 /**
  * The note whose page shows this one: the outermost note above it set to
@@ -47,6 +61,32 @@ function noteOf(target: ContextTarget, app: AppContext): TreeNode | null {
 }
 
 export const SUBTOPICS_MENU: ContextMenuItem[] = [
+  {
+    id: "notes.subtopics.newest",
+    inside: "options",
+    title: "Newest subtopics on top",
+    group: "layout",
+    icon: "sort",
+    targets: ["page", "editor"],
+    when: (target, app) => {
+      const node = noteOf(target, app);
+      return !!node && showsSubtopics(node) && !isJournal(node) && !newestFirst(node);
+    },
+    run: (target, app) => setNewestFirst(app, noteOf(target, app)!.id, true),
+  },
+  {
+    id: "notes.subtopics.oldest",
+    inside: "options",
+    title: "Oldest subtopics on top",
+    group: "layout",
+    icon: "sort",
+    targets: ["page", "editor"],
+    when: (target, app) => {
+      const node = noteOf(target, app);
+      return !!node && showsSubtopics(node) && !isJournal(node) && newestFirst(node);
+    },
+    run: (target, app) => setNewestFirst(app, noteOf(target, app)!.id, false),
+  },
   {
     id: "notes.subtopics.on",
     inside: "options",

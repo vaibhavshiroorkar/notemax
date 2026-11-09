@@ -128,7 +128,7 @@ function Activity({ app, id, versions, log }: { app: AppContext; id: string; ver
     // Each version names whose edits are new in it: those are the edits in the timeline.
     ...versions.flatMap((version) => (version.by ?? []).map((who, i) => ({ time: version.time, key: `${version.id}:${i}`, who, what: "edited it", version }))),
   ].sort((a, b) => b.time - a.time);
-  if (!lines.length) return <p className="versions-empty">Nothing recorded yet. Edits show here once a version is saved, and so does renaming, moving, trashing, restoring or sharing the page.</p>;
+  if (!lines.length) return <p className="versions-empty">Nothing recorded yet.</p>;
   return (
     <ul className="activity" aria-label="Who did what">
       {lines.map((line) => {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { touchFirst } from "./layout";
 
 /**
@@ -56,23 +56,42 @@ export function ConfirmDialog({
   confirmLabel,
   onConfirm,
   onCancel,
+  typeToConfirm,
 }: {
   title: string;
   message: ReactNode;
   confirmLabel: string;
   onConfirm(): void;
   onCancel(): void;
+  /** For what cannot be undone: these words must be typed before the button works. */
+  typeToConfirm?: string;
 }) {
+  const [typed, setTyped] = useState("");
+  const ready = !typeToConfirm || typed.trim().toLowerCase() === typeToConfirm.trim().toLowerCase();
   return (
     <Dialog label={title} onClose={onCancel} className="confirm">
       <h2 className="dialog-title">{title}</h2>
       <p className="dialog-message">{message}</p>
+      {typeToConfirm && (
+        <label className="prompt-field dialog-retype">
+          <span>
+            Type <strong>{typeToConfirm}</strong> to confirm
+          </span>
+          <input
+            value={typed}
+            data-autofocus
+            aria-label={`Type ${typeToConfirm} to confirm`}
+            onChange={(event) => setTyped(event.target.value)}
+            onKeyDown={(event) => event.key === "Enter" && ready && onConfirm()}
+          />
+        </label>
+      )}
       <div className="dialog-actions">
         {/* Focus starts on Cancel, so a stray Enter never erases anything. */}
         <button className="button" autoFocus onClick={onCancel}>
           Cancel
         </button>
-        <button className="button button-danger" onClick={onConfirm}>
+        <button className="button button-danger" disabled={!ready} onClick={onConfirm}>
           {confirmLabel}
         </button>
       </div>

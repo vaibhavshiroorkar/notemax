@@ -44,10 +44,10 @@
 **Organize**
 - Books with a description and chapters, each holding its numbered subtopics in its own page, with Next and Previous at the end of each. Read or write the whole book on one page.
 - Folders, books and notes in one sidebar. Drag to sort, put pages inside pages, or pick several and move them together.
-- Workspaces for separate parts of your life, arranged on a Home page. Copy or move pages between them.
+- Workspaces for separate parts of your life, arranged on Home, each lockable. Copy or move pages between them.
 - Share a note by link and write in it together, live and end-to-end encrypted.
 - A community: post notes and books, follow writers, and search everything posted.
-- Tabs, stars, tags, daily notes with a calendar and a template, and a graph of how your pages connect.
+- Journals with one entry per day, added with Next date or Choose date. Tabs, stars, tags, a calendar, and a graph of how your pages connect.
 - Split view: drag tabs to any edge to work on pages side by side.
 - A right sidebar you arrange: turn sections on and off, and drag them into tabs.
 - Ctrl+K finds any page, any words inside your notes, or any command. The sidebar can search, sort, group and filter.
@@ -102,7 +102,7 @@ Accounts and sync are optional. To try them, copy `apps/app/.env.example` to `ap
 
 React, Tiptap and Yjs in the browser, wrapped by Tauri on the desktop. Every note is a Yjs document saved as an append-only log, which is what lets devices edit offline and merge later without losing text. Each feature is a plugin, built with the same API that outside plugins use.
 
-See [docs/architecture.md](docs/architecture.md) for the layout of the code and [docs/plugins.md](docs/plugins.md) to write a plugin.
+The [docs](docs/README.md) cover the features, how data and sync work, the history of the project and the decisions behind it. See [docs/architecture.md](docs/architecture.md) for the layout of the code and [docs/plugins.md](docs/plugins.md) to write a plugin.
 
 ## Roadmap
 

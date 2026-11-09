@@ -4,7 +4,7 @@ import { bookOf } from "@/features/books/reading";
 import { OPEN_FILE_ITEMS } from "@/features/open-files/plugin";
 import { isDesktop } from "@/platform/platform";
 import { registry } from "@/plugins/registry";
-import type { AppContext, ContextMenuItem, ContextTarget } from "@/plugins/types";
+import type { AppContext, ContextMenuItem, ContextTarget, PageSetup } from "@/plugins/types";
 import { clearSelection, editingId, expand } from "./state";
 import { copyText } from "@/ui/clipboard";
 import { addPage } from "@/data/addPage";
@@ -37,11 +37,15 @@ function fitsBeside(tree: Tree, node: TreeNode, kind: NodeKind): boolean {
 }
 
 /** Makes a page of `kind` right after `node`, then opens it, or names it in its row when it is a folder. */
-function makeBeside(app: AppContext, node: TreeNode, kind: NodeKind) {
+function makeBeside(app: AppContext, node: TreeNode, kind: NodeKind, setup?: PageSetup) {
   const siblings = app.tree.byId.has(node.parentId) ? (app.tree.items.get(node.parentId)?.children ?? []) : app.tree.top;
   const next = siblings[siblings.findIndex((item) => item.id === node.id) + 1];
-  const id = createNode(app.doc, kind, node.parentId);
-  moveNodes(app.doc, [id], node.parentId, next?.id ?? null);
+  let id = "";
+  app.doc.transact(() => {
+    id = createNode(app.doc, kind, node.parentId);
+    setup?.(app.doc, id);
+    moveNodes(app.doc, [id], node.parentId, next?.id ?? null);
+  });
   if (kind === "folder") editingId.set(id);
   else app.open(id);
 }
@@ -50,9 +54,9 @@ function makeBeside(app: AppContext, node: TreeNode, kind: NodeKind) {
 const fitsInside = (parent: TreeNode, kind: NodeKind) => holds(parent.kind, kind) && (kind !== "folder" || parent.kind === "folder");
 
 /** Makes a page of `kind` inside `parent`, at the end, then opens it, or names it in its row when it is a folder. */
-function makeInside(app: AppContext, parent: TreeNode, kind: NodeKind) {
+function makeInside(app: AppContext, parent: TreeNode, kind: NodeKind, setup?: PageSetup) {
   expand(parent.id);
-  const id = addPage(app.doc, kind, parent.id);
+  const id = addPage(app.doc, kind, parent.id, "", setup);
   if (kind === "folder") editingId.set(id);
   else app.open(id);
 }
@@ -69,18 +73,18 @@ function createKinds(target: ContextTarget, app: AppContext): ContextMenuItem[] 
   return registry
     .kinds()
     .filter(({ kind }) => !node || (inside ? fitsInside(node, kind) : fitsBeside(app.tree, node, kind)))
-    .map(({ kind, label, icon }) => ({
-      id: `${on}.new.${kind}`,
+    .map(({ id: entry, kind, label, icon, setup }) => ({
+      id: `${on}.new.${entry ?? kind}`,
       inside: "new" as const,
       title: kindTitle(label),
       icon,
       group: "create",
       targets: [on] as ("page" | "sidebar")[],
       run(_target: ContextTarget, app: AppContext) {
-        if (node) return inside ? makeInside(app, node, kind) : makeBeside(app, node, kind);
+        if (node) return inside ? makeInside(app, node, kind, setup) : makeBeside(app, node, kind, setup);
         // A folder has no page; it is named in its row instead.
         if (kind === "folder") editingId.set(addPage(app.doc, "folder"));
-        else app.create(kind);
+        else app.create(kind, setup);
       },
     }));
 }
