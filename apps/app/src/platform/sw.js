@@ -28,6 +28,21 @@ self.addEventListener("message", (event) => {
   if (event.data === "update") self.skipWaiting();
 });
 
+/**
+ * How long the page waits for the network before opening the kept copy. A
+ * weak signal can leave a request hanging far longer than the app takes to
+ * open, and the kept copy is the version already running here.
+ */
+const PAGE_WAIT_MS = 1500;
+
+async function pageFor(request) {
+  const network = fetch(request);
+  const kept = await caches.match("/", { ignoreSearch: true });
+  if (!kept) return network;
+  const late = new Promise((resolve) => setTimeout(() => resolve(kept), PAGE_WAIT_MS));
+  return Promise.race([network.catch(() => kept), late]);
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -37,7 +52,7 @@ self.addEventListener("fetch", (event) => {
 
   // The page: the network first, so a new version shows; the kept copy when offline.
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match("/", { ignoreSearch: true })));
+    event.respondWith(pageFor(request));
     return;
   }
 

@@ -2,6 +2,15 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.113.0 (2026-11-10)
+
+- Faster sync. Through Google Drive an edit now reaches your other devices in about 2 to 3 seconds, down from about 8. One too big for live updates, like a long paste, takes about 3 seconds instead of 12.
+- Sending and fetching run at the same time, so a slow fetch no longer holds an edit back, and a failed one no longer stops it going out.
+- When an edit could not go live, your other devices get a nudge and fetch it at once instead of at their next check. Without live updates they check every 5 seconds instead of 10.
+- Starting the app no longer waits for a new Google Drive key when the last one is under an hour old.
+- Shared workspaces send edits after 0.6 seconds instead of 1.
+- On a weak connection the web app opens from the copy it keeps after 1.5 seconds, instead of waiting on the network.
+
 ## 0.112.0 (2026-11-09)
 
 - Share a whole workspace. From the workspace menu, Share this workspace. Invite people by email as Viewer, Editor or Admin. Admins invite and remove people too; only the owner adds admins or stops sharing.

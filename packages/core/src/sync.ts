@@ -91,8 +91,15 @@ const isPageBody = (stored: string) => {
 /** How many files move at once. Each Drive request takes a second or two however small, and ten at once take about as long as one. */
 const PARALLEL = 10;
 
+interface Counter {
+  add(n: number): void;
+  tick(): void;
+}
+
 export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
   const { store, remote, key, device } = options;
+  // Reading and sending share one limit, so running both never doubles the requests in flight.
+  const gate = limiter(PARALLEL);
   let state = options.loadState();
   // Docs edited again since their send started. They stay dirty after it.
   const edited = new Set<string>();
@@ -115,7 +122,12 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
     return updates.length ? Y.mergeUpdates(updates) : null;
   }
 
-  async function pull() {
+  /**
+   * Reads what other devices wrote. `wasDirty` is what this device had unsent
+   * when the run began: sending runs alongside, so by the time a file comes in
+   * its own edits may already be out, and they still count for the question.
+   */
+  async function pull(wasDirty: ReadonlySet<string>, count: Counter) {
     const { entries, cursor } = await remote.changes(state.cursor);
     // One question per page per sync, however many files came in for it.
     const reported = new Set<string>();
@@ -129,43 +141,59 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       if (entry.device !== device || fromStart) byDoc.set(entry.docId, [...(byDoc.get(entry.docId) ?? []), entry]);
     }
     const docs = [...byDoc.values()];
-    let done = 0;
-    if (docs.length) progress(0, docs.length);
+    count.add(docs.length);
     await inParallel(docs, async (files) => {
-      for (const entry of files) {
-        const incoming = await open(key, await remote.read(entry.ref));
+      // Downloaded side by side, since each request mostly waits on the network. Merged in turn.
+      const sealed = await Promise.all(files.map((entry) => gate(() => remote.read(entry.ref))));
+      for (const [i, entry] of files.entries()) {
+        const incoming = await open(key, sealed[i]);
         const local = await localUpdate(entry.docId);
         // Only what this device lacks, so the store does not grow by a whole copy on every sync.
         const fresh = local ? Y.diffUpdate(incoming, Y.encodeStateVectorFromUpdate(local)) : incoming;
         if (local && isEmptyUpdate(fresh, local)) continue;
         // This device's own file is an older copy of its own edits, never a conflict.
-        if (local && entry.device !== device && isPageBody(entry.docId) && state.dirty.includes(entry.docId) && !reported.has(entry.docId)) {
+        if (local && entry.device !== device && isPageBody(entry.docId) && (wasDirty.has(entry.docId) || state.dirty.includes(entry.docId)) && !reported.has(entry.docId)) {
           reported.add(entry.docId);
           options.onConflict?.(entry.docId, local, incoming);
         }
         await store.append(entry.docId, fresh);
         options.onRemoteUpdate(entry.docId, fresh);
       }
-      progress(++done, docs.length);
+      count.tick();
     });
     // Only after every file was merged: a failure part way reads them all again next time,
     // which is harmless because merging the same edits twice changes nothing.
     save({ ...state, cursor });
   }
 
-  async function push() {
+  async function push(count: Counter) {
     const dirty = [...state.dirty];
-    let done = 0;
-    if (dirty.length) progress(0, dirty.length);
+    count.add(dirty.length);
     await inParallel(dirty, async (docId) => {
       edited.delete(docId);
       const update = await localUpdate(docId);
-      if (update) await remote.write(docId, await seal(key, update));
-      else await remote.remove(docId);
+      if (update) {
+        const sealed = await seal(key, update);
+        await gate(() => remote.write(docId, sealed));
+      } else await gate(() => remote.remove(docId));
       if (!edited.has(docId)) save({ ...state, dirty: state.dirty.filter((id) => id !== docId) });
-      progress(++done, dirty.length);
+      count.tick();
     });
   }
+
+  /** One count of files for a whole run, so reading and sending side by side show one number. */
+  const counter = (): Counter => {
+    let done = 0;
+    let total = 0;
+    return {
+      add(n) {
+        if (!n) return;
+        total += n;
+        progress(done, total);
+      },
+      tick: () => progress(++done, total),
+    };
+  };
 
   return {
     markDirty(docId) {
@@ -187,8 +215,20 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       running = running.catch(() => {}).then(async () => {
         setStatus({ state: "syncing", lastSynced: status.lastSynced });
         try {
-          await pull();
-          await push();
+          const count = counter();
+          const wasDirty = new Set(state.dirty);
+          if (state.cursor === null) {
+            // From nothing, this device's own files must come back before it
+            // sends: a store that lost a page would otherwise erase its file.
+            await pull(wasDirty, count);
+            await push(count);
+          } else {
+            // Both mostly wait on the network, so an edit goes out without
+            // waiting for the read, and a failed read does not hold it back.
+            const results = await Promise.allSettled([pull(wasDirty, count), push(count)]);
+            const failed = results.find((result) => result.status === "rejected");
+            if (failed) throw failed.reason;
+          }
           setStatus({ state: "idle", lastSynced: Date.now() });
         } catch (err) {
           setStatus({ state: "error", lastSynced: status.lastSynced, message: err instanceof Error ? err.message : String(err) });
@@ -198,6 +238,24 @@ export function createSyncEngine(options: SyncEngineOptions): SyncEngine {
       return running;
     },
     status: () => status,
+  };
+}
+
+/** Runs each task given to it, at most `slots` at a time, the rest in the order they came. */
+function limiter(slots: number) {
+  let busy = 0;
+  const waiting: (() => void)[] = [];
+  return async <T>(task: () => Promise<T>): Promise<T> => {
+    if (busy >= slots) await new Promise<void>((resolve) => waiting.push(resolve));
+    else busy++;
+    try {
+      return await task();
+    } finally {
+      // The slot passes straight to the next task, so busy only drops when none waits.
+      const next = waiting.shift();
+      if (next) next();
+      else busy--;
+    }
   };
 }
 

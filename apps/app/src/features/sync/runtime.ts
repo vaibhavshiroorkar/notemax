@@ -112,14 +112,21 @@ setMemoryFill(async (store) => {
 let engine: SyncEngine | null = null;
 let stopRunning: (() => void) | null = null;
 
-/** How long after an edit to send it, so a burst of typing is sent once. Sooner when Drive holds the only copy. */
-const SEND_AFTER_MS = memoryOnly ? 500 : 1200;
+/**
+ * How long after an edit to send it, so a burst of typing is sent once. While
+ * the live link is up the edit has already reached the other devices, so Drive
+ * can wait a little longer; without it Drive is the only way, so it goes soon.
+ */
+const sendAfterMs = () => (memoryOnly ? 500 : liveState.get() === "live" ? 1500 : 600);
 /**
  * How often to look for other devices' edits while the window is on screen.
  * One small Drive request when nothing changed. A hidden window does not
- * look; it looks again the moment it shows.
+ * look; it looks again the moment it shows. With the live link up, other
+ * devices also say when they wrote, so looking can be rarer.
  */
-const POLL_MS = 10_000;
+const pollMs = () => (liveState.get() === "live" ? 10_000 : 5_000);
+/** After a nudge, look again a little later too: Drive's list of changes can lag a moment behind a write. */
+const POKE_AGAIN_MS = 4_000;
 
 async function runEngine(signal: AbortSignal) {
   const key = await importKey(getPref(PREFS.key)!);
@@ -134,9 +141,27 @@ async function runEngine(signal: AbortSignal) {
     channel.postMessage({ docId, update });
     if (workspace === workspaceNow()) noteRemoteEdit(docId);
   };
+  // The live link while it is joined. In an object, since it is set from callbacks.
+  const link: { live: LiveLink | null } = { live: null };
+  // Whether something went to Drive that the live link did not carry, so the other devices should be told.
+  const unsent = { live: false, wrote: false };
+  const drive = driveRemote(folder, deviceId());
+  const remote: typeof drive = {
+    ...drive,
+    async write(docId, data) {
+      await drive.write(docId, data);
+      unsent.wrote = true;
+    },
+    async remove(docId) {
+      await drive.remove(docId);
+      unsent.wrote = true;
+    },
+  };
+  // The first send needs the list of this device's files; fetch it alongside the first read.
+  void drive.listMine?.().catch(() => {});
   const current = createSyncEngine({
     store: await getRawStore(),
-    remote: driveRemote(folder, deviceId()),
+    remote,
     key,
     device: deviceId(),
     loadState,
@@ -167,11 +192,27 @@ async function runEngine(signal: AbortSignal) {
   const run = () => {
     clearTimeout(timer);
     timer = undefined;
-    current.sync().catch(() => {
-      // Shown through the status. The next poll or edit tries again.
-    });
+    current
+      .sync()
+      .catch(() => {
+        // Shown through the status. The next poll or edit tries again.
+      })
+      .finally(() => {
+        // Only edits the live link missed need a nudge: the rest are already there.
+        if (unsent.wrote && unsent.live) {
+          unsent.live = false;
+          link.live?.poke();
+        }
+        unsent.wrote = false;
+      });
   };
-  const soon = () => (timer ??= setTimeout(run, SEND_AFTER_MS));
+  const soon = () => (timer ??= setTimeout(run, sendAfterMs()));
+  let pokeAgain: ReturnType<typeof setTimeout> | undefined;
+  const onPoke = () => {
+    run();
+    clearTimeout(pokeAgain);
+    pokeAgain = setTimeout(run, POKE_AGAIN_MS);
+  };
   const changed = (docId: string) => {
     current.markDirty(docId);
     soon();
@@ -180,8 +221,6 @@ async function runEngine(signal: AbortSignal) {
   // Live updates while the setting is on. What comes in is kept like a synced
   // edit: in the raw store, so it is not sent back, and merged into open pages.
   const raw = await getRawStore();
-  // In an object, since it is set from callbacks.
-  const link: { live: LiveLink | null } = { live: null };
   let joining = false;
   const fromLive = (docId: string, update: Uint8Array) => {
     raw
@@ -193,7 +232,7 @@ async function runEngine(signal: AbortSignal) {
     const want = liveOn.get() && accountsEnabled && !signal.aborted;
     if (want && !link.live && !joining) {
       joining = true;
-      startLive(key, deviceId(), fromLive)
+      startLive(key, deviceId(), fromLive, onPoke)
         .then((joined) => {
           if (liveOn.get() && !signal.aborted) link.live = joined;
           else joined.stop();
@@ -217,9 +256,15 @@ async function runEngine(signal: AbortSignal) {
   // other devices go straight to the raw store, so they are never sent back.
   const stopWrites = onLocalWrite(({ docId, update }) => {
     changed(docId);
-    if (update && link.live && goesLive(docId)) link.live.send(docId, update);
+    const carried = !!update && !!link.live && goesLive(docId) && link.live.send(docId, update);
+    if (!carried) unsent.live = true;
   });
-  const poll = setInterval(() => document.visibilityState === "visible" && run(), POLL_MS);
+  let poll: ReturnType<typeof setTimeout> | undefined;
+  const look = () => {
+    if (document.visibilityState === "visible") run();
+    poll = setTimeout(look, pollMs());
+  };
+  poll = setTimeout(look, pollMs());
   // Hidden, the window may never come back (a phone closes it, a laptop sleeps), so edits go out now.
   const sendWaiting = () => loadState().dirty.length > 0 && run();
   const onWake = () => (document.visibilityState === "visible" ? run() : sendWaiting());
@@ -250,7 +295,8 @@ async function runEngine(signal: AbortSignal) {
   stopWrites();
   stopFollowing();
   link.live?.stop();
-  clearInterval(poll);
+  clearTimeout(poll);
+  clearTimeout(pokeAgain);
   clearTimeout(timer);
   window.removeEventListener("online", run);
   window.removeEventListener("focus", run);

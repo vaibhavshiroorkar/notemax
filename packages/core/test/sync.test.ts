@@ -18,6 +18,9 @@ class FakeDrive {
   duringWrite: ((docId: string) => Promise<void>) | null = null;
   inFlight = 0;
   maxInFlight = 0;
+  /** While set, reading the list of changes waits for it. */
+  holdChanges: Promise<void> | null = null;
+  failChanges = 0;
 
   private async slow<T>(work: () => Promise<T> | T): Promise<T> {
     this.inFlight++;
@@ -33,6 +36,11 @@ class FakeDrive {
   as(device: string): SyncRemote {
     return {
       changes: async (cursor) => {
+        await this.holdChanges;
+        if (this.failChanges > 0) {
+          this.failChanges--;
+          throw new Error("list failed");
+        }
         const since = cursor === null ? 0 : Number(cursor);
         const entries: RemoteEntry[] = [...this.files.entries()].filter(([, f]) => f.seq > since).map(([ref, f]) => ({ ref, docId: f.docId, device: f.device }));
         return { entries, cursor: String(this.seq) };
@@ -268,6 +276,55 @@ describe.each([
     expect(drive.maxInFlight).toBeLessThanOrEqual(10);
     for (let i = 0; i < 20; i++) expect(await b.read(`note-${i}`)).toBe(`Note ${i}`);
     expect(a.state().dirty).toEqual([]);
+  });
+
+  it("sends an edit while the read is still waiting, so a slow read does not hold it back", async () => {
+    const { drive, a } = await setup();
+    await a.type("note-1", "First.");
+    await a.engine.sync();
+    await a.type("note-1", " Second.");
+    let release = () => {};
+    drive.holdChanges = new Promise((resolve) => (release = resolve));
+    const before = drive.seq;
+    const run = a.engine.sync();
+    for (let i = 0; i < 100 && drive.seq === before; i++) await new Promise((r) => setTimeout(r, 5));
+    expect(drive.seq).toBeGreaterThan(before);
+    release();
+    await run;
+    expect(a.state().dirty).toEqual([]);
+  });
+
+  it("still sends when reading fails, and reads next time", async () => {
+    const { drive, a, b } = await setup();
+    await a.type("note-1", "One.");
+    await a.engine.sync();
+    await b.engine.sync();
+    await a.type("note-2", "Two.");
+    await a.engine.sync();
+    await b.type("note-3", "Three.");
+    drive.failChanges = 1;
+    await expect(b.engine.sync()).rejects.toThrow("list failed");
+    expect(drive.files.has("note-3@phone")).toBe(true);
+    expect(b.state().dirty).toEqual([]);
+    await b.engine.sync();
+    expect(await b.read("note-2")).toBe("Two.");
+  });
+
+  it("keeps to the limit with reading and sending at once", async () => {
+    const { drive, a, b } = await setup();
+    await a.type("note-0", "Start.");
+    await a.engine.sync();
+    await b.engine.sync();
+    drive.delayMs = 5;
+    for (let i = 1; i < 20; i++) await a.type(`note-${i}`, `From the laptop ${i}`);
+    await a.engine.sync();
+    for (let i = 20; i < 40; i++) await b.type(`note-${i}`, `From the phone ${i}`);
+    drive.maxInFlight = 0;
+    await b.engine.sync();
+    expect(drive.maxInFlight).toBeGreaterThan(1);
+    expect(drive.maxInFlight).toBeLessThanOrEqual(10);
+    expect(await b.read("note-19")).toBe("From the laptop 19");
+    expect(drive.files.has("note-39@phone")).toBe(true);
   });
 
   it("counts the files as they go, so a long first sync shows it is moving", async () => {

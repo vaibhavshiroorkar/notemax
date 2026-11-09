@@ -39,7 +39,10 @@ async function channelName(key: CryptoKey): Promise<string> {
 }
 
 export interface LiveLink {
-  send(docId: string, update: Uint8Array): void;
+  /** Sends an edit to the other devices. False when it could not go this way, so only Drive brings it. */
+  send(docId: string, update: Uint8Array): boolean;
+  /** Tells the other devices that Drive has something new, so they read it now instead of at their next look. */
+  poke(): void;
   stop(): void;
 }
 
@@ -49,11 +52,19 @@ interface Edit {
   data: string;
 }
 
-/** Joins this person's live channel. `onEdit` gets each edit another device sends. */
-export async function startLive(key: CryptoKey, device: string, onEdit: (docId: string, update: Uint8Array) => void): Promise<LiveLink> {
+/**
+ * Joins this person's live channel. `onEdit` gets each edit another device
+ * sends, and `onPoke` is called when another device wrote to Drive.
+ */
+export async function startLive(key: CryptoKey, device: string, onEdit: (docId: string, update: Uint8Array) => void, onPoke: () => void): Promise<LiveLink> {
   const { supabase } = await import("@/features/account/client");
   liveState.set("connecting");
+  let joined = false;
   const channel = supabase.channel(await channelName(key), { config: { broadcast: { self: false } } });
+  // Says nothing but who wrote, so it needs no sealing.
+  channel.on("broadcast", { event: "poke" }, ({ payload }: { payload: { device?: string } }) => {
+    if (payload.device !== device) onPoke();
+  });
   channel.on("broadcast", { event: "edit" }, ({ payload }: { payload: Edit }) => {
     if (payload.device === device) return;
     unseal(key, fromBase64(payload.data))
@@ -62,13 +73,21 @@ export async function startLive(key: CryptoKey, device: string, onEdit: (docId: 
         // Sealed with another key, or cut short: Drive brings the edit anyway.
       });
   });
-  channel.subscribe((status) => liveState.set(status === "SUBSCRIBED" ? "live" : status === "CLOSED" ? "off" : status === "CHANNEL_ERROR" || status === "TIMED_OUT" ? "error" : "connecting"));
+  channel.subscribe((status) => {
+    joined = status === "SUBSCRIBED";
+    liveState.set(joined ? "live" : status === "CLOSED" ? "off" : status === "CHANNEL_ERROR" || status === "TIMED_OUT" ? "error" : "connecting");
+  });
   return {
     send(docId, update) {
-      if (update.length > MAX_BYTES) return;
+      if (update.length > MAX_BYTES) return false;
       void seal(key, update)
         .then((sealed) => channel.send({ type: "broadcast", event: "edit", payload: { docId, device, data: toBase64(sealed) } satisfies Edit }))
         .catch(() => {});
+      // Before the channel is joined the edit may still get through, but Drive should not count on it.
+      return joined;
+    },
+    poke() {
+      if (joined) void channel.send({ type: "broadcast", event: "poke", payload: { device } }).catch(() => {});
     },
     stop() {
       void supabase.removeChannel(channel);

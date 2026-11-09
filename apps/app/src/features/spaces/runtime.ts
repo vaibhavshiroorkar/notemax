@@ -46,8 +46,8 @@ export function isViewOnly(workspace: string): boolean {
 
 /** How often to look for others' edits while the window shows. A poke from them comes sooner. */
 const POLL_MS = 20_000;
-/** How long after an edit to send it, so a burst of typing goes once. */
-const SEND_AFTER_MS = 1000;
+/** How long after an edit to send it, so a burst of typing goes once. The others hear of it straight after. */
+const SEND_AFTER_MS = 600;
 /** How often to ask again what this person may do, in case it changed. */
 const ROLE_MS = 60_000;
 const RETRY_MS = 30_000;

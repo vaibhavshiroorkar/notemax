@@ -9,13 +9,33 @@ import { getPref, removePref, setPref } from "@/platform/prefs";
 
 export const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 const REFRESH_PREF = "googleRefreshToken";
+// The short-lived token is kept too, so a restart within the hour skips asking
+// Supabase for a new one before its first Drive request. It opens less than
+// the refresh token beside it, and neither is among the settings that sync.
+const ACCESS_PREF = "googleAccessToken";
 
-let access: { token: string; expires: number } | null = null;
+type Access = { token: string; expires: number };
+
+function savedAccess(): Access | null {
+  try {
+    const value = JSON.parse(getPref(ACCESS_PREF) ?? "null") as Access | null;
+    return value && typeof value.token === "string" && typeof value.expires === "number" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+let access: Access | null = savedAccess();
+
+function keepAccess(next: Access) {
+  access = next;
+  setPref(ACCESS_PREF, JSON.stringify(next));
+}
 
 /** Keeps the Google tokens from a session that just signed in. Later sessions do not carry them. */
 export function rememberGoogleTokens(session: Session | null | undefined) {
   if (!session?.provider_token) return;
-  access = { token: session.provider_token, expires: Date.now() + 50 * 60_000 };
+  keepAccess({ token: session.provider_token, expires: Date.now() + 50 * 60_000 });
   if (session.provider_refresh_token) setPref(REFRESH_PREF, session.provider_refresh_token);
 }
 
@@ -24,6 +44,7 @@ export const hasDriveAccess = () => getPref(REFRESH_PREF) !== null;
 export function forgetDriveAccess() {
   access = null;
   removePref(REFRESH_PREF);
+  removePref(ACCESS_PREF);
 }
 
 export class NeedsSignIn extends Error {
@@ -64,6 +85,6 @@ async function refreshToken(): Promise<string> {
     }
     throw new Error(`Could not reach Google Drive: ${message}`);
   }
-  access = { token: data.access_token, expires: Date.now() + (data.expires_in ?? 3600) * 1000 };
-  return access.token;
+  keepAccess({ token: data.access_token, expires: Date.now() + (data.expires_in ?? 3600) * 1000 });
+  return data.access_token;
 }
