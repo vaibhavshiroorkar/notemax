@@ -161,8 +161,11 @@
   height: 13px;
 }
 
+/* A subtopic's number starts under its chapter's title, and each level below
+   goes a step further in. 30px is the chapter's arrow (20), the row's gap (2)
+   and the title's padding (8); 1.5em is the chapter number. */
 .book-panel-chapters .row.subtopic {
-  padding-left: calc(20px + var(--depth, 1) * 12px);
+  padding-left: calc(30px + 1.5em + (var(--depth, 1) - 1) * 14px);
 }
 
 .chapter-row {
@@ -170,6 +173,10 @@
   align-items: baseline;
   gap: 8px;
   padding-left: 8px;
+}
+
+.chapter-row .chapter-number {
+  flex: none;
 }
 
 .book-panel-empty {

@@ -33,7 +33,7 @@ export const specialPlugin: Plugin = {
   id: "special",
   name: "Special pages",
   description: "Pick the page for daily notes, their template, and the page a new window opens on",
-  settings: [{ id: "special", order: 32, group: "Writing", title: "Special pages", icon: "star", keywords: ["daily", "journal", "template", "start", "home", "folder"], component: SpecialSection }],
+  settings: [{ id: "special", order: 32, group: "Writing", title: "Special pages", about: "Give a page a job. You can also do it from a page's menu, under Use as.", icon: "star", keywords: ["daily", "journal", "template", "start", "home", "folder"], component: SpecialSection }],
   contextMenu: [useAs],
   rowMarks: ROLES.map((role) => ({ id: `special.${role.id}`, icon: role.icon, label: role.title, when: (node) => node.props[role.id] === true })),
   start(app) {

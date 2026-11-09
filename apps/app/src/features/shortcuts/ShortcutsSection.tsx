@@ -21,7 +21,6 @@ export function ShortcutsSection() {
 
   return (
     <>
-      <p>Click a shortcut and press new keys. They need Ctrl or Alt, or a function key. Backspace removes one, Esc cancels.</p>
       {note && <p className="shortcut-note" role="status">{note}</p>}
       <ul className="shortcut-list">
         {commands.map((command) => {

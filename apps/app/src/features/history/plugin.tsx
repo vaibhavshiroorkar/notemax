@@ -4,6 +4,7 @@ import { VersionPreview } from "./VersionPreview";
 import { VersionsPanel } from "./VersionsPanel";
 import { versionDays, versionEvery, versionLimit } from "./versions";
 import "./history.css";
+import { InfoTip } from "@/ui/InfoTip";
 
 const CHOICES: [number, string][] = [
   [5, "Every 5 minutes of editing"],
@@ -19,12 +20,10 @@ function HistorySection() {
   const days = versionDays.use();
   return (
     <>
-      <p>Notemax keeps earlier versions of each note: how it was before you started editing, then one every few minutes, then how you left it. Older ones thin out to one a day, then one a week. They sync and back up with your notes.</p>
-      <p>Each version says who made its changes, and each page keeps a log of what was done to it: renamed, moved, trashed, restored, shared. Find it under Versions, Activity. A name shows when that person was signed in; otherwise the device does.</p>
       <label className="settings-row">
         <span>
           Save a version
-          <span className="settings-description">Find them in the right sidebar of a note, under Versions.</span>
+          <InfoTip label="Where versions are">Find them in the right sidebar of a note, under Versions.</InfoTip>
         </span>
         <select className="settings-select" value={every} onChange={(event) => versionEvery.set(Number(event.target.value))}>
           {CHOICES.map(([minutes, label]) => (
@@ -35,13 +34,13 @@ function HistorySection() {
         </select>
       </label>
       <label className="settings-row">
-        <span>Versions per page<span className="settings-description">Applied when the next version is saved. Recovery snapshots stay available.</span></span>
+        <span>Versions per page<InfoTip label="About versions per page">Applied when the next version is saved. Recovery snapshots stay available.</InfoTip></span>
         <select aria-label="Versions per page" className="settings-select" value={limit} onChange={(event) => versionLimit.set(Number(event.target.value))}>
           {[20, 50, 100, 200, 500].map((count) => <option key={count} value={count}>{count}</option>)}
         </select>
       </label>
       <label className="settings-row">
-        <span>Keep versions for<span className="settings-description">The latest version and recovery snapshots are always kept.</span></span>
+        <span>Keep versions for<InfoTip label="About keeping versions">The latest version and recovery snapshots are always kept.</InfoTip></span>
         <select aria-label="Keep versions for" className="settings-select" value={days} onChange={(event) => versionDays.set(Number(event.target.value))}>
           <option value={0}>No age limit</option>
           {[7, 30, 90, 365].map((count) => <option key={count} value={count}>{count} days</option>)}
@@ -67,7 +66,7 @@ export const historyPlugin: Plugin = {
     watchTree(app.doc, app.workspace);
   },
   overlays: [{ id: "history.preview", component: VersionPreview }],
-  settings: [{ id: "history", order: 52, group: "Your data", title: "History", icon: "history", keywords: ["versions", "backup", "restore", "undo", "snapshot"], component: HistorySection }],
+  settings: [{ id: "history", order: 52, group: "Your data", title: "History", about: "Notemax keeps earlier versions of each note: how it was before you started editing, then one every few minutes, then how you left it. Older ones thin out to one a day, then one a week. They sync and back up with your notes. Each version says who made its changes, and each page keeps a log of what was done to it: renamed, moved, trashed, restored, shared. Find it under Versions, Activity. A name shows when that person was signed in; otherwise the device does.", icon: "history", keywords: ["versions", "backup", "restore", "undo", "snapshot"], component: HistorySection }],
   commands: [
     {
       id: "history.show",

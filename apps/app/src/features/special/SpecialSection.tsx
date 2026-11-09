@@ -2,6 +2,7 @@ import type { SettingsContext } from "@/plugins/types";
 import { SearchSelect } from "@/ui/SearchSelect";
 import { DAILY_TITLES, dailyTitle } from "./titles";
 import { ROLES, holder, setRole } from "./roles";
+import { InfoTip } from "@/ui/InfoTip";
 
 const NONE = "";
 
@@ -11,7 +12,6 @@ export function SpecialSection({ app }: SettingsContext) {
   const sample = new Date();
   return (
     <>
-      <p>Give a page a job. You can also do it from a page's menu, under Use as.</p>
       {ROLES.map((role) => {
         const current = holder(app.tree, role.id);
         const pages = [...app.tree.items.values()]
@@ -21,7 +21,7 @@ export function SpecialSection({ app }: SettingsContext) {
           <div key={role.id} className="settings-row">
             <span>
               {role.label}
-              <span className="settings-description">{role.description}</span>
+              <InfoTip label={`About ${role.label}`}>{role.description}</InfoTip>
             </span>
             <SearchSelect
               label={role.label}

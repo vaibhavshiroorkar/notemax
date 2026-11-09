@@ -6,7 +6,7 @@ export const shortcutsPlugin: Plugin = {
   name: "Keyboard shortcuts",
   description: "The list of every shortcut, and changing them",
   required: true,
-  settings: [{ id: "shortcuts", order: 70, group: "Advanced", title: "Keyboard shortcuts", icon: "keyboard", keywords: ["keys", "hotkeys"], component: ShortcutsSection }],
+  settings: [{ id: "shortcuts", order: 70, group: "Advanced", title: "Keyboard shortcuts", about: "Click a shortcut and press new keys. They need Ctrl or Alt, or a function key. Backspace removes one, Esc cancels.", icon: "keyboard", keywords: ["keys", "hotkeys"], component: ShortcutsSection }],
   commands: [
     { id: "shortcuts.help", title: "Show all keyboard shortcuts", keywords: ["keys", "hotkeys", "help"], shortcut: "Mod+/", run: (app) => app.openShortcuts() },
   ],

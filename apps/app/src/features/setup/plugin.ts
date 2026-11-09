@@ -10,6 +10,6 @@ export const setupPlugin: Plugin = {
   required: true,
   // Asked once, over everything, on a first visit.
   floating: [{ id: "setup.dialog", component: SetupDialog }],
-  settings: [{ id: "setup", order: 5, group: "General", title: "Setup", icon: "settings", keywords: ["offline", "online", "account", "start", "home", "first"], component: SetupSection }],
+  settings: [{ id: "setup", order: 5, group: "General", title: "Setup", about: "Choose how Notemax works on this device. Change it any time; your pages stay as they are.", icon: "settings", keywords: ["offline", "online", "account", "start", "home", "first"], component: SetupSection }],
   commands: [{ id: "setup.open", title: "Setup: offline or online", keywords: ["offline", "online", "start"], run: (app) => app.openSettings("setup") }],
 };

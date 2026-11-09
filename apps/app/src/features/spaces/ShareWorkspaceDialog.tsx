@@ -12,6 +12,7 @@ import { atLeast, invite, setLinkAccess, spacePeople, uninvite, type LinkAccess,
 import { leaveWorkspace, linkTo, shareWorkspace, stopSharingWorkspace } from "./actions";
 import { refreshSpace, spaceViews } from "./runtime";
 import "./spaces.css";
+import { InfoTip } from "@/ui/InfoTip";
 
 const ROLE_WORDS: Record<Role, string> = { owner: "Owner", admin: "Admin", editor: "Can edit", viewer: "Can view" };
 const ROLE_HINTS: Record<Person["role"], string> = {
@@ -59,9 +60,12 @@ export function ShareWorkspaceDialog({ app, options, onClose }: { app: AppContex
     body = (
       <>
         <p className="dialog-message">
-          Share <strong>{name}</strong> with people by email, or with a link. Everyone sees the same pages, and changes reach the others within moments. You choose who can only view and who can edit.
+          Share <strong>{name}</strong> with people by email, or with a link.
+          <InfoTip label="About sharing a workspace">
+            Everyone sees the same pages, and changes reach the others within moments. You choose who can only view and who can edit. The workspace is kept on
+            the Notemax server, encrypted, so people can open it while you are offline. Big files like long videos stay on your devices.
+          </InfoTip>
         </p>
-        <p className="share-people">The workspace is kept on the Notemax server, encrypted, so people can open it while you are offline. Big files like long videos stay on your devices.</p>
         {email ? null : <p className="share-people">Sign in first, so the workspace has an owner.</p>}
         <div className="dialog-actions">
           <button className="button" onClick={onClose}>
@@ -152,7 +156,13 @@ function Settings({ workspace, info, email, app, onClose }: { workspace: Workspa
       <p className="dialog-message">{YOU[info.role]}</p>
 
       <section className="space-section">
-        <h3>Anyone with the link</h3>
+        <h3>
+          Anyone with the link
+          <InfoTip label="About the link">
+            Off: only the people below can open it. Can view: anyone with the link can read it, without an account. Can edit: anyone with the link can read it,
+            and people signed in can also edit. Make a new link to stop the old one working.
+          </InfoTip>
+        </h3>
         {admin ? (
           <Segmented<LinkAccess>
             label="What anyone with the link can do"
@@ -165,20 +175,25 @@ function Settings({ workspace, info, email, app, onClose }: { workspace: Workspa
             onChange={(access) => act(() => setLinkAccess(space, token, access))}
           />
         ) : null}
-        <p className="share-people">{LINK_HINTS[info.linkAccess]}</p>
+        {!admin && <p className="share-people">{LINK_HINTS[info.linkAccess]}</p>}
         {admin && info.linkAccess !== "off" && info.linkToken && (
           <>
             <LinkRow label="Link" hint={info.linkAccess === "view" ? "Opens it to read." : "Opens it to read, or to edit once signed in."} link={linkTo(space, info.linkToken)} />
             <button className="link-button" disabled={busy} onClick={() => act(() => setLinkAccess(space, token, info.linkAccess, true))}>
               Make a new link
             </button>
-            <span className="share-people"> The old link stops working.</span>
           </>
         )}
       </section>
 
       <section className="space-section">
-        <h3>People</h3>
+        <h3>
+          People
+          <InfoTip label="About people and roles">
+            People you invite find it on Home, under Shared with you, once they sign in with that email. Can view: {ROLE_HINTS.viewer} Can edit: {ROLE_HINTS.editor}{" "}
+            Admin: {ROLE_HINTS.admin}
+          </InfoTip>
+        </h3>
         {admin && (
           <form
             className="space-invite"
@@ -200,7 +215,6 @@ function Settings({ workspace, info, email, app, onClose }: { workspace: Workspa
             </button>
           </form>
         )}
-        {admin && <p className="share-people">They find it on Home, under Shared with you, once they sign in with that email. {ROLE_HINTS[as]}</p>}
         {!email ? (
           <p className="share-people">Sign in to see who else has this workspace.</p>
         ) : (

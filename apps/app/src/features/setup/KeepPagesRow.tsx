@@ -4,6 +4,7 @@ import { onlineMode } from "@/platform/mode";
 import { memoryOnly } from "@/platform/platform";
 import { ConfirmDialog } from "@/ui/Dialog";
 import { messageOf } from "@/ui/format";
+import { InfoTip } from "@/ui/InfoTip";
 
 /**
  * Settings, Setup: whether this device keeps a copy of the pages. Off, they
@@ -33,13 +34,11 @@ export function KeepPagesRow() {
       <label className="settings-row settings-check">
         <span>
           Keep pages on this device
-          <span className="settings-description">
-            {!canChoose
-              ? "Needs sync. Without it, this device is the only place your pages are."
-              : memoryOnly
-                ? "Off: pages come from Google Drive each time Notemax opens, and nothing is left behind when it closes."
-                : "On: pages are saved here and open without the internet. Turn off for a shared or borrowed computer."}
-          </span>
+          <InfoTip label="About keeping pages">
+            On, pages are saved here and open without the internet. Off, they come from Google Drive each time Notemax opens, and nothing is left behind when
+            it closes: good for a shared or borrowed computer. It needs sync, since without it this device is the only place your pages are.
+          </InfoTip>
+          {!canChoose && <span className="settings-description">Needs sync.</span>}
         </span>
         <input
           type="checkbox"

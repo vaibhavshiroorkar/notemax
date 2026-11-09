@@ -137,6 +137,22 @@
   display: inline;
 }
 
+/* Touch screens make icon buttons 36px wide. The arrow keeps the icon's 24px,
+   so a folder's title starts where every other title does and its pages sit a
+   clear step in; a wider area round it, unseen, still takes the tap. */
+@media (pointer: coarse) {
+  .sidebar .row-fold {
+    position: relative;
+    width: 24px;
+  }
+
+  .sidebar .row-fold::after {
+    position: absolute;
+    inset: 0 -4px 0 -8px;
+    content: "";
+  }
+}
+
 .row-icon {
   display: inline-flex;
   align-items: center;

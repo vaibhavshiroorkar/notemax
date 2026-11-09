@@ -91,7 +91,7 @@ Every field is optional.
 | `statusItems` | The status bar at the bottom, like how sync is going. |
 | `start(app)` | Runs once when the main window has opened the workspace, like starting sync. |
 | `workspaceStart(app)` | Runs for the workspace in the sidebar: at start, and again after each switch. For what belongs to one workspace, like an index of its pages. `app.workspace` says which one. |
-| `settings` | A category in Settings. |
+| `settings` | A category in Settings. Its `about` text sits behind an (i) by the title, and option descriptions sit behind an (i) by their label. |
 | `options` | On or off switches. Without a `section`, they show under Plugins. |
 | `shortcutHints` | Keys listed in the shortcut list (Ctrl+/). |
 | `contextMenu` | Right-click menus. See below. |

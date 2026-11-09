@@ -369,6 +369,8 @@ export interface SettingsSection {
   group?: string;
   /** More words that find this section in the settings search. The text of each setting is searched anyway. */
   keywords?: string[];
+  /** What the section is for, behind an (i) by its title, so the settings themselves stay uncluttered. Searched too. */
+  about?: string;
   when?(): boolean;
   /**
    * The section's own settings. Options that name this section are listed

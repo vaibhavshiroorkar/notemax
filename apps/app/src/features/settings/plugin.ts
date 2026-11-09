@@ -12,7 +12,7 @@ export const settingsPlugin: Plugin = {
   settings: [
     { id: "basics", order: 0, group: "General", title: "Basics", icon: "settings", keywords: ["common", "main", "general"], component: BasicsSection },
     { id: "behavior", order: 7, group: "General", title: "How it works", icon: "command", keywords: ["behavior", "behaviour", "tab", "link", "open", "new", "welcome", "customize"], component: BehaviorSection },
-    { id: "plugins", order: 80, group: "Advanced", title: "Plugins", icon: "plug", component: PluginOptionsSection },
+    { id: "plugins", order: 80, group: "Advanced", title: "Plugins", about: "Everything in Notemax is a plugin. Switch off what you don't use; its pages stay safe and come back when you switch it on.", icon: "plug", component: PluginOptionsSection },
     { id: "storage", order: 65, group: "Your data", title: "Storage", icon: "storage", keywords: ["database", "disk", "data"], component: StorageSection },
   ],
   commands: [

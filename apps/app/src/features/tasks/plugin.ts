@@ -1,6 +1,7 @@
 import { startIndex } from "@/features/search/text-index";
 import { registry } from "@/plugins/registry";
 import type { Plugin } from "@/plugins/types";
+import { isDesktop } from "@/platform/platform";
 import { TaskAttrs, TaskDates } from "./editor";
 import { startReminders } from "./reminders";
 import { RemindersHost } from "./RemindersHost";
@@ -19,7 +20,7 @@ export const tasksPlugin: Plugin = {
   views: [{ id: "tasks", title: "Tasks", icon: "list-check", component: TasksView }],
   homeSections: [{ id: "tasks.today", title: "Today", order: 15, open: (app) => app.openView("tasks"), component: TodayHome }],
   floating: [{ id: "tasks.reminders", component: RemindersHost }],
-  settings: [{ id: "reminders", order: 35, group: "Writing", title: "Reminders", icon: "clock", keywords: ["notifications", "alarm", "tasks", "to-do"], component: RemindersSection }],
+  settings: [{ id: "reminders", order: 35, group: "Writing", title: "Reminders", about: `A to-do with a time rings at that time. Click its date chip to ring earlier, on a day with no time, or not at all. Reminders ring while Notemax is open${isDesktop ? ", and the desktop app keeps running in the tray when its window is closed" : ""}. One missed while it was closed rings when it opens, if it is less than a day old.`, icon: "clock", keywords: ["notifications", "alarm", "tasks", "to-do"], component: RemindersSection }],
   commands: [{ id: "tasks.open", title: "Open tasks", keywords: ["todo", "to-do", "due", "today", "upcoming", "overdue"], shortcut: "Mod+Alt+T", run: (app) => app.openView("tasks") }],
   // The list comes from the search index, which the Search plugin starts; without it, Tasks starts it.
   workspaceStart: (app) => {

@@ -1,5 +1,6 @@
 import { linksOpen, newPagesAt, newTabShows, pinnedBars, showWelcome, sidebarOpens, type NewTabShows, type PinnedBars, type Where } from "@/platform/behavior";
 import { Segmented } from "@/ui/Segmented";
+import { InfoTip } from "@/ui/InfoTip";
 
 const WHERE: { value: Where; label: string }[] = [
   { value: "here", label: "This tab" },
@@ -51,7 +52,7 @@ export function BehaviorSection() {
       <div className="settings-row">
         <span>
           On a phone, bars that stay while scrolling
-          <span className="settings-description">The bottom bar has formatting in a note and reading tools in a post. The button at the start of that bar changes it too.</span>
+          <InfoTip label="About the phone bars">The bottom bar has formatting in a note and reading tools in a post. The button at the start of that bar changes it too.</InfoTip>
         </span>
         <Segmented<`${PinnedBars}`> label="On a phone, bars that stay while scrolling" value={`${pinnedBars.use()}`} options={PINNED} onChange={(value) => pinnedBars.set(value === "peek" ? value : (Number(value) as PinnedBars))} />
       </div>

@@ -15,7 +15,7 @@ export const lockPlugin: Plugin = {
   hidesText: isHidden,
   pageHeader: [{ id: "lock.line", component: LockLine }],
   rowMarks: [{ id: "lock.locked", icon: "lock", label: "Locked", when: isLocked }],
-  settings: [{ id: "privacy", order: 85, group: "Your data", title: "Privacy", icon: "lock", keywords: ["lock", "password", "private", "hide"], component: LockSection }],
+  settings: [{ id: "privacy", order: 85, group: "Your data", title: "Privacy", about: "Lock a page from its menu, under Page options. A locked page asks for the password before it shows, and stays hidden from search, previews and the Tasks list. Pages lock again after 5 minutes without a key press, or when the app closes. Forgot the password? Open a locked page and choose Forgot the password. This lock keeps out casual eyes; it is not encryption.", icon: "lock", keywords: ["lock", "password", "private", "hide"], component: LockSection }],
   contextMenu: [
     {
       id: "lock.on",

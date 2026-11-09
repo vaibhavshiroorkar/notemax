@@ -2,6 +2,13 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.114.0 (2026-11-10)
+
+- Less text in Settings and the share windows. Explanations now sit behind a small (i): tap or click it, or point at it with a mouse. What a setting is doing right now, like Synced 2 minutes ago, still shows. Settings search still finds the hidden text.
+- Workspace cards on Home, and the cards on Get the app, keep their rows when a sidebar is dragged. They stretch or narrow instead of jumping to the next row.
+- On phones and other touch screens, folders and notes with subtopics line up with the other rows in the left sidebar, and the pages inside them sit a clear step in.
+- In a book's Chapters list, a chapter's subtopics start under its title, each level a step further in.
+
 ## 0.113.0 (2026-11-10)
 
 - Faster sync. Through Google Drive an edit now reaches your other devices in about 2 to 3 seconds, down from about 8. One too big for live updates, like a long paste, takes about 3 seconds instead of 12.

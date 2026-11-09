@@ -30,9 +30,6 @@ export function RemindersSection() {
           </button>
         )}
       </div>
-      <p className="settings-note">
-        A to-do with a time rings at that time. Click its date chip to ring earlier, on a day with no time, or not at all. Reminders ring while Notemax is open{isDesktop ? ", and the desktop app keeps running in the tray when its window is closed" : ""}. One missed while it was closed rings when it opens, if it is less than a day old.
-      </p>
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { Segmented } from "@/ui/Segmented";
 import { PAPER, paperSize, type PaperSize } from "./pages";
+import { InfoTip } from "@/ui/InfoTip";
 
 /** The Editor category's own rows. Its on and off options are listed after these. */
 export function EditorSection() {
@@ -7,7 +8,7 @@ export function EditorSection() {
     <div className="settings-row">
       <span>
         Paper size
-        <span className="settings-description">For notes shown as pages</span>
+        <InfoTip label="About paper size">For notes shown as pages.</InfoTip>
       </span>
       <Segmented
         label="Paper size"

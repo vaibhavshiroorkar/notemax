@@ -72,10 +72,18 @@
   color: var(--muted);
 }
 
+/* Side by side, or one above the other on a phone. Columns go by the window,
+   so dragging a sidebar stretches the cards instead of moving one to another row. */
 .get-app-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+@media (max-width: 700px) {
+  .get-app-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .get-app-card {

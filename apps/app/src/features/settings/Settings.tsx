@@ -4,6 +4,7 @@ import { registry } from "@/plugins/registry";
 import type { Plugin, PluginOption, SettingsContext, SettingsSection } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
+import { InfoTip } from "@/ui/InfoTip";
 import { APP_VERSION } from "@/version";
 import "./settings.css";
 
@@ -13,7 +14,7 @@ export function OptionRow({ plugin, option }: { plugin: Plugin; option: PluginOp
     <label className="settings-row settings-check">
       <span>
         {option.label}
-        {option.description && <span className="settings-description">{option.description}</span>}
+        {option.description && <InfoTip label={`About ${option.label}`}>{option.description}</InfoTip>}
       </span>
       <input type="checkbox" role="switch" checked={on} onChange={(event) => setOption(plugin.id, option.id, event.target.checked)} />
     </label>
@@ -27,6 +28,7 @@ function SectionBody({ section, ctx }: { section: SettingsSection; ctx: Settings
       <h3>
         <Icon name={section.icon} />
         {section.title}
+        {section.about && <InfoTip label={`About ${section.title}`}>{section.about}</InfoTip>}
       </h3>
       {Body && <Body {...ctx} />}
       {registry
@@ -93,7 +95,7 @@ export function Settings({ onClose, initialSection, ask, ...ctx }: SettingsConte
       const hits = rows.filter((row) => matches(row.textContent ?? "", terms));
       // The title shows the whole section. Keywords do only when no setting
       // matches on its own, so "dark" shows the Theme row, not all of Appearance.
-      const titleMatch = !!section && (matches(section.title, terms) || (!hits.length && matches((section.keywords ?? []).join(" "), terms)));
+      const titleMatch = !!section && (matches(section.title, terms) || (!hits.length && matches([...(section.keywords ?? []), section.about ?? ""].join(" "), terms)));
       let rowMatch = false;
       for (const row of rows) {
         const show = !searching || titleMatch || hits.includes(row);

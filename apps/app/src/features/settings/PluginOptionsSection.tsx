@@ -18,6 +18,7 @@ import { ConfirmDialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
 import { OptionRow } from "./Settings";
 import { messageOf } from "@/ui/format";
+import { InfoTip } from "@/ui/InfoTip";
 
 const GUIDE = "https://github.com/vaibhavshiroorkar/notemax/blob/main/docs/plugins.md";
 
@@ -75,13 +76,12 @@ export function PluginOptionsSection() {
 
   return (
     <>
-      <p>Everything in Notemax is a plugin. Switch off what you don't use; its pages stay safe and come back when you switch it on.</p>
       <h4 className="settings-subhead">Built in</h4>
       {builtIn.map((plugin) => (
         <label key={plugin.id} className="settings-row settings-check plugin-row">
           <span>
             {plugin.name}
-            {plugin.description && <span className="settings-description">{plugin.description}</span>}
+            {plugin.description && <InfoTip label={`About ${plugin.name}`}>{plugin.description}</InfoTip>}
           </span>
           {plugin.online && offline ? (
             <span className="plugin-always">Off while offline</span>
@@ -100,7 +100,7 @@ export function PluginOptionsSection() {
       <label className="settings-row settings-check">
         <span>
           Allow community plugins
-          <span className="settings-description">Plugins other people made. They stay on this device and are never synced.</span>
+          <InfoTip label="About community plugins">Plugins other people made. They stay on this device and are never synced.</InfoTip>
         </span>
         <input type="checkbox" checked={allowCommunity} onChange={(event) => (event.target.checked ? setAsking("turn-on") : void setCommunityOn(false))} />
       </label>

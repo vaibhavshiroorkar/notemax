@@ -48,7 +48,20 @@ export const syncPlugin: Plugin = {
   name: "Sync",
   online: true,
   description: "Your notes on every device, through your own Google Drive",
-  settings: [{ id: "sync", order: 45, group: "Account and sync", title: "Sync", icon: "upload", keywords: ["google drive", "devices", "backup", "passphrase", "phone"], when: () => accountsEnabled, component: SyncSection }],
+  settings: [
+    {
+      id: "sync",
+      order: 45,
+      group: "Account and sync",
+      title: "Sync",
+      icon: "upload",
+      keywords: ["google drive", "devices", "backup", "passphrase", "phone"],
+      about:
+        "Keeps your notes and settings on all your devices through your own Google Drive. Your notes go to a folder called Notemax in your Drive, sealed with your passphrase. Google cannot read them, and Notemax sees only that folder. Your settings go along too: theme, fonts, shortcuts, plugins and the like. Zoom, open sidebars and sync itself stay with each device.",
+      when: () => accountsEnabled,
+      component: SyncSection,
+    },
+  ],
   statusItems: [
     { id: "sync.status", component: SyncStatus },
     { id: "sync.notice", component: RemoteEditNotice },

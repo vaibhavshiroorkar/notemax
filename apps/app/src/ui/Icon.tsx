@@ -78,6 +78,7 @@ const paths = {
   outline: "M3 4h10M5 8h8M7 12h6",
   fit: "M2.5 5.5v-3h3M10.5 2.5h3v3M13.5 10.5v3h-3M5.5 13.5h-3v-3",
   layout: "M2.5 2.5h11v11h-11zM8 2.5v11M2.5 8h11",
+  info: "M8 2.25a5.75 5.75 0 1 0 0 11.5a5.75 5.75 0 1 0 0-11.5zM8 7.25v3.75M8 5h.01",
 };
 
 export type IconName = keyof typeof paths;

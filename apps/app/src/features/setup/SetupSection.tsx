@@ -18,7 +18,6 @@ export function SetupSection() {
   const startId = useId();
   return (
     <>
-      <p>Choose how Notemax works on this device. Change it any time; your pages stay as they are.</p>
       <div className="settings-row">
         <span>
           Online features

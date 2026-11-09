@@ -1,4 +1,5 @@
 import { allowAgain, checkNow, mirrorView, pickFolder, stopFolder, useFolder } from "./mirror";
+import { InfoTip } from "@/ui/InfoTip";
 
 const when = (time: number | null) => (time ? new Date(time).toLocaleTimeString(undefined, { timeStyle: "short" }) : "not yet");
 
@@ -12,10 +13,6 @@ export function MarkdownSection() {
 
   return (
     <>
-      <p>
-        Keep every note of this workspace as a plain Markdown file in a folder you choose, as well as in Notemax. Edit them in any app: changes come back
-        here, and the note as it was is kept as a version. Folders stay folders, and books become folders of numbered chapters.
-      </p>
       {view.state === "unsupported" && <p className="warning">This browser cannot keep files in a folder. Chrome, Edge and the desktop app can.</p>}
       {view.state === "off" && (
         <div className="settings-row">
@@ -29,7 +26,7 @@ export function MarkdownSection() {
         <div className="settings-row">
           <span>
             Notemax needs your permission again to use the folder {view.folder}.
-            <span className="settings-description">Browsers ask again after a restart, unless you let it allow this site every time.</span>
+            <InfoTip label="Why it asks again">Browsers ask again after a restart, unless you let it allow this site every time.</InfoTip>
           </span>
           <button className="button button-primary" onClick={() => void allowAgain()}>
             Allow
@@ -53,7 +50,7 @@ export function MarkdownSection() {
           <div className="settings-row">
             <span>
               Stop keeping files
-              <span className="settings-description">The files stay in the folder as they are.</span>
+              <InfoTip label="About stopping">The files stay in the folder as they are.</InfoTip>
             </span>
             <button className="button" onClick={() => void stopFolder()}>
               Stop

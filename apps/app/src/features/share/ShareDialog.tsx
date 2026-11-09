@@ -6,6 +6,7 @@ import { Dialog } from "@/ui/Dialog";
 import { Icon } from "@/ui/Icon";
 import { canEdit, linkOf, shareOf, startSharing, stopSharing } from "./share";
 import { joinedRooms, roomPeople } from "./useShare";
+import { InfoTip } from "@/ui/InfoTip";
 
 const namesOf = (names: string[]) => (names.length <= 2 ? names.join(" and ") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`);
 
@@ -60,12 +61,19 @@ export function ShareDialog({ app, options, onClose }: { app: AppContext; option
 
   return (
     <Dialog label={`Share ${title}`} onClose={onClose} className="share-dialog">
-      <h2 className="dialog-title">Share "{title}"</h2>
+      <h2 className="dialog-title">
+        Share "{title}"
+        {accountsEnabled && share && (
+          <InfoTip label="About sharing a page">
+            Edits go straight between the people who have it open, sealed with a key that is only in the links. Edits made apart meet up the next time you both have
+            it open.
+          </InfoTip>
+        )}
+      </h2>
       {!accountsEnabled ? (
         <p className="dialog-message">Sharing needs the online part of Notemax, which this copy of the app was built without.</p>
       ) : share ? (
         <>
-          <p className="dialog-message">Edits go straight between the people who have it open, sealed with a key that is only in the links.</p>
           {canEdit(share) && <LinkRow label="Can edit" hint="Reads and writes in it, live." link={linkOf(share, node.title, "edit")} />}
           {share.verify ? (
             <LinkRow label="Can view" hint="Reads it as it changes, and cannot change it." link={linkOf(share, node.title, "view")} />
@@ -79,7 +87,7 @@ export function ShareDialog({ app, options, onClose }: { app: AppContext; option
             </p>
           )}
           {!canEdit(share) && <p className="share-people">You can read this page. Ask for an edit link to write in it.</p>}
-          <p className="share-people">{people.length ? `Here now: ${namesOf(people.map((p) => p.name))}.` : "Nobody else has it open right now. Edits made apart meet up the next time you both have it open."}</p>
+          <p className="share-people">{people.length ? `Here now: ${namesOf(people.map((p) => p.name))}.` : "Nobody else has it open right now."}</p>
           <div className="dialog-actions">
             <button
               className="link-button danger"

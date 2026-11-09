@@ -4,6 +4,7 @@ import { liveOn, liveState, type LiveState } from "./live";
 import { folderState, syncIsOn, syncNow, syncView, turnOffSync, turnOnSync, type SyncView } from "./runtime";
 import "./sync.css";
 import { messageOf } from "@/ui/format";
+import { InfoTip } from "@/ui/InfoTip";
 
 
 /** "just now", "5 minutes ago", and so on. */
@@ -43,7 +44,7 @@ export function describe(view: SyncView): string {
 const LIVE_WORDS: Record<LiveState, string> = {
   off: "Off",
   connecting: "Connecting...",
-  live: "Connected: edits show up on your other open devices within a second",
+  live: "Connected",
   error: "Could not connect. Edits still sync through Drive.",
 };
 
@@ -55,7 +56,10 @@ function LiveSwitch() {
     <label className="settings-row settings-check">
       <span>
         Live updates
-        <span className="settings-description">{on ? LIVE_WORDS[state] : "Edits reach your other devices with the next sync, within half a minute."}</span>
+        <InfoTip label="About live updates">
+          Each edit goes straight to your other open devices, within a second. Drive still keeps the record, so anything missed arrives with the next sync. Off, edits go through Drive only, within a few seconds.
+        </InfoTip>
+        <span className="settings-description">{on ? LIVE_WORDS[state] : "Off"}</span>
       </span>
       <input type="checkbox" checked={on} onChange={(event) => liveOn.set(event.target.checked)} />
     </label>
@@ -144,16 +148,12 @@ export function SyncSection() {
           </button>
         )}
         <LiveSwitch />
-        <p className="settings-note">
-          Your notes go to a folder called Notemax in your Google Drive, sealed with your passphrase. Google cannot read them, and Notemax sees only that folder.
-        </p>
-        <p className="settings-note">
-          Your settings go along too: theme, fonts, shortcuts, plugins and the like. Zoom, open sidebars and sync itself stay with each device.
-        </p>
         <div className="settings-row">
           <div className="settings-row-text">
-            <strong>Turn off sync on this device</strong>
-            <span>Notes stay on this device, and the copies in Drive stay for your other devices.</span>
+            <strong>
+              Turn off sync on this device
+              <InfoTip label="About turning off sync">Notes stay on this device, and the copies in Drive stay for your other devices.</InfoTip>
+            </strong>
           </div>
           <button
             className="button"
@@ -172,7 +172,6 @@ export function SyncSection() {
 
   return (
     <>
-      <p>Keep your notes and settings on all your devices through your own Google Drive. They are sealed with a passphrase before they leave this device.</p>
       {signedIn === undefined ? (
         <p>Loading...</p>
       ) : !signedIn ? (

@@ -4,6 +4,7 @@ import { openContextMenu } from "@/ui/ContextMenu";
 import { SearchSelect } from "@/ui/SearchSelect";
 import { defaultFor, defaultFormat, download, downloadEverything, formatsFor } from "./download";
 import { PAGE_FORMATS } from "./formats";
+import { InfoTip } from "@/ui/InfoTip";
 
 const nodeOf = (target: ContextTarget): TreeNode | null => (target.type === "page" || target.type === "download" ? target.node : null);
 
@@ -35,11 +36,10 @@ function DownloadsSection() {
   const all = [...new Map(["note", "book", "board"].flatMap((kind) => formatsFor(kind as TreeNode["kind"])).map((f) => [f.id, f])).values()];
   return (
     <>
-      <p>Download a page from its menu (right click it in the sidebar), or with Ctrl+Shift+E.</p>
       <label className="settings-row">
         <span>
           Default format
-          <span className="settings-description">Used by Ctrl+Shift+E. Pages that cannot be saved this way use their first format.</span>
+          <InfoTip label="About the default format">Used by Ctrl+Shift+E. Pages that cannot be saved this way use their first format.</InfoTip>
         </span>
         <SearchSelect
           label="Default format"
@@ -58,7 +58,7 @@ export const downloadsPlugin: Plugin = {
   name: "Downloads",
   description: "Save pages as text, Markdown, Word, PDF, EPUB and more, or everything at once",
   exporters: PAGE_FORMATS,
-  settings: [{ id: "downloads", order: 60, group: "Your data", title: "Downloads", icon: "download", keywords: ["export", "save", "markdown", "pdf", "word", "epub", "backup"], component: DownloadsSection }],
+  settings: [{ id: "downloads", order: 60, group: "Your data", title: "Downloads", about: "Download a page from its menu (right click it in the sidebar), or with Ctrl+Shift+E.", icon: "download", keywords: ["export", "save", "markdown", "pdf", "word", "epub", "backup"], component: DownloadsSection }],
   options: [
     {
       id: "askWhere",

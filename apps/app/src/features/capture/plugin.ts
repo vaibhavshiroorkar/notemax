@@ -8,5 +8,5 @@ export const capturePlugin: Plugin = {
   description: "A small window from anywhere with Ctrl+Alt+N (desktop app)",
   // The hotkey lives in the desktop app itself, so switching this off here would not stop it.
   required: true,
-  settings: [{ id: "capture", order: 68, group: "Advanced", title: "Quick capture", icon: "bolt", keywords: ["hotkey", "inbox"], when: () => isDesktop, component: CaptureSection }],
+  settings: [{ id: "capture", order: 68, group: "Advanced", title: "Quick capture", about: "Press Ctrl+Alt+N in any app to write a quick note. It is added to your notes.", icon: "bolt", keywords: ["hotkey", "inbox"], when: () => isDesktop, component: CaptureSection }],
 };

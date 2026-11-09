@@ -2,6 +2,7 @@ import { isDesktop } from "@/platform/platform";
 import { APP_VERSION } from "@/version";
 import { autoUpdate } from "@/platform/behavior";
 import { checkForUpdate, installUpdate, updateState } from "./updates";
+import { InfoTip } from "@/ui/InfoTip";
 
 function StateLine() {
   const now = updateState.use();
@@ -44,7 +45,7 @@ export function UpdatesSection() {
       <label className="settings-row settings-check">
         <span>
           Update automatically
-          <span className="settings-description">{isDesktop ? "Downloads new versions and installs them when the app restarts" : "Switches to a new version the next time the site opens"}</span>
+          <InfoTip label="About automatic updates">{isDesktop ? "Downloads new versions and installs them when the app restarts." : "Switches to a new version the next time the site opens."}</InfoTip>
         </span>
         <input type="checkbox" role="switch" checked={auto} onChange={(event) => autoUpdate.set(event.target.checked)} />
       </label>

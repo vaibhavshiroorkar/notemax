@@ -2,9 +2,12 @@
 export function CaptureSection() {
   return (
     <>
-      <p>
-        Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>N</kbd> in any app to write a quick note. It is added to your notes.
-      </p>
+      <div className="settings-row">
+        <span>Quick note from any app</span>
+        <span>
+          <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>N</kbd>
+        </span>
+      </div>
     </>
   );
 }
