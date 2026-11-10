@@ -7,6 +7,7 @@ import { messageOf } from "@/ui/format";
 import { sharedWithMe, type SharedWithMe } from "./api";
 import { joinSpace } from "./actions";
 import "./spaces.css";
+import { Loading } from "@/ui/Spinner";
 
 const ROLE_WORDS = { admin: "Admin", editor: "Can edit", viewer: "Can view" } as const;
 
@@ -33,7 +34,7 @@ export function SharedWithYou({ app }: { app: AppContext }) {
   if (!accountsEnabled) return null;
   if (!signedIn) return <p className="home-empty">Sign in to see workspaces people shared with you.</p>;
   if (error) return <p className="home-empty">{error}</p>;
-  if (!items) return <p className="home-empty">Looking...</p>;
+  if (!items) return <Loading className="home-empty">Looking...</Loading>;
   if (!items.length) return <p className="home-empty">Nobody has shared a workspace with you yet. When someone invites {account.email}, it shows here.</p>;
   return (
     <ul className="space-shared-list">

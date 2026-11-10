@@ -3,6 +3,7 @@ import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { usePageWorkspace } from "@/data/scope";
 import { saveImage, imageUrl } from "./store";
 import "./images.css";
+import { Spinner } from "@/ui/Spinner";
 
 // Sizes a drag snaps to when it comes close, in percent of the text width.
 const SNAP = [25, 33, 50, 66, 75, 100];
@@ -88,7 +89,15 @@ export function ImageView({ node, updateAttributes, selected, editor }: NodeView
         {url ? (
           <img src={url} alt={alt} draggable={false} />
         ) : (
-          <div className="image-missing">{missing ? "This picture is not on this device." : "Loading picture..."}</div>
+          <div className="image-missing">
+            {missing ? (
+              "This picture is not on this device."
+            ) : (
+              <>
+                <Spinner /> Loading picture...
+              </>
+            )}
+          </div>
         )}
         {selected && editor.isEditable && (
           <>

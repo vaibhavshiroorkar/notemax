@@ -3,6 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import type { SettingsContext } from "@/plugins/types";
 import "./account.css";
 import { messageOf } from "@/ui/format";
+import { Loading } from "@/ui/Spinner";
 
 type Client = typeof import("./client");
 
@@ -64,7 +65,7 @@ export function AccountSection({ accountError, compact }: Pick<SettingsContext, 
   return (
     <>
       {user === undefined ? (
-        <p>Loading...</p>
+        <Loading>Loading...</Loading>
       ) : user ? (
         <>
           <div className="account">

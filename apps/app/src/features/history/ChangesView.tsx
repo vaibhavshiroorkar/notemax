@@ -4,6 +4,7 @@ import { dataUrl, loadPictures, resolver } from "@/features/export/content";
 import type { DocNode } from "@/features/export/serialize";
 import { diffHtml, type DiffResult } from "./diff";
 import "./diff.css";
+import { Loading } from "@/ui/Spinner";
 
 /** What each color means where it is shown, like "erased since then". */
 export interface Legend {
@@ -27,7 +28,7 @@ export function ChangesView({ old, now, tree, legend, className = "", workspace 
     };
   }, [old, now, tree, workspace]);
 
-  if (!result) return <p className="diff-legend">Comparing...</p>;
+  if (!result) return <Loading className="diff-legend">Comparing...</Loading>;
   const none = !result.gone && !result.added && !result.changed;
   return (
     <>

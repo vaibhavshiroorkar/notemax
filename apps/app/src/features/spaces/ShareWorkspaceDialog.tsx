@@ -9,10 +9,11 @@ import { ConfirmDialog, Dialog } from "@/ui/Dialog";
 import { messageOf } from "@/ui/format";
 import { Segmented } from "@/ui/Segmented";
 import { atLeast, invite, setLinkAccess, spacePeople, uninvite, type LinkAccess, type Person, type Role, type SpaceInfo } from "./api";
-import { leaveWorkspace, linkTo, shareWorkspace, stopSharingWorkspace } from "./actions";
+import { COPY_HINT, copying, leaveWorkspace, linkTo, shareWorkspace, startCopy, stopSharingWorkspace } from "./actions";
 import { refreshSpace, spaceViews } from "./runtime";
 import "./spaces.css";
 import { InfoTip } from "@/ui/InfoTip";
+import { Loading, Spinner } from "@/ui/Spinner";
 
 const ROLE_WORDS: Record<Role, string> = { owner: "Owner", admin: "Admin", editor: "Can edit", viewer: "Can view" };
 const ROLE_HINTS: Record<Person["role"], string> = {
@@ -24,7 +25,7 @@ const YOU: Record<Role, string> = {
   owner: "You own this workspace.",
   admin: "You can edit this workspace and choose who has it.",
   editor: "You can edit this workspace.",
-  viewer: "You can view this workspace. Ask its owner to let you edit.",
+  viewer: "You can view this workspace. Ask its owner to let you edit, or make your own copy to change.",
 };
 const LINK_HINTS: Record<LinkAccess, string> = {
   off: "Only the people below can open it.",
@@ -73,6 +74,7 @@ export function ShareWorkspaceDialog({ app, options, onClose }: { app: AppContex
           </button>
           {email ? (
             <button className="button button-primary" disabled={busy} onClick={() => act(() => shareWorkspace(workspace, account.state === "in" ? account.name : ""))}>
+              {busy && <Spinner />}
               {busy ? "Sharing..." : "Share this workspace"}
             </button>
           ) : (
@@ -84,7 +86,7 @@ export function ShareWorkspaceDialog({ app, options, onClose }: { app: AppContex
       </>
     );
   } else if (!view || view.state === "opening") {
-    body = <p className="dialog-message">Connecting...</p>;
+    body = <Loading className="dialog-message">Connecting...</Loading>;
   } else if (view.state === "error") {
     body = (
       <>
@@ -251,7 +253,11 @@ function Settings({ workspace, info, email, app, onClose }: { workspace: Workspa
                 </li>
               );
             })}
-            {people === null && <li className="share-people">Loading...</li>}
+            {people === null && (
+              <li className="share-people">
+                <Loading>Loading...</Loading>
+              </li>
+            )}
           </ul>
         )}
       </section>
@@ -263,6 +269,7 @@ function Settings({ workspace, info, email, app, onClose }: { workspace: Workspa
 
 function Footer({ workspace, email, app, role, onClose }: { workspace: WorkspaceInfo; email: string | null; app: AppContext; role: Role | null; onClose(): void }) {
   const [asking, setAsking] = useState(false);
+  const busyCopying = copying.use().has(workspace.id);
   const name = nameOf(workspace);
   const owner = role === "owner";
   // The first workspace is never removed, so leaving it is not offered; stopping is, to its owner.
@@ -272,6 +279,12 @@ function Footer({ workspace, email, app, role, onClose }: { workspace: Workspace
       {(owner || canLeave) && (
         <button className="link-button danger" onClick={() => setAsking(true)}>
           {owner ? "Stop sharing" : "Leave and remove from this device"}
+        </button>
+      )}
+      {!owner && (
+        <button className="button" disabled={busyCopying} title={COPY_HINT} onClick={() => startCopy(workspace)}>
+          {busyCopying && <Spinner />}
+          {busyCopying ? "Copying..." : "Make my own copy"}
         </button>
       )}
       <button className="button" onClick={onClose}>

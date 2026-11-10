@@ -2,10 +2,11 @@ import { accountsEnabled } from "@/features/account/config";
 import { accountView } from "@/features/account/session";
 import type { AppContext, Plugin } from "@/plugins/types";
 import { messageOf } from "@/ui/format";
-import { joinSpace, spaceFromLink } from "./actions";
+import { canCopy, joinSpace, spaceFromLink, startCopy } from "./actions";
 import { isViewOnly, startSpaces } from "./runtime";
 import { SharedWithYou } from "./SharedWithYou";
 import { ShareWorkspaceDialog } from "./ShareWorkspaceDialog";
+import { workspaceList } from "@/features/workspaces/list";
 
 /** Opens the workspace a link was for, adding it to this device's list the first time. */
 function openFromLink(app: AppContext) {
@@ -35,6 +36,19 @@ export const spacesPlugin: Plugin = {
       title: "Share this workspace",
       keywords: ["invite", "collaborate", "team", "people", "link", "access", "members"],
       run: (app) => app.openOverlay("workspace-share", { workspace: app.workspace }),
+    },
+    {
+      id: "spaces.copy",
+      title: "Make my own copy of this workspace",
+      keywords: ["fork", "duplicate", "clone", "copy", "shared", "view only", "private"],
+      when: (app) => {
+        const here = workspaceList.get().find((w) => w.id === app.workspace);
+        return !!here && canCopy(here);
+      },
+      run: (app) => {
+        const here = workspaceList.get().find((w) => w.id === app.workspace);
+        if (here) startCopy(here);
+      },
     },
   ],
   start(app) {

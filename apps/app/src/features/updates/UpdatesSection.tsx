@@ -3,14 +3,15 @@ import { APP_VERSION } from "@/version";
 import { autoUpdate } from "@/platform/behavior";
 import { checkForUpdate, installUpdate, updateState } from "./updates";
 import { InfoTip } from "@/ui/InfoTip";
+import { Loading } from "@/ui/Spinner";
 
 function StateLine() {
   const now = updateState.use();
   switch (now.state) {
     case "checking":
-      return <p className="updates-state">Checking...</p>;
+      return <Loading className="updates-state">Checking...</Loading>;
     case "downloading":
-      return <p className="updates-state">Downloading {now.version}...</p>;
+      return <Loading className="updates-state">Downloading {now.version}...</Loading>;
     case "ready":
       return (
         <p className="updates-state">

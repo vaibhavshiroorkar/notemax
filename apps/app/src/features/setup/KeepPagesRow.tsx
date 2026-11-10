@@ -5,6 +5,7 @@ import { memoryOnly } from "@/platform/platform";
 import { ConfirmDialog } from "@/ui/Dialog";
 import { messageOf } from "@/ui/format";
 import { InfoTip } from "@/ui/InfoTip";
+import { Loading } from "@/ui/Spinner";
 
 /**
  * Settings, Setup: whether this device keeps a copy of the pages. Off, they
@@ -48,7 +49,7 @@ export function KeepPagesRow() {
           onChange={(event) => (event.target.checked ? void run(keepPagesHere) : setAsking(true))}
         />
       </label>
-      {busy && <p className="settings-note">{memoryOnly ? "Saving pages to this device..." : "Sending edits, then erasing..."}</p>}
+      {busy && <Loading className="settings-note">{memoryOnly ? "Saving pages to this device..." : "Sending edits, then erasing..."}</Loading>}
       {error && <p className="warning">{error}</p>}
       {asking && (
         <ConfirmDialog

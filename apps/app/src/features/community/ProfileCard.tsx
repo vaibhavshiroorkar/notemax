@@ -4,6 +4,7 @@ import { myProfile, type Profile } from "./api";
 import { ProfileForm } from "./ProfileForm";
 import "./community.css";
 import { messageOf } from "@/ui/format";
+import { Loading } from "@/ui/Spinner";
 
 /**
  * Your community name where account things live: the username with a way to
@@ -29,7 +30,7 @@ export function ProfileCard() {
 
   if (!signedIn) return <p className="settings-description">Sign in to pick a username for the community.</p>;
   if (error) return <p className="community-error">{error}</p>;
-  if (profile === undefined) return <p className="community-meta">Loading...</p>;
+  if (profile === undefined) return <Loading className="community-meta">Loading...</Loading>;
   if (!profile || editing)
     return (
       <ProfileForm

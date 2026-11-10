@@ -6,6 +6,7 @@ import type { PageProps } from "@/plugins/types";
 import { locksVersion, registry } from "@/plugins/registry";
 import { useShownTheme } from "@/ui/appearance";
 import "./boards.css";
+import { PaneLoading } from "@/ui/Spinner";
 
 // Excalidraw is large, so it downloads the first time a board opens, not at startup.
 const BoardCanvas = lazy(() => import("./BoardCanvas"));
@@ -36,10 +37,12 @@ export function BoardPane({ node, app, workspaceDoc, onStatus, onReady }: PagePr
         <PageHeader node={node} app={app} />
       </header>
       <div className="board-canvas">
-        {local && (
-          <Suspense fallback={<p className="board-loading">Opening the board...</p>}>
+        {local ? (
+          <Suspense fallback={<PaneLoading label="Opening the board" />}>
             <BoardCanvas key={node.id} doc={local.doc} theme={theme} viewOnly={locked} onReady={onReady} onEdit={() => touchNode(workspaceDoc, node.id)} />
           </Suspense>
+        ) : (
+          <PaneLoading label="Opening the board" />
         )}
       </div>
     </div>

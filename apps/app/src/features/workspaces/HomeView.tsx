@@ -17,6 +17,9 @@ import { Dot } from "./Switcher";
 import { PageListView } from "./PageListView";
 import { plural } from "@/ui/format";
 import { accountView } from "@/features/account/session";
+import { COPY_HINT, canCopy, copying, startCopy } from "@/features/spaces/actions";
+import { spaceViews } from "@/features/spaces/runtime";
+import { Spinner } from "@/ui/Spinner";
 
 
 function Card({ workspace, app, count, onDragTo, onBack }: { workspace: WorkspaceInfo; app: AppContext; count: number | null; onDragTo(id: string): void; onBack(): void }) {
@@ -25,6 +28,9 @@ function Card({ workspace, app, count, onDragTo, onBack }: { workspace: Workspac
   const [deleting, setDeleting] = useState(false);
   const [dropping, setDropping] = useState(false);
   const opened = unlocked.use();
+  // canCopy reads the role, which arrives after the card first shows.
+  spaceViews.use();
+  const busyCopying = copying.use().has(workspace.id);
   const name = nameOf(workspace);
 
   return (
@@ -99,6 +105,12 @@ function Card({ workspace, app, count, onDragTo, onBack }: { workspace: Workspac
             <button className="button" onClick={() => void setLock(app, workspace, !workspace.locked)}>
               <Icon name="lock" />
               {workspace.locked ? "Remove the lock" : "Lock"}
+            </button>
+          )}
+          {canCopy(workspace) && (!workspace.locked || opened) && (
+            <button className="button" title={COPY_HINT} disabled={busyCopying} onClick={() => startCopy(workspace)}>
+              {busyCopying ? <Spinner /> : <Icon name="copy" />}
+              {busyCopying ? "Copying..." : "Make my own copy"}
             </button>
           )}
           {canDelete(workspace) && (

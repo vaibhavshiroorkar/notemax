@@ -1,6 +1,8 @@
 import * as Y from "yjs";
 import { onDocOpen } from "@/data/docCache";
+import { workspaceList } from "@/features/workspaces/list";
 import { showToast } from "@/ui/toast";
+import { startCopy } from "./actions";
 
 // A workspace shared with you to view: its pages are locked, but the sidebar
 // and other places can still change the tree or a page here and there. Those
@@ -20,13 +22,14 @@ class Every extends Set<unknown> {
 }
 
 let toldAt = 0;
-const tell = () => {
+const tell = (workspace: string) => {
   if (Date.now() - toldAt < 8000) return;
   toldAt = Date.now();
-  showToast("This workspace is shared with you to view, so changes are not kept.");
+  const info = workspaceList.get().find((w) => w.id === workspace);
+  showToast("This workspace is shared with you to view, so changes are not kept.", info && { label: "Make my own copy", run: () => startCopy(info) });
 };
 
-function guard(doc: Y.Doc) {
+function guard(doc: Y.Doc, workspace: string) {
   if (guards.has(doc)) return;
   const undo: Y.UndoManager = new Y.UndoManager([...doc.share.values()], {
     captureTimeout: 0,
@@ -35,7 +38,7 @@ function guard(doc: Y.Doc) {
   });
   undo.on("stack-item-added", (event: { type: "undo" | "redo" }) => {
     if (event.type !== "undo") return;
-    tell();
+    tell(workspace);
     // After the change's own transaction has finished.
     queueMicrotask(() => {
       undo.undo();
@@ -66,7 +69,7 @@ onDocOpen((workspace, _docId, local) => {
     docs.delete(local.doc);
     unguard(local.doc);
   });
-  if (viewOnly.has(workspace)) guard(local.doc);
+  if (viewOnly.has(workspace)) guard(local.doc, workspace);
 });
 
 /** Turns the guard on or off for a workspace, for its open docs and the ones it opens later. */
@@ -74,5 +77,8 @@ export function setViewOnly(workspace: string, on: boolean) {
   if (on === viewOnly.has(workspace)) return;
   if (on) viewOnly.add(workspace);
   else viewOnly.delete(workspace);
-  for (const doc of docsOf.get(workspace) ?? []) (on ? guard : unguard)(doc);
+  for (const doc of docsOf.get(workspace) ?? []) {
+    if (on) guard(doc, workspace);
+    else unguard(doc);
+  }
 }

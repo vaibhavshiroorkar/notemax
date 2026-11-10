@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { accountNames, myProfile, saveProfile, type Profile } from "./api";
 import { messageOf } from "@/ui/format";
+import { Spinner } from "@/ui/Spinner";
 
 /** A first guess at a username from a name: small letters, digits and _. */
 const guess = (name: string) =>
@@ -73,6 +74,7 @@ export function ProfileForm({ onSaved, intro }: { onSaved(profile: Profile): voi
       </label>
       {error && <p className="community-error">{error}</p>}
       <button className="button button-primary" type="submit" disabled={busy || username.length < 3}>
+        {busy && <Spinner />}
         {busy ? "Saving..." : "Save"}
       </button>
     </form>

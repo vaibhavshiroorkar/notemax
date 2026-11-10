@@ -1,0 +1,71 @@
+.spinner {
+  display: inline-block;
+  flex: none;
+  box-sizing: border-box;
+  width: 1em;
+  height: 1em;
+  border: 2px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  vertical-align: -0.15em;
+  animation:
+    spinner-turn 0.75s linear infinite,
+    spinner-in 0.2s 0.25s ease-out backwards;
+}
+
+.spinner[data-large] {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+  color: var(--muted);
+}
+
+/* Inside a button the words stay put; the ring takes the place of nothing. */
+.button .spinner,
+.link-button .spinner {
+  margin-right: 6px;
+  animation-delay: 0s, 0s;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  animation: spinner-in 0.2s 0.25s ease-out backwards;
+}
+
+.loading .spinner {
+  animation-delay: 0s, 0s;
+}
+
+.pane-loading {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 160px;
+  height: 100%;
+}
+
+.app-loading {
+  position: fixed;
+  inset: 0;
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinner-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: spinner-in 0.2s 0.25s ease-out backwards;
+  }
+}

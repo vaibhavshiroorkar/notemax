@@ -8,6 +8,7 @@ import { ProfileForm } from "./ProfileForm";
 import { loadPostedSources } from "./ReaderNotesPanel";
 import { snapshotOf } from "./snapshot";
 import { messageOf } from "@/ui/format";
+import { Loading, Spinner } from "@/ui/Spinner";
 
 const RIGHTS = "communityRights";
 
@@ -57,7 +58,7 @@ export function PostDialog({ app, options, onClose }: { app: AppContext; options
   };
 
   let body;
-  if (!state) body = error ? <p className="community-error">{error}</p> : <p className="community-meta">Loading...</p>;
+  if (!state) body = error ? <p className="community-error">{error}</p> : <Loading className="community-meta">Loading...</Loading>;
   else if (!state.me)
     body = (
       <>
@@ -139,6 +140,7 @@ export function PostDialog({ app, options, onClose }: { app: AppContext; options
             </button>
           )}
           <button type="submit" className="button button-primary" disabled={busy || !rights}>
+            {busy && <Spinner />}
             {busy ? "Posting..." : state.post ? "Update post" : "Post"}
           </button>
         </div>

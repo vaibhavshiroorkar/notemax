@@ -1,7 +1,8 @@
 import * as Y from "yjs";
-import { WORKSPACE_DOC_ID, assetDocId, copyNodesTo, scopedId, type DocStore } from "@notemax/core";
+import { WORKSPACE_DOC_ID, addWorkspace, assetDocId, copyNodesTo, scopedId, splitScoped, type DocStore } from "@notemax/core";
 import { peekDoc } from "@/data/docCache";
 import { getSharedStore } from "@/platform/platform";
+import { openList } from "./list";
 
 /** A page's whole stored state, taken from memory when it is open, so the last keystrokes come along. */
 async function stateOf(store: DocStore, docId: string, workspace: string): Promise<Uint8Array | null> {
@@ -62,4 +63,37 @@ export async function copyToWorkspace(workspaceDoc: Y.Doc, id: string, target: s
   } finally {
     tree.destroy();
   }
+}
+
+/**
+ * Makes a new workspace holding every page of another, as they are on this
+ * device. Page ids stay the same inside it, so links between its pages still
+ * work. `tidy` gets the copied tree before it is stored, to take out what must
+ * not come along. The tree is written last and the workspace listed after
+ * that, so nobody opens it half full. Returns the new workspace's id.
+ */
+export async function copyWorkspace(source: string, name: string, color: string, tidy?: (tree: Y.Doc) => void): Promise<string> {
+  const store = await getSharedStore();
+  const id = crypto.randomUUID().slice(0, 8);
+  const docIds = (await store.list()).flatMap((stored) => {
+    const scoped = splitScoped(stored);
+    return scoped.workspace === source && scoped.docId !== WORKSPACE_DOC_ID ? [scoped.docId] : [];
+  });
+  for (const docId of docIds) {
+    const state = await stateOf(store, docId, source);
+    if (state) await store.append(scopedId(id, docId), state);
+  }
+  const tree = new Y.Doc();
+  try {
+    const state = await stateOf(store, WORKSPACE_DOC_ID, source);
+    if (state) Y.applyUpdate(tree, state);
+    tidy?.(tree);
+    await store.append(scopedId(id, WORKSPACE_DOC_ID), Y.encodeStateAsUpdate(tree));
+  } finally {
+    tree.destroy();
+  }
+  const list = await openList();
+  addWorkspace(list.doc, name, color, id);
+  await list.flush();
+  return id;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Profile } from "./api";
 import { messageOf } from "@/ui/format";
+import { Loading } from "@/ui/Spinner";
 
 // Small parts the community screens share.
 
@@ -56,6 +57,6 @@ export function Avatar({ profile, size = 28 }: { profile?: Profile; size?: numbe
 
 export function Status({ error, loading, children }: { error?: string; loading: boolean; children: ReactNode }) {
   if (error) return <p className="community-error">{error}</p>;
-  if (loading) return <p className="community-empty" aria-busy="true">Loading...</p>;
+  if (loading) return <Loading className="community-empty">Loading...</Loading>;
   return <>{children}</>;
 }

@@ -7,6 +7,7 @@ import { Icon } from "@/ui/Icon";
 import { LANGUAGES, languageOf, type Language } from "./languages";
 import { readsInput, run, type Line, type Run } from "./run";
 import "./code.css";
+import { Loading } from "@/ui/Spinner";
 
 // CodeMirror and its languages load with the first code page, not with the app.
 const CodeEditor = lazy(() => import("./CodeEditor").then((m) => ({ default: m.CodeEditor })));
@@ -151,11 +152,19 @@ export function CodePane({ node, app, workspaceDoc, onStatus, onReady }: PagePro
         )}
       </div>
       {local ? (
-        <Suspense fallback={<div className="code-editor code-loading">Loading the editor...</div>}>
+        <Suspense
+          fallback={
+            <div className="code-editor code-loading">
+              <Loading>Loading the editor...</Loading>
+            </div>
+          }
+        >
           <CodeEditor text={local.doc.getText("code")} language={language} onRun={() => start()} />
         </Suspense>
       ) : (
-        <div className="code-editor code-loading" />
+        <div className="code-editor code-loading">
+          <Loading>Opening...</Loading>
+        </div>
       )}
       {showInput && readsInput(language) && (
         <label className="code-stdin">

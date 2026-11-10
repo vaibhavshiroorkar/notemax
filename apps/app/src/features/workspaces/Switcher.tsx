@@ -8,6 +8,8 @@ import { DeleteWorkspaceDialog, canDelete, setLock } from "./actions";
 import { createWorkspace, nameOf, openList, rename, switchTo, workspaceList } from "./list";
 import { useDismiss } from "@/ui/useDismiss";
 import { isViewOnly, spaceViews } from "@/features/spaces/runtime";
+import { COPY_HINT, canCopy, copying, startCopy } from "@/features/spaces/actions";
+import { Spinner } from "@/ui/Spinner";
 
 /** A dot in the workspace's color, or an outline when it has none. */
 export function Dot({ color }: { color: string }) {
@@ -51,6 +53,7 @@ export function Switcher({ app }: { app: AppContext }) {
   useDismiss(open, () => setOpen(false), wrapper);
 
   const current = list.find((w) => w.id === app.workspace);
+  const busyCopying = copying.use().has(app.workspace);
   const startNew = async () => {
     setOpen(false);
     const name = await askText({ title: "New workspace", label: "Name", placeholder: "Like Work, School or Novel", confirm: "Create" });
@@ -158,6 +161,21 @@ export function Switcher({ app }: { app: AppContext }) {
             >
               <Icon name="people" />
               {current.shared ? "Sharing and people..." : "Share this workspace..."}
+            </button>
+          )}
+          {current && canCopy(current) && (!current.locked || opened) && (
+            <button
+              className="menu-item"
+              role="menuitem"
+              title={COPY_HINT}
+              disabled={busyCopying}
+              onClick={() => {
+                setOpen(false);
+                startCopy(current);
+              }}
+            >
+              {busyCopying ? <Spinner /> : <Icon name="copy" />}
+              {busyCopying ? "Copying..." : "Make my own copy"}
             </button>
           )}
           <button className="menu-item" role="menuitem" onClick={() => void startNew()}>

@@ -20,8 +20,8 @@
     "path": "notemax-android.keystore",
     "alias": "notemax"
   },
-  "appVersion": "0.114.0",
-  "appVersionCode": 11400,
+  "appVersion": "0.115.0",
+  "appVersionCode": 11500,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://notemax.pages.dev/manifest.webmanifest",

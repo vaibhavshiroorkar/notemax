@@ -14,9 +14,17 @@
     <link rel="icon" href="/icon.svg?v=2" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Notemax</title>
+    <style>
+      /* Shown until the app draws its first screen, which replaces it. Only after a moment, so a quick start never flashes it. */
+      .boot { position: fixed; inset: 0; display: grid; place-items: center; animation: boot-in 0.2s 0.4s backwards; }
+      .boot::after { content: ""; box-sizing: border-box; width: 28px; height: 28px; border: 3px solid rgba(128, 128, 128, 0.25); border-top-color: #8a8a8a; border-radius: 50%; animation: boot-turn 0.75s linear infinite; }
+      @keyframes boot-turn { to { transform: rotate(360deg); } }
+      @keyframes boot-in { from { opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) { .boot::after { animation: none; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot" role="status" aria-label="Opening Notemax"></div></div>
     <script type="module" src="/src/app/main.tsx"></script>
   </body>
 </html>

@@ -276,3 +276,9 @@
     -webkit-touch-callout: none;
   }
 }
+
+/* Shown under the title while a long note's text comes off the disk. */
+.note-loading {
+  margin: 16px 0;
+  font-size: 14px;
+}

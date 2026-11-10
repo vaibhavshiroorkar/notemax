@@ -5,6 +5,7 @@ import { folderState, syncIsOn, syncNow, syncView, turnOffSync, turnOnSync, type
 import "./sync.css";
 import { messageOf } from "@/ui/format";
 import { InfoTip } from "@/ui/InfoTip";
+import { Loading } from "@/ui/Spinner";
 
 
 /** "just now", "5 minutes ago", and so on. */
@@ -173,7 +174,7 @@ export function SyncSection() {
   return (
     <>
       {signedIn === undefined ? (
-        <p>Loading...</p>
+        <Loading>Loading...</Loading>
       ) : !signedIn ? (
         waiting ? (
           <>
@@ -188,11 +189,11 @@ export function SyncSection() {
           </button>
         )
       ) : busy ? (
-        <p>{busy}</p>
+        <Loading>{busy}</Loading>
       ) : folder ? (
         <PassphraseForm existing={folder.hasPassphrase} onSubmit={start} />
       ) : (
-        <p>Looking at your Drive...</p>
+        <Loading>Looking at your Drive...</Loading>
       )}
       {error && <p className="warning">{error}</p>}
     </>

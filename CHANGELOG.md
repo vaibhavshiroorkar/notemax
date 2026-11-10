@@ -2,6 +2,11 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.115.0 (2026-11-10)
+
+- A workspace shared with you can be copied into one of your own: "Make my own copy" in the workspace menu, on its Home card, in its share window and in the command palette. The copy has every page as it is now, takes your edits, and nobody else sees it. Viewers who try to change something are offered it too.
+- A turning ring shows wherever something takes a moment: starting the app, opening a note, board, drawing or code page, pictures and videos, sync and update checks, the community and share windows, and buttons that are working.
+
 ## 0.114.0 (2026-11-10)
 
 - Less text in Settings and the share windows. Explanations now sit behind a small (i): tap or click it, or point at it with a mouse. What a setting is doing right now, like Synced 2 minutes ago, still shows. Settings search still finds the hidden text.

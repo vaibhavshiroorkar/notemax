@@ -4,6 +4,7 @@ import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { APP_VERSION } from "@/version";
 import { askForDownloads, canInstall, downloads, inAndroidApp, installWebApp, megabytes, systemOf, type Download, type System } from "./offer";
+import { Loading } from "@/ui/Spinner";
 
 const here = systemOf();
 
@@ -44,7 +45,7 @@ function Card({ system, title, needs, points, children }: { system: System; titl
 function Windows() {
   const { windows } = downloads.use();
   if (isDesktop) return <p className="get-app-meta">This is the Windows app, version {APP_VERSION.replace(/\.0$/, "")}. It updates itself.</p>;
-  if (windows === undefined) return <p className="get-app-meta">Finding the newest version...</p>;
+  if (windows === undefined) return <Loading className="get-app-meta">Finding the newest version...</Loading>;
   if (!windows) return <p className="get-app-meta">The installer could not be reached right now. Try again in a little while.</p>;
   return (
     <>
@@ -67,7 +68,7 @@ function Android() {
   if (inAndroidApp) return <p className="get-app-meta">This is the Android app. It gets each new version on its own.</p>;
   return (
     <>
-      {android === undefined && <p className="get-app-meta">Finding the newest version...</p>}
+      {android === undefined && <Loading className="get-app-meta">Finding the newest version...</Loading>}
       {android && android !== "none" && (
         <>
           <DownloadLink download={android}>Download for Android</DownloadLink>

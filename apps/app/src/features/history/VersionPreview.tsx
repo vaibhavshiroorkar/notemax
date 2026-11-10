@@ -14,6 +14,7 @@ import { logPage, stampOf } from "./audit";
 import { saveNow } from "./versions";
 import { whenOf } from "./VersionsPanel";
 import { messageOf } from "@/ui/format";
+import { Spinner } from "@/ui/Spinner";
 
 /** One saved version, read-only, with a button to make the page say that again. */
 export function VersionPreview({ app, options, onClose }: { app: AppContext; options: Record<string, unknown>; onClose(): void }) {
@@ -53,7 +54,13 @@ export function VersionPreview({ app, options, onClose }: { app: AppContext; opt
       <header className="version-preview-header">
         <div>
           <h2 className="dialog-title">{title}</h2>
-          <p className="version-preview-when">{version ? whenOf(version.time) : "Loading..."}</p>
+          <p className="version-preview-when">{version ? (
+              whenOf(version.time)
+            ) : (
+              <>
+                <Spinner /> Loading...
+              </>
+            )}</p>
         </div>
         <div className="dialog-actions">
           <button className="button" onClick={onClose}>

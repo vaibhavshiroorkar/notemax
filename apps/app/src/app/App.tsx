@@ -68,6 +68,7 @@ import "./app.css";
 import { KeyboardBar } from "@/features/editor/KeyboardBar";
 import { isTypingTarget } from "@/ui/typing";
 import { addPage } from "@/data/addPage";
+import { PaneLoading } from "@/ui/Spinner";
 
 // Matches the breakpoint in app.css where the sidebars become overlays.
 
@@ -319,7 +320,7 @@ export function App() {
 
   // A device that keeps no pages explains its own failure: there is no local storage to blame.
   if (workspace.openError) return <p className="error">{memoryOnly ? workspace.openError : `Could not open local storage: ${workspace.openError}`}</p>;
-  if (!workspace.doc || !workspace.tree) return null;
+  if (!workspace.doc || !workspace.tree) return <PaneLoading className="app-loading" label="Opening Notemax" />;
 
   const { tree, doc } = workspace;
   const activeNode = activeId ? tree.byId.get(activeId) : undefined;

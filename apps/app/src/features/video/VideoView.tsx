@@ -4,6 +4,7 @@ import { usePageWorkspace } from "@/data/scope";
 // Any asset reads the same way; pictures were simply first.
 import { imageUrl } from "@/features/images/store";
 import "./video.css";
+import { Spinner } from "@/ui/Spinner";
 
 const SIZES = [25, 50, 75, 100];
 
@@ -38,7 +39,15 @@ export function VideoView({ node, updateAttributes, selected, editor }: NodeView
       {url ? (
         <video src={url} controls preload="metadata" />
       ) : (
-        <div className="video-missing">{missing ? "This video is not on this device." : "Loading video..."}</div>
+        <div className="video-missing">
+          {missing ? (
+            "This video is not on this device."
+          ) : (
+            <>
+              <Spinner /> Loading video...
+            </>
+          )}
+        </div>
       )}
       {selected && editor.isEditable && (
         <div className="image-bar video-bar" contentEditable={false} onMouseDown={(event) => event.preventDefault()}>

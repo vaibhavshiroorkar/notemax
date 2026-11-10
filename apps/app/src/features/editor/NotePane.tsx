@@ -23,6 +23,7 @@ import { JournalAdder } from "@/features/dates/JournalAdder";
 import { starterContent } from "./welcome";
 import "./editor.css";
 import { isTypingTarget } from "@/ui/typing";
+import { Loading } from "@/ui/Spinner";
 
 // Tiptap's focus() waits for the next animation frame, so keys typed right after
 // Enter would still land in the title. Focusing the view directly is immediate;
@@ -153,6 +154,7 @@ export function NotePane({ node, app, tree, hub, workspaceDoc, onStatus, onReady
           }}
         />
       )}
+      {!local && <Loading className="note-loading">Opening the note...</Loading>}
       {local && (chapter || inline) && (
         <InlineSubtopics
           subtopics={subtopics}

@@ -1,9 +1,14 @@
-import { MAIN_WORKSPACE, addWorkspace, exportKey, setWorkspaceShared, type WorkspaceInfo } from "@notemax/core";
+import { MAIN_WORKSPACE, addWorkspace, exportKey, readTree, setWorkspaceShared, type WorkspaceInfo } from "@notemax/core";
+import { shareOf, stopSharing } from "@/features/share/share";
 import { deleteWorkspace, nameOf, openList, switchTo, workspaceList } from "@/features/workspaces/list";
+import { copyWorkspace } from "@/features/workspaces/transfer";
 import { isDesktop } from "@/platform/platform";
 import { workspaceNow } from "@/platform/prefs";
+import { createStore } from "@/platform/store";
+import { messageOf } from "@/ui/format";
+import { dismissToast, showToast } from "@/ui/toast";
 import { createSpace, deleteSpace, openSpace, uninvite } from "./api";
-import { forgetSpaceState } from "./runtime";
+import { forgetSpaceState, spaceViews } from "./runtime";
 
 /** Where people without the app open a link. The desktop app has no address of its own. */
 const PUBLIC_APP = "https://notemax.pages.dev";
@@ -82,3 +87,76 @@ export const spaceFromLink: { space: string; token: string } | null = (() => {
   history.replaceState(history.state, "", location.pathname + location.search);
   return { space: match[1].toLowerCase(), token: match[2] };
 })();
+
+export const COPY_HINT = "A new workspace with every page as it is now, only for you to change. It does not follow later changes, and nobody else sees it.";
+
+/** Whether to offer a private copy: to the people a workspace is shared with, not to its owner, who has the original. */
+export function canCopy(workspace: WorkspaceInfo): boolean {
+  if (!workspace.shared) return false;
+  const view = spaceViews.get()[workspace.id];
+  return view?.state !== "ready" || view.info.role !== "owner";
+}
+
+/** Shared workspaces being copied right now, so their buttons can show it. */
+export const copying = createStore<ReadonlySet<string>>(new Set());
+
+/** How long to wait for pages still arriving before copying what is here. */
+const SETTLE_MS = 60_000;
+
+/** Resolves once this window is not reading the workspace's pages, or after a while. */
+function settled(workspace: string): Promise<void> {
+  const busy = () => {
+    const view = spaceViews.get()[workspace];
+    return view?.state === "opening" || (view?.state === "ready" && view.sync?.state === "syncing");
+  };
+  if (!busy()) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      stop();
+      resolve();
+    };
+    const timer = setTimeout(done, SETTLE_MS);
+    const stop = spaceViews.subscribe(() => !busy() && done());
+  });
+}
+
+/**
+ * Makes a private copy of a shared workspace, so someone who may only view it
+ * can still change their own version. The copy is theirs alone: it is not
+ * shared, and pages in it that were shared on their own by link lose that
+ * link, so nothing typed in the copy reaches the original.
+ */
+export async function copySharedWorkspace(workspace: WorkspaceInfo): Promise<{ workspace: string; name: string }> {
+  const set = (on: boolean) => {
+    const next = new Set(copying.get());
+    if (on) next.add(workspace.id);
+    else next.delete(workspace.id);
+    copying.set(next);
+  };
+  set(true);
+  try {
+    await settled(workspace.id);
+    const name = `${nameOf(workspace)} (copy)`;
+    const id = await copyWorkspace(workspace.id, name, workspace.color, (tree) => {
+      tree.transact(() => {
+        for (const node of readTree(tree).byId.values()) if (shareOf(node)) stopSharing(tree, node.id);
+      });
+    });
+    return { workspace: id, name };
+  } finally {
+    set(false);
+  }
+}
+
+/** Copies a shared workspace and says so, with a button to go there. */
+export function startCopy(workspace: WorkspaceInfo) {
+  if (copying.get().has(workspace.id)) return;
+  const working = showToast(`Copying ${nameOf(workspace)}...`);
+  copySharedWorkspace(workspace)
+    .finally(() => dismissToast(working))
+    .then(
+      (copy) => showToast(`Made ${copy.name}. It is yours to change, and nobody else sees it.`, { label: "Open it", run: () => switchTo(copy.workspace) }),
+      (err: unknown) => showToast(`Could not make a copy: ${messageOf(err)}`),
+    );
+}

@@ -6,6 +6,7 @@ import type { StoredFile } from "./board-sync";
 import { DEFAULT_HEIGHT, HEIGHTS, hasShapes, packScene, readFiles, readList, shouldOpenNew } from "./drawing-data";
 import type { Scene } from "./DrawingCanvas";
 import "./drawing.css";
+import { PaneLoading } from "@/ui/Spinner";
 
 const DrawingCanvas = lazy(() => import("./DrawingCanvas"));
 
@@ -101,7 +102,7 @@ export function DrawingView({ node, updateAttributes, selected, editor }: NodeVi
       <div className="drawing-frame" style={full ? undefined : { height: shown }} contentEditable={false}>
         {editing ? (
           <div className="drawing-live">
-            <Suspense fallback={<p className="drawing-note">Opening the drawing...</p>}>
+            <Suspense fallback={<PaneLoading label="Opening the drawing" />}>
               <DrawingCanvas elements={elements} files={files} theme={theme} onSave={save} />
             </Suspense>
           </div>

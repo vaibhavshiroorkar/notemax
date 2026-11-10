@@ -15,6 +15,7 @@ import { revealing } from "./reveal";
 import { openPage, type Visit } from "./tabs";
 import { Gated } from "./Gated";
 import { addPage } from "@/data/addPage";
+import { PaneLoading } from "@/ui/Spinner";
 
 /** What makes a page from another workspace work: that workspace's tree and doc, and the page. */
 export interface Scope {
@@ -104,7 +105,7 @@ export function ForeignPage({ base, visit, active, version }: { base: AppContext
   );
 
   if (workspace.openError) return <p className="empty pane-empty">The workspace this page is in could not be opened.</p>;
-  if (!app || !tree || !doc) return null;
+  if (!app || !tree || !doc) return <PaneLoading />;
   const Page = node && registry.pageView(node.kind)?.component;
   return (
     <PageWorkspace.Provider value={ws}>
