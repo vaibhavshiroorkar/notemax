@@ -10,6 +10,7 @@ import { SyncSection } from "./SyncSection";
 import { onlineMode, type Mode } from "@/platform/mode";
 import { accountsEnabled } from "@/features/account/config";
 import { Segmented } from "@/ui/Segmented";
+import { InfoTip } from "@/ui/InfoTip";
 
 /**
  * The window the account bar opens: sign in, then sync, without going
@@ -34,21 +35,33 @@ export function AccountDialog({ app, options, onClose }: { app: AppContext; opti
       <div className="account-dialog-body">
       <section className="account-mode">
         <div>
-          <h3>This device</h3>
-          <p className="settings-description">{online ? "Online features are available. Sign in to sync and share." : "Online features are off. Your pages stay on this device."}</p>
+          <h3>
+            This device
+            <InfoTip label="About device mode">
+              {online ? "Online features are available. Sign in to sync and share." : "Online features are off. Your pages stay on this device."}
+            </InfoTip>
+          </h3>
         </div>
         <Segmented<Mode> label="Device mode" value={mode ?? "online"} options={[{ value: "offline", label: "Offline" }, { value: "online", label: "Online" }]} onChange={(value) => onlineMode.set(value)} />
       </section>
       {online && accountsEnabled && <section className="account-dialog-sync"><AccountSection accountError={typeof options.error === "string" ? options.error : undefined} compact /></section>}
       {online && account.state === "in" && registry.isOn("community") && (
         <section className="account-dialog-sync">
-          <h3>Community profile</h3>
+          <h3>
+            Community profile
+            <InfoTip label="About community profile">Sign in to pick a username for the community.</InfoTip>
+          </h3>
           <ProfileCard />
         </section>
       )}
       {online && account.state === "in" && registry.isOn("sync") && (
         <section className="account-dialog-sync">
-          <h3>Sync</h3>
+          <h3>
+            Sync
+            <InfoTip label="About sync">
+              Your notes go to a folder called Notemax in your Google Drive, sealed with your passphrase. Google cannot read them, and Notemax sees only that folder. Your settings go along too: theme, fonts, shortcuts, plugins and the like. Zoom, open sidebars and sync itself stay with each device.
+            </InfoTip>
+          </h3>
           <SyncSection />
         </section>
       )}

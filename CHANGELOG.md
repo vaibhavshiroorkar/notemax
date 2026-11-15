@@ -2,6 +2,11 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.116.0 (2026-11-15)
+
+- Less clutter in Sync and Account. Explanations about the Notemax Drive folder, passphrase protection, and synced settings now sit behind a small (i) info icon. Passphrase prompts, account descriptions, and device mode hints are streamlined.
+- More reliable Google Drive sync across web, desktop, and mobile. Captures Google OAuth refresh tokens reliably after sign-in so Drive access connects cleanly, refreshes tokens immediately on retry, and avoids brief "another tab" notices during startup.
+
 ## 0.115.0 (2026-11-10)
 
 - A workspace shared with you can be copied into one of your own: "Make my own copy" in the workspace menu, on its Home card, in its share window and in the command palette. The copy has every page as it is now, takes your edits, and nobody else sees it. Viewers who try to change something are offered it too.

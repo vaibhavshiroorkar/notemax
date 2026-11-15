@@ -67,19 +67,16 @@ export function AccountSection({ accountError, compact }: Pick<SettingsContext, 
       {user === undefined ? (
         <Loading>Loading...</Loading>
       ) : user ? (
-        <>
-          <div className="account">
-            {avatar && <img className="account-avatar" src={avatar} alt="" referrerPolicy="no-referrer" />}
-            <div className="account-name">
-              <strong>{name}</strong>
-              {name !== user.email && <span>{user.email}</span>}
-            </div>
-            <button className="button" onClick={signOut}>
-              Sign out
-            </button>
+        <div className="account">
+          {avatar && <img className="account-avatar" src={avatar} alt="" referrerPolicy="no-referrer" />}
+          <div className="account-name">
+            <strong>{name}</strong>
+            {name !== user.email && <span>{user.email}</span>}
           </div>
-          {!compact && <p>To keep your notes on all your devices, turn on Sync in the Sync section.</p>}
-        </>
+          <button className="button" onClick={signOut}>
+            Sign out
+          </button>
+        </div>
       ) : waiting ? (
         <>
           <p>Finish signing in with Google in your browser, then come back here.</p>
@@ -88,12 +85,9 @@ export function AccountSection({ accountError, compact }: Pick<SettingsContext, 
           </button>
         </>
       ) : (
-        <>
-          <p>{compact ? "Sign in to sync your notes and use the community." : "Notemax works without an account. Sign in to sync through Google Drive, share pages, and use the community."}</p>
-          <button className="button" onClick={signIn} disabled={!client}>
-            Continue with Google
-          </button>
-        </>
+        <button className="button button-primary" onClick={signIn} disabled={!client}>
+          Continue with Google
+        </button>
       )}
       {error && <p className="warning">{error}</p>}
     </>

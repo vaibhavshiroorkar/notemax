@@ -59,6 +59,10 @@ let refreshing: Promise<string> | null = null;
 /** An access token for Drive, fetching a new one when the last is about to run out. */
 export async function driveToken(force = false): Promise<string> {
   if (!force && access && access.expires > Date.now() + 60_000) return access.token;
+  if (force) {
+    access = null;
+    refreshing = null;
+  }
   refreshing ??= refreshToken().finally(() => (refreshing = null));
   return refreshing;
 }

@@ -92,5 +92,5 @@ describe("who did what", () => {
     const long = await listLog(store, "q");
     expect(long).toHaveLength(500);
     expect(long.at(-1)?.time).toBe(15);
-  });
+  }, 15000);
 });

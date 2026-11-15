@@ -319,9 +319,17 @@ export function startSync() {
     if (!controller.signal.aborted) syncView.set({ state: "error", lastSynced: null, message: messageOf(err) });
   };
   if (navigator.locks) {
-    syncView.set({ state: "elsewhere" });
+    let granted = false;
+    const timer = setTimeout(() => {
+      if (!granted) syncView.set({ state: "elsewhere" });
+    }, 150);
+    const locked = async () => {
+      granted = true;
+      clearTimeout(timer);
+      await body();
+    };
     // Waits while another tab holds the lock, and takes over when that tab closes.
-    void navigator.locks.request("notemax-sync", { signal: controller.signal }, body).catch(failed);
+    void navigator.locks.request("notemax-sync", { signal: controller.signal }, locked).catch(failed);
   } else void body().catch(failed);
 }
 

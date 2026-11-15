@@ -134,7 +134,12 @@ export function SyncSection() {
       <>
         <div className="settings-row">
           <div className="settings-row-text">
-            <strong>Sync is on</strong>
+            <strong>
+              Sync is on
+              <InfoTip label="About sync">
+                Your notes go to a folder called Notemax in your Google Drive, sealed with your passphrase. Google cannot read them, and Notemax sees only that folder. Your settings go along too: theme, fonts, shortcuts, plugins and the like. Zoom, open sidebars and sync itself stay with each device.
+              </InfoTip>
+            </strong>
             <span data-state={view.state} className="sync-state">
               {describe(view)}
             </span>
@@ -184,9 +189,17 @@ export function SyncSection() {
             </button>
           </>
         ) : (
-          <button className="button button-primary" onClick={signIn}>
-            Continue with Google
-          </button>
+          <div className="settings-row">
+            <span>
+              Google Drive sync
+              <InfoTip label="About sync">
+                Your notes go to a folder called Notemax in your Google Drive, sealed with your passphrase. Google cannot read them, and Notemax sees only that folder. Your settings go along too: theme, fonts, shortcuts, plugins and the like. Zoom, open sidebars and sync itself stay with each device.
+              </InfoTip>
+            </span>
+            <button className="button button-primary" onClick={signIn}>
+              Continue with Google
+            </button>
+          </div>
         )
       ) : busy ? (
         <Loading>{busy}</Loading>
@@ -214,15 +227,15 @@ function PassphraseForm({ existing, onSubmit }: { existing: boolean; onSubmit(pa
 
   return (
     <form className="sync-form" onSubmit={submit}>
-      {existing ? (
-        <p>Your Drive already has Notemax notes. Enter the passphrase you chose on your other device.</p>
-      ) : (
-        <p>
-          Choose a passphrase. Every device you sync needs it. <strong>If you forget it, the copies in Drive cannot be read</strong>, though the notes on each device stay as they are.
-        </p>
-      )}
       <label className="sync-field">
-        <span>Passphrase</span>
+        <span>
+          Passphrase
+          <InfoTip label="About passphrase">
+            {existing
+              ? "Your Drive already has Notemax notes. Enter the passphrase you chose on your other device."
+              : "Choose a passphrase. Every device you sync needs it. If you forget it, the copies in Drive cannot be read, though the notes on each device stay as they are."}
+          </InfoTip>
+        </span>
         <input type="password" autoComplete={existing ? "current-password" : "new-password"} value={passphrase} onChange={(event) => setPassphrase(event.target.value)} data-autofocus />
       </label>
       {!existing && (

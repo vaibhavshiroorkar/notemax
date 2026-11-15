@@ -12,8 +12,8 @@ export const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!, {
     // PKCE: the code that comes back is useless without a secret kept on this
     // device, so another program catching the redirect gains nothing.
     flowType: "pkce",
-    // The desktop app gets its code from the local listener, never from its own URL.
-    detectSessionInUrl: !isDesktop,
+    // We explicitly exchange the code in finishWebSignIn to guarantee capturing provider tokens.
+    detectSessionInUrl: false,
   },
 });
 
@@ -70,14 +70,34 @@ export async function signInWithGoogle(signal: AbortSignal): Promise<void> {
  * Returns an error message, if any.
  */
 export async function finishWebSignIn(params: URLSearchParams): Promise<string | undefined> {
-  const { data, error } = await supabase.auth.getSession();
+  const errorDescription = params.get("error_description");
+  const code = params.get("code");
   // Drop the code from the address bar, so a reload does not try to use it twice.
   // The state is kept: it says which page this history entry is.
   history.replaceState(history.state, "", location.pathname + location.hash);
-  if (params.get("error_description")) return params.get("error_description")!;
-  if (error) return error.message;
-  if (!data.session) return "Google sign-in did not finish.";
-  rememberGoogleTokens(data.session);
+  if (errorDescription) return errorDescription;
+
+  let session = null;
+  if (code) {
+    try {
+      const exchange = await supabase.auth.exchangeCodeForSession(code);
+      if (exchange.error) {
+        const { data } = await supabase.auth.getSession();
+        session = data.session;
+      } else {
+        session = exchange.data.session;
+      }
+    } catch {
+      const { data } = await supabase.auth.getSession();
+      session = data.session;
+    }
+  } else {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) return error.message;
+    session = data.session;
+  }
+  if (!session) return "Google sign-in did not finish.";
+  rememberGoogleTokens(session);
   return undefined;
 }
 
