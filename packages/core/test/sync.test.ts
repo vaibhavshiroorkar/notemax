@@ -66,8 +66,10 @@ class FakeDrive {
   }
 }
 
-async function device(name: string, drive: FakeDrive, key: CryptoKey, store: DocStore) {
-  let state: SyncState = { cursor: null, dirty: [] };
+const isLater = (docId: string) => docId.startsWith("history:");
+
+async function device(name: string, drive: FakeDrive, key: CryptoKey, store: DocStore, start: SyncState = { cursor: null, dirty: [] }, later: (docId: string) => boolean = isLater) {
+  let state: SyncState = start;
   const received: string[] = [];
   const updates: Uint8Array[] = [];
   const statuses: SyncStatus[] = [];
@@ -85,6 +87,7 @@ async function device(name: string, drive: FakeDrive, key: CryptoKey, store: Doc
     },
     onStatus: (status) => statuses.push(status),
     onConflict: (docId, mine, theirs) => conflicts.push({ docId, mine, theirs }),
+    isLater: later,
   });
   /** Types into a note the way the app does: through a local doc that saves to the store. */
   const type = async (docId: string, text: string) => {
@@ -404,6 +407,121 @@ describe.each([
     const open = new Y.Doc();
     b.updates.forEach((update) => Y.applyUpdate(open, update));
     expect(open.getText("body").toString()).toBe("Live.");
+  });
+
+  it("does not send versions on an ordinary run, and sends them on a later run", async () => {
+    const { drive, a } = await setup();
+    await a.type("note", "text");
+    await a.type("history:note", "v1");
+    await a.engine.sync();
+    expect([...drive.files.keys()]).toEqual(["note@laptop"]);
+    await a.engine.sync({ later: true });
+    expect([...drive.files.keys()].sort()).toEqual(["history:note@laptop", "note@laptop"]);
+    expect(a.state().dirty).toEqual([]);
+  });
+
+  it("does not download versions until asked", async () => {
+    const { a, b } = await setup();
+    await a.type("note", "text");
+    await a.type("history:note", "v1");
+    await a.engine.sync({ later: true });
+    await b.engine.sync();
+    expect(await b.read("note")).toBe("text");
+    expect((await b.store.load("history:note")).updates).toEqual([]);
+    expect(b.state().waiting?.["history:note"]).toHaveLength(1);
+    expect(await b.engine.fetch("history:note")).toBe(true);
+    expect(await b.read("history:note")).toBe("v1");
+    expect(b.received).toContain("history:note");
+    expect(await b.engine.fetch("history:note")).toBe(false);
+  });
+
+  it("does not download versions on a first sync from nothing, even its own", async () => {
+    const { drive, key, a } = await setup();
+    await a.type("note", "text");
+    await a.type("history:note", "v1");
+    await a.engine.sync({ later: true });
+    // The same device after a reinstall: an empty store and no cursor.
+    const again = await device("laptop", drive, key, await freshStore("again"));
+    await again.engine.sync();
+    expect(await again.read("note")).toBe("text");
+    expect((await again.store.load("history:note")).updates).toEqual([]);
+    expect(await again.engine.fetch("history:note")).toBe(true);
+    expect(await again.read("history:note")).toBe("v1");
+  });
+
+  it("keeps its own older versions when it sends new ones", async () => {
+    const { drive, key, a } = await setup();
+    await a.type("history:note", "v1 ");
+    await a.engine.sync({ later: true });
+    const again = await device("laptop", drive, key, await freshStore("again"));
+    await again.engine.sync();
+    await again.type("history:note", "v2");
+    await again.engine.sync({ later: true });
+    const third = await device("tablet", drive, key, await freshStore("third"));
+    await third.engine.sync();
+    await third.engine.fetch("history:note");
+    const text = await third.read("history:note");
+    expect(text).toContain("v1");
+    expect(text).toContain("v2");
+  });
+
+  it("keeps its own older versions when an engine that sends them at once takes over", async () => {
+    // A device that keeps no pages: it starts empty, fills without versions, then sends them as urgent.
+    const { drive, key, a } = await setup();
+    await a.type("history:note", "v1 ");
+    await a.engine.sync({ later: true });
+    const fill = await device("laptop", drive, key, await freshStore("fill"));
+    await fill.engine.sync();
+    const urgent = await device("laptop", drive, key, fill.store, fill.state(), () => false);
+    await urgent.type("history:note", "v2");
+    await urgent.engine.sync();
+    const third = await device("tablet", drive, key, await freshStore("third"));
+    await third.engine.sync();
+    await third.engine.fetch("history:note");
+    const text = await third.read("history:note");
+    expect(text).toContain("v1");
+    expect(text).toContain("v2");
+  });
+
+  it("says synced when only versions wait", async () => {
+    const { a } = await setup();
+    await a.type("history:note", "v1");
+    await a.engine.sync();
+    expect(a.engine.status().state).toBe("idle");
+    expect(a.engine.hasLater()).toBe(true);
+    expect(a.statuses.some((s) => s.state === "syncing" && (s.total ?? 0) > 0)).toBe(false);
+  });
+
+  it("keeps versions to send after a restart", async () => {
+    const { drive, key, a } = await setup();
+    await a.type("history:note", "v1");
+    const restarted = await device("laptop", drive, key, a.store, a.state());
+    expect(restarted.engine.hasLater()).toBe(true);
+  });
+
+  it("keeps a waiting version when fetching it fails, and gets it next time", async () => {
+    const { drive, a, b } = await setup();
+    await a.type("history:note", "v1");
+    await a.engine.sync({ later: true });
+    await b.engine.sync();
+    drive.failReads = 1;
+    await expect(b.engine.fetch("history:note")).rejects.toThrow("network down");
+    expect(b.state().waiting?.["history:note"]).toHaveLength(1);
+    expect(await b.engine.fetch("history:note")).toBe(true);
+    expect(await b.read("history:note")).toBe("v1");
+  });
+
+  it("keeps only the newest waiting file per device", async () => {
+    const { a, b } = await setup();
+    await a.type("history:note", "v1");
+    await a.engine.sync({ later: true });
+    await b.engine.sync();
+    await a.type("history:note", " v2");
+    await a.engine.sync({ later: true });
+    await b.engine.sync();
+    expect(b.state().waiting?.["history:note"]).toHaveLength(1);
+    await b.engine.fetch("history:note");
+    expect(await b.read("history:note")).toBe("v1 v2");
   });
 });
 

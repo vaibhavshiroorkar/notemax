@@ -2,6 +2,11 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.117.0 (2026-11-15)
+
+- Faster sync. Versions of a page no longer go to Drive with every edit, since each holds a whole copy of the page. They follow in the background, at most every 10 minutes, and when the desktop app quits. Another device downloads a page's versions only when you open its History. In a test with a long note, the same three edits sent 443 kB instead of 3.2 MB.
+- Back up everything to one file, and restore it: Settings, Backup, or the command palette. The file holds every workspace, version and picture on the device. Restoring adds to what is there and removes nothing.
+
 ## 0.116.0 (2026-11-15)
 
 - Less clutter in Sync and Account. Explanations about the Notemax Drive folder, passphrase protection, and synced settings now sit behind a small (i) info icon. Passphrase prompts, account descriptions, and device mode hints are streamlined.

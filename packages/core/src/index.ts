@@ -78,3 +78,4 @@ export {
 } from "./workspaces";
 export { parseWhen, nextDue, type When, type Repeat } from "./when";
 export { tasksIn, finishTask, remindAt, type Task } from "./tasks";
+export { packBackup, readBackup, restoreBackup, type BackupInfo } from "./backup";

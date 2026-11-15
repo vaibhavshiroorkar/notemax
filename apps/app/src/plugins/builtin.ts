@@ -5,6 +5,7 @@ import { booksPlugin } from "@/features/books/plugin";
 import { capturePlugin } from "@/features/capture/plugin";
 import { notesPlugin } from "@/features/editor/plugin";
 import { downloadsPlugin } from "@/features/export/plugin";
+import { backupPlugin } from "@/features/backup/plugin";
 import { graphPlugin } from "@/features/graph/plugin";
 import { imagesPlugin } from "@/features/images/plugin";
 import { linksPlugin } from "@/features/links/plugin";
@@ -84,6 +85,7 @@ import { registerPlugin } from "./registry";
   pageInfoPlugin,
   graphPlugin,
   downloadsPlugin,
+  backupPlugin,
   palettePlugin,
   navigationPlugin,
   findPlugin,

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import * as Y from "yjs";
-import { listLog, listVersions, type AuditEntry, type Author, type Version } from "@notemax/core";
+import { historyDocId, listLog, listVersions, scopedId, type AuditEntry, type Author, type Version } from "@notemax/core";
 import { withPageDoc } from "@/features/export/content";
 import { storeFor } from "@/platform/platform";
 import { savedStore } from "@/platform/store";
+import { fetchHistory } from "@/features/sync/runtime";
+import { Loading } from "@/ui/Spinner";
 import type { AppContext } from "@/plugins/types";
 import { Icon } from "@/ui/Icon";
 import { Segmented } from "@/ui/Segmented";
@@ -45,10 +47,15 @@ function History({ app }: { app: AppContext }) {
   const changed = historyChanged.use();
   const [versions, setVersions] = useState<Version[] | null>(null);
   const [log, setLog] = useState<AuditEntry[] | null>(null);
+  const [offline, setOffline] = useState(false);
 
   useEffect(() => {
     let live = true;
-    const store = storeFor(app.workspace);
+    // Versions from other devices wait on Drive until someone looks at them.
+    const store = fetchHistory(scopedId(app.workspace, historyDocId(id))).then((fetched) => {
+      if (live) setOffline(fetched === "offline");
+      return storeFor(app.workspace);
+    });
     store
       .then((s) => listVersions(s, id))
       .then((list) => live && setVersions(list))
@@ -76,6 +83,7 @@ function History({ app }: { app: AppContext }) {
         />
       )}
       {shown === "versions" ? <Versions app={app} id={id} versions={versions} /> : <Activity app={app} id={id} versions={isNote ? versions : []} log={log} />}
+      {offline && <p className="versions-empty">Older versions from other devices need a connection.</p>}
     </div>
   );
 }
@@ -92,7 +100,9 @@ function Versions({ app, id, versions }: { app: AppContext; id: string; versions
 
   return (
     <>
-      {versions === null ? null : versions.length ? (
+      {versions === null ? (
+        <Loading>Getting versions</Loading>
+      ) : versions.length ? (
         <ul>
           {versions.map((version) => (
             <li key={version.id}>

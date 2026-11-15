@@ -83,7 +83,11 @@ function loadState(): SyncState {
   if (memoryOnly) return memoryState;
   try {
     const value = JSON.parse(getPref(PREFS.state) ?? "") as SyncState;
-    return { cursor: typeof value.cursor === "string" ? value.cursor : null, dirty: Array.isArray(value.dirty) ? value.dirty : [] };
+    return {
+      cursor: typeof value.cursor === "string" ? value.cursor : null,
+      dirty: Array.isArray(value.dirty) ? value.dirty : [],
+      waiting: value.waiting && typeof value.waiting === "object" ? value.waiting : {},
+    };
   } catch {
     return { cursor: null, dirty: [] };
   }
@@ -105,6 +109,7 @@ setMemoryFill(async (store) => {
     saveState,
     onRemoteUpdate: () => {},
     onStatus: (status) => syncView.set(status),
+    isLater: isVersions,
   });
   await fill.sync();
 });
@@ -127,6 +132,15 @@ const sendAfterMs = () => (memoryOnly ? 500 : liveState.get() === "live" ? 1500 
 const pollMs = () => (liveState.get() === "live" ? 10_000 : 5_000);
 /** After a nudge, look again a little later too: Drive's list of changes can lag a moment behind a write. */
 const POKE_AGAIN_MS = 4_000;
+/**
+ * Versions hold whole copies of a page, so sending them is slow. They go at
+ * most this often, when no edit is waiting, and another device downloads a
+ * page's versions only when its History opens.
+ */
+const LATER_EVERY_MS = 10 * 60_000;
+
+/** A page's version history, which can wait. */
+const isVersions = (stored: string) => isHistoryDocId(splitScoped(stored).docId);
 
 async function runEngine(signal: AbortSignal) {
   const key = await importKey(getPref(PREFS.key)!);
@@ -168,6 +182,8 @@ async function runEngine(signal: AbortSignal) {
     saveState,
     // Open pages in every window merge it, the way they merge another window's edits.
     onRemoteUpdate: tellOpenPages,
+    // A device that keeps no pages has Drive as the only copy of its versions, so they go at once.
+    isLater: (stored) => !memoryOnly && isVersions(stored),
     // Asked in the workspace it belongs to. Elsewhere both edits are kept all the same.
     onConflict(stored, mine, theirs) {
       const { workspace, docId } = splitScoped(stored);
@@ -189,6 +205,13 @@ async function runEngine(signal: AbortSignal) {
   engine = current;
 
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let laterTimer: ReturnType<typeof setTimeout> | undefined;
+  const sendLater = () => {
+    laterTimer = setTimeout(sendLater, LATER_EVERY_MS);
+    const urgent = loadState().dirty.some((docId) => !isVersions(docId));
+    if (current.hasLater() && !urgent && navigator.onLine) current.sync({ later: true }).catch(() => {});
+  };
+  laterTimer = setTimeout(sendLater, LATER_EVERY_MS);
   const run = () => {
     clearTimeout(timer);
     timer = undefined;
@@ -269,8 +292,9 @@ async function runEngine(signal: AbortSignal) {
   const sendWaiting = () => loadState().dirty.length > 0 && run();
   const onWake = () => (document.visibilityState === "visible" ? run() : sendWaiting());
   window.addEventListener("pagehide", sendWaiting);
+  // The desktop app waits for this on quit, so versions go too.
   const stopQuitHook = beforeQuit(async () => {
-    if (loadState().dirty.length) await current.sync();
+    if (loadState().dirty.length) await current.sync({ later: true });
   });
   // Drive holds the only copy, so closing with edits not yet sent asks first, and sends them meanwhile.
   const onLeave = (event: BeforeUnloadEvent) => {
@@ -298,6 +322,7 @@ async function runEngine(signal: AbortSignal) {
   clearTimeout(poll);
   clearTimeout(pokeAgain);
   clearTimeout(timer);
+  clearTimeout(laterTimer);
   window.removeEventListener("online", run);
   window.removeEventListener("focus", run);
   document.removeEventListener("visibilitychange", onWake);
@@ -306,6 +331,22 @@ async function runEngine(signal: AbortSignal) {
   stopQuitHook();
   channels.forEach((channel) => channel.close());
   engine = null;
+}
+
+/**
+ * Downloads a page's versions from other devices, which wait on Drive until
+ * someone looks at them. "off" when this window does not sync (sync is off,
+ * or another tab holds it), "offline" when the download failed.
+ */
+export async function fetchHistory(stored: string): Promise<"done" | "offline" | "off"> {
+  if (!engine) return "off";
+  try {
+    await engine.fetch(stored);
+    return "done";
+  } catch (err) {
+    console.warn("[notemax] could not fetch versions", stored, err);
+    return "offline";
+  }
 }
 
 /** Starts sync in this window when it is on. In a browser, only one tab syncs at a time. */
@@ -488,6 +529,7 @@ export async function turnOnSync(passphrase: string): Promise<"started" | "reloa
     saveState,
     onRemoteUpdate: () => {},
     onStatus: (status) => syncView.set(status),
+    isLater: isVersions,
   });
   if (!adopt) await first.markAllDirty();
   await first.sync();
