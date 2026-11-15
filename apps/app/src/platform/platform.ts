@@ -2,8 +2,12 @@ import { MAIN_WORKSPACE, createMemoryStore, createSqlStore, openIdbStore, scoped
 import { getPref, workspaceNow } from "./prefs";
 import { messageOf } from "@/ui/format";
 
-/** True inside the Tauri desktop app, false in a normal browser. */
-export const isDesktop = "__TAURI_INTERNALS__" in window;
+/** True inside a Tauri app: the desktop app or the phone app. */
+export const isTauri = "__TAURI_INTERNALS__" in window;
+/** True inside the Android app. It keeps pages in SQLite like the desktop app, and otherwise acts like the website. */
+export const isPhoneApp = isTauri && /Android/i.test(navigator.userAgent);
+/** True inside the desktop app, false in a browser or the phone app. */
+export const isDesktop = isTauri && !isPhoneApp;
 
 /** Where windows of one workspace post their saved edits, so the others stay current. */
 export const docChannelFor = (workspace: string) => (workspace === MAIN_WORKSPACE ? "notemax-docs" : `notemax-docs@${workspace}`);
@@ -21,8 +25,8 @@ const DESKTOP_DB_URL = "sqlite:notemax.db";
 export const memoryOnly = getPref("keepLocal") === "0" && getPref("syncOn") === "1";
 
 async function openDiskStore(): Promise<DocStore> {
-  if (!isDesktop) return openIdbStore();
-  // Loaded only on desktop, so the web build never pulls in Tauri code.
+  if (!isTauri) return openIdbStore();
+  // Loaded only in the apps, so the website never pulls in Tauri code.
   const { default: Database } = await import("@tauri-apps/plugin-sql");
   const db = await Database.load(DESKTOP_DB_URL);
   return createSqlStore({
@@ -75,7 +79,7 @@ async function openStore(): Promise<DocStore> {
 export async function eraseDiskStore() {
   const disk = await openDiskStore();
   for (const docId of await disk.list()) await disk.remove(docId);
-  if (isDesktop) {
+  if (isTauri) {
     // SQLite keeps deleted rows in free pages until the file is rebuilt.
     const { default: Database } = await import("@tauri-apps/plugin-sql");
     await (await Database.load(DESKTOP_DB_URL)).execute("VACUUM");
@@ -196,7 +200,7 @@ export const getStore = () => storeFor(workspaceNow());
  * writes a normal file on disk, so this risk does not apply there.
  */
 export async function requestPersistentStorage(): Promise<boolean> {
-  if (isDesktop) return true;
+  if (isTauri) return true;
   if (!navigator.storage?.persist) return false;
   return (await navigator.storage.persisted()) || navigator.storage.persist();
 }

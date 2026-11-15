@@ -4,7 +4,6 @@ import { phoneBar } from "@/ui/phoneBar";
 import { replaceToast } from "@/ui/toast";
 
 const SAY: Record<PinnedBars, string> = {
-  0: "All bars scroll away with the page",
   peek: "The bottom bar comes back when you scroll up",
   1: "The bottom bar stays while you scroll",
   2: "Both bars stay while you scroll",
@@ -30,7 +29,7 @@ function PinnedGlyph({ level }: { level: PinnedBars }) {
   );
 }
 
-/** Steps through how many bars stay: the bottom one, both, none, the bottom one on scrolling up, and round again. */
+/** Steps through how many bars stay: the bottom one, both, the bottom one on scrolling up, and round again. */
 export function PinnedBarsButton() {
   const level = pinnedBars.use();
   const next = PINNED_ORDER[(PINNED_ORDER.indexOf(level) + 1) % PINNED_ORDER.length];

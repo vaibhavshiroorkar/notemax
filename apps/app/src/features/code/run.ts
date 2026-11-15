@@ -6,6 +6,7 @@
 
 import type { Language } from "./languages";
 import { messageOf } from "@/ui/format";
+import { BIG_FILES_FROM } from "@/platform/bigFiles";
 
 export type Line =
   | { kind: "out" | "err" | "info"; text: string }
@@ -72,7 +73,7 @@ const workerFor = (source: string) => new Worker(URL.createObjectURL(new Blob([s
 const sqlWorker = () => new Worker(new URL("./sql.worker.ts", import.meta.url), { type: "module" });
 const cppWorker = () => new Worker(new URL("./cpp.worker.ts", import.meta.url), { type: "module" });
 
-const JAVA = "/runtimes/teavm/";
+const JAVA = `${BIG_FILES_FROM}/runtimes/teavm/`;
 
 interface Compiled {
   status?: string;

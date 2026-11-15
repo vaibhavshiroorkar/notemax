@@ -1,4 +1,5 @@
 import { getOption } from "@/plugins/options";
+import { isPhoneApp } from "@/platform/platform";
 
 type SavePicker = (options: { suggestedName: string }) => Promise<{ createWritable(): Promise<{ write(data: Blob): Promise<void>; close(): Promise<void> }> }>;
 
@@ -8,6 +9,15 @@ type SavePicker = (options: { suggestedName: string }) => Promise<{ createWritab
  * (and the desktop app's web view) offers one.
  */
 export async function saveFile(blob: Blob, name: string): Promise<boolean> {
+  // The phone app's web view cannot download, so the phone's own Save dialog picks the place.
+  if (isPhoneApp) {
+    const { save } = await import("@tauri-apps/plugin-dialog");
+    const { writeFile } = await import("@tauri-apps/plugin-fs");
+    const path = await save({ defaultPath: name });
+    if (!path) return false;
+    await writeFile(path, new Uint8Array(await blob.arrayBuffer()));
+    return true;
+  }
   const picker = (window as unknown as { showSaveFilePicker?: SavePicker }).showSaveFilePicker;
   if (picker && getOption("downloads", "askWhere")) {
     try {

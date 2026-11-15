@@ -1,6 +1,6 @@
 import { accountsEnabled } from "@/features/account/config";
 import { onlineMode } from "@/platform/mode";
-import { isDesktop } from "@/platform/platform";
+import { isTauri } from "@/platform/platform";
 import { createStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
 import { Dialog } from "@/ui/Dialog";
@@ -28,7 +28,7 @@ export const setupLater = createStore(quietForChecks());
  * Settings, Setup still turns it offline.
  */
 export function startOnlineOnTheWeb() {
-  if (!isDesktop && onlineMode.get() === null) onlineMode.set("online");
+  if (!isTauri && onlineMode.get() === null) onlineMode.set("online");
 }
 
 /**
@@ -39,7 +39,7 @@ export function startOnlineOnTheWeb() {
 export function SetupDialog({ app }: { app: AppContext }) {
   const mode = onlineMode.use();
   const later = setupLater.use();
-  if (!isDesktop || mode !== null || later) return null;
+  if (!isTauri || mode !== null || later) return null;
   return (
     <Dialog label="How will you use Notemax?" className="setup-dialog" onClose={() => setupLater.set(true)}>
       <h2 className="dialog-title">How will you use Notemax?</h2>

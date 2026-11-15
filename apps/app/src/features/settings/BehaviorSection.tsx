@@ -14,7 +14,6 @@ const NEW_TAB: { value: NewTabShows; label: string }[] = [
 ];
 
 const PINNED: { value: `${PinnedBars}`; label: string }[] = [
-  { value: "0", label: "None" },
   { value: "peek", label: "Bottom, scrolling up" },
   { value: "1", label: "Bottom" },
   { value: "2", label: "Both" },
@@ -54,7 +53,7 @@ export function BehaviorSection() {
           On a phone, bars that stay while scrolling
           <InfoTip label="About the phone bars">The bottom bar has formatting in a note and reading tools in a post. The button at the start of that bar changes it too.</InfoTip>
         </span>
-        <Segmented<`${PinnedBars}`> label="On a phone, bars that stay while scrolling" value={`${pinnedBars.use()}`} options={PINNED} onChange={(value) => pinnedBars.set(value === "peek" ? value : (Number(value) as PinnedBars))} />
+        <Segmented<`${PinnedBars}`> label="On a phone, bars that stay while scrolling" value={`${pinnedBars.use()}`} options={PINNED} onChange={(value) => pinnedBars.set(value === "peek" ? value : (Number(value) as 1 | 2))} />
       </div>
       <label className="settings-row settings-check">
         <span>Open a Welcome tab in each new workspace</span>

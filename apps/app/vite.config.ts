@@ -72,14 +72,15 @@ function serviceWorker(): Plugin {
 // out: its hot reload needs inline scripts.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net blob:",
+  "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://notemax.pages.dev blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: blob:",
   // Excalidraw still asks esm.sh for its fonts in the built app, though the
   // fonts are served from /excalidraw/ and its asset path is set before it
   // loads. Until that is found, boards keep their fonts from there.
-  "font-src 'self' data: https://esm.sh",
+  // The Android app gets them, and the Java runtime, from the website (platform/bigFiles.ts).
+  "font-src 'self' data: https://esm.sh https://notemax.pages.dev",
   // ipc: is how the desktop window talks to the app around it. Local addresses are for a plugin's dev server.
   "connect-src 'self' https: wss://*.supabase.co data: blob: ipc: http://ipc.localhost http://localhost:* http://127.0.0.1:*",
   "worker-src 'self' blob:",

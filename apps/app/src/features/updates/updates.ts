@@ -1,9 +1,11 @@
 import type { Update } from "@tauri-apps/plugin-updater";
-import { isDesktop } from "@/platform/platform";
+import { isDesktop, isPhoneApp } from "@/platform/platform";
+import { APP_VERSION } from "@/version";
 import { beforeQuit, runQuitHooks } from "@/platform/quit";
 import { autoUpdate } from "@/platform/behavior";
 import { createStore } from "@/platform/store";
 import { messageOf } from "@/ui/format";
+import { showToast } from "@/ui/toast";
 
 export type UpdateState =
   | { state: "idle" }
@@ -43,6 +45,10 @@ export async function checkForUpdate(): Promise<void> {
   if (now === "checking" || now === "downloading") return;
   updateState.set({ state: "checking" });
   try {
+    if (isPhoneApp) {
+      const newer = await newerApk();
+      return updateState.set(newer ? { state: "ready", version: newer.version } : { state: "latest", at: Date.now() });
+    }
     if (!isDesktop) {
       if (!import.meta.env.PROD) return updateState.set({ state: "latest", at: Date.now() });
       const worker = await waitingWorker();
@@ -62,6 +68,14 @@ export async function checkForUpdate(): Promise<void> {
 
 /** Puts the new version in place now: the website reloads, the desktop app installs and starts again. */
 export async function installUpdate(): Promise<void> {
+  if (isPhoneApp) {
+    // Android installs an app only from a file the person opens, so the browser downloads it.
+    const newer = await newerApk();
+    if (!newer) return;
+    const { openUrl } = await import("@tauri-apps/plugin-opener");
+    await openUrl(`${SITE}/android/${newer.file}`);
+    return;
+  }
   if (!isDesktop) {
     const worker = await waitingWorker();
     if (!worker) return location.reload();
@@ -82,6 +96,22 @@ export async function installUpdate(): Promise<void> {
 }
 
 const HOURS_6 = 6 * 60 * 60 * 1000;
+const SITE = "https://notemax.pages.dev";
+
+/** The newer Android app on the website, or null when this one is the newest. */
+async function newerApk(): Promise<{ version: string; file: string } | null> {
+  const response = await fetch(`${SITE}/android/latest.json`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`could not look for updates (${response.status})`);
+  const latest = (await response.json()) as { version: string; file: string };
+  return isNewer(latest.version, APP_VERSION) ? latest : null;
+}
+
+/** Whether version a (like "0.120.0") comes after version b. */
+export const isNewer = (a: string, b: string) => {
+  const [x, y] = [a, b].map((v) => v.split(".").map(Number));
+  for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) > (y[i] ?? 0);
+  return false;
+};
 
 /**
  * The desktop app looks on its own a little after it opens, and every few
@@ -89,6 +119,17 @@ const HOURS_6 = 6 * 60 * 60 * 1000;
  * the app quits, so nothing closes under someone's typing.
  */
 export function startDesktopUpdates() {
+  if (isPhoneApp && !import.meta.env.DEV) {
+    // The phone app cannot install by itself; it says when a new one is out.
+    const look = () =>
+      void checkForUpdate().then(() => {
+        const now = updateState.get();
+        if (now.state === "ready") showToast(`Notemax ${now.version} is out`, { label: "Get it", run: () => void installUpdate() });
+      });
+    setTimeout(look, 20_000);
+    setInterval(look, HOURS_6);
+    return;
+  }
   if (!isDesktop || import.meta.env.DEV) return;
   const look = () => autoUpdate.get() && void checkForUpdate();
   setTimeout(look, 20_000);

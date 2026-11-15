@@ -2,6 +2,13 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.119.0 (2026-11-16)
+
+- A real Android app. It is built the same way as the Windows app, with your pages saved in a database on the phone instead of in a browser's storage. Signing in opens Google in the browser and comes back to the app. Saving a file asks where to put it, and reminders use the phone's own notifications. When a new version is out, the app says so and links the download.
+- Home's top button is now Get the app, in the browser. Customize Home moved below the cards. The Get the app card is gone, since the button does its job.
+- Get the app shows the newest Android version again. It had been stuck on 0.109.
+- On a phone, the bars can no longer all scroll away. That choice took the bars button with them, leaving no way back except Settings. Anyone who had it now gets the bottom bar back when scrolling up.
+
 ## 0.118.0 (2026-11-15)
 
 - The phone app feels less like a web page. Pulling down no longer reloads it, taps don't flash blue, and a double tap doesn't zoom. Holding a button, tab or bar no longer selects its text or brings up Chrome's menu. Holding a tab or a page in a list opens Notemax's own menu. Note text still selects as before.

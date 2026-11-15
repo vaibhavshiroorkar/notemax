@@ -1,4 +1,4 @@
-import { isDesktop } from "@/platform/platform";
+import { isDesktop, isPhoneApp } from "@/platform/platform";
 import { APP_VERSION } from "@/version";
 import { autoUpdate } from "@/platform/behavior";
 import { checkForUpdate, installUpdate, updateState } from "./updates";
@@ -17,7 +17,7 @@ function StateLine() {
         <p className="updates-state">
           {now.version ? `Notemax ${now.version} is ready.` : "A new version is ready."}
           <button className="button button-primary" onClick={() => void installUpdate()}>
-            {isDesktop ? "Restart to update" : "Reload to update"}
+            {isDesktop ? "Restart to update" : isPhoneApp ? "Download it" : "Reload to update"}
           </button>
         </p>
       );

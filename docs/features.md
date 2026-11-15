@@ -94,4 +94,4 @@ What may sit inside what is one rule in `packages/core/src/workspace.ts` (`holds
 
 - The website installs as an app and works offline. On a weak connection it opens from the copy it keeps after 1.5 seconds, instead of waiting on the network.
 - The Windows app keeps pages in one SQLite file, has quick capture and a tray icon, and updates itself.
-- The Android app opens the website full screen and gets new versions with it.
+- The Android app keeps pages in SQLite on the phone, signs in through the browser and comes back by a notemax:// link, and says when a new version is out.

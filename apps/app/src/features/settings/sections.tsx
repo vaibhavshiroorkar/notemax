@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { syncIsOn } from "@/features/sync/runtime";
-import { isDesktop, memoryOnly } from "@/platform/platform";
+import { isDesktop, isPhoneApp, memoryOnly } from "@/platform/platform";
 import type { SettingsContext } from "@/plugins/types";
 
 // Must match DB_URL in apps/desktop/src-tauri/src/lib.rs. The SQL plugin keeps
@@ -30,7 +30,7 @@ export function StorageSection({ persistent }: SettingsContext) {
         </>
       ) : (
         <>
-          <p>Your notes are saved in this browser on this device.{elsewhere}</p>
+          <p>{isPhoneApp ? "Your notes are saved in this app on this phone." : "Your notes are saved in this browser on this device."}{elsewhere}</p>
           {persistent === false && (
             <p className="warning">
               The browser has not promised to keep them. It may clear them if disk space runs low. The desktop app does not have this limit.

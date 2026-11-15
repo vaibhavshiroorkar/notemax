@@ -1,4 +1,4 @@
-import { isDesktop } from "./platform";
+import { isDesktop, isPhoneApp } from "./platform";
 import { getPref, setPref } from "./prefs";
 
 const DEVICE = "deviceId";
@@ -7,7 +7,7 @@ const DEVICE = "deviceId";
 export function deviceId(): string {
   let id = getPref(DEVICE);
   if (!id) {
-    id = `${isDesktop ? "desktop" : "web"}-${Math.random().toString(36).slice(2, 10)}`;
+    id = `${isDesktop ? "desktop" : isPhoneApp ? "phone" : "web"}-${Math.random().toString(36).slice(2, 10)}`;
     setPref(DEVICE, id);
   }
   return id;
@@ -31,6 +31,7 @@ export function deviceLabel(agent = navigator.userAgent): string {
                 ? "Linux"
                 : "";
   if (isDesktop) return system ? `Desktop app on ${system}` : "Desktop app";
+  if (isPhoneApp) return "Android app";
   // Order matters: Edge and Opera also say Chrome, and Chrome also says Safari.
   const browser = /Edg\//.test(agent)
     ? "Edge"

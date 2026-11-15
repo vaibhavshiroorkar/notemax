@@ -1,11 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
 import { DRIVE_SCOPE, forgetDriveAccess, rememberGoogleTokens } from "@/features/sync/google";
-import { isDesktop } from "@/platform/platform";
+import { isDesktop, isPhoneApp } from "@/platform/platform";
 import { SUPABASE_KEY, SUPABASE_URL } from "./config";
 
 // Must match SIGN_IN_PORT in apps/desktop/src-tauri/src/lib.rs, and be listed
 // under Redirect URLs in the Supabase dashboard.
 const SIGN_IN_REDIRECT = "http://127.0.0.1:47820";
+// The phone app's way back from the browser. Android opens notemax:// links in
+// the app (tauri.android.conf.json), even when it had closed meanwhile. Listed
+// under Redirect URLs in the Supabase dashboard too.
+export const PHONE_REDIRECT = "notemax://auth/callback";
 
 export const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!, {
   auth: {
@@ -27,6 +31,7 @@ const cancelled = () => new DOMException("Sign-in was cancelled", "AbortError");
  * On desktop it opens the browser and resolves once the app has a session.
  */
 export async function signInWithGoogle(signal: AbortSignal): Promise<void> {
+  if (isPhoneApp) return signInOnPhone(signal);
   if (!isDesktop) {
     const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { ...GOOGLE_OPTIONS, redirectTo: location.origin } });
     if (error) throw error;
@@ -61,6 +66,59 @@ export async function signInWithGoogle(signal: AbortSignal): Promise<void> {
   } finally {
     stop();
   }
+}
+
+/**
+ * The phone app: Google refuses to sign in inside the app's web view, so the
+ * browser opens, and the notemax:// link it ends on comes back to the app.
+ */
+async function signInOnPhone(signal: AbortSignal): Promise<void> {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { ...GOOGLE_OPTIONS, redirectTo: PHONE_REDIRECT, skipBrowserRedirect: true },
+  });
+  if (error) throw error;
+  const { onOpenUrl } = await import("@tauri-apps/plugin-deep-link");
+  const { openUrl } = await import("@tauri-apps/plugin-opener");
+  let stop = () => {};
+  const back = new Promise<string>((resolve, reject) => {
+    signal.addEventListener("abort", () => reject(cancelled()), { once: true });
+    // Listening starts before the browser opens, so the link cannot be missed.
+    void onOpenUrl((urls) => {
+      const url = urls.find((u) => u.startsWith(PHONE_REDIRECT));
+      if (url) resolve(url);
+    }).then((unlisten) => {
+      stop = unlisten;
+      if (signal.aborted) unlisten();
+    });
+  });
+  try {
+    await openUrl(data.url);
+    const url = await back;
+    // So a reload, which still sees the link that opened the app, does not use the spent code again.
+    sessionStorage.setItem("notemax:signInLink", url);
+    const failed = await finishPhoneSignIn(url);
+    if (failed) throw new Error(failed);
+  } finally {
+    stop();
+  }
+}
+
+/**
+ * Trades the code in a notemax://auth/callback link for a session. Also used
+ * at start, when Android closed the app while the browser was open and the
+ * link started it again. Returns an error message, if any.
+ */
+export async function finishPhoneSignIn(url: string): Promise<string | undefined> {
+  const params = new URL(url).searchParams;
+  const failed = params.get("error_description");
+  if (failed) return failed;
+  const code = params.get("code");
+  if (!code) return "Google sign-in did not finish.";
+  const exchange = await supabase.auth.exchangeCodeForSession(code);
+  if (exchange.error) return exchange.error.message;
+  rememberGoogleTokens(exchange.data.session);
+  return undefined;
 }
 
 /**

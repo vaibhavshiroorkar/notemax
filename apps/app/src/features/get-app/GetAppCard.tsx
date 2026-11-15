@@ -52,15 +52,3 @@ export function GetAppCard({ app }: { app: AppContext }) {
   );
 }
 
-/** Home's card: a way to the downloads. */
-export function GetAppHome({ app }: { app: AppContext }) {
-  return (
-    <>
-      <p className="home-intro">For Windows and Android. Works offline.</p>
-      <button className="button get-app-home-button" onClick={() => app.openView(DOWNLOAD_VIEW)}>
-        <Icon name="download" />
-        Download
-      </button>
-    </>
-  );
-}

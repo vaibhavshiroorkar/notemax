@@ -2,7 +2,7 @@ import { createNode, holds, moveNodes, setProp, type NodeKind, type SortOrder, t
 import { openBeside } from "@/app/tabs";
 import { bookOf } from "@/features/books/reading";
 import { OPEN_FILE_ITEMS } from "@/features/open-files/plugin";
-import { isDesktop } from "@/platform/platform";
+import { isTauri } from "@/platform/platform";
 import { registry } from "@/plugins/registry";
 import type { AppContext, ContextMenuItem, ContextTarget, PageSetup } from "@/plugins/types";
 import { clearSelection, editingId, expand } from "./state";
@@ -199,7 +199,7 @@ export const PAGE_MENU: ContextMenuItem[] = [
     group: "edit",
     icon: "link",
     targets: ["page"],
-    when: (target) => isPage(target) && !isDesktop,
+    when: (target) => isPage(target) && !isTauri,
     run: (target, app) => void copyText(`${location.origin}${location.pathname}#${encodeURIComponent(nodeOf(target)!.id)}`, "the link"),
   },
   {

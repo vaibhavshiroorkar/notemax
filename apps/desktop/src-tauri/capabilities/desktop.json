@@ -1,7 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "What the app windows may do: core features, the local notes database, letting the capture box hide or move itself, zooming the app, full screen with F11, showing reminders, and installing updates.",
+  "identifier": "desktop",
+  "description": "What the desktop app windows may do: core features, the local notes database, letting the capture box hide or move itself, zooming the app, full screen with F11, showing reminders, and installing updates.",
+  "platforms": ["windows", "macOS", "linux"],
   "windows": ["main", "capture"],
   "permissions": [
     "core:default",

@@ -1,6 +1,6 @@
 import { remindAt } from "@notemax/core";
 import { indexVersion } from "@/features/search/text-index";
-import { isDesktop } from "@/platform/platform";
+import { isDesktop, isPhoneApp, isTauri } from "@/platform/platform";
 import { getPref, setPref } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
 import type { AppContext } from "@/plugins/types";
@@ -52,7 +52,7 @@ async function tellSystem(app: AppContext, ring: Ring) {
   const title = ring.entry.task.text;
   const body = [whenLabel(ring.entry.task), app.tree.byId.get(ring.entry.noteId)?.title].filter(Boolean).join(" - ");
   try {
-    if (isDesktop) {
+    if (isTauri) {
       const notification = await import("@tauri-apps/plugin-notification");
       if (!(await notification.isPermissionGranted()) && (await notification.requestPermission()) !== "granted") return;
       notification.sendNotification({ title, body });
@@ -122,6 +122,10 @@ export const tomorrowMorning = (now = new Date()) => new Date(now.getFullYear(),
 
 /** Asks the browser for leave to show reminders. Needs a click or key press to ask. */
 export async function askToNotify(): Promise<boolean> {
+  if (isPhoneApp) {
+    const notification = await import("@tauri-apps/plugin-notification");
+    return (await notification.isPermissionGranted()) || (await notification.requestPermission()) === "granted";
+  }
   if (isDesktop) return true;
   if (typeof Notification === "undefined") return false;
   if (Notification.permission === "granted") return true;

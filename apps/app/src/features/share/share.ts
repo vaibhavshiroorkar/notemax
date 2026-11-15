@@ -1,6 +1,6 @@
 import { importKey, setProp, type TreeNode } from "@notemax/core";
 import type * as Y from "yjs";
-import { isDesktop } from "@/platform/platform";
+import { isTauri } from "@/platform/platform";
 
 // A shared page has a link like https://notemax.pages.dev/#share=<room>.<key>.<verify>.<sign>.
 // Everything is in the part after #, which browsers never send to any server.
@@ -67,7 +67,7 @@ export const keepShare = (doc: Y.Doc, pageId: string, share: Share) => setProp(d
 
 /** A link to the page: one that can edit, or one that can only read (without the signing key). */
 export const linkOf = (share: Share, title: string, as: "edit" | "view" = "edit") =>
-  `${isDesktop ? PUBLIC_APP : location.origin}/#share=${format(as === "view" ? { ...share, sign: undefined } : share)}${title ? `&t=${encodeURIComponent(title)}` : ""}`;
+  `${isTauri ? PUBLIC_APP : location.origin}/#share=${format(as === "view" ? { ...share, sign: undefined } : share)}${title ? `&t=${encodeURIComponent(title)}` : ""}`;
 
 function shareInAddress(): { share: Share; title: string } | null {
   const params = new URLSearchParams(location.hash.slice(1));

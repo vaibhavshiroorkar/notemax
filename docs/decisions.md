@@ -44,5 +44,5 @@ The choices that shaped Notemax, with the reason for each. Where a later choice 
 
 ## Apps
 
-- **The Android app is the website** in a Trusted Web Activity. It gets every change without a reinstall.
+- **The Android app is the Tauri app** built for Android, since 0.119. From 0.108 to 0.118 it was the website in a Trusted Web Activity, which got every change without a reinstall but felt like a browser tab and kept pages in Chrome's storage. Now pages live in SQLite on the phone, and a new version is a new APK that the app offers.
 - **The desktop app updates itself** from the website, with signed installers.

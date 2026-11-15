@@ -1,6 +1,6 @@
 [package]
 name = "notemax"
-version = "0.118.0"
+version = "0.119.0"
 description = "Notemax desktop app"
 authors = ["Notemax"]
 license = ""
@@ -32,3 +32,9 @@ tauri-plugin-global-shortcut = "2"
 tauri-plugin-process = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-updater = "2"
+
+# Sign-in coming back as a notemax:// link, and saving files, on a phone.
+[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
+tauri-plugin-deep-link = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"

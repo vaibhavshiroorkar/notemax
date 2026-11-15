@@ -18,6 +18,8 @@ import { PageListView } from "./PageListView";
 import { plural } from "@/ui/format";
 import { accountView } from "@/features/account/session";
 import { COPY_HINT, canCopy, copying, startCopy } from "@/features/spaces/actions";
+import { DOWNLOAD_VIEW, inAndroidApp } from "@/features/get-app/offer";
+import { isDesktop } from "@/platform/platform";
 import { spaceViews } from "@/features/spaces/runtime";
 import { Spinner } from "@/ui/Spinner";
 
@@ -330,10 +332,13 @@ export function HomeView({ app }: { app: AppContext; options: Record<string, unk
             {today}
           </p>
         </div>
-        <button className="button" aria-expanded={customizing} onClick={() => setCustomizing(!customizing)}>
-          <Icon name="settings" />
-          Customize
-        </button>
+        {/* The apps have no use for a button telling them to get the app. */}
+        {!isDesktop && !inAndroidApp && (
+          <button className="button" onClick={() => app.openView(DOWNLOAD_VIEW)}>
+            <Icon name="download" />
+            Get the app
+          </button>
+        )}
       </header>
       {customizing && <Customize sections={sections} onClose={() => setCustomizing(false)} />}
       <div className="home-grid">
@@ -354,8 +359,14 @@ export function HomeView({ app }: { app: AppContext; options: Record<string, unk
             </Safe>
           </section>
         ))}
-        {shown.length === 0 && <p className="home-empty">Every card is off. Customize turns them back on.</p>}
+        {shown.length === 0 && <p className="home-empty">Every card is off. Customize Home turns them back on.</p>}
       </div>
+      {!customizing && (
+        <button className="link-button home-customize-link" onClick={() => setCustomizing(true)}>
+          <Icon name="settings" />
+          Customize Home
+        </button>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { UNTRACKED, onNodesAdded, setProp, type Tree, type TreeItem, type TreeNode } from "@notemax/core";
 import type * as Y from "yjs";
 import { syncIsOn } from "@/features/sync/runtime";
-import { isDesktop } from "@/platform/platform";
+import { isTauri } from "@/platform/platform";
 import { getPref, setPref } from "@/platform/prefs";
 
 // A page made in a browser while sync is off lives only in that browser, which
@@ -15,7 +15,7 @@ const MARKED_OLD = "temporaryMarkedOld";
 export const isTemporary = (node: TreeNode) => typeof node.props[TEMPORARY] === "number";
 
 /** True while a new page would live only in this browser. */
-const onlyHere = () => !isDesktop && !syncIsOn();
+const onlyHere = () => !isTauri && !syncIsOn();
 
 export function markTemporary(doc: Y.Doc, ids: string[]) {
   const now = Date.now();

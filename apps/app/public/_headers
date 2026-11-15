@@ -30,3 +30,9 @@
   Access-Control-Allow-Origin: *
 /android/*
   Access-Control-Allow-Origin: *
+
+# The Android app leaves these out of the APK and loads them from here (platform/bigFiles.ts).
+/excalidraw/*
+  Access-Control-Allow-Origin: *
+/runtimes/*
+  Access-Control-Allow-Origin: *

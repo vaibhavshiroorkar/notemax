@@ -22,8 +22,7 @@ Run `pnpm typecheck` without `-s`: the silent flag hides the compiler's errors. 
 
 ```
 apps/app/        the editor app (Vite, React, Tiptap, Yjs), for the web and the desktop
-apps/desktop/    the Tauri v2 shell
-apps/android/    the Android app's manifest (the rest is generated)
+apps/desktop/    the Tauri v2 shell, for Windows and Android
 packages/core/   storage, the tree, sync, history, links; no UI, with tests
 supabase/        database migrations and the Google token function
 examples/        a sample plugin
@@ -43,7 +42,7 @@ See [architecture.md](architecture.md) for how the app's code is laid out.
 
 Each finished step is a version:
 
-1. `pnpm version:set 0.N.0` sets the number everywhere, the Android manifest included.
+1. `pnpm version:set 0.N.0` sets the number everywhere. The Android app takes its version from the Tauri config.
 2. Add a section to [CHANGELOG.md](../CHANGELOG.md) in plain words for the people who use the app.
 3. Commit, and tag `v0.N.0`.
 
@@ -54,7 +53,7 @@ Commit messages are short and plain, like "Add [[links]] and backlinks", with a 
 The website is the hub: the desktop app and the Android app both get updates from it.
 
 - **Desktop:** `pnpm desktop:release "<notes>"` builds and signs the Windows installer and writes `latest.json` into the site's `desktop/` folder. Installed apps check it and update themselves. The signing key lives outside the repo; losing it means installed apps stop accepting updates.
-- **Android:** `pnpm android:release` builds and signs the APK with Bubblewrap into the site's `android/` folder. It is only needed when the Android manifest changes, since the app loads the website.
+- **Android:** `pnpm android:release` builds the Tauri app for Android, signs the APK and puts it with `latest.json` into the site's `android/` folder. It needs the Android SDK with the NDK, and on Windows, Developer Mode. The app carries the web app inside it, so every release that changes the app needs a new APK. The app tells people when one is out. The APK must stay under Cloudflare's 25 MiB per file, so the drawing fonts and the Java runtime load from the website (`src/platform/bigFiles.ts`).
 - **Website:** `pnpm build`, then deploy `apps/app/dist` to Cloudflare Pages. Check that the live build has the Supabase address in it, or the Account section stays hidden.
 
 Never commit keys, passwords or `.env` files.

@@ -128,8 +128,7 @@
 }
 
 .get-app-download,
-.get-app-install,
-.get-app-home-button {
+.get-app-install {
   display: inline-flex;
   align-items: center;
   gap: 6px;

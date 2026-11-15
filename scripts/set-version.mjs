@@ -31,8 +31,3 @@ for (const file of ["package.json", "apps/app/package.json", "apps/desktop/packa
 edit("apps/desktop/src-tauri/Cargo.toml", (text) => text.replace(/^version = ".*?"$/m, `version = "${version}"`));
 // The lock names the crate's own version too, so a build does not rewrite it.
 edit("apps/desktop/src-tauri/Cargo.lock", (text) => text.replace(/(name = "notemax"\r?\nversion = )".*?"/, `$1"${version}"`));
-// The Android app: its version name, and a version code that rises with each release (0.109.0 is 10900).
-edit("apps/android/twa-manifest.json", (text) => {
-  const [major, minor, patch] = version.split(".").map(Number);
-  return text.replace(/^ {2}"appVersion": ".*?",$/m, `  "appVersion": "${version}",`).replace(/^ {2}"appVersionCode": \d+,$/m, `  "appVersionCode": ${major * 1_000_000 + minor * 100 + patch},`);
-});

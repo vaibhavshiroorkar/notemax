@@ -1,6 +1,8 @@
 // Runs one compiled Java program. A worker per run, so Stop can end it.
 // TeaVM's runtime hands each printed character to putchar; lines go out whole.
-const base = `${self.location.origin}/runtimes/teavm/`;
+import { BIG_FILES_FROM } from "@/platform/bigFiles";
+
+const base = `${BIG_FILES_FROM || self.location.origin}/runtimes/teavm/`;
 
 self.onmessage = async ({ data }: MessageEvent<{ script: Int8Array }>) => {
   const { load } = await import(/* @vite-ignore */ `${base}compiler.wasm-runtime.js`);

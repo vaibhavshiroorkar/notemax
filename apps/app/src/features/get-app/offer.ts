@@ -1,4 +1,4 @@
-import { isDesktop } from "@/platform/platform";
+import { isPhoneApp, isTauri } from "@/platform/platform";
 import { createStore, savedStore } from "@/platform/store";
 
 /** The tab with the Windows and Android downloads. /download on the website opens it too. */
@@ -17,7 +17,7 @@ export function systemOf(agent = navigator.userAgent): System | null {
  * True inside the Android app. The app is the website in a full-screen Chrome
  * window (a Trusted Web Activity), so it looks like an installed web app.
  */
-export const inAndroidApp = !isDesktop && systemOf() === "android" && matchMedia("(display-mode: standalone)").matches;
+export const inAndroidApp = isPhoneApp || (!isTauri && systemOf() === "android" && matchMedia("(display-mode: standalone)").matches);
 
 /** Set once the corner card is answered, either way, so it asks only once per browser. */
 export const offerAnswered = savedStore("getAppAnswered", false, { decode: (raw) => raw === "1", encode: (value) => (value ? "1" : "0") });
@@ -37,10 +37,10 @@ function quietForChecks(): boolean {
 }
 
 /** True when the corner card should offer the app: a browser on a system that has one. */
-export const mayOffer = () => !isDesktop && !inAndroidApp && systemOf() !== null && !quietForChecks();
+export const mayOffer = () => !isTauri && !inAndroidApp && systemOf() !== null && !quietForChecks();
 
 // The downloads live on the website. The desktop app asks the website for them.
-const SITE = isDesktop ? "https://notemax.pages.dev" : "";
+const SITE = isTauri ? "https://notemax.pages.dev" : "";
 
 export interface Download {
   url: string;
@@ -109,7 +109,7 @@ export const canInstall = createStore(false);
 // Only on Android: on a PC the same prompt would install a browser window,
 // which is not what the Android card offers. Chrome's own install bar gives
 // way to the card's button.
-if (!isDesktop && systemOf() === "android") {
+if (!isTauri && systemOf() === "android") {
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     installPrompt = event as InstallPrompt;

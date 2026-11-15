@@ -1,0 +1,14 @@
+{
+  "build": {
+    "beforeBuildCommand": "node ../../scripts/phone-web.mjs",
+    "frontendDist": "../../app/dist-phone"
+  },
+  "app": {
+    "windows": [{ "label": "main", "title": "Notemax" }]
+  },
+  "plugins": {
+    "deep-link": {
+      "mobile": [{ "scheme": ["notemax"], "host": "auth", "appLink": false }]
+    }
+  }
+}

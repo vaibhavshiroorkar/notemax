@@ -1,0 +1,18 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "mobile",
+  "description": "What the phone app may do: core features, the local notes database, reminders, opening the browser to sign in and taking the sign-in link back, and saving files through the Save dialog.",
+  "platforms": ["android", "iOS"],
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "sql:default",
+    "sql:allow-execute",
+    "notification:default",
+    "opener:default",
+    "deep-link:default",
+    "dialog:default",
+    "fs:default",
+    "fs:allow-write-file"
+  ]
+}

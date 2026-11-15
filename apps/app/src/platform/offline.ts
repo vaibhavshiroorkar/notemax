@@ -1,6 +1,6 @@
 import { showToast } from "@/ui/toast";
 import { autoUpdate } from "./behavior";
-import { isDesktop } from "./platform";
+import { isTauri } from "./platform";
 
 /**
  * Lets the web app open with no network (see sw.js). A new version found
@@ -9,7 +9,7 @@ import { isDesktop } from "./platform";
  * that was already waiting at start takes over right away, before any typing.
  */
 export function startOffline() {
-  if (isDesktop || !import.meta.env.PROD || !("serviceWorker" in navigator)) return;
+  if (isTauri || !import.meta.env.PROD || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register("/sw.js");

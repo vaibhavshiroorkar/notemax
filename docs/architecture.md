@@ -13,8 +13,7 @@ Sync is optional. Each device writes its changes as encrypted files to a folder 
 ```
 apps/
   app/       The editor (Vite, React, Tiptap). Runs in the browser and inside the desktop shell.
-  desktop/   Tauri v2 shell: SQLite storage, tray icon, global shortcut, capture window, updates.
-  android/   The Android app's manifest. Bubblewrap generates the rest.
+  desktop/   Tauri v2 shell for Windows and Android: SQLite storage, and on Windows the tray icon, global shortcut, capture window and updates. src-tauri/gen/android is the Android project.
 packages/
   core/      Storage, the workspace tree, sync, history, links and word counts. No UI code, and covered by tests.
 supabase/    Database migrations for shared pages and the community, and the function that trades a Google sign-in for a Drive token.

@@ -502,3 +502,13 @@
   font-weight: 400;
   line-height: 16px;
 }
+
+/* Customize sits under the cards, out of the way, since it is used once in a while. */
+.home-customize-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}

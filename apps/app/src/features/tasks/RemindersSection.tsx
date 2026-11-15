@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { isDesktop } from "@/platform/platform";
+import { isTauri } from "@/platform/platform";
 import { askToNotify } from "./reminders";
 
 type Leave = "granted" | "denied" | "default" | "none";
 
-const leaveNow = (): Leave => (isDesktop ? "granted" : typeof Notification === "undefined" ? "none" : Notification.permission);
+const leaveNow = (): Leave => (isTauri ? "granted" : typeof Notification === "undefined" ? "none" : Notification.permission);
 
 /** Settings, Reminders: whether reminders can show over other apps, and how they work. */
 export function RemindersSection() {
