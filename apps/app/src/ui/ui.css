@@ -431,3 +431,56 @@ kbd {
 ol[data-marker=")"] > li::marker {
   content: counter(list-item) ") ";
 }
+
+/*
+ * On a touch screen the app should not act like a web page: no pull down to
+ * reload, no blue flash on a tap, no double tap to zoom the page, and no
+ * Chrome menu or text selection on a long press of the app's own buttons,
+ * rows and bars. Note text, fields and code stay selectable as before.
+ */
+@media (pointer: coarse) {
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  a,
+  img,
+  label,
+  .sidebar,
+  .tab-strip,
+  .main-top,
+  .pane-top,
+  .page-toolbar,
+  .status-bar,
+  .side-panel,
+  .panel-box-head,
+  .menu,
+  .context-menu,
+  .dialog-title,
+  .settings-row > span:first-child,
+  .row,
+  .section-header {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* A field inside a bar, like the sidebar's search, still edits and selects. */
+  input,
+  textarea,
+  [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+}

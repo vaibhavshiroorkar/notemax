@@ -1,7 +1,8 @@
-// On a touch screen a long press belongs to the phone: it selects text in a
-// note, and brings up the phone's own menu (Copy, Paste) on what it selected.
-// The app's right-click menu is for a mouse or keyboard; page menus on a phone
-// are behind each row's ... button.
+// On a touch screen a long press on text belongs to the phone: it selects text
+// in a note, and brings up the phone's own menu (Copy, Paste) on what it
+// selected. On the app's own parts it opens the app's menu, as in other phone
+// apps. Rows in the sidebar drag on a long press instead, so their menus stay
+// behind each row's ... button.
 
 let lastTouch = -Infinity;
 
@@ -20,8 +21,13 @@ export function leaveLongPressToThePhone() {
     },
     { capture: true, passive: true },
   );
-  // Before any handler of the app sees it, and without preventDefault, so the phone still does its part.
-  window.addEventListener("contextmenu", (event) => fromTouch() && event.stopImmediatePropagation(), true);
+  // A long press on text that can be selected (a note, a field, a selection)
+  // belongs to the phone: its handles and its Copy and Paste. Stopped before
+  // any handler of the app sees it, without preventDefault.
+  window.addEventListener("contextmenu", (event) => fromTouch() && (onSelection || selectable(event.target)) && event.stopImmediatePropagation(), true);
+  // Anywhere else it is the app's: a tab or a list item opens its own menu, and
+  // Chrome's menu (open in new tab, download image) never shows over the app.
+  window.addEventListener("contextmenu", (event) => fromTouch() && event.preventDefault());
   // A hold on words in a note selects them with the phone's handles. Dragging
   // them then would start at once, with a drop line jumping under the finger.
   // So a finger drags only text that was already selected before it touched
@@ -29,6 +35,14 @@ export function leaveLongPressToThePhone() {
   window.addEventListener("dragstart", (event) => {
     if (fromTouch() && !onSelection && event.target instanceof Node && (event.target instanceof Element ? event.target : event.target.parentElement)?.closest(".ProseMirror")) event.preventDefault();
   }, true);
+}
+
+/** Whether a long press here should select text: fields, notes, code, and any text the styles leave selectable. */
+function selectable(target: EventTarget | null): boolean {
+  const element = target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
+  if (!element) return false;
+  if (element.closest("input, textarea, [contenteditable='true'], .ProseMirror, .cm-editor")) return true;
+  return getComputedStyle(element).userSelect !== "none";
 }
 
 /** True when the point is on the text selected now. */

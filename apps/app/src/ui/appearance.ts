@@ -121,6 +121,22 @@ function apply() {
   root.style.setProperty("--note-size", `${textSize.get()}px`);
   root.style.setProperty("--page-width", pageWidth.get() ? `${pageWidth.get()}px` : "none");
   if (font.get() === "file") void loadFontFile();
+  paintSystemBars();
+}
+
+/**
+ * The phone's status bar takes its color from the page's theme-color. The
+ * page sets one per system scheme, which is wrong once someone picks Dark or
+ * Light in Notemax itself, so it follows the theme shown instead.
+ */
+function paintSystemBars() {
+  const color = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+  if (!color) return;
+  const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
+  metas.slice(1).forEach((meta) => meta.remove());
+  const meta = metas[0] ?? document.head.appendChild(Object.assign(document.createElement("meta"), { name: "theme-color" }));
+  meta.removeAttribute("media");
+  meta.content = color;
 }
 
 let loadedFont: string | null = null;
@@ -143,6 +159,8 @@ async function loadFontFile() {
 export function initAppearance() {
   apply();
   for (const store of [theme, accent, font, fontFile, pageWidth, textSize]) store.subscribe(apply);
+  // With System chosen, the bars follow the phone switching between light and dark.
+  darkQuery().addEventListener("change", paintSystemBars);
 }
 
 const darkQuery = () => window.matchMedia("(prefers-color-scheme: dark)");

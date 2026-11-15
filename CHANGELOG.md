@@ -2,6 +2,11 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.118.0 (2026-11-15)
+
+- The phone app feels less like a web page. Pulling down no longer reloads it, taps don't flash blue, and a double tap doesn't zoom. Holding a button, tab or bar no longer selects its text or brings up Chrome's menu. Holding a tab or a page in a list opens Notemax's own menu. Note text still selects as before.
+- The phone's status bar follows the theme chosen in Notemax, not only the phone's own light or dark setting.
+
 ## 0.117.0 (2026-11-15)
 
 - Faster sync. Versions of a page no longer go to Drive with every edit, since each holds a whole copy of the page. They follow in the background, at most every 10 minutes, and when the desktop app quits. Another device downloads a page's versions only when you open its History. In a test with a long note, the same three edits sent 443 kB instead of 3.2 MB.
