@@ -2,6 +2,10 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.121.0 (2026-11-16)
+
+- Fixed: on notemax.shiroorkar.com the app could fail to open, showing a blank page, for some visitors right after an update. An address that doesn't exist now says "Page not found" instead of returning the app's page, which a cache had kept in place of one of the app's files.
+
 ## 0.120.0 (2026-11-16)
 
 - Notemax has a front page at notemax.shiroorkar.com. Someone visiting for the first time sees what Notemax is, what it does, and where to get it, then opens the app with one click. Anyone who has used Notemax in that browser goes straight to the app as before, and so do the desktop and Android apps, installed copies and shared links.
