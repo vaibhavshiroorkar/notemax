@@ -2,6 +2,11 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.120.0 (2026-11-16)
+
+- Notemax has a front page at notemax.shiroorkar.com. Someone visiting for the first time sees what Notemax is, what it does, and where to get it, then opens the app with one click. Anyone who has used Notemax in that browser goes straight to the app as before, and so do the desktop and Android apps, installed copies and shared links.
+- Search engines can now read what Notemax is, from a description, a sitemap and the page itself.
+
 ## 0.119.0 (2026-11-16)
 
 - A real Android app. It is built the same way as the Windows app, with your pages saved in a database on the phone instead of in a browser's storage. Signing in opens Google in the browser and comes back to the app. Saving a file asks where to put it, and reminders use the phone's own notifications. When a new version is out, the app says so and links the download.

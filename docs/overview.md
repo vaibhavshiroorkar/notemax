@@ -40,7 +40,7 @@ These came from common complaints about other note apps. New features follow the
 
 ## Where it runs
 
-- **Web:** [notemax.pages.dev](https://notemax.pages.dev). Installs as an app and works offline.
+- **Web:** [notemax.shiroorkar.com](https://notemax.shiroorkar.com). Installs as an app and works offline.
 - **Windows:** a desktop app built with Tauri. It stores pages in one SQLite file, sits in the tray and updates itself.
 - **Android:** the same Tauri app, built for phones. It stores pages in SQLite on the phone and offers each new version.
 

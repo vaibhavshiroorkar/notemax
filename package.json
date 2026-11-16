@@ -1,8 +1,8 @@
 {
   "name": "notemax",
-  "version": "0.119.0",
+  "version": "0.120.0",
   "description": "A local-first note app for writing that grows into books",
-  "homepage": "https://notemax.pages.dev",
+  "homepage": "https://notemax.shiroorkar.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/vaibhavshiroorkar/notemax.git"

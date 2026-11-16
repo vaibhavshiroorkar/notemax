@@ -1,0 +1,451 @@
+/* The landing page in index.html, shown on a first visit (public/boot.js).
+   It uses the app's own colors from theme.css, so it follows light and dark
+   the same way. The app's sans-serif is for Notemax itself; the serif only
+   appears on the sheets in the picture, for the book the notes become. */
+
+.lp {
+  --lp-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --lp-display: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --lp-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --lp-line: rgba(0, 0, 0, 0.16);
+  --lp-gutter: 16px;
+  font-family: var(--lp-sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+@media (prefers-color-scheme: dark) {
+  .lp {
+    --lp-line: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@media (min-width: 720px) {
+  .lp {
+    --lp-gutter: 32px;
+  }
+}
+
+.lp main,
+.lp-bar,
+.lp-foot {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding-left: var(--lp-gutter);
+  padding-right: var(--lp-gutter);
+}
+
+.lp a {
+  color: inherit;
+}
+
+.lp a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* The bar */
+
+.lp-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.lp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 650;
+  font-size: 1.125rem;
+  text-decoration: none;
+}
+
+.lp-brand img {
+  border-radius: 7px;
+}
+
+.lp-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.lp-quiet {
+  text-decoration: none;
+  color: var(--muted) !important;
+}
+
+.lp-quiet:hover {
+  color: var(--text) !important;
+}
+
+@media (max-width: 560px) {
+  .lp-quiet {
+    display: none;
+  }
+}
+
+/* Buttons. One filled kind for opening the app, one outlined for everything else. */
+
+.lp-button,
+.lp-outline {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lp .lp-button {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.lp .lp-button:hover {
+  opacity: 0.86;
+}
+
+.lp .lp-outline {
+  box-shadow: inset 0 0 0 1px var(--lp-line);
+}
+
+.lp .lp-outline:hover {
+  background: var(--hover);
+}
+
+.lp-big {
+  padding: 12px 20px;
+  font-size: 1rem;
+}
+
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+@media (max-width: 420px) {
+  .lp-actions a {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* The opening: the pitch on the left, the desk with three sheets on the right. */
+
+.lp-hero {
+  display: grid;
+  gap: 40px;
+  padding: 32px 0 72px;
+}
+
+@media (min-width: 960px) {
+  .lp-hero {
+    grid-template-columns: 5fr 6fr;
+    align-items: center;
+    gap: 56px;
+    padding: 56px 0 96px;
+  }
+}
+
+.lp h1 {
+  margin: 0;
+  font-family: var(--lp-display);
+  font-size: clamp(2.5rem, 4.6vw + 0.75rem, 4.5rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.lp-lede {
+  margin: 24px 0 0;
+  max-width: 32em;
+  font-size: 1.1875rem;
+  line-height: 1.55;
+}
+
+.lp-small {
+  margin: 16px 0 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+/* The desk is the page layout's own desk color; the sheets are its paper.
+   It keeps one shape and sizes its text by its own width (cqw), so the sheets
+   overlap in the same places on every screen and never cover each other's words. */
+.lp-desk {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 10 / 9;
+  container-type: inline-size;
+  border-radius: 20px;
+  background: var(--desk);
+  overflow: hidden;
+}
+
+.lp-desk > * {
+  font-size: 2.35cqw;
+}
+
+.lp-sheet {
+  position: absolute;
+  padding: 1.6em 1.8em;
+  background: var(--paper);
+  border-radius: 3px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 14px 34px rgba(0, 0, 0, 0.12);
+  line-height: 1.5;
+  animation: lp-settle 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+.lp-sheet p,
+.lp-sheet ul,
+.lp-sheet ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* They start as one pile and spread out once, on load. */
+@keyframes lp-settle {
+  from {
+    opacity: 0;
+    translate: var(--lp-from);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-sheet {
+    animation: none;
+  }
+}
+
+.lp-note {
+  --lp-from: 30% 25%;
+  top: 6%;
+  left: 5%;
+  width: 44%;
+  height: 46%;
+  font-family: var(--lp-sans);
+}
+
+.lp-note-title {
+  font-weight: 650;
+  font-size: 1.15em;
+  margin-bottom: 0.6em !important;
+}
+
+.lp-note li {
+  position: relative;
+  padding-left: 1em;
+  margin-top: 0.3em;
+}
+
+.lp-note li::before {
+  content: "";
+  position: absolute;
+  left: 0.15em;
+  top: 0.68em;
+  width: 0.32em;
+  height: 0.32em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.lp-link {
+  color: var(--accent);
+}
+
+.lp-contents {
+  --lp-from: -30% 20%;
+  top: 10%;
+  right: 5%;
+  width: 40%;
+  height: 44%;
+  font-family: var(--lp-serif);
+  animation-delay: 0.08s;
+}
+
+.lp-book-title {
+  font-size: 1.25em;
+  font-style: italic;
+  margin-bottom: 0.7em !important;
+}
+
+.lp-contents li,
+.lp-parts li {
+  display: flex;
+  gap: 0.8em;
+  padding: 0.18em 0;
+}
+
+.lp-contents li span,
+.lp-parts li span {
+  min-width: 1.6em;
+  color: var(--muted);
+  font-variant-numeric: oldstyle-nums;
+}
+
+.lp-here {
+  font-weight: 700;
+}
+
+.lp-chapter {
+  --lp-from: 0 18%;
+  z-index: 1;
+  left: 20%;
+  bottom: 6%;
+  width: 60%;
+  padding: 2em 2.2em;
+  font-family: var(--lp-serif);
+  animation-delay: 0.16s;
+}
+
+.lp-kicker {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.lp-chapter-title {
+  font-size: 2em;
+  line-height: 1.1;
+  margin: 0.1em 0 0.5em !important;
+}
+
+.lp-prose {
+  line-height: 1.6;
+  margin-bottom: 0.9em !important;
+}
+
+/* A phone gets a taller desk with bigger words, and the two small sheets sit
+   side by side instead of overlapping, so every word stays readable. */
+@media (max-width: 640px) {
+  .lp-desk {
+    aspect-ratio: 4 / 5;
+  }
+  .lp-desk > * {
+    font-size: 3.1cqw;
+    padding: 1.3em 1.4em;
+  }
+  .lp-note {
+    top: 5%;
+    left: 4%;
+    width: 47%;
+    height: 42%;
+  }
+  .lp-contents {
+    top: 5%;
+    right: 4%;
+    width: 43%;
+    height: 42%;
+  }
+  .lp-chapter {
+    left: 7%;
+    bottom: 5%;
+    width: 86%;
+  }
+}
+
+/* What it does */
+
+.lp-features {
+  padding: 72px 0;
+  border-top: 1px solid var(--border);
+}
+
+.lp h2 {
+  margin: 0;
+  font-family: var(--lp-display);
+  font-size: clamp(1.75rem, 1.6vw + 1.1rem, 2.375rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  max-width: 20em;
+}
+
+.lp-groups {
+  display: grid;
+  gap: 40px 48px;
+  margin-top: 40px;
+}
+
+@media (min-width: 720px) {
+  .lp-groups {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .lp-groups {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.lp h3 {
+  margin: 0 0 12px;
+  font-size: 1.0625rem;
+  font-weight: 650;
+}
+
+.lp-groups li {
+  margin-top: 10px;
+  font-size: 0.96875rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.lp kbd,
+.lp code {
+  padding: 0.05em 0.35em;
+  border-radius: 4px;
+  background: var(--code-bg);
+  color: var(--text);
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.875em;
+}
+
+/* The ending */
+
+.lp-get {
+  padding: 72px 0 88px;
+  border-top: 1px solid var(--border);
+}
+
+.lp-get p {
+  margin: 16px 0 0;
+  max-width: 36em;
+}
+
+.lp-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding-top: 24px;
+  padding-bottom: 40px;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.lp-foot span {
+  margin-right: auto;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.lp-foot a {
+  color: var(--muted) !important;
+}

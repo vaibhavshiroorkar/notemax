@@ -3,7 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
-    <meta name="description" content="Notes that grow into books." />
+    <!-- The site's address is written here, in public/robots.txt and in public/sitemap.xml. -->
+    <meta name="description" content="Notemax is a free note app for long writing. Notes stay on your device, work offline, and grow into chapters and books you can download as Word, PDF or EPUB." />
+    <link rel="canonical" href="https://notemax.shiroorkar.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Notemax" />
+    <meta property="og:title" content="Notemax: notes that grow into books" />
+    <meta property="og:description" content="A free note app for long writing. Local first, works offline, and turns notes into chapters and books." />
+    <meta property="og:url" content="https://notemax.shiroorkar.com/" />
+    <meta property="og:image" content="https://notemax.shiroorkar.com/icon-512.png" />
+    <meta name="twitter:card" content="summary" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#1b1b1b" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -13,7 +22,21 @@
     <link rel="icon" href="/favicon-32.png?v=2" sizes="32x32" type="image/png" />
     <link rel="icon" href="/icon.svg?v=2" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>Notemax</title>
+    <title>Notemax: notes that grow into books</title>
+    <!-- Chooses the landing page or the app before anything paints. Blocking on purpose. -->
+    <script src="/boot.js"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Notemax",
+        "url": "https://notemax.shiroorkar.com/",
+        "description": "A local-first note app for writing that grows into books.",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "Web, Windows, Android",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
     <style>
       /* Shown until the app draws its first screen, which replaces it. Only after a moment, so a quick start never flashes it. */
       .boot { position: fixed; inset: 0; display: grid; place-items: center; animation: boot-in 0.2s 0.4s backwards; }
@@ -21,9 +44,121 @@
       @keyframes boot-turn { to { transform: rotate(360deg); } }
       @keyframes boot-in { from { opacity: 0; } }
       @media (prefers-reduced-motion: reduce) { .boot::after { animation: none; } }
+      /* Here and not in landing.css, so the right one hides even before any stylesheet arrives. */
+      html[data-start="landing"] #root, html:not([data-start="landing"]) #landing { display: none; }
     </style>
   </head>
   <body>
+    <!-- The landing page for a first visit (public/boot.js). Plain HTML, so search engines read it without running the app. -->
+    <div id="landing" class="lp">
+      <header class="lp-bar">
+        <a class="lp-brand" href="/" aria-label="Notemax home"><img src="/icon.svg" alt="" width="28" height="28" /><span>Notemax</span></a>
+        <nav class="lp-nav" aria-label="Site">
+          <a class="lp-quiet" href="/#view:download">Get the app</a>
+          <a class="lp-button" href="/?app" data-open-app>Open Notemax</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="lp-hero" aria-labelledby="lp-title">
+          <div class="lp-pitch">
+            <h1 id="lp-title">Notes that grow into books.</h1>
+            <p class="lp-lede">Write loose notes, link them together, and shape them into chapters. Notemax keeps everything on your device, so it opens instantly and works offline.</p>
+            <div class="lp-actions">
+              <a class="lp-button lp-big" href="/?app" data-open-app>Open Notemax</a>
+              <a class="lp-outline lp-big" href="/#view:download">Get it for Windows or Android</a>
+            </div>
+            <p class="lp-small">Free. No account needed. Runs in your browser.</p>
+          </div>
+
+          <figure class="lp-desk" aria-label="A note, the chapter written from it, and the book's contents">
+            <div class="lp-sheet lp-note" aria-hidden="true">
+              <p class="lp-note-title">Lighthouse ideas</p>
+              <ul>
+                <li>Elias keeps the light alone</li>
+                <li>Why does he climb in <span class="lp-link">[[The Storm]]</span>?</li>
+                <li>Ask Mara about the old lens</li>
+              </ul>
+            </div>
+            <div class="lp-sheet lp-chapter" aria-hidden="true">
+              <p class="lp-kicker">Chapter 2</p>
+              <p class="lp-chapter-title">The Storm</p>
+              <p class="lp-prose">The barometer had been falling since noon. By the time Elias reached the lamp, the sea had turned to slate.</p>
+              <ol class="lp-parts">
+                <li><span>2.1</span>The lamp room</li>
+                <li><span>2.2</span>Before dark</li>
+              </ol>
+            </div>
+            <div class="lp-sheet lp-contents" aria-hidden="true">
+              <p class="lp-book-title">The Lighthouse Keeper</p>
+              <ol>
+                <li><span>1</span>Arrival</li>
+                <li class="lp-here"><span>2</span>The Storm</li>
+                <li><span>3</span>Letters home</li>
+                <li><span>4</span>The Last Light</li>
+              </ol>
+            </div>
+          </figure>
+        </section>
+
+        <section class="lp-features" aria-labelledby="lp-features-title">
+          <h2 id="lp-features-title">Everything a long piece of writing needs</h2>
+          <div class="lp-groups">
+            <div>
+              <h3>Write</h3>
+              <ul>
+                <li>Headings, lists, to-dos, quotes, code, pictures and video. Type <kbd>/</kbd> for any block.</li>
+                <li>Word-like fonts, colors and spacing. Paste from Word or Google Docs and keep the look.</li>
+                <li><code>[[Links]]</code> between notes that survive renames, with backlinks on every page.</li>
+                <li>Drawing boards, voice typing, and code pages that run Python or JavaScript.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Shape it into a book</h3>
+              <ul>
+                <li>Books with chapters, each holding numbered subtopics.</li>
+                <li>Read or edit the whole book on one page, or lay a page out as A4 or Letter sheets with page numbers.</li>
+                <li>Download a book as Word, PDF or EPUB.</li>
+                <li>Post notes and books to the community, and follow other writers.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Keep it yours</h3>
+              <ul>
+                <li>Saved on your device as you type. Startup and typing are tested with 5,000 notes.</li>
+                <li>Optional sync through your own Google Drive, locked with a passphrase so Google can't read it.</li>
+                <li>Version history for every note and a trash you can restore from.</li>
+                <li>Download everything as plain Markdown whenever you like.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Write with others</h3>
+              <ul>
+                <li>Share a note by link and write in it together, live and end-to-end encrypted.</li>
+                <li>Share a whole workspace by email or link, as viewer, editor or admin.</li>
+                <li>Separate workspaces for separate parts of your life, each one lockable.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="lp-get" aria-labelledby="lp-get-title">
+          <h2 id="lp-get-title">Start writing</h2>
+          <p>Open Notemax in this browser, or install it on Windows or Android. Your notes stay on the device you write them on until you turn on sync.</p>
+          <div class="lp-actions">
+            <a class="lp-button lp-big" href="/?app" data-open-app>Open Notemax</a>
+            <a class="lp-outline lp-big" href="/#view:download">Get it for Windows or Android</a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="lp-foot">
+        <span>Notemax</span>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="https://github.com/vaibhavshiroorkar/notemax">Source code</a>
+      </footer>
+    </div>
     <div id="root"><div class="boot" role="status" aria-label="Opening Notemax"></div></div>
     <script type="module" src="/src/app/main.tsx"></script>
   </body>

@@ -13,21 +13,27 @@ import { startSettingsSync } from "@/platform/settingsSync";
 import { listenForQuit } from "@/platform/quit";
 import { loadCommunityPlugins } from "@/plugins/community";
 import { startOnlineOnTheWeb } from "@/features/setup/SetupDialog";
+import { startWhenOpened } from "@/landing/open";
+import "@/landing/landing.css";
 import { App } from "./App";
 
-initAppearance();
-startOnlineOnTheWeb();
-startOffline();
-// When storage cannot open, the app says why on screen; settings just wait for the next start.
-startSettingsSync().catch(() => {});
-leaveLongPressToThePhone();
-void listenForQuit();
+function start() {
+  initAppearance();
+  startOnlineOnTheWeb();
+  startOffline();
+  // When storage cannot open, the app says why on screen; settings just wait for the next start.
+  startSettingsSync().catch(() => {});
+  leaveLongPressToThePhone();
+  void listenForQuit();
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
 
-// After the first page shows, so a slow plugin never holds up startup.
-void loadCommunityPlugins();
+  // After the first page shows, so a slow plugin never holds up startup.
+  void loadCommunityPlugins();
+}
+
+startWhenOpened(start);

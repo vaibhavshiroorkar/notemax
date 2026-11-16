@@ -30,7 +30,10 @@ features/    one folder per feature: editor, links, sidebar, books, sync, ...
 ui/          shared pieces: icons, dialogs, menus, theme and appearance
 platform/    desktop or web, and saved preferences
 data/        hooks that open notes and the workspace
+landing/     holds the app back while the landing page shows
 ```
+
+The landing page is plain HTML in `apps/app/index.html`, so search engines read it without running the app. `public/boot.js` runs before the first paint and sets `data-start` on `<html>` to `landing` or `app`. Only a first visit in a browser gets the landing page. The desktop and Android apps, installed web apps, links with a hash or query, the dev server, and any browser that has a `notemax:` key in localStorage get the app. Add `?landing` to see the landing page anyway.
 
 Imports between folders use `@/`, like `@/ui/Icon`. Imports inside a feature stay relative.
 

@@ -52,10 +52,12 @@ function serviceWorker(): Plugin {
       for (const [name, item] of Object.entries(bundle)) if (item.type === "chunk" && item.isEntry && item.name === "main") add(name);
       if (!files.size) this.error("service worker: the main entry was not found");
       // Any changed file makes a new version, so phones drop what they kept of the old one.
-      const version = createHash("sha256").update(Object.keys(bundle).sort().join(" ")).digest("hex").slice(0, 12);
+      // boot.js comes from public/ with no hash in its name, so its content counts instead.
+      const boot = readFileSync(fromHere("public/boot.js"), "utf8");
+      const version = createHash("sha256").update(Object.keys(bundle).sort().join(" ")).update(boot).digest("hex").slice(0, 12);
       const source = readFileSync(fromHere("src/platform/sw.js"), "utf8")
         .replace("__VERSION__", version)
-        .replace("__FILES__", JSON.stringify(["/", ...[...files].sort().map((name) => `/${name}`)]));
+        .replace("__FILES__", JSON.stringify(["/", "/boot.js", ...[...files].sort().map((name) => `/${name}`)]));
       this.emitFile({ type: "asset", fileName: "sw.js", source });
     },
   };

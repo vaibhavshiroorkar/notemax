@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://notemax.pages.dev"><b>Open the web app</b></a>
+  <a href="https://notemax.shiroorkar.com"><b>Open the web app</b></a>
   &nbsp;&nbsp;|&nbsp;&nbsp;
   <a href="#run-it-yourself">Run it yourself</a>
   &nbsp;&nbsp;|&nbsp;&nbsp;
@@ -80,7 +80,7 @@
 
 ## Get Notemax
 
-- **On the web:** open [notemax.pages.dev](https://notemax.pages.dev). It installs as an app on a phone or computer and works offline. Notes stay in that browser until you sign in to sync them.
+- **On the web:** open [notemax.shiroorkar.com](https://notemax.shiroorkar.com). It installs as an app on a phone or computer and works offline. Notes stay in that browser until you sign in to sync them.
 - **On the desktop:** an app built with Tauri, tested on Windows so far. It keeps your notes in one file on disk, sits in the tray, and opens quick capture with Ctrl+Alt+N from any app. Build it from source with `pnpm desktop:build`.
 
 ## Run it yourself
@@ -111,7 +111,7 @@ The [docs](docs/README.md) cover the features, how data and sync work, the histo
 
 ## Privacy
 
-Notemax has no server that sees your notes. Read the [privacy policy](https://notemax.pages.dev/privacy) and [terms](https://notemax.pages.dev/terms).
+Notemax has no server that sees your notes. Read the [privacy policy](https://notemax.shiroorkar.com/privacy) and [terms](https://notemax.shiroorkar.com/terms).
 
 ## License
 
