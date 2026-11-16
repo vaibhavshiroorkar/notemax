@@ -2,7 +2,7 @@ import { MAIN_WORKSPACE, addWorkspace, exportKey, readTree, setWorkspaceShared, 
 import { shareOf, stopSharing } from "@/features/share/share";
 import { deleteWorkspace, nameOf, openList, switchTo, workspaceList } from "@/features/workspaces/list";
 import { copyWorkspace } from "@/features/workspaces/transfer";
-import { isTauri } from "@/platform/platform";
+import { isTauri, PUBLIC_SITE } from "@/platform/platform";
 import { workspaceNow } from "@/platform/prefs";
 import { createStore } from "@/platform/store";
 import { messageOf } from "@/ui/format";
@@ -10,11 +10,8 @@ import { dismissToast, showToast } from "@/ui/toast";
 import { createSpace, deleteSpace, openSpace, uninvite } from "./api";
 import { forgetSpaceState, spaceViews } from "./runtime";
 
-/** Where people without the app open a link. The desktop app has no address of its own. */
-const PUBLIC_APP = "https://notemax.pages.dev";
-
 /** The link anyone may open, as the link setting allows. */
-export const linkTo = (space: string, token: string) => `${isTauri ? PUBLIC_APP : location.origin}/#space=${space}.${token}`;
+export const linkTo = (space: string, token: string) => `${isTauri ? PUBLIC_SITE : location.origin}/#space=${space}.${token}`;
 
 const mark = async (workspace: string, shared: { space: string; token: string | null } | null) => {
   const local = await openList();

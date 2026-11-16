@@ -1,8 +1,8 @@
 import { importKey, setProp, type TreeNode } from "@notemax/core";
 import type * as Y from "yjs";
-import { isTauri } from "@/platform/platform";
+import { isTauri, PUBLIC_SITE } from "@/platform/platform";
 
-// A shared page has a link like https://notemax.pages.dev/#share=<room>.<key>.<verify>.<sign>.
+// A shared page has a link like https://notemax.shiroorkar.com/#share=<room>.<key>.<verify>.<sign>.
 // Everything is in the part after #, which browsers never send to any server.
 // The key seals the page's text, so only people with a link can read it. Edits
 // are signed: an edit link carries the signing key, a view link only the key
@@ -12,7 +12,6 @@ import { isTauri } from "@/platform/platform";
 
 const SHARE = "share";
 /** Where people without the app open a link. The desktop app has no address of its own. */
-const PUBLIC_APP = "https://notemax.pages.dev";
 
 export interface Share {
   room: string;
@@ -67,7 +66,7 @@ export const keepShare = (doc: Y.Doc, pageId: string, share: Share) => setProp(d
 
 /** A link to the page: one that can edit, or one that can only read (without the signing key). */
 export const linkOf = (share: Share, title: string, as: "edit" | "view" = "edit") =>
-  `${isTauri ? PUBLIC_APP : location.origin}/#share=${format(as === "view" ? { ...share, sign: undefined } : share)}${title ? `&t=${encodeURIComponent(title)}` : ""}`;
+  `${isTauri ? PUBLIC_SITE : location.origin}/#share=${format(as === "view" ? { ...share, sign: undefined } : share)}${title ? `&t=${encodeURIComponent(title)}` : ""}`;
 
 function shareInAddress(): { share: Share; title: string } | null {
   const params = new URLSearchParams(location.hash.slice(1));

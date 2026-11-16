@@ -2,6 +2,11 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.122.0 (2026-11-16)
+
+- Links to shared pages and workspace invites made in the desktop or Android app now point to notemax.shiroorkar.com. Old links to notemax.pages.dev keep working.
+- Get the app tells phone users to open notemax.shiroorkar.com in Chrome.
+
 ## 0.121.0 (2026-11-16)
 
 - Fixed: on notemax.shiroorkar.com the app could fail to open, showing a blank page, for some visitors right after an update. An address that doesn't exist now says "Page not found" instead of returning the app's page, which a cache had kept in place of one of the app's files.

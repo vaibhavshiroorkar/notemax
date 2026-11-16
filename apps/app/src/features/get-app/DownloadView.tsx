@@ -95,7 +95,7 @@ function Android() {
         <details className="get-app-help" open={android === null || android === "none"}>
           <summary>Or install it from the browser</summary>
           <ol>
-            <li>{here === "android" ? "Open notemax.pages.dev in Chrome." : "Open notemax.pages.dev in Chrome on your phone."}</li>
+            <li>{here === "android" ? "Open notemax.shiroorkar.com in Chrome." : "Open notemax.shiroorkar.com in Chrome on your phone."}</li>
             <li>Tap the menu (the three dots at the top right).</li>
             <li>
               Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.

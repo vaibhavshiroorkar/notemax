@@ -9,6 +9,14 @@ export const isPhoneApp = isTauri && /Android/i.test(navigator.userAgent);
 /** True inside the desktop app, false in a browser or the phone app. */
 export const isDesktop = isTauri && !isPhoneApp;
 
+/**
+ * The website's address, for links people open in a browser (shared pages,
+ * workspace invites). The apps have no address of their own. Updates and big
+ * files still come from notemax.pages.dev (updates.ts, bigFiles.ts, offer.ts),
+ * because apps already installed ask there and that address stays up.
+ */
+export const PUBLIC_SITE = "https://notemax.shiroorkar.com";
+
 /** Where windows of one workspace post their saved edits, so the others stay current. */
 export const docChannelFor = (workspace: string) => (workspace === MAIN_WORKSPACE ? "notemax-docs" : `notemax-docs@${workspace}`);
 /** Where the list of workspaces is shared between windows. */
