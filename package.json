@@ -16,11 +16,15 @@
     "dev": "pnpm --filter @notemax/app dev",
     "desktop": "pnpm --filter @notemax/desktop dev",
     "build": "pnpm --filter @notemax/app build",
+    "site:deploy": "pnpm build && wrangler pages deploy apps/app/dist --project-name notemax --branch main",
     "desktop:build": "pnpm --filter @notemax/desktop build",
     "desktop:release": "node scripts/release-desktop.mjs",
     "android:release": "node scripts/release-android.mjs",
     "typecheck": "pnpm -r typecheck",
     "version:set": "node scripts/set-version.mjs",
     "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "wrangler": "^4.163.0"
   }
 }
