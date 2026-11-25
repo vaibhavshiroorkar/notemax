@@ -325,10 +325,10 @@ function limiter(slots: number) {
 }
 
 /**
- * Runs `work` on every item, PARALLEL at a time. After a failure it starts no
- * more, waits for the ones running, and throws the first error.
+ * Runs `work` on every item, up to `limit` at a time. After a failure it starts
+ * no more, waits for the ones running, and throws the first error.
  */
-async function inParallel<T>(items: T[], work: (item: T) => Promise<void>) {
+export async function inParallel<T>(items: T[], work: (item: T) => Promise<void>, limit = PARALLEL) {
   let next = 0;
   let failure: { error: unknown } | null = null;
   const worker = async () => {
@@ -340,7 +340,7 @@ async function inParallel<T>(items: T[], work: (item: T) => Promise<void>) {
       }
     }
   };
-  await Promise.all(Array.from({ length: Math.min(PARALLEL, items.length) }, worker));
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
   if (failure) throw (failure as { error: unknown }).error;
 }
 

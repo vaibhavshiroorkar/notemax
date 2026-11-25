@@ -173,6 +173,8 @@ async function runEngine(signal: AbortSignal) {
   };
   // The first send needs the list of this device's files; fetch it alongside the first read.
   void drive.listMine?.().catch(() => {});
+  // Move any legacy flat files in the Notemax root into their subfolders.
+  void drive.organize(signal).catch((err) => console.warn("[notemax] could not organize Drive folder", err));
   const current = createSyncEngine({
     store: await getRawStore(),
     remote,
