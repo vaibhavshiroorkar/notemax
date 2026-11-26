@@ -1,10 +1,13 @@
 import { createHash } from "node:crypto";
 import { cpSync, createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
-const fromHere = (file: string) => new URL(file, import.meta.url).pathname.replace(/^\/(\w:)/, "$1");
+// fileURLToPath, not URL.pathname: pathname keeps %20 for a space, so a checkout
+// under a folder like "My Projects" could not find index.html.
+const fromHere = (file: string) => fileURLToPath(new URL(file, import.meta.url));
 
 // Excalidraw downloads its fonts from a CDN unless the page serves them. Notes
 // work offline and nothing should leave the device, so the fonts the package

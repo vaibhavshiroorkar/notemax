@@ -2,6 +2,11 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## Unreleased
+
+- Fixed: the Android app icon showed an oversized N cut off by the launcher's round or rounded-square shape. The icon now has a dark background and an N sized to sit inside the launcher's safe area.
+- Fixed: `pnpm build` failed when the repo sat in a folder whose name has a space, because the Vite config passed `%20` in the page paths.
+
 ## 0.122.0 (2026-11-16)
 
 - Links to shared pages and workspace invites made in the desktop or Android app now point to notemax.shiroorkar.com. Old links to notemax.pages.dev keep working.
