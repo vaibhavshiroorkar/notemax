@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press the app icon. Each opens a notemax://open/ link, which
+     apps/app/src/features/phone/links.ts handles. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="new"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_new"
+        android:shortcutShortLabel="@string/shortcut_new">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.notemax.app"
+            android:targetClass="com.notemax.app.MainActivity"
+            android:data="notemax://open/new" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="today"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_today"
+        android:shortcutShortLabel="@string/shortcut_today">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.notemax.app"
+            android:targetClass="com.notemax.app.MainActivity"
+            android:data="notemax://open/today" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="tasks"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_tasks"
+        android:shortcutShortLabel="@string/shortcut_tasks">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.notemax.app"
+            android:targetClass="com.notemax.app.MainActivity"
+            android:data="notemax://open/tasks" />
+    </shortcut>
+</shortcuts>

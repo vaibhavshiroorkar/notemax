@@ -8,7 +8,10 @@
   },
   "plugins": {
     "deep-link": {
-      "mobile": [{ "scheme": ["notemax"], "host": "auth", "appLink": false }]
+      "mobile": [
+        { "scheme": ["notemax"], "host": "auth", "appLink": false },
+        { "scheme": ["notemax"], "host": "open", "appLink": false }
+      ]
     }
   }
 }

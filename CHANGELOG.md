@@ -4,6 +4,9 @@ Each release is tagged in git as `v0.N.0`.
 
 ## Unreleased
 
+- Android: share text or a link from any app to Notemax, and it is saved as a new note and opened. A shared web page keeps its title.
+- Android: long-press the app icon for New note, Today and Tasks.
+- Fixed: on Android, Back closed the app from any page. It now goes to the page before, and from the first page it puts the app in the background, so opening it again is instant.
 - Fixed: the Android app icon showed an oversized N cut off by the launcher's round or rounded-square shape. The icon now has a dark background and an N sized to sit inside the launcher's safe area.
 - Fixed: `pnpm build` failed when the repo sat in a folder whose name has a space, because the Vite config passed `%20` in the page paths.
 

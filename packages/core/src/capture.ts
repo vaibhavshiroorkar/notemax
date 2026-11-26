@@ -20,6 +20,40 @@ export function splitCapture(text: string): { title: string; body: string[] } | 
   return { title: lines[0].trim(), body: lines.slice(1) };
 }
 
+const TITLE_MAX = 60;
+
+/**
+ * What another app shared, as a note. A subject, like the title of a shared
+ * web page, names it and the text becomes the body. Without one, the first
+ * line is the title, as in quick capture. A first line too long for a title
+ * is cut at a word for the title and kept whole in the body.
+ */
+export function sharedNote(text: string, subject = ""): { title: string; body: string[] } | null {
+  const name = subject.trim();
+  const parts = splitCapture(text);
+  if (name) return { title: name, body: parts && !(parts.title === name && !parts.body.length) ? [parts.title, ...parts.body] : [] };
+  if (!parts) return null;
+  if (parts.title.length <= TITLE_MAX) return parts;
+  const cut = parts.title.slice(0, TITLE_MAX);
+  const atWord = cut.lastIndexOf(" ");
+  return { title: `${(atWord > 0 ? cut.slice(0, atWord) : cut).trimEnd()}...`, body: [parts.title, ...parts.body] };
+}
+
+/** Writes a note's text, one paragraph per line in the shape the editor writes. Nothing for no lines. */
+export async function writeNoteBody(store: DocStore, id: string, lines: string[], docOptions: { broadcast?: string; compactAbove?: number } = {}): Promise<void> {
+  if (!lines.length) return;
+  const note = await openLocalDoc(store, id, docOptions);
+  note.doc.transact(() => {
+    const paragraphs = lines.map((line) => {
+      const paragraph = new Y.XmlElement("paragraph");
+      if (line) paragraph.insert(0, [new Y.XmlText(line)]);
+      return paragraph;
+    });
+    note.doc.getXmlFragment("content").insert(0, paragraphs);
+  });
+  await note.close();
+}
+
 /**
  * Saves a quick note at the top level and returns its id, or null for empty
  * text. It is not filed into a folder: sorting happens later, in the main window.
@@ -35,19 +69,7 @@ export async function captureNote(store: DocStore, text: string, options: { broa
 
   // Body first, tree second. A crash in between leaves an unlisted body,
   // never a listed note whose text is missing.
-  if (parts.body.length) {
-    const note = await openLocalDoc(store, id, docOptions);
-    note.doc.transact(() => {
-      // Same shape the editor writes: one paragraph element per line.
-      const paragraphs = parts.body.map((line) => {
-        const paragraph = new Y.XmlElement("paragraph");
-        if (line) paragraph.insert(0, [new Y.XmlText(line)]);
-        return paragraph;
-      });
-      note.doc.getXmlFragment("content").insert(0, paragraphs);
-    });
-    await note.close();
-  }
+  await writeNoteBody(store, id, parts.body, docOptions);
 
   const workspace = await openLocalDoc(store, WORKSPACE_DOC_ID, docOptions);
   try {

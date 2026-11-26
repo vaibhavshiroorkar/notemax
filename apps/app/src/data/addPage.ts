@@ -8,10 +8,10 @@ import { newPagesAt } from "@/platform/behavior";
  * never see it at the end first. Pages placed on purpose, like a chapter after
  * another or a day in the Journal, use createNode and their own place instead.
  */
-export function addPage(doc: Y.Doc, kind: NodeKind, parentId = ROOT, title = "", setup?: (doc: Y.Doc, id: string) => void): string {
+export function addPage(doc: Y.Doc, kind: NodeKind, parentId = ROOT, title = "", setup?: (doc: Y.Doc, id: string) => void, withId?: string): string {
   let id = "";
   doc.transact(() => {
-    id = createNode(doc, kind, parentId, title);
+    id = createNode(doc, kind, parentId, title, withId);
     setup?.(doc, id);
     if (newPagesAt.get() === "top") moveNode(doc, id, parentId, 0);
   });

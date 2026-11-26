@@ -3,6 +3,7 @@ import { appearancePlugin } from "@/features/appearance/plugin";
 import { boardsPlugin } from "@/features/boards/plugin";
 import { booksPlugin } from "@/features/books/plugin";
 import { capturePlugin } from "@/features/capture/plugin";
+import { phonePlugin } from "@/features/phone/plugin";
 import { notesPlugin } from "@/features/editor/plugin";
 import { downloadsPlugin } from "@/features/export/plugin";
 import { backupPlugin } from "@/features/backup/plugin";
@@ -98,4 +99,5 @@ import { registerPlugin } from "./registry";
   accountPlugin,
   syncPlugin,
   capturePlugin,
+  phonePlugin,
 ].forEach(registerPlugin);

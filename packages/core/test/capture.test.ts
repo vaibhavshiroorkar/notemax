@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it, vi } from "vitest";
 import * as Y from "yjs";
-import { INBOX_ID, ROOT, WORKSPACE_DOC_ID, captureNote, createSqlStore, openLocalDoc, readTree, splitCapture, tasksIn } from "../src";
+import { INBOX_ID, ROOT, WORKSPACE_DOC_ID, captureNote, createSqlStore, sharedNote, writeNoteBody, openLocalDoc, readTree, splitCapture, tasksIn } from "../src";
 import { memorySqlDatabase } from "./node-sqlite";
 
 let channelCount = 0;
@@ -95,5 +95,42 @@ describe("captureNote", () => {
     ]);
     expect(new Set(tasks.map((t) => t.id)).size).toBe(3);
     await inbox.close();
+  });
+});
+
+describe("sharedNote", () => {
+  it("names the note after the subject and keeps the text as its body", () => {
+    expect(sharedNote("https://example.com/a", "A page")).toEqual({ title: "A page", body: ["https://example.com/a"] });
+  });
+
+  it("uses the first line as the title without a subject", () => {
+    expect(sharedNote("Groceries\nmilk\neggs")).toEqual({ title: "Groceries", body: ["milk", "eggs"] });
+  });
+
+  it("does not repeat a subject that is also the text", () => {
+    expect(sharedNote("Same words", "Same words")).toEqual({ title: "Same words", body: [] });
+  });
+
+  it("shortens a long first line for the title and keeps all of it in the body", () => {
+    const line = "word ".repeat(30).trim();
+    const note = sharedNote(line)!;
+    expect(note.title.length).toBeLessThanOrEqual(63);
+    expect(note.title.endsWith("...")).toBe(true);
+    expect(note.title).not.toMatch(/\s\.\.\.$/);
+    expect(note.body).toEqual([line]);
+  });
+
+  it("returns null when nothing was shared", () => {
+    expect(sharedNote("  \n ", "")).toBeNull();
+  });
+});
+
+describe("writeNoteBody", () => {
+  it("writes one paragraph per line, as the editor does", async () => {
+    const store = createSqlStore(memorySqlDatabase());
+    await writeNoteBody(store, "n1", ["first", "", "third"]);
+    const note = await openLocalDoc(store, "n1");
+    expect(paragraphs(note.doc)).toEqual(["first", "", "third"]);
+    await note.close();
   });
 });

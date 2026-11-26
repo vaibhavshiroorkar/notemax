@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">"Notemax"</string>
     <string name="main_activity_title">"Notemax"</string>
+    <string name="shortcut_new">New note</string>
+    <string name="shortcut_today">Today</string>
+    <string name="shortcut_tasks">Tasks</string>
 </resources>
