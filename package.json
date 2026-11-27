@@ -1,6 +1,6 @@
 {
   "name": "notemax",
-  "version": "0.122.0",
+  "version": "0.123.0",
   "description": "A local-first note app for writing that grows into books",
   "homepage": "https://notemax.shiroorkar.com",
   "repository": {
@@ -20,6 +20,7 @@
     "desktop:build": "pnpm --filter @notemax/desktop build",
     "desktop:release": "node scripts/release-desktop.mjs",
     "android:release": "node scripts/release-android.mjs",
+    "release": "node scripts/release.mjs",
     "typecheck": "pnpm -r typecheck",
     "version:set": "node scripts/set-version.mjs",
     "test": "pnpm -r test"

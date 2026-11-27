@@ -2,8 +2,10 @@
 
 Each release is tagged in git as `v0.N.0`.
 
-## Unreleased
+## 0.123.0 (2026-11-27)
 
+- The Notemax folder in Google Drive is organized: each workspace gets its own folder, with pages, versions and pictures apart, and settings go in a system folder. The first device on this version moves the files there. Devices on 0.122.0 or older stop seeing new edits until they update, so update every app.
+- One version everywhere: `pnpm release` releases the Windows app, the Android app and the website together.
 - Android: share text or a link from any app to Notemax, and it is saved as a new note and opened. A shared web page keeps its title.
 - Android: long-press the app icon for New note, Today and Tasks.
 - Fixed: on Android, Back closed the app from any page. It now goes to the page before, and from the first page it puts the app in the background, so opening it again is instant.

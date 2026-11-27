@@ -2570,7 +2570,7 @@ dependencies = [
 
 [[package]]
 name = "notemax"
-version = "0.122.0"
+version = "0.123.0"
 dependencies = [
  "log",
  "serde",
