@@ -4,3 +4,6 @@
 *.png binary
 *.ico binary
 *.icns binary
+
+# Pinned by hash in scripts/copy-runtimes.mjs, so git must not touch line endings.
+vendor/** binary

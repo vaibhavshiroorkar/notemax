@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node ../../scripts/fetch-runtimes.mjs && vite",
-    "build": "node ../../scripts/fetch-runtimes.mjs && tsc --noEmit && vite build",
+    "dev": "node ../../scripts/copy-runtimes.mjs && vite",
+    "build": "node ../../scripts/copy-runtimes.mjs && tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },

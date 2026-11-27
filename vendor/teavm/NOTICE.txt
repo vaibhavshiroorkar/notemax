@@ -1,0 +1,9 @@
+These files run Java in Notemax code pages. They are TeaVM's build of
+javac for WebAssembly, from https://teavm.org/playground/3/.
+
+TeaVM and teavm-javac: Copyright Alexey Andreev, Apache License 2.0,
+https://github.com/konsoletyper/teavm and https://github.com/konsoletyper/teavm-javac
+
+The class libraries include parts of OpenJDK, under the GNU General Public
+License version 2 with the Classpath Exception. Their source is at
+https://github.com/openjdk/jdk

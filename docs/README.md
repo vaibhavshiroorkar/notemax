@@ -10,5 +10,6 @@ Start with the overview, then read whichever part you need.
 - [development.md](development.md): running the app, checks, versions and releases.
 - [decisions.md](decisions.md): the choices that shaped Notemax, and why.
 - [plugins.md](plugins.md): writing a plugin.
+- [PENDING.md](PENDING.md): open work, decisions and follow-ups.
 
 The [changelog](../CHANGELOG.md) lists every release in detail.

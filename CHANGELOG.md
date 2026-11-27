@@ -2,6 +2,10 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## Unreleased
+
+- Build: the Java runtime for code pages (TeaVM) is now kept in `vendor/teavm/` in git and copied in before dev and build. It was downloaded from teavm.org each build, but teavm.org changes its files in place, so CI failed at random. The app ships the same files as before.
+
 ## 0.123.1 (2026-11-27)
 
 - Fixed: 0.123.0 had no sign-in or sync on the website, Windows or Android. It was built without its Supabase settings. Every release now checks for them first.
