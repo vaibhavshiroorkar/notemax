@@ -14,6 +14,7 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync,
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import "./check-env.mjs";
 
 const ALIAS = "notemax";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");

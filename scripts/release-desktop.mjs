@@ -11,6 +11,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, 
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import "./check-env.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const key = process.env.TAURI_SIGNING_PRIVATE_KEY_PATH ?? join(homedir(), ".tauri", "notemax-updater.key");

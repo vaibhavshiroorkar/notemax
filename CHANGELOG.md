@@ -2,6 +2,10 @@
 
 Each release is tagged in git as `v0.N.0`.
 
+## 0.123.1 (2026-11-27)
+
+- Fixed: 0.123.0 had no sign-in or sync on the website, Windows or Android. It was built without its Supabase settings. Every release now checks for them first.
+
 ## 0.123.0 (2026-11-27)
 
 - The Notemax folder in Google Drive is organized: each workspace gets its own folder, with pages, versions and pictures apart, and settings go in a system folder. The first device on this version moves the files there. Devices on 0.122.0 or older stop seeing new edits until they update, so update every app.
